@@ -27,6 +27,18 @@ go.work.sum
 # env file
 .env
 
+# local Python virtual envs and generated tooling
+.venv/
+venv/
+.env/
+server/.bin/
+**/.bin/
+**/vacuum
+*.bin
+
+# generated reports and local API artifacts
+vacuum-report-*.json
+
 # Editor/IDE
 # .idea/
 # .vscode/
