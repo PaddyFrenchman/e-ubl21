@@ -1,0 +1,99 @@
+openapi: 3.0.3
+info:
+  title: e-ubl21 API
+  version: 0.1.0
+  description: API for uploading and validating UBL 2.1 XML documents.
+servers:
+  - url: https://api.example.com
+security:
+  - oauth2: []
+tags:
+  - name: UBL
+    description: UBL document upload and validation operations.
+paths:
+  /api/v1/ubl/upload:
+    post:
+      operationId: UBLUploadUploadXMLDocument
+      tags:
+        - UBL
+      summary: Upload a UBL 2.1 XML document
+      description: Accepts a UBL 2.1 XML payload for validation and processing.
+      security:
+        - oauth2: []
+      requestBody:
+        required: true
+        description: Raw XML document payload for a UBL 2.1 invoice or other supported document type.
+        content:
+          application/xml:
+            schema:
+              type: string
+      responses:
+        '202':
+          description: Document accepted for validation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: accepted
+                  document:
+                    type: string
+                    example: ubl-2.1-xml
+                  receivedAt:
+                    type: string
+                    format: date-time
+                    example: '2026-08-20T12:00:00Z'
+                required:
+                  - status
+                  - document
+                  - receivedAt
+              example:
+                status: accepted
+                document: ubl-2.1-xml
+                receivedAt: '2026-08-20T12:00:00Z'
+        '400':
+          description: Invalid XML payload or malformed request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: invalid XML payload
+        '401':
+          description: Missing or invalid OAuth 2 bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: missing bearer token
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: method not allowed
+components:
+  schemas:
+    ErrorResponse:
+      description: Standard error payload returned when a request is rejected.
+      type: object
+      properties:
+        error:
+          type: string
+          example: invalid XML payload
+      required:
+        - error
+      additionalProperties: false
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: OAuth 2 bearer token used to authenticate the caller.
+      flows:
+        clientCredentials:
+          tokenUrl: https://issuer.example.com/oauth/token
+          scopes: {}

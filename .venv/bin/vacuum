@@ -1,0 +1,52 @@
+#!/home/a/e-ubl21/.venv/bin/python
+#coding:utf-8
+# Author        : tuxpy
+# Email         : q8886888@qq.com.com
+# Last modified : 2016-07-12 15:36:54
+# Filename      : run.py
+# Description   : 
+from __future__ import print_function, unicode_literals
+
+import vacuum.config
+def init_rc():
+    import vacuum.api
+    config = vacuum.api.fetch_config()
+    vacuum.config.save_config(config)
+
+if not vacuum.config.get_config():
+    init_rc()
+
+import sys
+import vacuum
+import vacuum.log
+import vacuum.api
+
+def scanning():
+    for application_name, log_file in vacuum.log.ls():
+        vacuum.log.analysis(application_name, log_file)
+
+def backup():
+    vacuum.log.sync2cdn()
+
+
+def get_opera():
+    if len(sys.argv) < 2:
+        return 'scanning'
+
+    opera = sys.argv[1]
+    if opera not in ['scanning', 'backup']:
+        print('not supported', opera)
+        sys.exit(1)
+
+    return opera
+
+
+if __name__ == "__main__":
+
+    opera = get_opera()
+    if opera == 'scanning':
+        scanning()
+
+    elif opera == 'backup':
+        backup()
+
