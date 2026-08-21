@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GuaranteeCertificate xmlns="urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <cbc:UBLVersionID>ID-001</cbc:UBLVersionID>
+    <cbc:CustomizationID>ID-001</cbc:CustomizationID>
+    <cbc:ProfileID>ID-001</cbc:ProfileID>
+    <cbc:ProfileExecutionID>ID-001</cbc:ProfileExecutionID>
+    <cbc:ID>ID-001</cbc:ID>
+    <cbc:CopyIndicator>true</cbc:CopyIndicator>
+    <cbc:UUID>Value of UUID</cbc:UUID>
+    <cbc:ContractFolderID>ID-001</cbc:ContractFolderID>
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cbc:IssueTime>12:00:00</cbc:IssueTime>
+    <cbc:GuaranteeTypeCode>CODE-001</cbc:GuaranteeTypeCode>
+    <cbc:Purpose>Value of Purpose</cbc:Purpose>
+    <cbc:LiabilityAmount currencyID="USD">100.00</cbc:LiabilityAmount>
+    <cbc:ConstitutionCode>CODE-001</cbc:ConstitutionCode>
+    <cbc:Note>Value of Note</cbc:Note>
+    <cac:ApplicablePeriod>
+        <cbc:StartDate>2026-01-01</cbc:StartDate>
+        <cbc:StartTime>12:00:00</cbc:StartTime>
+        <cbc:EndDate>2026-01-01</cbc:EndDate>
+        <cbc:EndTime>12:00:00</cbc:EndTime>
+        <cbc:DurationMeasure unitCode="CODE-001">1</cbc:DurationMeasure>
+        <cbc:DescriptionCode>CODE-001</cbc:DescriptionCode>
+        <cbc:Description>Value of Description</cbc:Description>
+    </cac:ApplicablePeriod>
+    <cac:ApplicableRegulation>
+        <cbc:Name>Value of Name</cbc:Name>
+        <cbc:LegalReference>Value of LegalReference</cbc:LegalReference>
+        <cbc:OntologyURI>Value of OntologyURI</cbc:OntologyURI>
+    </cac:ApplicableRegulation>
+    <cac:GuaranteeDocumentReference>
+        <cbc:ID>ID-001</cbc:ID>
+        <cbc:CopyIndicator>true</cbc:CopyIndicator>
+        <cbc:UUID>Value of UUID</cbc:UUID>
+        <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+        <cbc:IssueTime>12:00:00</cbc:IssueTime>
+        <cbc:DocumentTypeCode>CODE-001</cbc:DocumentTypeCode>
+        <cbc:DocumentType>Value of DocumentType</cbc:DocumentType>
+        <cbc:XPath>Value of XPath</cbc:XPath>
+        <cbc:LanguageID>ID-001</cbc:LanguageID>
+        <cbc:LocaleCode>CODE-001</cbc:LocaleCode>
+        <cbc:VersionID>ID-001</cbc:VersionID>
+        <cbc:DocumentStatusCode>CODE-001</cbc:DocumentStatusCode>
+        <cbc:DocumentDescription>Value of DocumentDescription</cbc:DocumentDescription>
+        <cac:Attachment>
+            <cbc:EmbeddedDocumentBinaryObject mimeCode="CODE-001">U2FtcGxlRGF0YQ==</cbc:EmbeddedDocumentBinaryObject>
+            <cac:ExternalReference>
+                <cbc:URI>Value of URI</cbc:URI>
+                <cbc:DocumentHash>Value of DocumentHash</cbc:DocumentHash>
+                <cbc:HashAlgorithmMethod>Value of HashAlgorithmMethod</cbc:HashAlgorithmMethod>
+                <cbc:ExpiryDate>2026-01-01</cbc:ExpiryDate>
+                <cbc:ExpiryTime>12:00:00</cbc:ExpiryTime>
+                <cbc:MimeCode>CODE-001</cbc:MimeCode>
+                <cbc:FormatCode>CODE-001</cbc:FormatCode>
+                <cbc:EncodingCode>CODE-001</cbc:EncodingCode>
+                <cbc:CharacterSetCode>CODE-001</cbc:CharacterSetCode>
+                <cbc:FileName>Value of FileName</cbc:FileName>
+                <cbc:Description>Value of Description</cbc:Description>
+            </cac:ExternalReference>
+        </cac:Attachment>
+        <cac:ValidityPeriod></cac:ValidityPeriod>
+        <cac:IssuerParty>
+            <cbc:MarkCareIndicator>true</cbc:MarkCareIndicator>
+            <cbc:MarkAttentionIndicator>true</cbc:MarkAttentionIndicator>
+            <cbc:WebsiteURI>Value of WebsiteURI</cbc:WebsiteURI>
+            <cbc:LogoReferenceID>ID-001</cbc:LogoReferenceID>
+            <cbc:EndpointID>ID-001</cbc:EndpointID>
+            <cbc:IndustryClassificationCode>CODE-001</cbc:IndustryClassificationCode>
+            <cac:PartyIdentification>
+                <cbc:ID>ID-001</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name>Value of Name</cbc:Name>
+            </cac:PartyName>
+            <cac:Language>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cbc:LocaleCode>CODE-001</cbc:LocaleCode>
+            </cac:Language>
+            <cac:PostalAddress>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:AddressTypeCode>CODE-001</cbc:AddressTypeCode>
+                <cbc:AddressFormatCode>CODE-001</cbc:AddressFormatCode>
+                <cbc:Postbox>Value of Postbox</cbc:Postbox>
+                <cbc:Floor>Value of Floor</cbc:Floor>
+                <cbc:Room>Value of Room</cbc:Room>
+                <cbc:StreetName>Value of StreetName</cbc:StreetName>
+                <cbc:AdditionalStreetName>Value of AdditionalStreetName</cbc:AdditionalStreetName>
+                <cbc:BlockName>Value of BlockName</cbc:BlockName>
+                <cbc:BuildingName>Value of BuildingName</cbc:BuildingName>
+                <cbc:BuildingNumber>Value of BuildingNumber</cbc:BuildingNumber>
+                <cbc:InhouseMail>Value of InhouseMail</cbc:InhouseMail>
+                <cbc:Department>Value of Department</cbc:Department>
+                <cbc:MarkAttention>Value of MarkAttention</cbc:MarkAttention>
+                <cbc:MarkCare>Value of MarkCare</cbc:MarkCare>
+                <cbc:PlotIdentification>Value of PlotIdentification</cbc:PlotIdentification>
+                <cbc:CitySubdivisionName>Value of CitySubdivisionName</cbc:CitySubdivisionName>
+                <cbc:CityName>Value of CityName</cbc:CityName>
+                <cbc:PostalZone>Value of PostalZone</cbc:PostalZone>
+                <cbc:CountrySubentity>Value of CountrySubentity</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode>CODE-001</cbc:CountrySubentityCode>
+                <cbc:Region>Value of Region</cbc:Region>
+                <cbc:District>Value of District</cbc:District>
+                <cbc:TimezoneOffset>Value of TimezoneOffset</cbc:TimezoneOffset>
+                <cac:AddressLine>
+                    <cbc:Line>Value of Line</cbc:Line>
+                </cac:AddressLine>
+                <cac:Country>
+                    <cbc:IdentificationCode>CODE-001</cbc:IdentificationCode>
+                    <cbc:Name>Value of Name</cbc:Name>
+                </cac:Country>
+                <cac:LocationCoordinate>
+                    <cbc:CoordinateSystemCode>CODE-001</cbc:CoordinateSystemCode>
+                    <cbc:LatitudeDegreesMeasure unitCode="CODE-001">1</cbc:LatitudeDegreesMeasure>
+                    <cbc:LatitudeMinutesMeasure unitCode="CODE-001">1</cbc:LatitudeMinutesMeasure>
+                    <cbc:LatitudeDirectionCode>CODE-001</cbc:LatitudeDirectionCode>
+                    <cbc:LongitudeDegreesMeasure unitCode="CODE-001">1</cbc:LongitudeDegreesMeasure>
+                    <cbc:LongitudeMinutesMeasure unitCode="CODE-001">1</cbc:LongitudeMinutesMeasure>
+                    <cbc:LongitudeDirectionCode>CODE-001</cbc:LongitudeDirectionCode>
+                    <cbc:AltitudeMeasure unitCode="CODE-001">1</cbc:AltitudeMeasure>
+                </cac:LocationCoordinate>
+            </cac:PostalAddress>
+            <cac:PhysicalLocation>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cbc:Conditions>Value of Conditions</cbc:Conditions>
+                <cbc:CountrySubentity>Value of CountrySubentity</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode>CODE-001</cbc:CountrySubentityCode>
+                <cbc:LocationTypeCode>CODE-001</cbc:LocationTypeCode>
+                <cbc:InformationURI>Value of InformationURI</cbc:InformationURI>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cac:ValidityPeriod></cac:ValidityPeriod>
+                <cac:Address></cac:Address>
+                <cac:SubsidiaryLocation></cac:SubsidiaryLocation>
+                <cac:LocationCoordinate></cac:LocationCoordinate>
+            </cac:PhysicalLocation>
+            <cac:PartyTaxScheme>
+                <cbc:RegistrationName>Value of RegistrationName</cbc:RegistrationName>
+                <cbc:CompanyID>ID-001</cbc:CompanyID>
+                <cbc:TaxLevelCode>CODE-001</cbc:TaxLevelCode>
+                <cbc:ExemptionReasonCode>CODE-001</cbc:ExemptionReasonCode>
+                <cbc:ExemptionReason>Value of ExemptionReason</cbc:ExemptionReason>
+                <cac:RegistrationAddress></cac:RegistrationAddress>
+                <cac:TaxScheme>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:Name>Value of Name</cbc:Name>
+                    <cbc:TaxTypeCode>CODE-001</cbc:TaxTypeCode>
+                    <cbc:CurrencyCode>USD</cbc:CurrencyCode>
+                    <cac:JurisdictionRegionAddress></cac:JurisdictionRegionAddress>
+                </cac:TaxScheme>
+            </cac:PartyTaxScheme>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>Value of RegistrationName</cbc:RegistrationName>
+                <cbc:CompanyID>ID-001</cbc:CompanyID>
+                <cbc:RegistrationDate>2026-01-01</cbc:RegistrationDate>
+                <cbc:RegistrationExpirationDate>2026-01-01</cbc:RegistrationExpirationDate>
+                <cbc:CompanyLegalFormCode>CODE-001</cbc:CompanyLegalFormCode>
+                <cbc:CompanyLegalForm>Value of CompanyLegalForm</cbc:CompanyLegalForm>
+                <cbc:SoleProprietorshipIndicator>true</cbc:SoleProprietorshipIndicator>
+                <cbc:CompanyLiquidationStatusCode>CODE-001</cbc:CompanyLiquidationStatusCode>
+                <cbc:CorporateStockAmount currencyID="USD">100.00</cbc:CorporateStockAmount>
+                <cbc:FullyPaidSharesIndicator>true</cbc:FullyPaidSharesIndicator>
+                <cac:RegistrationAddress></cac:RegistrationAddress>
+                <cac:CorporateRegistrationScheme>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:Name>Value of Name</cbc:Name>
+                    <cbc:CorporateRegistrationTypeCode>CODE-001</cbc:CorporateRegistrationTypeCode>
+                    <cac:JurisdictionRegionAddress></cac:JurisdictionRegionAddress>
+                </cac:CorporateRegistrationScheme>
+                <cac:HeadOfficeParty></cac:HeadOfficeParty>
+                <cac:ShareholderParty>
+                    <cbc:PartecipationPercent>10.00</cbc:PartecipationPercent>
+                    <cac:Party></cac:Party>
+                </cac:ShareholderParty>
+            </cac:PartyLegalEntity>
+            <cac:Contact>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cbc:Telephone>Value of Telephone</cbc:Telephone>
+                <cbc:Telefax>Value of Telefax</cbc:Telefax>
+                <cbc:ElectronicMail>Value of ElectronicMail</cbc:ElectronicMail>
+                <cbc:Note>Value of Note</cbc:Note>
+                <cac:OtherCommunication>
+                    <cbc:ChannelCode>CODE-001</cbc:ChannelCode>
+                    <cbc:Channel>Value of Channel</cbc:Channel>
+                    <cbc:Value>Value of Value</cbc:Value>
+                </cac:OtherCommunication>
+            </cac:Contact>
+            <cac:Person>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:FirstName>Value of FirstName</cbc:FirstName>
+                <cbc:FamilyName>Value of FamilyName</cbc:FamilyName>
+                <cbc:Title>Value of Title</cbc:Title>
+                <cbc:MiddleName>Value of MiddleName</cbc:MiddleName>
+                <cbc:OtherName>Value of OtherName</cbc:OtherName>
+                <cbc:NameSuffix>Value of NameSuffix</cbc:NameSuffix>
+                <cbc:JobTitle>Value of JobTitle</cbc:JobTitle>
+                <cbc:NationalityID>ID-001</cbc:NationalityID>
+                <cbc:GenderCode>CODE-001</cbc:GenderCode>
+                <cbc:BirthDate>2026-01-01</cbc:BirthDate>
+                <cbc:BirthplaceName>Value of BirthplaceName</cbc:BirthplaceName>
+                <cbc:OrganizationDepartment>Value of OrganizationDepartment</cbc:OrganizationDepartment>
+                <cac:Contact></cac:Contact>
+                <cac:FinancialAccount>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:Name>Value of Name</cbc:Name>
+                    <cbc:AliasName>Value of AliasName</cbc:AliasName>
+                    <cbc:AccountTypeCode>CODE-001</cbc:AccountTypeCode>
+                    <cbc:AccountFormatCode>CODE-001</cbc:AccountFormatCode>
+                    <cbc:CurrencyCode>USD</cbc:CurrencyCode>
+                    <cbc:PaymentNote>Value of PaymentNote</cbc:PaymentNote>
+                    <cac:FinancialInstitutionBranch>
+                        <cbc:ID>ID-001</cbc:ID>
+                        <cbc:Name>Value of Name</cbc:Name>
+                        <cac:FinancialInstitution>
+                            <cbc:ID>ID-001</cbc:ID>
+                            <cbc:Name>Value of Name</cbc:Name>
+                            <cac:Address></cac:Address>
+                        </cac:FinancialInstitution>
+                        <cac:Address></cac:Address>
+                    </cac:FinancialInstitutionBranch>
+                    <cac:Country></cac:Country>
+                </cac:FinancialAccount>
+                <cac:IdentityDocumentReference>
+                    <cbc:ID>ID-001</cbc:ID>
+                </cac:IdentityDocumentReference>
+                <cac:ResidenceAddress></cac:ResidenceAddress>
+            </cac:Person>
+            <cac:AgentParty></cac:AgentParty>
+            <cac:ServiceProviderParty>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:ServiceTypeCode>CODE-001</cbc:ServiceTypeCode>
+                <cbc:ServiceType>Value of ServiceType</cbc:ServiceType>
+                <cac:Party></cac:Party>
+                <cac:SellerContact></cac:SellerContact>
+            </cac:ServiceProviderParty>
+            <cac:PowerOfAttorney>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cac:NotaryParty></cac:NotaryParty>
+                <cac:AgentParty></cac:AgentParty>
+                <cac:WitnessParty></cac:WitnessParty>
+                <cac:MandateDocumentReference>
+                    <cbc:ID>ID-001</cbc:ID>
+                </cac:MandateDocumentReference>
+            </cac:PowerOfAttorney>
+            <cac:FinancialAccount></cac:FinancialAccount>
+        </cac:IssuerParty>
+        <cac:ResultOfVerification>
+            <cbc:ValidatorID>ID-001</cbc:ValidatorID>
+            <cbc:ValidationResultCode>CODE-001</cbc:ValidationResultCode>
+            <cbc:ValidationDate>2026-01-01</cbc:ValidationDate>
+            <cbc:ValidationTime>12:00:00</cbc:ValidationTime>
+            <cbc:ValidateProcess>Value of ValidateProcess</cbc:ValidateProcess>
+            <cbc:ValidateTool>Value of ValidateTool</cbc:ValidateTool>
+            <cbc:ValidateToolVersion>Value of ValidateToolVersion</cbc:ValidateToolVersion>
+            <cac:SignatoryParty></cac:SignatoryParty>
+        </cac:ResultOfVerification>
+    </cac:GuaranteeDocumentReference>
+    <cac:ImmobilizedSecurity>
+        <cbc:ImmobilizationCertificateID>ID-001</cbc:ImmobilizationCertificateID>
+        <cbc:SecurityID>ID-001</cbc:SecurityID>
+        <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+        <cbc:FaceValueAmount currencyID="USD">100.00</cbc:FaceValueAmount>
+        <cbc:MarketValueAmount currencyID="USD">100.00</cbc:MarketValueAmount>
+        <cbc:SharesNumberQuantity>1</cbc:SharesNumberQuantity>
+        <cac:IssuerParty></cac:IssuerParty>
+    </cac:ImmobilizedSecurity>
+    <cac:Signature>
+        <cbc:ID>ID-001</cbc:ID>
+        <cbc:Note>Value of Note</cbc:Note>
+        <cbc:ValidationDate>2026-01-01</cbc:ValidationDate>
+        <cbc:ValidationTime>12:00:00</cbc:ValidationTime>
+        <cbc:ValidatorID>ID-001</cbc:ValidatorID>
+        <cbc:CanonicalizationMethod>Value of CanonicalizationMethod</cbc:CanonicalizationMethod>
+        <cbc:SignatureMethod>Value of SignatureMethod</cbc:SignatureMethod>
+        <cac:SignatoryParty></cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment></cac:DigitalSignatureAttachment>
+        <cac:OriginalDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:OriginalDocumentReference>
+    </cac:Signature>
+    <cac:GuarantorParty></cac:GuarantorParty>
+    <cac:InterestedParty></cac:InterestedParty>
+    <cac:BeneficiaryParty></cac:BeneficiaryParty>
+</GuaranteeCertificate>
+

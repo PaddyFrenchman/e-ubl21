@@ -1,0 +1,1784 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContractNotice xmlns="urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <cbc:UBLVersionID>ID-001</cbc:UBLVersionID>
+    <cbc:CustomizationID>ID-001</cbc:CustomizationID>
+    <cbc:ProfileID>ID-001</cbc:ProfileID>
+    <cbc:ProfileExecutionID>ID-001</cbc:ProfileExecutionID>
+    <cbc:ID>ID-001</cbc:ID>
+    <cbc:CopyIndicator>true</cbc:CopyIndicator>
+    <cbc:UUID>Value of UUID</cbc:UUID>
+    <cbc:ContractFolderID>ID-001</cbc:ContractFolderID>
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cbc:IssueTime>12:00:00</cbc:IssueTime>
+    <cbc:Note>Value of Note</cbc:Note>
+    <cbc:RequestedPublicationDate>2026-01-01</cbc:RequestedPublicationDate>
+    <cbc:RegulatoryDomain>Value of RegulatoryDomain</cbc:RegulatoryDomain>
+    <cac:FrequencyPeriod>
+        <cbc:StartDate>2026-01-01</cbc:StartDate>
+        <cbc:StartTime>12:00:00</cbc:StartTime>
+        <cbc:EndDate>2026-01-01</cbc:EndDate>
+        <cbc:EndTime>12:00:00</cbc:EndTime>
+        <cbc:DurationMeasure unitCode="CODE-001">1</cbc:DurationMeasure>
+        <cbc:DescriptionCode>CODE-001</cbc:DescriptionCode>
+        <cbc:Description>Value of Description</cbc:Description>
+    </cac:FrequencyPeriod>
+    <cac:Signature>
+        <cbc:ID>ID-001</cbc:ID>
+        <cbc:Note>Value of Note</cbc:Note>
+        <cbc:ValidationDate>2026-01-01</cbc:ValidationDate>
+        <cbc:ValidationTime>12:00:00</cbc:ValidationTime>
+        <cbc:ValidatorID>ID-001</cbc:ValidatorID>
+        <cbc:CanonicalizationMethod>Value of CanonicalizationMethod</cbc:CanonicalizationMethod>
+        <cbc:SignatureMethod>Value of SignatureMethod</cbc:SignatureMethod>
+        <cac:SignatoryParty>
+            <cbc:MarkCareIndicator>true</cbc:MarkCareIndicator>
+            <cbc:MarkAttentionIndicator>true</cbc:MarkAttentionIndicator>
+            <cbc:WebsiteURI>Value of WebsiteURI</cbc:WebsiteURI>
+            <cbc:LogoReferenceID>ID-001</cbc:LogoReferenceID>
+            <cbc:EndpointID>ID-001</cbc:EndpointID>
+            <cbc:IndustryClassificationCode>CODE-001</cbc:IndustryClassificationCode>
+            <cac:PartyIdentification>
+                <cbc:ID>ID-001</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name>Value of Name</cbc:Name>
+            </cac:PartyName>
+            <cac:Language>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cbc:LocaleCode>CODE-001</cbc:LocaleCode>
+            </cac:Language>
+            <cac:PostalAddress>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:AddressTypeCode>CODE-001</cbc:AddressTypeCode>
+                <cbc:AddressFormatCode>CODE-001</cbc:AddressFormatCode>
+                <cbc:Postbox>Value of Postbox</cbc:Postbox>
+                <cbc:Floor>Value of Floor</cbc:Floor>
+                <cbc:Room>Value of Room</cbc:Room>
+                <cbc:StreetName>Value of StreetName</cbc:StreetName>
+                <cbc:AdditionalStreetName>Value of AdditionalStreetName</cbc:AdditionalStreetName>
+                <cbc:BlockName>Value of BlockName</cbc:BlockName>
+                <cbc:BuildingName>Value of BuildingName</cbc:BuildingName>
+                <cbc:BuildingNumber>Value of BuildingNumber</cbc:BuildingNumber>
+                <cbc:InhouseMail>Value of InhouseMail</cbc:InhouseMail>
+                <cbc:Department>Value of Department</cbc:Department>
+                <cbc:MarkAttention>Value of MarkAttention</cbc:MarkAttention>
+                <cbc:MarkCare>Value of MarkCare</cbc:MarkCare>
+                <cbc:PlotIdentification>Value of PlotIdentification</cbc:PlotIdentification>
+                <cbc:CitySubdivisionName>Value of CitySubdivisionName</cbc:CitySubdivisionName>
+                <cbc:CityName>Value of CityName</cbc:CityName>
+                <cbc:PostalZone>Value of PostalZone</cbc:PostalZone>
+                <cbc:CountrySubentity>Value of CountrySubentity</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode>CODE-001</cbc:CountrySubentityCode>
+                <cbc:Region>Value of Region</cbc:Region>
+                <cbc:District>Value of District</cbc:District>
+                <cbc:TimezoneOffset>Value of TimezoneOffset</cbc:TimezoneOffset>
+                <cac:AddressLine>
+                    <cbc:Line>Value of Line</cbc:Line>
+                </cac:AddressLine>
+                <cac:Country>
+                    <cbc:IdentificationCode>CODE-001</cbc:IdentificationCode>
+                    <cbc:Name>Value of Name</cbc:Name>
+                </cac:Country>
+                <cac:LocationCoordinate>
+                    <cbc:CoordinateSystemCode>CODE-001</cbc:CoordinateSystemCode>
+                    <cbc:LatitudeDegreesMeasure unitCode="CODE-001">1</cbc:LatitudeDegreesMeasure>
+                    <cbc:LatitudeMinutesMeasure unitCode="CODE-001">1</cbc:LatitudeMinutesMeasure>
+                    <cbc:LatitudeDirectionCode>CODE-001</cbc:LatitudeDirectionCode>
+                    <cbc:LongitudeDegreesMeasure unitCode="CODE-001">1</cbc:LongitudeDegreesMeasure>
+                    <cbc:LongitudeMinutesMeasure unitCode="CODE-001">1</cbc:LongitudeMinutesMeasure>
+                    <cbc:LongitudeDirectionCode>CODE-001</cbc:LongitudeDirectionCode>
+                    <cbc:AltitudeMeasure unitCode="CODE-001">1</cbc:AltitudeMeasure>
+                </cac:LocationCoordinate>
+            </cac:PostalAddress>
+            <cac:PhysicalLocation>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cbc:Conditions>Value of Conditions</cbc:Conditions>
+                <cbc:CountrySubentity>Value of CountrySubentity</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode>CODE-001</cbc:CountrySubentityCode>
+                <cbc:LocationTypeCode>CODE-001</cbc:LocationTypeCode>
+                <cbc:InformationURI>Value of InformationURI</cbc:InformationURI>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cac:ValidityPeriod></cac:ValidityPeriod>
+                <cac:Address></cac:Address>
+                <cac:SubsidiaryLocation></cac:SubsidiaryLocation>
+                <cac:LocationCoordinate></cac:LocationCoordinate>
+            </cac:PhysicalLocation>
+            <cac:PartyTaxScheme>
+                <cbc:RegistrationName>Value of RegistrationName</cbc:RegistrationName>
+                <cbc:CompanyID>ID-001</cbc:CompanyID>
+                <cbc:TaxLevelCode>CODE-001</cbc:TaxLevelCode>
+                <cbc:ExemptionReasonCode>CODE-001</cbc:ExemptionReasonCode>
+                <cbc:ExemptionReason>Value of ExemptionReason</cbc:ExemptionReason>
+                <cac:RegistrationAddress></cac:RegistrationAddress>
+                <cac:TaxScheme>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:Name>Value of Name</cbc:Name>
+                    <cbc:TaxTypeCode>CODE-001</cbc:TaxTypeCode>
+                    <cbc:CurrencyCode>USD</cbc:CurrencyCode>
+                    <cac:JurisdictionRegionAddress></cac:JurisdictionRegionAddress>
+                </cac:TaxScheme>
+            </cac:PartyTaxScheme>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName>Value of RegistrationName</cbc:RegistrationName>
+                <cbc:CompanyID>ID-001</cbc:CompanyID>
+                <cbc:RegistrationDate>2026-01-01</cbc:RegistrationDate>
+                <cbc:RegistrationExpirationDate>2026-01-01</cbc:RegistrationExpirationDate>
+                <cbc:CompanyLegalFormCode>CODE-001</cbc:CompanyLegalFormCode>
+                <cbc:CompanyLegalForm>Value of CompanyLegalForm</cbc:CompanyLegalForm>
+                <cbc:SoleProprietorshipIndicator>true</cbc:SoleProprietorshipIndicator>
+                <cbc:CompanyLiquidationStatusCode>CODE-001</cbc:CompanyLiquidationStatusCode>
+                <cbc:CorporateStockAmount currencyID="USD">100.00</cbc:CorporateStockAmount>
+                <cbc:FullyPaidSharesIndicator>true</cbc:FullyPaidSharesIndicator>
+                <cac:RegistrationAddress></cac:RegistrationAddress>
+                <cac:CorporateRegistrationScheme>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:Name>Value of Name</cbc:Name>
+                    <cbc:CorporateRegistrationTypeCode>CODE-001</cbc:CorporateRegistrationTypeCode>
+                    <cac:JurisdictionRegionAddress></cac:JurisdictionRegionAddress>
+                </cac:CorporateRegistrationScheme>
+                <cac:HeadOfficeParty></cac:HeadOfficeParty>
+                <cac:ShareholderParty>
+                    <cbc:PartecipationPercent>10.00</cbc:PartecipationPercent>
+                    <cac:Party></cac:Party>
+                </cac:ShareholderParty>
+            </cac:PartyLegalEntity>
+            <cac:Contact>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cbc:Telephone>Value of Telephone</cbc:Telephone>
+                <cbc:Telefax>Value of Telefax</cbc:Telefax>
+                <cbc:ElectronicMail>Value of ElectronicMail</cbc:ElectronicMail>
+                <cbc:Note>Value of Note</cbc:Note>
+                <cac:OtherCommunication>
+                    <cbc:ChannelCode>CODE-001</cbc:ChannelCode>
+                    <cbc:Channel>Value of Channel</cbc:Channel>
+                    <cbc:Value>Value of Value</cbc:Value>
+                </cac:OtherCommunication>
+            </cac:Contact>
+            <cac:Person>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:FirstName>Value of FirstName</cbc:FirstName>
+                <cbc:FamilyName>Value of FamilyName</cbc:FamilyName>
+                <cbc:Title>Value of Title</cbc:Title>
+                <cbc:MiddleName>Value of MiddleName</cbc:MiddleName>
+                <cbc:OtherName>Value of OtherName</cbc:OtherName>
+                <cbc:NameSuffix>Value of NameSuffix</cbc:NameSuffix>
+                <cbc:JobTitle>Value of JobTitle</cbc:JobTitle>
+                <cbc:NationalityID>ID-001</cbc:NationalityID>
+                <cbc:GenderCode>CODE-001</cbc:GenderCode>
+                <cbc:BirthDate>2026-01-01</cbc:BirthDate>
+                <cbc:BirthplaceName>Value of BirthplaceName</cbc:BirthplaceName>
+                <cbc:OrganizationDepartment>Value of OrganizationDepartment</cbc:OrganizationDepartment>
+                <cac:Contact></cac:Contact>
+                <cac:FinancialAccount>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:Name>Value of Name</cbc:Name>
+                    <cbc:AliasName>Value of AliasName</cbc:AliasName>
+                    <cbc:AccountTypeCode>CODE-001</cbc:AccountTypeCode>
+                    <cbc:AccountFormatCode>CODE-001</cbc:AccountFormatCode>
+                    <cbc:CurrencyCode>USD</cbc:CurrencyCode>
+                    <cbc:PaymentNote>Value of PaymentNote</cbc:PaymentNote>
+                    <cac:FinancialInstitutionBranch>
+                        <cbc:ID>ID-001</cbc:ID>
+                        <cbc:Name>Value of Name</cbc:Name>
+                        <cac:FinancialInstitution>
+                            <cbc:ID>ID-001</cbc:ID>
+                            <cbc:Name>Value of Name</cbc:Name>
+                            <cac:Address></cac:Address>
+                        </cac:FinancialInstitution>
+                        <cac:Address></cac:Address>
+                    </cac:FinancialInstitutionBranch>
+                    <cac:Country></cac:Country>
+                </cac:FinancialAccount>
+                <cac:IdentityDocumentReference>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:CopyIndicator>true</cbc:CopyIndicator>
+                    <cbc:UUID>Value of UUID</cbc:UUID>
+                    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                    <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                    <cbc:DocumentTypeCode>CODE-001</cbc:DocumentTypeCode>
+                    <cbc:DocumentType>Value of DocumentType</cbc:DocumentType>
+                    <cbc:XPath>Value of XPath</cbc:XPath>
+                    <cbc:LanguageID>ID-001</cbc:LanguageID>
+                    <cbc:LocaleCode>CODE-001</cbc:LocaleCode>
+                    <cbc:VersionID>ID-001</cbc:VersionID>
+                    <cbc:DocumentStatusCode>CODE-001</cbc:DocumentStatusCode>
+                    <cbc:DocumentDescription>Value of DocumentDescription</cbc:DocumentDescription>
+                    <cac:Attachment>
+                        <cbc:EmbeddedDocumentBinaryObject mimeCode="CODE-001">U2FtcGxlRGF0YQ==</cbc:EmbeddedDocumentBinaryObject>
+                        <cac:ExternalReference>
+                            <cbc:URI>Value of URI</cbc:URI>
+                            <cbc:DocumentHash>Value of DocumentHash</cbc:DocumentHash>
+                            <cbc:HashAlgorithmMethod>Value of HashAlgorithmMethod</cbc:HashAlgorithmMethod>
+                            <cbc:ExpiryDate>2026-01-01</cbc:ExpiryDate>
+                            <cbc:ExpiryTime>12:00:00</cbc:ExpiryTime>
+                            <cbc:MimeCode>CODE-001</cbc:MimeCode>
+                            <cbc:FormatCode>CODE-001</cbc:FormatCode>
+                            <cbc:EncodingCode>CODE-001</cbc:EncodingCode>
+                            <cbc:CharacterSetCode>CODE-001</cbc:CharacterSetCode>
+                            <cbc:FileName>Value of FileName</cbc:FileName>
+                            <cbc:Description>Value of Description</cbc:Description>
+                        </cac:ExternalReference>
+                    </cac:Attachment>
+                    <cac:ValidityPeriod></cac:ValidityPeriod>
+                    <cac:IssuerParty></cac:IssuerParty>
+                    <cac:ResultOfVerification>
+                        <cbc:ValidatorID>ID-001</cbc:ValidatorID>
+                        <cbc:ValidationResultCode>CODE-001</cbc:ValidationResultCode>
+                        <cbc:ValidationDate>2026-01-01</cbc:ValidationDate>
+                        <cbc:ValidationTime>12:00:00</cbc:ValidationTime>
+                        <cbc:ValidateProcess>Value of ValidateProcess</cbc:ValidateProcess>
+                        <cbc:ValidateTool>Value of ValidateTool</cbc:ValidateTool>
+                        <cbc:ValidateToolVersion>Value of ValidateToolVersion</cbc:ValidateToolVersion>
+                        <cac:SignatoryParty></cac:SignatoryParty>
+                    </cac:ResultOfVerification>
+                </cac:IdentityDocumentReference>
+                <cac:ResidenceAddress></cac:ResidenceAddress>
+            </cac:Person>
+            <cac:AgentParty></cac:AgentParty>
+            <cac:ServiceProviderParty>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:ServiceTypeCode>CODE-001</cbc:ServiceTypeCode>
+                <cbc:ServiceType>Value of ServiceType</cbc:ServiceType>
+                <cac:Party></cac:Party>
+                <cac:SellerContact></cac:SellerContact>
+            </cac:ServiceProviderParty>
+            <cac:PowerOfAttorney>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cac:NotaryParty></cac:NotaryParty>
+                <cac:AgentParty></cac:AgentParty>
+                <cac:WitnessParty></cac:WitnessParty>
+                <cac:MandateDocumentReference>
+                    <cbc:ID>ID-001</cbc:ID>
+                </cac:MandateDocumentReference>
+            </cac:PowerOfAttorney>
+            <cac:FinancialAccount></cac:FinancialAccount>
+        </cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment></cac:DigitalSignatureAttachment>
+        <cac:OriginalDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:OriginalDocumentReference>
+    </cac:Signature>
+    <cac:ContractingParty>
+        <cbc:BuyerProfileURI>Value of BuyerProfileURI</cbc:BuyerProfileURI>
+        <cac:ContractingPartyType>
+            <cbc:PartyTypeCode>CODE-001</cbc:PartyTypeCode>
+            <cbc:PartyType>Value of PartyType</cbc:PartyType>
+        </cac:ContractingPartyType>
+        <cac:ContractingActivity>
+            <cbc:ActivityTypeCode>CODE-001</cbc:ActivityTypeCode>
+            <cbc:ActivityType>Value of ActivityType</cbc:ActivityType>
+        </cac:ContractingActivity>
+        <cac:Party></cac:Party>
+    </cac:ContractingParty>
+    <cac:OriginatorCustomerParty>
+        <cbc:CustomerAssignedAccountID>ID-001</cbc:CustomerAssignedAccountID>
+        <cbc:SupplierAssignedAccountID>ID-001</cbc:SupplierAssignedAccountID>
+        <cbc:AdditionalAccountID>ID-001</cbc:AdditionalAccountID>
+        <cac:Party></cac:Party>
+        <cac:DeliveryContact></cac:DeliveryContact>
+        <cac:AccountingContact></cac:AccountingContact>
+        <cac:BuyerContact></cac:BuyerContact>
+    </cac:OriginatorCustomerParty>
+    <cac:ReceiverParty></cac:ReceiverParty>
+    <cac:TenderingTerms>
+        <cbc:AwardingMethodTypeCode>CODE-001</cbc:AwardingMethodTypeCode>
+        <cbc:PriceEvaluationCode>CODE-001</cbc:PriceEvaluationCode>
+        <cbc:MaximumVariantQuantity>1</cbc:MaximumVariantQuantity>
+        <cbc:VariantConstraintIndicator>true</cbc:VariantConstraintIndicator>
+        <cbc:AcceptedVariantsDescription>Value of AcceptedVariantsDescription</cbc:AcceptedVariantsDescription>
+        <cbc:PriceRevisionFormulaDescription>Value of PriceRevisionFormulaDescription</cbc:PriceRevisionFormulaDescription>
+        <cbc:FundingProgramCode>CODE-001</cbc:FundingProgramCode>
+        <cbc:FundingProgram>Value of FundingProgram</cbc:FundingProgram>
+        <cbc:MaximumAdvertisementAmount currencyID="USD">100.00</cbc:MaximumAdvertisementAmount>
+        <cbc:Note>Value of Note</cbc:Note>
+        <cbc:PaymentFrequencyCode>CODE-001</cbc:PaymentFrequencyCode>
+        <cbc:EconomicOperatorRegistryURI>Value of EconomicOperatorRegistryURI</cbc:EconomicOperatorRegistryURI>
+        <cbc:RequiredCurriculaIndicator>true</cbc:RequiredCurriculaIndicator>
+        <cbc:OtherConditionsIndicator>true</cbc:OtherConditionsIndicator>
+        <cbc:AdditionalConditions>Value of AdditionalConditions</cbc:AdditionalConditions>
+        <cbc:LatestSecurityClearanceDate>2026-01-01</cbc:LatestSecurityClearanceDate>
+        <cbc:DocumentationFeeAmount currencyID="USD">100.00</cbc:DocumentationFeeAmount>
+        <cac:PenaltyClause>
+            <cbc:ID>ID-001</cbc:ID>
+            <cbc:Content>Value of Content</cbc:Content>
+        </cac:PenaltyClause>
+        <cac:RequiredFinancialGuarantee>
+            <cbc:GuaranteeTypeCode>CODE-001</cbc:GuaranteeTypeCode>
+            <cbc:Description>Value of Description</cbc:Description>
+            <cbc:LiabilityAmount currencyID="USD">100.00</cbc:LiabilityAmount>
+            <cbc:AmountRate>1.25</cbc:AmountRate>
+            <cac:ConstitutionPeriod></cac:ConstitutionPeriod>
+        </cac:RequiredFinancialGuarantee>
+        <cac:ProcurementLegislationDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:ProcurementLegislationDocumentReference>
+        <cac:FiscalLegislationDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:FiscalLegislationDocumentReference>
+        <cac:EnvironmentalLegislationDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:EnvironmentalLegislationDocumentReference>
+        <cac:EmploymentLegislationDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:EmploymentLegislationDocumentReference>
+        <cac:ContractualDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:ContractualDocumentReference>
+        <cac:CallForTendersDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:CallForTendersDocumentReference>
+        <cac:WarrantyValidityPeriod></cac:WarrantyValidityPeriod>
+        <cac:PaymentTerms>
+            <cbc:ID>ID-001</cbc:ID>
+            <cbc:PaymentMeansID>ID-001</cbc:PaymentMeansID>
+            <cbc:PrepaidPaymentReferenceID>ID-001</cbc:PrepaidPaymentReferenceID>
+            <cbc:Note>Value of Note</cbc:Note>
+            <cbc:ReferenceEventCode>CODE-001</cbc:ReferenceEventCode>
+            <cbc:SettlementDiscountPercent>10.00</cbc:SettlementDiscountPercent>
+            <cbc:PenaltySurchargePercent>10.00</cbc:PenaltySurchargePercent>
+            <cbc:PaymentPercent>10.00</cbc:PaymentPercent>
+            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+            <cbc:SettlementDiscountAmount currencyID="USD">100.00</cbc:SettlementDiscountAmount>
+            <cbc:PenaltyAmount currencyID="USD">100.00</cbc:PenaltyAmount>
+            <cbc:PaymentTermsDetailsURI>Value of PaymentTermsDetailsURI</cbc:PaymentTermsDetailsURI>
+            <cbc:PaymentDueDate>2026-01-01</cbc:PaymentDueDate>
+            <cbc:InstallmentDueDate>2026-01-01</cbc:InstallmentDueDate>
+            <cbc:InvoicingPartyReference>Value of InvoicingPartyReference</cbc:InvoicingPartyReference>
+            <cac:SettlementPeriod></cac:SettlementPeriod>
+            <cac:PenaltyPeriod></cac:PenaltyPeriod>
+            <cac:ExchangeRate>
+                <cbc:SourceCurrencyCode>USD</cbc:SourceCurrencyCode>
+                <cbc:SourceCurrencyBaseRate>1.25</cbc:SourceCurrencyBaseRate>
+                <cbc:TargetCurrencyCode>USD</cbc:TargetCurrencyCode>
+                <cbc:TargetCurrencyBaseRate>1.25</cbc:TargetCurrencyBaseRate>
+                <cbc:ExchangeMarketID>ID-001</cbc:ExchangeMarketID>
+                <cbc:CalculationRate>1.25</cbc:CalculationRate>
+                <cbc:MathematicOperatorCode>CODE-001</cbc:MathematicOperatorCode>
+                <cbc:Date>2026-01-01</cbc:Date>
+                <cac:ForeignExchangeContract>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                    <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                    <cbc:NominationDate>2026-01-01</cbc:NominationDate>
+                    <cbc:NominationTime>12:00:00</cbc:NominationTime>
+                    <cbc:ContractTypeCode>CODE-001</cbc:ContractTypeCode>
+                    <cbc:ContractType>Value of ContractType</cbc:ContractType>
+                    <cbc:Note>Value of Note</cbc:Note>
+                    <cbc:VersionID>ID-001</cbc:VersionID>
+                    <cbc:Description>Value of Description</cbc:Description>
+                    <cac:ValidityPeriod></cac:ValidityPeriod>
+                    <cac:ContractDocumentReference>
+                        <cbc:ID>ID-001</cbc:ID>
+                    </cac:ContractDocumentReference>
+                    <cac:NominationPeriod></cac:NominationPeriod>
+                    <cac:ContractualDelivery>
+                        <cbc:ID>ID-001</cbc:ID>
+                        <cbc:Quantity>1</cbc:Quantity>
+                        <cbc:MinimumQuantity>1</cbc:MinimumQuantity>
+                        <cbc:MaximumQuantity>1</cbc:MaximumQuantity>
+                        <cbc:ActualDeliveryDate>2026-01-01</cbc:ActualDeliveryDate>
+                        <cbc:ActualDeliveryTime>12:00:00</cbc:ActualDeliveryTime>
+                        <cbc:LatestDeliveryDate>2026-01-01</cbc:LatestDeliveryDate>
+                        <cbc:LatestDeliveryTime>12:00:00</cbc:LatestDeliveryTime>
+                        <cbc:ReleaseID>ID-001</cbc:ReleaseID>
+                        <cbc:TrackingID>ID-001</cbc:TrackingID>
+                        <cac:DeliveryAddress></cac:DeliveryAddress>
+                        <cac:DeliveryLocation></cac:DeliveryLocation>
+                        <cac:AlternativeDeliveryLocation></cac:AlternativeDeliveryLocation>
+                        <cac:RequestedDeliveryPeriod></cac:RequestedDeliveryPeriod>
+                        <cac:PromisedDeliveryPeriod></cac:PromisedDeliveryPeriod>
+                        <cac:EstimatedDeliveryPeriod></cac:EstimatedDeliveryPeriod>
+                        <cac:CarrierParty></cac:CarrierParty>
+                        <cac:DeliveryParty></cac:DeliveryParty>
+                        <cac:NotifyParty></cac:NotifyParty>
+                        <cac:Despatch>
+                            <cbc:ID>ID-001</cbc:ID>
+                            <cbc:RequestedDespatchDate>2026-01-01</cbc:RequestedDespatchDate>
+                            <cbc:RequestedDespatchTime>12:00:00</cbc:RequestedDespatchTime>
+                            <cbc:EstimatedDespatchDate>2026-01-01</cbc:EstimatedDespatchDate>
+                            <cbc:EstimatedDespatchTime>12:00:00</cbc:EstimatedDespatchTime>
+                            <cbc:ActualDespatchDate>2026-01-01</cbc:ActualDespatchDate>
+                            <cbc:ActualDespatchTime>12:00:00</cbc:ActualDespatchTime>
+                            <cbc:GuaranteedDespatchDate>2026-01-01</cbc:GuaranteedDespatchDate>
+                            <cbc:GuaranteedDespatchTime>12:00:00</cbc:GuaranteedDespatchTime>
+                            <cbc:ReleaseID>ID-001</cbc:ReleaseID>
+                            <cbc:Instructions>Value of Instructions</cbc:Instructions>
+                            <cac:DespatchAddress></cac:DespatchAddress>
+                            <cac:DespatchLocation></cac:DespatchLocation>
+                            <cac:DespatchParty></cac:DespatchParty>
+                            <cac:CarrierParty></cac:CarrierParty>
+                            <cac:NotifyParty></cac:NotifyParty>
+                            <cac:Contact></cac:Contact>
+                            <cac:EstimatedDespatchPeriod></cac:EstimatedDespatchPeriod>
+                            <cac:RequestedDespatchPeriod></cac:RequestedDespatchPeriod>
+                        </cac:Despatch>
+                        <cac:DeliveryTerms>
+                            <cbc:ID>ID-001</cbc:ID>
+                            <cbc:SpecialTerms>Value of SpecialTerms</cbc:SpecialTerms>
+                            <cbc:LossRiskResponsibilityCode>CODE-001</cbc:LossRiskResponsibilityCode>
+                            <cbc:LossRisk>Value of LossRisk</cbc:LossRisk>
+                            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                            <cac:DeliveryLocation></cac:DeliveryLocation>
+                            <cac:AllowanceCharge>
+                                <cbc:ID>ID-001</cbc:ID>
+                                <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                <cbc:AllowanceChargeReasonCode>CODE-001</cbc:AllowanceChargeReasonCode>
+                                <cbc:AllowanceChargeReason>Value of AllowanceChargeReason</cbc:AllowanceChargeReason>
+                                <cbc:MultiplierFactorNumeric>1</cbc:MultiplierFactorNumeric>
+                                <cbc:PrepaidIndicator>true</cbc:PrepaidIndicator>
+                                <cbc:SequenceNumeric>1</cbc:SequenceNumeric>
+                                <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                <cbc:BaseAmount currencyID="USD">100.00</cbc:BaseAmount>
+                                <cbc:AccountingCostCode>CODE-001</cbc:AccountingCostCode>
+                                <cbc:AccountingCost>Value of AccountingCost</cbc:AccountingCost>
+                                <cbc:PerUnitAmount currencyID="USD">100.00</cbc:PerUnitAmount>
+                                <cac:TaxCategory>
+                                    <cbc:ID>ID-001</cbc:ID>
+                                    <cbc:Name>Value of Name</cbc:Name>
+                                    <cbc:Percent>10.00</cbc:Percent>
+                                    <cbc:BaseUnitMeasure unitCode="CODE-001">1</cbc:BaseUnitMeasure>
+                                    <cbc:PerUnitAmount currencyID="USD">100.00</cbc:PerUnitAmount>
+                                    <cbc:TaxExemptionReasonCode>CODE-001</cbc:TaxExemptionReasonCode>
+                                    <cbc:TaxExemptionReason>Value of TaxExemptionReason</cbc:TaxExemptionReason>
+                                    <cbc:TierRange>Value of TierRange</cbc:TierRange>
+                                    <cbc:TierRatePercent>10.00</cbc:TierRatePercent>
+                                    <cac:TaxScheme></cac:TaxScheme>
+                                </cac:TaxCategory>
+                                <cac:TaxTotal>
+                                    <cbc:TaxAmount currencyID="USD">100.00</cbc:TaxAmount>
+                                    <cbc:RoundingAmount currencyID="USD">100.00</cbc:RoundingAmount>
+                                    <cbc:TaxEvidenceIndicator>true</cbc:TaxEvidenceIndicator>
+                                    <cbc:TaxIncludedIndicator>true</cbc:TaxIncludedIndicator>
+                                    <cac:TaxSubtotal>
+                                        <cbc:TaxableAmount currencyID="USD">100.00</cbc:TaxableAmount>
+                                        <cbc:TaxAmount currencyID="USD">100.00</cbc:TaxAmount>
+                                        <cbc:CalculationSequenceNumeric>1</cbc:CalculationSequenceNumeric>
+                                        <cbc:TransactionCurrencyTaxAmount currencyID="USD">100.00</cbc:TransactionCurrencyTaxAmount>
+                                        <cbc:Percent>10.00</cbc:Percent>
+                                        <cbc:BaseUnitMeasure unitCode="CODE-001">1</cbc:BaseUnitMeasure>
+                                        <cbc:PerUnitAmount currencyID="USD">100.00</cbc:PerUnitAmount>
+                                        <cbc:TierRange>Value of TierRange</cbc:TierRange>
+                                        <cbc:TierRatePercent>10.00</cbc:TierRatePercent>
+                                        <cac:TaxCategory>
+                                            <cac:TaxScheme></cac:TaxScheme>
+                                        </cac:TaxCategory>
+                                    </cac:TaxSubtotal>
+                                </cac:TaxTotal>
+                                <cac:PaymentMeans>
+                                    <cbc:ID>ID-001</cbc:ID>
+                                    <cbc:PaymentMeansCode>CODE-001</cbc:PaymentMeansCode>
+                                    <cbc:PaymentDueDate>2026-01-01</cbc:PaymentDueDate>
+                                    <cbc:PaymentChannelCode>CODE-001</cbc:PaymentChannelCode>
+                                    <cbc:InstructionID>ID-001</cbc:InstructionID>
+                                    <cbc:InstructionNote>Value of InstructionNote</cbc:InstructionNote>
+                                    <cbc:PaymentID>ID-001</cbc:PaymentID>
+                                    <cac:CardAccount>
+                                        <cbc:PrimaryAccountNumberID>ID-001</cbc:PrimaryAccountNumberID>
+                                        <cbc:NetworkID>ID-001</cbc:NetworkID>
+                                        <cbc:CardTypeCode>CODE-001</cbc:CardTypeCode>
+                                        <cbc:ValidityStartDate>2026-01-01</cbc:ValidityStartDate>
+                                        <cbc:ExpiryDate>2026-01-01</cbc:ExpiryDate>
+                                        <cbc:IssuerID>ID-001</cbc:IssuerID>
+                                        <cbc:IssueNumberID>ID-001</cbc:IssueNumberID>
+                                        <cbc:CV2ID>ID-001</cbc:CV2ID>
+                                        <cbc:CardChipCode>CODE-001</cbc:CardChipCode>
+                                        <cbc:ChipApplicationID>ID-001</cbc:ChipApplicationID>
+                                        <cbc:HolderName>Value of HolderName</cbc:HolderName>
+                                    </cac:CardAccount>
+                                    <cac:PayerFinancialAccount></cac:PayerFinancialAccount>
+                                    <cac:PayeeFinancialAccount></cac:PayeeFinancialAccount>
+                                    <cac:CreditAccount>
+                                        <cbc:AccountID>ID-001</cbc:AccountID>
+                                    </cac:CreditAccount>
+                                    <cac:PaymentMandate>
+                                        <cbc:ID>ID-001</cbc:ID>
+                                        <cbc:MandateTypeCode>CODE-001</cbc:MandateTypeCode>
+                                        <cbc:MaximumPaymentInstructionsNumeric>1</cbc:MaximumPaymentInstructionsNumeric>
+                                        <cbc:MaximumPaidAmount currencyID="USD">100.00</cbc:MaximumPaidAmount>
+                                        <cbc:SignatureID>ID-001</cbc:SignatureID>
+                                        <cac:PayerParty></cac:PayerParty>
+                                        <cac:PayerFinancialAccount></cac:PayerFinancialAccount>
+                                        <cac:ValidityPeriod></cac:ValidityPeriod>
+                                        <cac:PaymentReversalPeriod></cac:PaymentReversalPeriod>
+                                        <cac:Clause></cac:Clause>
+                                    </cac:PaymentMandate>
+                                    <cac:TradeFinancing>
+                                        <cbc:ID>ID-001</cbc:ID>
+                                        <cbc:FinancingInstrumentCode>CODE-001</cbc:FinancingInstrumentCode>
+                                        <cac:ContractDocumentReference>
+                                            <cbc:ID>ID-001</cbc:ID>
+                                        </cac:ContractDocumentReference>
+                                        <cac:DocumentReference>
+                                            <cbc:ID>ID-001</cbc:ID>
+                                        </cac:DocumentReference>
+                                        <cac:FinancingParty></cac:FinancingParty>
+                                        <cac:FinancingFinancialAccount></cac:FinancingFinancialAccount>
+                                        <cac:Clause></cac:Clause>
+                                    </cac:TradeFinancing>
+                                </cac:PaymentMeans>
+                            </cac:AllowanceCharge>
+                        </cac:DeliveryTerms>
+                        <cac:MinimumDeliveryUnit>
+                            <cbc:BatchQuantity>1</cbc:BatchQuantity>
+                            <cbc:ConsumerUnitQuantity>1</cbc:ConsumerUnitQuantity>
+                            <cbc:HazardousRiskIndicator>true</cbc:HazardousRiskIndicator>
+                        </cac:MinimumDeliveryUnit>
+                        <cac:MaximumDeliveryUnit>
+                            <cbc:BatchQuantity>1</cbc:BatchQuantity>
+                        </cac:MaximumDeliveryUnit>
+                        <cac:Shipment>
+                            <cbc:ID>ID-001</cbc:ID>
+                            <cbc:ShippingPriorityLevelCode>CODE-001</cbc:ShippingPriorityLevelCode>
+                            <cbc:HandlingCode>CODE-001</cbc:HandlingCode>
+                            <cbc:HandlingInstructions>Value of HandlingInstructions</cbc:HandlingInstructions>
+                            <cbc:Information>Value of Information</cbc:Information>
+                            <cbc:GrossWeightMeasure unitCode="CODE-001">1</cbc:GrossWeightMeasure>
+                            <cbc:NetWeightMeasure unitCode="CODE-001">1</cbc:NetWeightMeasure>
+                            <cbc:NetNetWeightMeasure unitCode="CODE-001">1</cbc:NetNetWeightMeasure>
+                            <cbc:GrossVolumeMeasure unitCode="CODE-001">1</cbc:GrossVolumeMeasure>
+                            <cbc:NetVolumeMeasure unitCode="CODE-001">1</cbc:NetVolumeMeasure>
+                            <cbc:TotalGoodsItemQuantity>1</cbc:TotalGoodsItemQuantity>
+                            <cbc:TotalTransportHandlingUnitQuantity>1</cbc:TotalTransportHandlingUnitQuantity>
+                            <cbc:InsuranceValueAmount currencyID="USD">100.00</cbc:InsuranceValueAmount>
+                            <cbc:DeclaredCustomsValueAmount currencyID="USD">100.00</cbc:DeclaredCustomsValueAmount>
+                            <cbc:DeclaredForCarriageValueAmount currencyID="USD">100.00</cbc:DeclaredForCarriageValueAmount>
+                            <cbc:DeclaredStatisticsValueAmount currencyID="USD">100.00</cbc:DeclaredStatisticsValueAmount>
+                            <cbc:FreeOnBoardValueAmount currencyID="USD">100.00</cbc:FreeOnBoardValueAmount>
+                            <cbc:SpecialInstructions>Value of SpecialInstructions</cbc:SpecialInstructions>
+                            <cbc:DeliveryInstructions>Value of DeliveryInstructions</cbc:DeliveryInstructions>
+                            <cbc:SplitConsignmentIndicator>true</cbc:SplitConsignmentIndicator>
+                            <cbc:ConsignmentQuantity>1</cbc:ConsignmentQuantity>
+                            <cac:Consignment>
+                                <cbc:ID>ID-001</cbc:ID>
+                                <cbc:CarrierAssignedID>ID-001</cbc:CarrierAssignedID>
+                                <cbc:ConsigneeAssignedID>ID-001</cbc:ConsigneeAssignedID>
+                                <cbc:ConsignorAssignedID>ID-001</cbc:ConsignorAssignedID>
+                                <cbc:FreightForwarderAssignedID>ID-001</cbc:FreightForwarderAssignedID>
+                                <cbc:BrokerAssignedID>ID-001</cbc:BrokerAssignedID>
+                                <cbc:ContractedCarrierAssignedID>ID-001</cbc:ContractedCarrierAssignedID>
+                                <cbc:PerformingCarrierAssignedID>ID-001</cbc:PerformingCarrierAssignedID>
+                                <cbc:SummaryDescription>Value of SummaryDescription</cbc:SummaryDescription>
+                                <cbc:TotalInvoiceAmount currencyID="USD">100.00</cbc:TotalInvoiceAmount>
+                                <cbc:DeclaredCustomsValueAmount currencyID="USD">100.00</cbc:DeclaredCustomsValueAmount>
+                                <cbc:TariffDescription>Value of TariffDescription</cbc:TariffDescription>
+                                <cbc:TariffCode>CODE-001</cbc:TariffCode>
+                                <cbc:InsurancePremiumAmount currencyID="USD">100.00</cbc:InsurancePremiumAmount>
+                                <cbc:GrossWeightMeasure unitCode="CODE-001">1</cbc:GrossWeightMeasure>
+                                <cbc:NetWeightMeasure unitCode="CODE-001">1</cbc:NetWeightMeasure>
+                                <cbc:NetNetWeightMeasure unitCode="CODE-001">1</cbc:NetNetWeightMeasure>
+                                <cbc:ChargeableWeightMeasure unitCode="CODE-001">1</cbc:ChargeableWeightMeasure>
+                                <cbc:GrossVolumeMeasure unitCode="CODE-001">1</cbc:GrossVolumeMeasure>
+                                <cbc:NetVolumeMeasure unitCode="CODE-001">1</cbc:NetVolumeMeasure>
+                                <cbc:LoadingLengthMeasure unitCode="CODE-001">1</cbc:LoadingLengthMeasure>
+                                <cbc:Remarks>Value of Remarks</cbc:Remarks>
+                                <cbc:HazardousRiskIndicator>true</cbc:HazardousRiskIndicator>
+                                <cbc:AnimalFoodIndicator>true</cbc:AnimalFoodIndicator>
+                                <cbc:HumanFoodIndicator>true</cbc:HumanFoodIndicator>
+                                <cbc:LivestockIndicator>true</cbc:LivestockIndicator>
+                                <cbc:BulkCargoIndicator>true</cbc:BulkCargoIndicator>
+                                <cbc:ContainerizedIndicator>true</cbc:ContainerizedIndicator>
+                                <cbc:GeneralCargoIndicator>true</cbc:GeneralCargoIndicator>
+                                <cbc:SpecialSecurityIndicator>true</cbc:SpecialSecurityIndicator>
+                                <cbc:ThirdPartyPayerIndicator>true</cbc:ThirdPartyPayerIndicator>
+                                <cbc:CarrierServiceInstructions>Value of CarrierServiceInstructions</cbc:CarrierServiceInstructions>
+                                <cbc:CustomsClearanceServiceInstructions>Value of CustomsClearanceServiceInstructions</cbc:CustomsClearanceServiceInstructions>
+                                <cbc:ForwarderServiceInstructions>Value of ForwarderServiceInstructions</cbc:ForwarderServiceInstructions>
+                                <cbc:SpecialServiceInstructions>Value of SpecialServiceInstructions</cbc:SpecialServiceInstructions>
+                                <cbc:SequenceID>ID-001</cbc:SequenceID>
+                                <cbc:ShippingPriorityLevelCode>CODE-001</cbc:ShippingPriorityLevelCode>
+                                <cbc:HandlingCode>CODE-001</cbc:HandlingCode>
+                                <cbc:HandlingInstructions>Value of HandlingInstructions</cbc:HandlingInstructions>
+                                <cbc:Information>Value of Information</cbc:Information>
+                                <cbc:TotalGoodsItemQuantity>1</cbc:TotalGoodsItemQuantity>
+                                <cbc:TotalTransportHandlingUnitQuantity>1</cbc:TotalTransportHandlingUnitQuantity>
+                                <cbc:InsuranceValueAmount currencyID="USD">100.00</cbc:InsuranceValueAmount>
+                                <cbc:DeclaredForCarriageValueAmount currencyID="USD">100.00</cbc:DeclaredForCarriageValueAmount>
+                                <cbc:DeclaredStatisticsValueAmount currencyID="USD">100.00</cbc:DeclaredStatisticsValueAmount>
+                                <cbc:FreeOnBoardValueAmount currencyID="USD">100.00</cbc:FreeOnBoardValueAmount>
+                                <cbc:SpecialInstructions>Value of SpecialInstructions</cbc:SpecialInstructions>
+                                <cbc:SplitConsignmentIndicator>true</cbc:SplitConsignmentIndicator>
+                                <cbc:DeliveryInstructions>Value of DeliveryInstructions</cbc:DeliveryInstructions>
+                                <cbc:ConsignmentQuantity>1</cbc:ConsignmentQuantity>
+                                <cbc:ConsolidatableIndicator>true</cbc:ConsolidatableIndicator>
+                                <cbc:HaulageInstructions>Value of HaulageInstructions</cbc:HaulageInstructions>
+                                <cbc:LoadingSequenceID>ID-001</cbc:LoadingSequenceID>
+                                <cbc:ChildConsignmentQuantity>1</cbc:ChildConsignmentQuantity>
+                                <cbc:TotalPackagesQuantity>1</cbc:TotalPackagesQuantity>
+                                <cac:ConsolidatedShipment>
+                                    <cbc:ID>ID-001</cbc:ID>
+                                </cac:ConsolidatedShipment>
+                                <cac:CustomsDeclaration>
+                                    <cbc:ID>ID-001</cbc:ID>
+                                    <cac:IssuerParty></cac:IssuerParty>
+                                </cac:CustomsDeclaration>
+                                <cac:RequestedPickupTransportEvent>
+                                    <cbc:IdentificationID>ID-001</cbc:IdentificationID>
+                                    <cbc:OccurrenceDate>2026-01-01</cbc:OccurrenceDate>
+                                    <cbc:OccurrenceTime>12:00:00</cbc:OccurrenceTime>
+                                    <cbc:TransportEventTypeCode>CODE-001</cbc:TransportEventTypeCode>
+                                    <cbc:Description>Value of Description</cbc:Description>
+                                    <cbc:CompletionIndicator>true</cbc:CompletionIndicator>
+                                    <cac:ReportedShipment>
+                                        <cbc:ID>ID-001</cbc:ID>
+                                    </cac:ReportedShipment>
+                                    <cac:CurrentStatus>
+                                        <cbc:ConditionCode>CODE-001</cbc:ConditionCode>
+                                        <cbc:ReferenceDate>2026-01-01</cbc:ReferenceDate>
+                                        <cbc:ReferenceTime>12:00:00</cbc:ReferenceTime>
+                                        <cbc:Description>Value of Description</cbc:Description>
+                                        <cbc:StatusReasonCode>CODE-001</cbc:StatusReasonCode>
+                                        <cbc:StatusReason>Value of StatusReason</cbc:StatusReason>
+                                        <cbc:SequenceID>ID-001</cbc:SequenceID>
+                                        <cbc:Text>Value of Text</cbc:Text>
+                                        <cbc:IndicationIndicator>true</cbc:IndicationIndicator>
+                                        <cbc:Percent>10.00</cbc:Percent>
+                                        <cbc:ReliabilityPercent>10.00</cbc:ReliabilityPercent>
+                                        <cac:Condition>
+                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                            <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                            <cbc:Description>Value of Description</cbc:Description>
+                                            <cbc:MinimumMeasure unitCode="CODE-001">1</cbc:MinimumMeasure>
+                                            <cbc:MaximumMeasure unitCode="CODE-001">1</cbc:MaximumMeasure>
+                                        </cac:Condition>
+                                    </cac:CurrentStatus>
+                                    <cac:Contact></cac:Contact>
+                                    <cac:Location></cac:Location>
+                                    <cac:Signature>
+                                        <cbc:ID>ID-001</cbc:ID>
+                                    </cac:Signature>
+                                    <cac:Period></cac:Period>
+                                </cac:RequestedPickupTransportEvent>
+                                <cac:RequestedDeliveryTransportEvent></cac:RequestedDeliveryTransportEvent>
+                                <cac:PlannedPickupTransportEvent></cac:PlannedPickupTransportEvent>
+                                <cac:PlannedDeliveryTransportEvent></cac:PlannedDeliveryTransportEvent>
+                                <cac:Status></cac:Status>
+                                <cac:ChildConsignment>
+                                    <cbc:ID>ID-001</cbc:ID>
+                                </cac:ChildConsignment>
+                                <cac:ConsigneeParty></cac:ConsigneeParty>
+                                <cac:ExporterParty></cac:ExporterParty>
+                                <cac:ConsignorParty></cac:ConsignorParty>
+                                <cac:ImporterParty></cac:ImporterParty>
+                                <cac:CarrierParty></cac:CarrierParty>
+                                <cac:FreightForwarderParty></cac:FreightForwarderParty>
+                                <cac:NotifyParty></cac:NotifyParty>
+                                <cac:OriginalDespatchParty></cac:OriginalDespatchParty>
+                                <cac:FinalDeliveryParty></cac:FinalDeliveryParty>
+                                <cac:PerformingCarrierParty></cac:PerformingCarrierParty>
+                                <cac:SubstituteCarrierParty></cac:SubstituteCarrierParty>
+                                <cac:LogisticsOperatorParty></cac:LogisticsOperatorParty>
+                                <cac:TransportAdvisorParty></cac:TransportAdvisorParty>
+                                <cac:HazardousItemNotificationParty></cac:HazardousItemNotificationParty>
+                                <cac:InsuranceParty></cac:InsuranceParty>
+                                <cac:MortgageHolderParty></cac:MortgageHolderParty>
+                                <cac:BillOfLadingHolderParty></cac:BillOfLadingHolderParty>
+                                <cac:OriginalDepartureCountry></cac:OriginalDepartureCountry>
+                                <cac:FinalDestinationCountry></cac:FinalDestinationCountry>
+                                <cac:TransitCountry></cac:TransitCountry>
+                                <cac:TransportContract></cac:TransportContract>
+                                <cac:TransportEvent></cac:TransportEvent>
+                                <cac:OriginalDespatchTransportationService>
+                                    <cbc:TransportServiceCode>CODE-001</cbc:TransportServiceCode>
+                                    <cbc:TariffClassCode>CODE-001</cbc:TariffClassCode>
+                                    <cbc:Priority>Value of Priority</cbc:Priority>
+                                    <cbc:FreightRateClassCode>CODE-001</cbc:FreightRateClassCode>
+                                    <cbc:TransportationServiceDescription>Value of TransportationServiceDescription</cbc:TransportationServiceDescription>
+                                    <cbc:TransportationServiceDetailsURI>Value of TransportationServiceDetailsURI</cbc:TransportationServiceDetailsURI>
+                                    <cbc:NominationDate>2026-01-01</cbc:NominationDate>
+                                    <cbc:NominationTime>12:00:00</cbc:NominationTime>
+                                    <cbc:Name>Value of Name</cbc:Name>
+                                    <cbc:SequenceNumeric>1</cbc:SequenceNumeric>
+                                    <cac:TransportEquipment>
+                                        <cbc:ID>ID-001</cbc:ID>
+                                        <cbc:ReferencedConsignmentID>ID-001</cbc:ReferencedConsignmentID>
+                                        <cbc:TransportEquipmentTypeCode>CODE-001</cbc:TransportEquipmentTypeCode>
+                                        <cbc:ProviderTypeCode>CODE-001</cbc:ProviderTypeCode>
+                                        <cbc:OwnerTypeCode>CODE-001</cbc:OwnerTypeCode>
+                                        <cbc:SizeTypeCode>CODE-001</cbc:SizeTypeCode>
+                                        <cbc:DispositionCode>CODE-001</cbc:DispositionCode>
+                                        <cbc:FullnessIndicationCode>CODE-001</cbc:FullnessIndicationCode>
+                                        <cbc:RefrigerationOnIndicator>true</cbc:RefrigerationOnIndicator>
+                                        <cbc:Information>Value of Information</cbc:Information>
+                                        <cbc:ReturnabilityIndicator>true</cbc:ReturnabilityIndicator>
+                                        <cbc:LegalStatusIndicator>true</cbc:LegalStatusIndicator>
+                                        <cbc:AirFlowPercent>10.00</cbc:AirFlowPercent>
+                                        <cbc:HumidityPercent>10.00</cbc:HumidityPercent>
+                                        <cbc:AnimalFoodApprovedIndicator>true</cbc:AnimalFoodApprovedIndicator>
+                                        <cbc:HumanFoodApprovedIndicator>true</cbc:HumanFoodApprovedIndicator>
+                                        <cbc:DangerousGoodsApprovedIndicator>true</cbc:DangerousGoodsApprovedIndicator>
+                                        <cbc:RefrigeratedIndicator>true</cbc:RefrigeratedIndicator>
+                                        <cbc:Characteristics>Value of Characteristics</cbc:Characteristics>
+                                        <cbc:DamageRemarks>Value of DamageRemarks</cbc:DamageRemarks>
+                                        <cbc:Description>Value of Description</cbc:Description>
+                                        <cbc:SpecialTransportRequirements>Value of SpecialTransportRequirements</cbc:SpecialTransportRequirements>
+                                        <cbc:GrossWeightMeasure unitCode="CODE-001">1</cbc:GrossWeightMeasure>
+                                        <cbc:GrossVolumeMeasure unitCode="CODE-001">1</cbc:GrossVolumeMeasure>
+                                        <cbc:TareWeightMeasure unitCode="CODE-001">1</cbc:TareWeightMeasure>
+                                        <cbc:TrackingDeviceCode>CODE-001</cbc:TrackingDeviceCode>
+                                        <cbc:PowerIndicator>true</cbc:PowerIndicator>
+                                        <cbc:TraceID>ID-001</cbc:TraceID>
+                                        <cac:MeasurementDimension>
+                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                            <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                            <cbc:Description>Value of Description</cbc:Description>
+                                            <cbc:MinimumMeasure unitCode="CODE-001">1</cbc:MinimumMeasure>
+                                            <cbc:MaximumMeasure unitCode="CODE-001">1</cbc:MaximumMeasure>
+                                        </cac:MeasurementDimension>
+                                        <cac:TransportEquipmentSeal>
+                                            <cbc:ID>ID-001</cbc:ID>
+                                            <cbc:SealIssuerTypeCode>CODE-001</cbc:SealIssuerTypeCode>
+                                            <cbc:Condition>Value of Condition</cbc:Condition>
+                                            <cbc:SealStatusCode>CODE-001</cbc:SealStatusCode>
+                                            <cbc:SealingPartyType>Value of SealingPartyType</cbc:SealingPartyType>
+                                        </cac:TransportEquipmentSeal>
+                                        <cac:MinimumTemperature>
+                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                            <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                            <cbc:Description>Value of Description</cbc:Description>
+                                        </cac:MinimumTemperature>
+                                        <cac:MaximumTemperature>
+                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                            <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                        </cac:MaximumTemperature>
+                                        <cac:ProviderParty></cac:ProviderParty>
+                                        <cac:LoadingProofParty></cac:LoadingProofParty>
+                                        <cac:SupplierParty>
+                                            <cbc:CustomerAssignedAccountID>ID-001</cbc:CustomerAssignedAccountID>
+                                            <cbc:AdditionalAccountID>ID-001</cbc:AdditionalAccountID>
+                                            <cbc:DataSendingCapability>Value of DataSendingCapability</cbc:DataSendingCapability>
+                                            <cac:Party></cac:Party>
+                                            <cac:DespatchContact></cac:DespatchContact>
+                                            <cac:AccountingContact></cac:AccountingContact>
+                                            <cac:SellerContact></cac:SellerContact>
+                                        </cac:SupplierParty>
+                                        <cac:OwnerParty></cac:OwnerParty>
+                                        <cac:OperatingParty></cac:OperatingParty>
+                                        <cac:LoadingLocation></cac:LoadingLocation>
+                                        <cac:UnloadingLocation></cac:UnloadingLocation>
+                                        <cac:StorageLocation></cac:StorageLocation>
+                                        <cac:PositioningTransportEvent></cac:PositioningTransportEvent>
+                                        <cac:QuarantineTransportEvent></cac:QuarantineTransportEvent>
+                                        <cac:DeliveryTransportEvent></cac:DeliveryTransportEvent>
+                                        <cac:PickupTransportEvent></cac:PickupTransportEvent>
+                                        <cac:HandlingTransportEvent></cac:HandlingTransportEvent>
+                                        <cac:LoadingTransportEvent></cac:LoadingTransportEvent>
+                                        <cac:TransportEvent></cac:TransportEvent>
+                                        <cac:ApplicableTransportMeans>
+                                            <cbc:JourneyID>ID-001</cbc:JourneyID>
+                                            <cbc:RegistrationNationalityID>ID-001</cbc:RegistrationNationalityID>
+                                            <cbc:RegistrationNationality>Value of RegistrationNationality</cbc:RegistrationNationality>
+                                            <cbc:DirectionCode>CODE-001</cbc:DirectionCode>
+                                            <cbc:TransportMeansTypeCode>CODE-001</cbc:TransportMeansTypeCode>
+                                            <cbc:TradeServiceCode>CODE-001</cbc:TradeServiceCode>
+                                            <cac:Stowage>
+                                                <cbc:LocationID>ID-001</cbc:LocationID>
+                                                <cbc:Location>Value of Location</cbc:Location>
+                                                <cac:MeasurementDimension>
+                                                    <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                </cac:MeasurementDimension>
+                                            </cac:Stowage>
+                                            <cac:AirTransport>
+                                                <cbc:AircraftID>ID-001</cbc:AircraftID>
+                                            </cac:AirTransport>
+                                            <cac:RoadTransport>
+                                                <cbc:LicensePlateID>ID-001</cbc:LicensePlateID>
+                                            </cac:RoadTransport>
+                                            <cac:RailTransport>
+                                                <cbc:TrainID>ID-001</cbc:TrainID>
+                                                <cbc:RailCarID>ID-001</cbc:RailCarID>
+                                            </cac:RailTransport>
+                                            <cac:MaritimeTransport>
+                                                <cbc:VesselID>ID-001</cbc:VesselID>
+                                                <cbc:VesselName>Value of VesselName</cbc:VesselName>
+                                                <cbc:RadioCallSignID>ID-001</cbc:RadioCallSignID>
+                                                <cbc:ShipsRequirements>Value of ShipsRequirements</cbc:ShipsRequirements>
+                                                <cbc:GrossTonnageMeasure unitCode="CODE-001">1</cbc:GrossTonnageMeasure>
+                                                <cbc:NetTonnageMeasure unitCode="CODE-001">1</cbc:NetTonnageMeasure>
+                                                <cac:RegistryCertificateDocumentReference>
+                                                    <cbc:ID>ID-001</cbc:ID>
+                                                </cac:RegistryCertificateDocumentReference>
+                                                <cac:RegistryPortLocation></cac:RegistryPortLocation>
+                                            </cac:MaritimeTransport>
+                                            <cac:OwnerParty></cac:OwnerParty>
+                                            <cac:MeasurementDimension>
+                                                <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                            </cac:MeasurementDimension>
+                                        </cac:ApplicableTransportMeans>
+                                        <cac:HaulageTradingTerms>
+                                            <cbc:Information>Value of Information</cbc:Information>
+                                            <cbc:Reference>Value of Reference</cbc:Reference>
+                                            <cac:ApplicableAddress></cac:ApplicableAddress>
+                                        </cac:HaulageTradingTerms>
+                                        <cac:HazardousGoodsTransit>
+                                            <cbc:TransportEmergencyCardCode>CODE-001</cbc:TransportEmergencyCardCode>
+                                            <cbc:PackingCriteriaCode>CODE-001</cbc:PackingCriteriaCode>
+                                            <cbc:HazardousRegulationCode>CODE-001</cbc:HazardousRegulationCode>
+                                            <cbc:InhalationToxicityZoneCode>CODE-001</cbc:InhalationToxicityZoneCode>
+                                            <cbc:TransportAuthorizationCode>CODE-001</cbc:TransportAuthorizationCode>
+                                            <cac:MaximumTemperature>
+                                                <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                            </cac:MaximumTemperature>
+                                            <cac:MinimumTemperature>
+                                                <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                            </cac:MinimumTemperature>
+                                        </cac:HazardousGoodsTransit>
+                                        <cac:PackagedTransportHandlingUnit>
+                                            <cbc:ID>ID-001</cbc:ID>
+                                            <cbc:TransportHandlingUnitTypeCode>CODE-001</cbc:TransportHandlingUnitTypeCode>
+                                            <cbc:HandlingCode>CODE-001</cbc:HandlingCode>
+                                            <cbc:HandlingInstructions>Value of HandlingInstructions</cbc:HandlingInstructions>
+                                            <cbc:HazardousRiskIndicator>true</cbc:HazardousRiskIndicator>
+                                            <cbc:TotalGoodsItemQuantity>1</cbc:TotalGoodsItemQuantity>
+                                            <cbc:TotalPackageQuantity>1</cbc:TotalPackageQuantity>
+                                            <cbc:DamageRemarks>Value of DamageRemarks</cbc:DamageRemarks>
+                                            <cbc:ShippingMarks>Value of ShippingMarks</cbc:ShippingMarks>
+                                            <cbc:TraceID>ID-001</cbc:TraceID>
+                                            <cac:HandlingUnitDespatchLine>
+                                                <cbc:ID>ID-001</cbc:ID>
+                                                <cbc:UUID>Value of UUID</cbc:UUID>
+                                                <cbc:Note>Value of Note</cbc:Note>
+                                                <cbc:LineStatusCode>CODE-001</cbc:LineStatusCode>
+                                                <cbc:DeliveredQuantity>1</cbc:DeliveredQuantity>
+                                                <cbc:BackorderQuantity>1</cbc:BackorderQuantity>
+                                                <cbc:BackorderReason>Value of BackorderReason</cbc:BackorderReason>
+                                                <cbc:OutstandingQuantity>1</cbc:OutstandingQuantity>
+                                                <cbc:OutstandingReason>Value of OutstandingReason</cbc:OutstandingReason>
+                                                <cbc:OversupplyQuantity>1</cbc:OversupplyQuantity>
+                                                <cac:OrderLineReference>
+                                                    <cbc:LineID>ID-001</cbc:LineID>
+                                                    <cbc:SalesOrderLineID>ID-001</cbc:SalesOrderLineID>
+                                                    <cbc:UUID>Value of UUID</cbc:UUID>
+                                                    <cbc:LineStatusCode>CODE-001</cbc:LineStatusCode>
+                                                    <cac:OrderReference>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:SalesOrderID>ID-001</cbc:SalesOrderID>
+                                                        <cbc:CopyIndicator>true</cbc:CopyIndicator>
+                                                        <cbc:UUID>Value of UUID</cbc:UUID>
+                                                        <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                                                        <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                                                        <cbc:CustomerReference>Value of CustomerReference</cbc:CustomerReference>
+                                                        <cbc:OrderTypeCode>CODE-001</cbc:OrderTypeCode>
+                                                        <cac:DocumentReference>
+                                                            <cbc:ID>ID-001</cbc:ID>
+                                                        </cac:DocumentReference>
+                                                    </cac:OrderReference>
+                                                </cac:OrderLineReference>
+                                                <cac:DocumentReference>
+                                                    <cbc:ID>ID-001</cbc:ID>
+                                                </cac:DocumentReference>
+                                                <cac:Item>
+                                                    <cbc:Description>Value of Description</cbc:Description>
+                                                    <cbc:PackQuantity>1</cbc:PackQuantity>
+                                                    <cbc:PackSizeNumeric>1</cbc:PackSizeNumeric>
+                                                    <cbc:CatalogueIndicator>true</cbc:CatalogueIndicator>
+                                                    <cbc:Name>Value of Name</cbc:Name>
+                                                    <cbc:HazardousRiskIndicator>true</cbc:HazardousRiskIndicator>
+                                                    <cbc:AdditionalInformation>Value of AdditionalInformation</cbc:AdditionalInformation>
+                                                    <cbc:Keyword>Value of Keyword</cbc:Keyword>
+                                                    <cbc:BrandName>Value of BrandName</cbc:BrandName>
+                                                    <cbc:ModelName>Value of ModelName</cbc:ModelName>
+                                                    <cac:BuyersItemIdentification>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:ExtendedID>ID-001</cbc:ExtendedID>
+                                                        <cbc:BarcodeSymbologyID>ID-001</cbc:BarcodeSymbologyID>
+                                                        <cac:PhysicalAttribute>
+                                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                            <cbc:PositionCode>CODE-001</cbc:PositionCode>
+                                                            <cbc:DescriptionCode>CODE-001</cbc:DescriptionCode>
+                                                            <cbc:Description>Value of Description</cbc:Description>
+                                                        </cac:PhysicalAttribute>
+                                                        <cac:MeasurementDimension>
+                                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                        </cac:MeasurementDimension>
+                                                        <cac:IssuerParty></cac:IssuerParty>
+                                                    </cac:BuyersItemIdentification>
+                                                    <cac:SellersItemIdentification>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                    </cac:SellersItemIdentification>
+                                                    <cac:ManufacturersItemIdentification>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                    </cac:ManufacturersItemIdentification>
+                                                    <cac:StandardItemIdentification>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                    </cac:StandardItemIdentification>
+                                                    <cac:CatalogueItemIdentification>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                    </cac:CatalogueItemIdentification>
+                                                    <cac:AdditionalItemIdentification>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                    </cac:AdditionalItemIdentification>
+                                                    <cac:CatalogueDocumentReference>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                    </cac:CatalogueDocumentReference>
+                                                    <cac:ItemSpecificationDocumentReference>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                    </cac:ItemSpecificationDocumentReference>
+                                                    <cac:OriginCountry></cac:OriginCountry>
+                                                    <cac:CommodityClassification>
+                                                        <cbc:NatureCode>CODE-001</cbc:NatureCode>
+                                                        <cbc:CargoTypeCode>CODE-001</cbc:CargoTypeCode>
+                                                        <cbc:CommodityCode>CODE-001</cbc:CommodityCode>
+                                                        <cbc:ItemClassificationCode>CODE-001</cbc:ItemClassificationCode>
+                                                    </cac:CommodityClassification>
+                                                    <cac:TransactionConditions>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:ActionCode>CODE-001</cbc:ActionCode>
+                                                        <cbc:Description>Value of Description</cbc:Description>
+                                                        <cac:DocumentReference>
+                                                            <cbc:ID>ID-001</cbc:ID>
+                                                        </cac:DocumentReference>
+                                                    </cac:TransactionConditions>
+                                                    <cac:HazardousItem>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:PlacardNotation>Value of PlacardNotation</cbc:PlacardNotation>
+                                                        <cbc:PlacardEndorsement>Value of PlacardEndorsement</cbc:PlacardEndorsement>
+                                                        <cbc:AdditionalInformation>Value of AdditionalInformation</cbc:AdditionalInformation>
+                                                        <cbc:UNDGCode>Value of UNDGCode</cbc:UNDGCode>
+                                                        <cbc:EmergencyProceduresCode>CODE-001</cbc:EmergencyProceduresCode>
+                                                        <cbc:MedicalFirstAidGuideCode>CODE-001</cbc:MedicalFirstAidGuideCode>
+                                                        <cbc:TechnicalName>Value of TechnicalName</cbc:TechnicalName>
+                                                        <cbc:CategoryName>Value of CategoryName</cbc:CategoryName>
+                                                        <cbc:HazardousCategoryCode>CODE-001</cbc:HazardousCategoryCode>
+                                                        <cbc:UpperOrangeHazardPlacardID>ID-001</cbc:UpperOrangeHazardPlacardID>
+                                                        <cbc:LowerOrangeHazardPlacardID>ID-001</cbc:LowerOrangeHazardPlacardID>
+                                                        <cbc:MarkingID>ID-001</cbc:MarkingID>
+                                                        <cbc:HazardClassID>ID-001</cbc:HazardClassID>
+                                                        <cbc:NetWeightMeasure unitCode="CODE-001">1</cbc:NetWeightMeasure>
+                                                        <cbc:NetVolumeMeasure unitCode="CODE-001">1</cbc:NetVolumeMeasure>
+                                                        <cbc:Quantity>1</cbc:Quantity>
+                                                        <cac:ContactParty></cac:ContactParty>
+                                                        <cac:SecondaryHazard>
+                                                            <cbc:ID>ID-001</cbc:ID>
+                                                            <cbc:PlacardNotation>Value of PlacardNotation</cbc:PlacardNotation>
+                                                            <cbc:PlacardEndorsement>Value of PlacardEndorsement</cbc:PlacardEndorsement>
+                                                            <cbc:EmergencyProceduresCode>CODE-001</cbc:EmergencyProceduresCode>
+                                                            <cbc:Extension>Value of Extension</cbc:Extension>
+                                                        </cac:SecondaryHazard>
+                                                        <cac:HazardousGoodsTransit></cac:HazardousGoodsTransit>
+                                                        <cac:EmergencyTemperature>
+                                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                            <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                                        </cac:EmergencyTemperature>
+                                                        <cac:FlashpointTemperature>
+                                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                            <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                                        </cac:FlashpointTemperature>
+                                                        <cac:AdditionalTemperature>
+                                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                            <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                                        </cac:AdditionalTemperature>
+                                                    </cac:HazardousItem>
+                                                    <cac:ClassifiedTaxCategory>
+                                                        <cac:TaxScheme></cac:TaxScheme>
+                                                    </cac:ClassifiedTaxCategory>
+                                                    <cac:AdditionalItemProperty>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:Name>Value of Name</cbc:Name>
+                                                        <cbc:NameCode>CODE-001</cbc:NameCode>
+                                                        <cbc:TestMethod>Value of TestMethod</cbc:TestMethod>
+                                                        <cbc:Value>Value of Value</cbc:Value>
+                                                        <cbc:ValueQuantity>1</cbc:ValueQuantity>
+                                                        <cbc:ValueQualifier>Value of ValueQualifier</cbc:ValueQualifier>
+                                                        <cbc:ImportanceCode>CODE-001</cbc:ImportanceCode>
+                                                        <cbc:ListValue>Value of ListValue</cbc:ListValue>
+                                                        <cac:UsabilityPeriod></cac:UsabilityPeriod>
+                                                        <cac:ItemPropertyGroup>
+                                                            <cbc:ID>ID-001</cbc:ID>
+                                                            <cbc:Name>Value of Name</cbc:Name>
+                                                            <cbc:ImportanceCode>CODE-001</cbc:ImportanceCode>
+                                                        </cac:ItemPropertyGroup>
+                                                        <cac:RangeDimension>
+                                                            <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                        </cac:RangeDimension>
+                                                        <cac:ItemPropertyRange>
+                                                            <cbc:MinimumValue>Value of MinimumValue</cbc:MinimumValue>
+                                                            <cbc:MaximumValue>Value of MaximumValue</cbc:MaximumValue>
+                                                        </cac:ItemPropertyRange>
+                                                    </cac:AdditionalItemProperty>
+                                                    <cac:ManufacturerParty></cac:ManufacturerParty>
+                                                    <cac:InformationContentProviderParty></cac:InformationContentProviderParty>
+                                                    <cac:OriginAddress></cac:OriginAddress>
+                                                    <cac:ItemInstance>
+                                                        <cbc:ProductTraceID>ID-001</cbc:ProductTraceID>
+                                                        <cbc:ManufactureDate>2026-01-01</cbc:ManufactureDate>
+                                                        <cbc:ManufactureTime>12:00:00</cbc:ManufactureTime>
+                                                        <cbc:BestBeforeDate>2026-01-01</cbc:BestBeforeDate>
+                                                        <cbc:RegistrationID>ID-001</cbc:RegistrationID>
+                                                        <cbc:SerialID>ID-001</cbc:SerialID>
+                                                        <cac:AdditionalItemProperty>
+                                                            <cbc:Name>Value of Name</cbc:Name>
+                                                        </cac:AdditionalItemProperty>
+                                                        <cac:LotIdentification>
+                                                            <cbc:LotNumberID>ID-001</cbc:LotNumberID>
+                                                            <cbc:ExpiryDate>2026-01-01</cbc:ExpiryDate>
+                                                            <cac:AdditionalItemProperty>
+                                                                <cbc:Name>Value of Name</cbc:Name>
+                                                            </cac:AdditionalItemProperty>
+                                                        </cac:LotIdentification>
+                                                    </cac:ItemInstance>
+                                                    <cac:Certificate>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:CertificateTypeCode>CODE-001</cbc:CertificateTypeCode>
+                                                        <cbc:CertificateType>Value of CertificateType</cbc:CertificateType>
+                                                        <cbc:Remarks>Value of Remarks</cbc:Remarks>
+                                                        <cac:IssuerParty></cac:IssuerParty>
+                                                        <cac:DocumentReference>
+                                                            <cbc:ID>ID-001</cbc:ID>
+                                                        </cac:DocumentReference>
+                                                        <cac:Signature>
+                                                            <cbc:ID>ID-001</cbc:ID>
+                                                        </cac:Signature>
+                                                    </cac:Certificate>
+                                                    <cac:Dimension>
+                                                        <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                    </cac:Dimension>
+                                                </cac:Item>
+                                                <cac:Shipment>
+                                                    <cbc:ID>ID-001</cbc:ID>
+                                                </cac:Shipment>
+                                            </cac:HandlingUnitDespatchLine>
+                                            <cac:ActualPackage>
+                                                <cbc:ID>ID-001</cbc:ID>
+                                                <cbc:Quantity>1</cbc:Quantity>
+                                                <cbc:ReturnableMaterialIndicator>true</cbc:ReturnableMaterialIndicator>
+                                                <cbc:PackageLevelCode>CODE-001</cbc:PackageLevelCode>
+                                                <cbc:PackagingTypeCode>CODE-001</cbc:PackagingTypeCode>
+                                                <cbc:PackingMaterial>Value of PackingMaterial</cbc:PackingMaterial>
+                                                <cbc:TraceID>ID-001</cbc:TraceID>
+                                                <cac:ContainedPackage></cac:ContainedPackage>
+                                                <cac:ContainingTransportEquipment></cac:ContainingTransportEquipment>
+                                                <cac:GoodsItem>
+                                                    <cbc:ID>ID-001</cbc:ID>
+                                                    <cbc:SequenceNumberID>ID-001</cbc:SequenceNumberID>
+                                                    <cbc:Description>Value of Description</cbc:Description>
+                                                    <cbc:HazardousRiskIndicator>true</cbc:HazardousRiskIndicator>
+                                                    <cbc:DeclaredCustomsValueAmount currencyID="USD">100.00</cbc:DeclaredCustomsValueAmount>
+                                                    <cbc:DeclaredForCarriageValueAmount currencyID="USD">100.00</cbc:DeclaredForCarriageValueAmount>
+                                                    <cbc:DeclaredStatisticsValueAmount currencyID="USD">100.00</cbc:DeclaredStatisticsValueAmount>
+                                                    <cbc:FreeOnBoardValueAmount currencyID="USD">100.00</cbc:FreeOnBoardValueAmount>
+                                                    <cbc:InsuranceValueAmount currencyID="USD">100.00</cbc:InsuranceValueAmount>
+                                                    <cbc:ValueAmount currencyID="USD">100.00</cbc:ValueAmount>
+                                                    <cbc:GrossWeightMeasure unitCode="CODE-001">1</cbc:GrossWeightMeasure>
+                                                    <cbc:NetWeightMeasure unitCode="CODE-001">1</cbc:NetWeightMeasure>
+                                                    <cbc:NetNetWeightMeasure unitCode="CODE-001">1</cbc:NetNetWeightMeasure>
+                                                    <cbc:ChargeableWeightMeasure unitCode="CODE-001">1</cbc:ChargeableWeightMeasure>
+                                                    <cbc:GrossVolumeMeasure unitCode="CODE-001">1</cbc:GrossVolumeMeasure>
+                                                    <cbc:NetVolumeMeasure unitCode="CODE-001">1</cbc:NetVolumeMeasure>
+                                                    <cbc:Quantity>1</cbc:Quantity>
+                                                    <cbc:PreferenceCriterionCode>CODE-001</cbc:PreferenceCriterionCode>
+                                                    <cbc:RequiredCustomsID>ID-001</cbc:RequiredCustomsID>
+                                                    <cbc:CustomsStatusCode>CODE-001</cbc:CustomsStatusCode>
+                                                    <cbc:CustomsTariffQuantity>1</cbc:CustomsTariffQuantity>
+                                                    <cbc:CustomsImportClassifiedIndicator>true</cbc:CustomsImportClassifiedIndicator>
+                                                    <cbc:ChargeableQuantity>1</cbc:ChargeableQuantity>
+                                                    <cbc:ReturnableQuantity>1</cbc:ReturnableQuantity>
+                                                    <cbc:TraceID>ID-001</cbc:TraceID>
+                                                    <cac:Item></cac:Item>
+                                                    <cac:GoodsItemContainer>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:Quantity>1</cbc:Quantity>
+                                                        <cac:TransportEquipment></cac:TransportEquipment>
+                                                    </cac:GoodsItemContainer>
+                                                    <cac:FreightAllowanceCharge>
+                                                        <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                                        <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                                    </cac:FreightAllowanceCharge>
+                                                    <cac:InvoiceLine>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:UUID>Value of UUID</cbc:UUID>
+                                                        <cbc:Note>Value of Note</cbc:Note>
+                                                        <cbc:InvoicedQuantity>1</cbc:InvoicedQuantity>
+                                                        <cbc:LineExtensionAmount currencyID="USD">100.00</cbc:LineExtensionAmount>
+                                                        <cbc:TaxPointDate>2026-01-01</cbc:TaxPointDate>
+                                                        <cbc:AccountingCostCode>CODE-001</cbc:AccountingCostCode>
+                                                        <cbc:AccountingCost>Value of AccountingCost</cbc:AccountingCost>
+                                                        <cbc:PaymentPurposeCode>CODE-001</cbc:PaymentPurposeCode>
+                                                        <cbc:FreeOfChargeIndicator>true</cbc:FreeOfChargeIndicator>
+                                                        <cac:InvoicePeriod></cac:InvoicePeriod>
+                                                        <cac:OrderLineReference>
+                                                            <cbc:LineID>ID-001</cbc:LineID>
+                                                        </cac:OrderLineReference>
+                                                        <cac:DespatchLineReference>
+                                                            <cbc:LineID>ID-001</cbc:LineID>
+                                                            <cbc:UUID>Value of UUID</cbc:UUID>
+                                                            <cbc:LineStatusCode>CODE-001</cbc:LineStatusCode>
+                                                            <cac:DocumentReference>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                            </cac:DocumentReference>
+                                                        </cac:DespatchLineReference>
+                                                        <cac:ReceiptLineReference>
+                                                            <cbc:LineID>ID-001</cbc:LineID>
+                                                        </cac:ReceiptLineReference>
+                                                        <cac:BillingReference>
+                                                            <cac:InvoiceDocumentReference>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                            </cac:InvoiceDocumentReference>
+                                                            <cac:SelfBilledInvoiceDocumentReference>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                            </cac:SelfBilledInvoiceDocumentReference>
+                                                            <cac:CreditNoteDocumentReference>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                            </cac:CreditNoteDocumentReference>
+                                                            <cac:SelfBilledCreditNoteDocumentReference>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                            </cac:SelfBilledCreditNoteDocumentReference>
+                                                            <cac:DebitNoteDocumentReference>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                            </cac:DebitNoteDocumentReference>
+                                                            <cac:ReminderDocumentReference>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                            </cac:ReminderDocumentReference>
+                                                            <cac:AdditionalDocumentReference>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                            </cac:AdditionalDocumentReference>
+                                                            <cac:BillingReferenceLine>
+                                                                <cbc:ID>ID-001</cbc:ID>
+                                                                <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                                                <cac:AllowanceCharge>
+                                                                    <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                                                    <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                                                </cac:AllowanceCharge>
+                                                            </cac:BillingReferenceLine>
+                                                        </cac:BillingReference>
+                                                        <cac:DocumentReference>
+                                                            <cbc:ID>ID-001</cbc:ID>
+                                                        </cac:DocumentReference>
+                                                        <cac:PricingReference>
+                                                            <cac:OriginalItemLocationQuantity>
+                                                                <cbc:LeadTimeMeasure unitCode="CODE-001">1</cbc:LeadTimeMeasure>
+                                                                <cbc:MinimumQuantity>1</cbc:MinimumQuantity>
+                                                                <cbc:MaximumQuantity>1</cbc:MaximumQuantity>
+                                                                <cbc:HazardousRiskIndicator>true</cbc:HazardousRiskIndicator>
+                                                                <cbc:TradingRestrictions>Value of TradingRestrictions</cbc:TradingRestrictions>
+                                                                <cac:ApplicableTerritoryAddress></cac:ApplicableTerritoryAddress>
+                                                                <cac:Price>
+                                                                    <cbc:PriceAmount currencyID="USD">100.00</cbc:PriceAmount>
+                                                                    <cbc:BaseQuantity>1</cbc:BaseQuantity>
+                                                                    <cbc:PriceChangeReason>Value of PriceChangeReason</cbc:PriceChangeReason>
+                                                                    <cbc:PriceTypeCode>CODE-001</cbc:PriceTypeCode>
+                                                                    <cbc:PriceType>Value of PriceType</cbc:PriceType>
+                                                                    <cbc:OrderableUnitFactorRate>1.25</cbc:OrderableUnitFactorRate>
+                                                                    <cac:ValidityPeriod></cac:ValidityPeriod>
+                                                                    <cac:PriceList>
+                                                                        <cbc:ID>ID-001</cbc:ID>
+                                                                        <cbc:StatusCode>CODE-001</cbc:StatusCode>
+                                                                        <cac:ValidityPeriod></cac:ValidityPeriod>
+                                                                        <cac:PreviousPriceList></cac:PreviousPriceList>
+                                                                    </cac:PriceList>
+                                                                    <cac:AllowanceCharge>
+                                                                        <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                                                        <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                                                    </cac:AllowanceCharge>
+                                                                    <cac:PricingExchangeRate>
+                                                                        <cbc:SourceCurrencyCode>USD</cbc:SourceCurrencyCode>
+                                                                        <cbc:TargetCurrencyCode>USD</cbc:TargetCurrencyCode>
+                                                                    </cac:PricingExchangeRate>
+                                                                </cac:Price>
+                                                                <cac:DeliveryUnit>
+                                                                    <cbc:BatchQuantity>1</cbc:BatchQuantity>
+                                                                </cac:DeliveryUnit>
+                                                                <cac:ApplicableTaxCategory>
+                                                                    <cac:TaxScheme></cac:TaxScheme>
+                                                                </cac:ApplicableTaxCategory>
+                                                                <cac:Package></cac:Package>
+                                                                <cac:AllowanceCharge>
+                                                                    <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                                                    <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                                                </cac:AllowanceCharge>
+                                                                <cac:DependentPriceReference>
+                                                                    <cbc:Percent>10.00</cbc:Percent>
+                                                                    <cac:LocationAddress></cac:LocationAddress>
+                                                                    <cac:DependentLineReference>
+                                                                        <cbc:LineID>ID-001</cbc:LineID>
+                                                                    </cac:DependentLineReference>
+                                                                </cac:DependentPriceReference>
+                                                            </cac:OriginalItemLocationQuantity>
+                                                            <cac:AlternativeConditionPrice>
+                                                                <cbc:PriceAmount currencyID="USD">100.00</cbc:PriceAmount>
+                                                            </cac:AlternativeConditionPrice>
+                                                        </cac:PricingReference>
+                                                        <cac:OriginatorParty></cac:OriginatorParty>
+                                                        <cac:Delivery></cac:Delivery>
+                                                        <cac:PaymentTerms></cac:PaymentTerms>
+                                                        <cac:AllowanceCharge>
+                                                            <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                                            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                                        </cac:AllowanceCharge>
+                                                        <cac:TaxTotal>
+                                                            <cbc:TaxAmount currencyID="USD">100.00</cbc:TaxAmount>
+                                                        </cac:TaxTotal>
+                                                        <cac:WithholdingTaxTotal>
+                                                            <cbc:TaxAmount currencyID="USD">100.00</cbc:TaxAmount>
+                                                        </cac:WithholdingTaxTotal>
+                                                        <cac:Item></cac:Item>
+                                                        <cac:Price>
+                                                            <cbc:PriceAmount currencyID="USD">100.00</cbc:PriceAmount>
+                                                        </cac:Price>
+                                                        <cac:DeliveryTerms></cac:DeliveryTerms>
+                                                        <cac:SubInvoiceLine>
+                                                            <cbc:ID>ID-001</cbc:ID>
+                                                            <cbc:LineExtensionAmount currencyID="USD">100.00</cbc:LineExtensionAmount>
+                                                            <cac:Item></cac:Item>
+                                                        </cac:SubInvoiceLine>
+                                                        <cac:ItemPriceExtension>
+                                                            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                                            <cac:TaxTotal>
+                                                                <cbc:TaxAmount currencyID="USD">100.00</cbc:TaxAmount>
+                                                            </cac:TaxTotal>
+                                                        </cac:ItemPriceExtension>
+                                                    </cac:InvoiceLine>
+                                                    <cac:Temperature>
+                                                        <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                        <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                                    </cac:Temperature>
+                                                    <cac:ContainedGoodsItem></cac:ContainedGoodsItem>
+                                                    <cac:OriginAddress></cac:OriginAddress>
+                                                    <cac:Delivery></cac:Delivery>
+                                                    <cac:Pickup>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                        <cbc:ActualPickupDate>2026-01-01</cbc:ActualPickupDate>
+                                                        <cbc:ActualPickupTime>12:00:00</cbc:ActualPickupTime>
+                                                        <cbc:EarliestPickupDate>2026-01-01</cbc:EarliestPickupDate>
+                                                        <cbc:EarliestPickupTime>12:00:00</cbc:EarliestPickupTime>
+                                                        <cbc:LatestPickupDate>2026-01-01</cbc:LatestPickupDate>
+                                                        <cbc:LatestPickupTime>12:00:00</cbc:LatestPickupTime>
+                                                        <cac:PickupLocation></cac:PickupLocation>
+                                                        <cac:PickupParty></cac:PickupParty>
+                                                    </cac:Pickup>
+                                                    <cac:Despatch></cac:Despatch>
+                                                    <cac:MeasurementDimension>
+                                                        <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                    </cac:MeasurementDimension>
+                                                    <cac:ContainingPackage></cac:ContainingPackage>
+                                                    <cac:ShipmentDocumentReference>
+                                                        <cbc:ID>ID-001</cbc:ID>
+                                                    </cac:ShipmentDocumentReference>
+                                                    <cac:MinimumTemperature>
+                                                        <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                        <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                                    </cac:MinimumTemperature>
+                                                    <cac:MaximumTemperature>
+                                                        <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                        <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                                    </cac:MaximumTemperature>
+                                                </cac:GoodsItem>
+                                                <cac:MeasurementDimension>
+                                                    <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                </cac:MeasurementDimension>
+                                                <cac:DeliveryUnit>
+                                                    <cbc:BatchQuantity>1</cbc:BatchQuantity>
+                                                </cac:DeliveryUnit>
+                                                <cac:Delivery></cac:Delivery>
+                                                <cac:Pickup></cac:Pickup>
+                                                <cac:Despatch></cac:Despatch>
+                                            </cac:ActualPackage>
+                                            <cac:ReceivedHandlingUnitReceiptLine>
+                                                <cbc:ID>ID-001</cbc:ID>
+                                                <cbc:UUID>Value of UUID</cbc:UUID>
+                                                <cbc:Note>Value of Note</cbc:Note>
+                                                <cbc:ReceivedQuantity>1</cbc:ReceivedQuantity>
+                                                <cbc:ShortQuantity>1</cbc:ShortQuantity>
+                                                <cbc:ShortageActionCode>CODE-001</cbc:ShortageActionCode>
+                                                <cbc:RejectedQuantity>1</cbc:RejectedQuantity>
+                                                <cbc:RejectReasonCode>CODE-001</cbc:RejectReasonCode>
+                                                <cbc:RejectReason>Value of RejectReason</cbc:RejectReason>
+                                                <cbc:RejectActionCode>CODE-001</cbc:RejectActionCode>
+                                                <cbc:QuantityDiscrepancyCode>CODE-001</cbc:QuantityDiscrepancyCode>
+                                                <cbc:OversupplyQuantity>1</cbc:OversupplyQuantity>
+                                                <cbc:ReceivedDate>2026-01-01</cbc:ReceivedDate>
+                                                <cbc:TimingComplaintCode>CODE-001</cbc:TimingComplaintCode>
+                                                <cbc:TimingComplaint>Value of TimingComplaint</cbc:TimingComplaint>
+                                                <cac:OrderLineReference>
+                                                    <cbc:LineID>ID-001</cbc:LineID>
+                                                </cac:OrderLineReference>
+                                                <cac:DespatchLineReference>
+                                                    <cbc:LineID>ID-001</cbc:LineID>
+                                                </cac:DespatchLineReference>
+                                                <cac:DocumentReference>
+                                                    <cbc:ID>ID-001</cbc:ID>
+                                                </cac:DocumentReference>
+                                                <cac:Item></cac:Item>
+                                                <cac:Shipment>
+                                                    <cbc:ID>ID-001</cbc:ID>
+                                                </cac:Shipment>
+                                            </cac:ReceivedHandlingUnitReceiptLine>
+                                            <cac:TransportEquipment></cac:TransportEquipment>
+                                            <cac:TransportMeans></cac:TransportMeans>
+                                            <cac:HazardousGoodsTransit></cac:HazardousGoodsTransit>
+                                            <cac:MeasurementDimension>
+                                                <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                            </cac:MeasurementDimension>
+                                            <cac:MinimumTemperature>
+                                                <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                            </cac:MinimumTemperature>
+                                            <cac:MaximumTemperature>
+                                                <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                                <cbc:Measure unitCode="CODE-001">1</cbc:Measure>
+                                            </cac:MaximumTemperature>
+                                            <cac:GoodsItem></cac:GoodsItem>
+                                            <cac:FloorSpaceMeasurementDimension>
+                                                <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                            </cac:FloorSpaceMeasurementDimension>
+                                            <cac:PalletSpaceMeasurementDimension>
+                                                <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                            </cac:PalletSpaceMeasurementDimension>
+                                            <cac:ShipmentDocumentReference>
+                                                <cbc:ID>ID-001</cbc:ID>
+                                            </cac:ShipmentDocumentReference>
+                                            <cac:Status></cac:Status>
+                                            <cac:CustomsDeclaration>
+                                                <cbc:ID>ID-001</cbc:ID>
+                                            </cac:CustomsDeclaration>
+                                            <cac:ReferencedShipment>
+                                                <cbc:ID>ID-001</cbc:ID>
+                                            </cac:ReferencedShipment>
+                                            <cac:Package></cac:Package>
+                                        </cac:PackagedTransportHandlingUnit>
+                                        <cac:ServiceAllowanceCharge>
+                                            <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                        </cac:ServiceAllowanceCharge>
+                                        <cac:FreightAllowanceCharge>
+                                            <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                        </cac:FreightAllowanceCharge>
+                                        <cac:AttachedTransportEquipment></cac:AttachedTransportEquipment>
+                                        <cac:Delivery></cac:Delivery>
+                                        <cac:Pickup></cac:Pickup>
+                                        <cac:Despatch></cac:Despatch>
+                                        <cac:ShipmentDocumentReference>
+                                            <cbc:ID>ID-001</cbc:ID>
+                                        </cac:ShipmentDocumentReference>
+                                        <cac:ContainedInTransportEquipment></cac:ContainedInTransportEquipment>
+                                        <cac:Package></cac:Package>
+                                        <cac:GoodsItem></cac:GoodsItem>
+                                    </cac:TransportEquipment>
+                                    <cac:SupportedTransportEquipment></cac:SupportedTransportEquipment>
+                                    <cac:UnsupportedTransportEquipment></cac:UnsupportedTransportEquipment>
+                                    <cac:CommodityClassification></cac:CommodityClassification>
+                                    <cac:SupportedCommodityClassification></cac:SupportedCommodityClassification>
+                                    <cac:UnsupportedCommodityClassification></cac:UnsupportedCommodityClassification>
+                                    <cac:TotalCapacityDimension>
+                                        <cbc:AttributeID>ID-001</cbc:AttributeID>
+                                    </cac:TotalCapacityDimension>
+                                    <cac:ShipmentStage>
+                                        <cbc:ID>ID-001</cbc:ID>
+                                        <cbc:TransportModeCode>CODE-001</cbc:TransportModeCode>
+                                        <cbc:TransportMeansTypeCode>CODE-001</cbc:TransportMeansTypeCode>
+                                        <cbc:TransitDirectionCode>CODE-001</cbc:TransitDirectionCode>
+                                        <cbc:PreCarriageIndicator>true</cbc:PreCarriageIndicator>
+                                        <cbc:OnCarriageIndicator>true</cbc:OnCarriageIndicator>
+                                        <cbc:EstimatedDeliveryDate>2026-01-01</cbc:EstimatedDeliveryDate>
+                                        <cbc:EstimatedDeliveryTime>12:00:00</cbc:EstimatedDeliveryTime>
+                                        <cbc:RequiredDeliveryDate>2026-01-01</cbc:RequiredDeliveryDate>
+                                        <cbc:RequiredDeliveryTime>12:00:00</cbc:RequiredDeliveryTime>
+                                        <cbc:LoadingSequenceID>ID-001</cbc:LoadingSequenceID>
+                                        <cbc:SuccessiveSequenceID>ID-001</cbc:SuccessiveSequenceID>
+                                        <cbc:Instructions>Value of Instructions</cbc:Instructions>
+                                        <cbc:DemurrageInstructions>Value of DemurrageInstructions</cbc:DemurrageInstructions>
+                                        <cbc:CrewQuantity>1</cbc:CrewQuantity>
+                                        <cbc:PassengerQuantity>1</cbc:PassengerQuantity>
+                                        <cac:TransitPeriod></cac:TransitPeriod>
+                                        <cac:CarrierParty></cac:CarrierParty>
+                                        <cac:TransportMeans></cac:TransportMeans>
+                                        <cac:LoadingPortLocation></cac:LoadingPortLocation>
+                                        <cac:UnloadingPortLocation></cac:UnloadingPortLocation>
+                                        <cac:TransshipPortLocation></cac:TransshipPortLocation>
+                                        <cac:LoadingTransportEvent></cac:LoadingTransportEvent>
+                                        <cac:ExaminationTransportEvent></cac:ExaminationTransportEvent>
+                                        <cac:AvailabilityTransportEvent></cac:AvailabilityTransportEvent>
+                                        <cac:ExportationTransportEvent></cac:ExportationTransportEvent>
+                                        <cac:DischargeTransportEvent></cac:DischargeTransportEvent>
+                                        <cac:WarehousingTransportEvent></cac:WarehousingTransportEvent>
+                                        <cac:TakeoverTransportEvent></cac:TakeoverTransportEvent>
+                                        <cac:OptionalTakeoverTransportEvent></cac:OptionalTakeoverTransportEvent>
+                                        <cac:DropoffTransportEvent></cac:DropoffTransportEvent>
+                                        <cac:ActualPickupTransportEvent></cac:ActualPickupTransportEvent>
+                                        <cac:DeliveryTransportEvent></cac:DeliveryTransportEvent>
+                                        <cac:ReceiptTransportEvent></cac:ReceiptTransportEvent>
+                                        <cac:StorageTransportEvent></cac:StorageTransportEvent>
+                                        <cac:AcceptanceTransportEvent></cac:AcceptanceTransportEvent>
+                                        <cac:TerminalOperatorParty></cac:TerminalOperatorParty>
+                                        <cac:CustomsAgentParty></cac:CustomsAgentParty>
+                                        <cac:EstimatedTransitPeriod></cac:EstimatedTransitPeriod>
+                                        <cac:FreightAllowanceCharge>
+                                            <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                        </cac:FreightAllowanceCharge>
+                                        <cac:FreightChargeLocation></cac:FreightChargeLocation>
+                                        <cac:DetentionTransportEvent></cac:DetentionTransportEvent>
+                                        <cac:RequestedDepartureTransportEvent></cac:RequestedDepartureTransportEvent>
+                                        <cac:RequestedArrivalTransportEvent></cac:RequestedArrivalTransportEvent>
+                                        <cac:RequestedWaypointTransportEvent></cac:RequestedWaypointTransportEvent>
+                                        <cac:PlannedDepartureTransportEvent></cac:PlannedDepartureTransportEvent>
+                                        <cac:PlannedArrivalTransportEvent></cac:PlannedArrivalTransportEvent>
+                                        <cac:PlannedWaypointTransportEvent></cac:PlannedWaypointTransportEvent>
+                                        <cac:ActualDepartureTransportEvent></cac:ActualDepartureTransportEvent>
+                                        <cac:ActualWaypointTransportEvent></cac:ActualWaypointTransportEvent>
+                                        <cac:ActualArrivalTransportEvent></cac:ActualArrivalTransportEvent>
+                                        <cac:TransportEvent></cac:TransportEvent>
+                                        <cac:EstimatedDepartureTransportEvent></cac:EstimatedDepartureTransportEvent>
+                                        <cac:EstimatedArrivalTransportEvent></cac:EstimatedArrivalTransportEvent>
+                                        <cac:PassengerPerson></cac:PassengerPerson>
+                                        <cac:DriverPerson></cac:DriverPerson>
+                                        <cac:ReportingPerson></cac:ReportingPerson>
+                                        <cac:CrewMemberPerson></cac:CrewMemberPerson>
+                                        <cac:SecurityOfficerPerson></cac:SecurityOfficerPerson>
+                                        <cac:MasterPerson></cac:MasterPerson>
+                                        <cac:ShipsSurgeonPerson></cac:ShipsSurgeonPerson>
+                                    </cac:ShipmentStage>
+                                    <cac:TransportEvent></cac:TransportEvent>
+                                    <cac:ResponsibleTransportServiceProviderParty></cac:ResponsibleTransportServiceProviderParty>
+                                    <cac:EnvironmentalEmission>
+                                        <cbc:EnvironmentalEmissionTypeCode>CODE-001</cbc:EnvironmentalEmissionTypeCode>
+                                        <cbc:ValueMeasure unitCode="CODE-001">1</cbc:ValueMeasure>
+                                        <cbc:Description>Value of Description</cbc:Description>
+                                        <cac:EmissionCalculationMethod>
+                                            <cbc:CalculationMethodCode>CODE-001</cbc:CalculationMethodCode>
+                                            <cbc:FullnessIndicationCode>CODE-001</cbc:FullnessIndicationCode>
+                                            <cac:MeasurementFromLocation></cac:MeasurementFromLocation>
+                                            <cac:MeasurementToLocation></cac:MeasurementToLocation>
+                                        </cac:EmissionCalculationMethod>
+                                    </cac:EnvironmentalEmission>
+                                    <cac:EstimatedDurationPeriod></cac:EstimatedDurationPeriod>
+                                    <cac:ScheduledServiceFrequency>
+                                        <cbc:WeekDayCode>CODE-001</cbc:WeekDayCode>
+                                    </cac:ScheduledServiceFrequency>
+                                </cac:OriginalDespatchTransportationService>
+                                <cac:FinalDeliveryTransportationService>
+                                    <cbc:TransportServiceCode>CODE-001</cbc:TransportServiceCode>
+                                </cac:FinalDeliveryTransportationService>
+                                <cac:DeliveryTerms></cac:DeliveryTerms>
+                                <cac:PaymentTerms></cac:PaymentTerms>
+                                <cac:CollectPaymentTerms></cac:CollectPaymentTerms>
+                                <cac:DisbursementPaymentTerms></cac:DisbursementPaymentTerms>
+                                <cac:PrepaidPaymentTerms></cac:PrepaidPaymentTerms>
+                                <cac:FreightAllowanceCharge>
+                                    <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                    <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                </cac:FreightAllowanceCharge>
+                                <cac:ExtraAllowanceCharge>
+                                    <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                    <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                                </cac:ExtraAllowanceCharge>
+                                <cac:MainCarriageShipmentStage></cac:MainCarriageShipmentStage>
+                                <cac:PreCarriageShipmentStage></cac:PreCarriageShipmentStage>
+                                <cac:OnCarriageShipmentStage></cac:OnCarriageShipmentStage>
+                                <cac:TransportHandlingUnit></cac:TransportHandlingUnit>
+                                <cac:FirstArrivalPortLocation></cac:FirstArrivalPortLocation>
+                                <cac:LastExitPortLocation></cac:LastExitPortLocation>
+                            </cac:Consignment>
+                            <cac:GoodsItem></cac:GoodsItem>
+                            <cac:ShipmentStage></cac:ShipmentStage>
+                            <cac:Delivery></cac:Delivery>
+                            <cac:TransportHandlingUnit></cac:TransportHandlingUnit>
+                            <cac:ReturnAddress></cac:ReturnAddress>
+                            <cac:OriginAddress></cac:OriginAddress>
+                            <cac:FirstArrivalPortLocation></cac:FirstArrivalPortLocation>
+                            <cac:LastExitPortLocation></cac:LastExitPortLocation>
+                            <cac:ExportCountry></cac:ExportCountry>
+                            <cac:FreightAllowanceCharge>
+                                <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
+                                <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                            </cac:FreightAllowanceCharge>
+                        </cac:Shipment>
+                    </cac:ContractualDelivery>
+                </cac:ForeignExchangeContract>
+            </cac:ExchangeRate>
+            <cac:ValidityPeriod></cac:ValidityPeriod>
+        </cac:PaymentTerms>
+        <cac:TendererQualificationRequest>
+            <cbc:CompanyLegalFormCode>CODE-001</cbc:CompanyLegalFormCode>
+            <cbc:CompanyLegalForm>Value of CompanyLegalForm</cbc:CompanyLegalForm>
+            <cbc:PersonalSituation>Value of PersonalSituation</cbc:PersonalSituation>
+            <cbc:OperatingYearsQuantity>1</cbc:OperatingYearsQuantity>
+            <cbc:EmployeeQuantity>1</cbc:EmployeeQuantity>
+            <cbc:Description>Value of Description</cbc:Description>
+            <cac:RequiredBusinessClassificationScheme>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:UUID>Value of UUID</cbc:UUID>
+                <cbc:LastRevisionDate>2026-01-01</cbc:LastRevisionDate>
+                <cbc:LastRevisionTime>12:00:00</cbc:LastRevisionTime>
+                <cbc:Note>Value of Note</cbc:Note>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cbc:AgencyID>ID-001</cbc:AgencyID>
+                <cbc:AgencyName>Value of AgencyName</cbc:AgencyName>
+                <cbc:VersionID>ID-001</cbc:VersionID>
+                <cbc:URI>Value of URI</cbc:URI>
+                <cbc:SchemeURI>Value of SchemeURI</cbc:SchemeURI>
+                <cbc:LanguageID>ID-001</cbc:LanguageID>
+                <cac:ClassificationCategory>
+                    <cbc:Name>Value of Name</cbc:Name>
+                    <cbc:CodeValue>Value of CodeValue</cbc:CodeValue>
+                    <cbc:Description>Value of Description</cbc:Description>
+                    <cac:CategorizesClassificationCategory></cac:CategorizesClassificationCategory>
+                </cac:ClassificationCategory>
+            </cac:RequiredBusinessClassificationScheme>
+            <cac:TechnicalEvaluationCriterion>
+                <cbc:EvaluationCriterionTypeCode>CODE-001</cbc:EvaluationCriterionTypeCode>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cbc:ThresholdAmount currencyID="USD">100.00</cbc:ThresholdAmount>
+                <cbc:ThresholdQuantity>1</cbc:ThresholdQuantity>
+                <cbc:ExpressionCode>CODE-001</cbc:ExpressionCode>
+                <cbc:Expression>Value of Expression</cbc:Expression>
+                <cac:DurationPeriod></cac:DurationPeriod>
+                <cac:SuggestedEvidence>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:EvidenceTypeCode>CODE-001</cbc:EvidenceTypeCode>
+                    <cbc:Description>Value of Description</cbc:Description>
+                    <cbc:CandidateStatement>Value of CandidateStatement</cbc:CandidateStatement>
+                    <cac:EvidenceIssuingParty></cac:EvidenceIssuingParty>
+                    <cac:DocumentReference>
+                        <cbc:ID>ID-001</cbc:ID>
+                    </cac:DocumentReference>
+                    <cac:Language></cac:Language>
+                </cac:SuggestedEvidence>
+            </cac:TechnicalEvaluationCriterion>
+            <cac:FinancialEvaluationCriterion></cac:FinancialEvaluationCriterion>
+            <cac:SpecificTendererRequirement>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cbc:TendererRequirementTypeCode>CODE-001</cbc:TendererRequirementTypeCode>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cbc:LegalReference>Value of LegalReference</cbc:LegalReference>
+                <cac:SuggestedEvidence></cac:SuggestedEvidence>
+            </cac:SpecificTendererRequirement>
+            <cac:EconomicOperatorRole>
+                <cbc:RoleCode>CODE-001</cbc:RoleCode>
+                <cbc:RoleDescription>Value of RoleDescription</cbc:RoleDescription>
+            </cac:EconomicOperatorRole>
+        </cac:TendererQualificationRequest>
+        <cac:AllowedSubcontractTerms>
+            <cbc:Rate>1.25</cbc:Rate>
+            <cbc:UnknownPriceIndicator>true</cbc:UnknownPriceIndicator>
+            <cbc:Description>Value of Description</cbc:Description>
+            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+            <cbc:SubcontractingConditionsCode>CODE-001</cbc:SubcontractingConditionsCode>
+            <cbc:MaximumPercent>10.00</cbc:MaximumPercent>
+            <cbc:MinimumPercent>10.00</cbc:MinimumPercent>
+        </cac:AllowedSubcontractTerms>
+        <cac:TenderPreparation>
+            <cbc:TenderEnvelopeID>ID-001</cbc:TenderEnvelopeID>
+            <cbc:TenderEnvelopeTypeCode>CODE-001</cbc:TenderEnvelopeTypeCode>
+            <cbc:Description>Value of Description</cbc:Description>
+            <cbc:OpenTenderID>ID-001</cbc:OpenTenderID>
+            <cac:ProcurementProjectLot>
+                <cbc:ID>ID-001</cbc:ID>
+                <cac:TenderingTerms></cac:TenderingTerms>
+                <cac:ProcurementProject>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cbc:Name>Value of Name</cbc:Name>
+                    <cbc:Description>Value of Description</cbc:Description>
+                    <cbc:ProcurementTypeCode>CODE-001</cbc:ProcurementTypeCode>
+                    <cbc:ProcurementSubTypeCode>CODE-001</cbc:ProcurementSubTypeCode>
+                    <cbc:QualityControlCode>CODE-001</cbc:QualityControlCode>
+                    <cbc:RequiredFeeAmount currencyID="USD">100.00</cbc:RequiredFeeAmount>
+                    <cbc:FeeDescription>Value of FeeDescription</cbc:FeeDescription>
+                    <cbc:RequestedDeliveryDate>2026-01-01</cbc:RequestedDeliveryDate>
+                    <cbc:EstimatedOverallContractQuantity>1</cbc:EstimatedOverallContractQuantity>
+                    <cbc:Note>Value of Note</cbc:Note>
+                    <cac:RequestedTenderTotal>
+                        <cbc:EstimatedOverallContractAmount currencyID="USD">100.00</cbc:EstimatedOverallContractAmount>
+                        <cbc:TotalAmount currencyID="USD">100.00</cbc:TotalAmount>
+                        <cbc:TaxIncludedIndicator>true</cbc:TaxIncludedIndicator>
+                        <cbc:MinimumAmount currencyID="USD">100.00</cbc:MinimumAmount>
+                        <cbc:MaximumAmount currencyID="USD">100.00</cbc:MaximumAmount>
+                        <cbc:MonetaryScope>Value of MonetaryScope</cbc:MonetaryScope>
+                        <cbc:AverageSubsequentContractAmount currencyID="USD">100.00</cbc:AverageSubsequentContractAmount>
+                        <cac:ApplicableTaxCategory>
+                            <cac:TaxScheme></cac:TaxScheme>
+                        </cac:ApplicableTaxCategory>
+                    </cac:RequestedTenderTotal>
+                    <cac:MainCommodityClassification></cac:MainCommodityClassification>
+                    <cac:AdditionalCommodityClassification></cac:AdditionalCommodityClassification>
+                    <cac:RealizedLocation></cac:RealizedLocation>
+                    <cac:PlannedPeriod></cac:PlannedPeriod>
+                    <cac:ContractExtension>
+                        <cbc:OptionsDescription>Value of OptionsDescription</cbc:OptionsDescription>
+                        <cbc:MinimumNumberNumeric>1</cbc:MinimumNumberNumeric>
+                        <cbc:MaximumNumberNumeric>1</cbc:MaximumNumberNumeric>
+                        <cac:OptionValidityPeriod></cac:OptionValidityPeriod>
+                        <cac:Renewal>
+                            <cbc:Amount currencyID="USD">100.00</cbc:Amount>
+                            <cac:Period></cac:Period>
+                        </cac:Renewal>
+                    </cac:ContractExtension>
+                    <cac:RequestForTenderLine>
+                        <cbc:ID>ID-001</cbc:ID>
+                        <cbc:UUID>Value of UUID</cbc:UUID>
+                        <cbc:Note>Value of Note</cbc:Note>
+                        <cbc:Quantity>1</cbc:Quantity>
+                        <cbc:MinimumQuantity>1</cbc:MinimumQuantity>
+                        <cbc:MaximumQuantity>1</cbc:MaximumQuantity>
+                        <cbc:TaxIncludedIndicator>true</cbc:TaxIncludedIndicator>
+                        <cbc:MinimumAmount currencyID="USD">100.00</cbc:MinimumAmount>
+                        <cbc:MaximumAmount currencyID="USD">100.00</cbc:MaximumAmount>
+                        <cbc:EstimatedAmount currencyID="USD">100.00</cbc:EstimatedAmount>
+                        <cac:DocumentReference>
+                            <cbc:ID>ID-001</cbc:ID>
+                        </cac:DocumentReference>
+                        <cac:DeliveryPeriod></cac:DeliveryPeriod>
+                        <cac:RequiredItemLocationQuantity></cac:RequiredItemLocationQuantity>
+                        <cac:WarrantyValidityPeriod></cac:WarrantyValidityPeriod>
+                        <cac:Item></cac:Item>
+                        <cac:SubRequestForTenderLine>
+                            <cac:Item></cac:Item>
+                        </cac:SubRequestForTenderLine>
+                    </cac:RequestForTenderLine>
+                </cac:ProcurementProject>
+            </cac:ProcurementProjectLot>
+            <cac:DocumentTenderRequirement>
+                <cbc:Name>Value of Name</cbc:Name>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cac:TemplateDocumentReference>
+                    <cbc:ID>ID-001</cbc:ID>
+                </cac:TemplateDocumentReference>
+            </cac:DocumentTenderRequirement>
+        </cac:TenderPreparation>
+        <cac:ContractExecutionRequirement>
+            <cbc:Name>Value of Name</cbc:Name>
+            <cbc:ExecutionRequirementCode>CODE-001</cbc:ExecutionRequirementCode>
+            <cbc:Description>Value of Description</cbc:Description>
+        </cac:ContractExecutionRequirement>
+        <cac:AwardingTerms>
+            <cbc:WeightingAlgorithmCode>CODE-001</cbc:WeightingAlgorithmCode>
+            <cbc:Description>Value of Description</cbc:Description>
+            <cbc:TechnicalCommitteeDescription>Value of TechnicalCommitteeDescription</cbc:TechnicalCommitteeDescription>
+            <cbc:LowTendersDescription>Value of LowTendersDescription</cbc:LowTendersDescription>
+            <cbc:PrizeIndicator>true</cbc:PrizeIndicator>
+            <cbc:PrizeDescription>Value of PrizeDescription</cbc:PrizeDescription>
+            <cbc:PaymentDescription>Value of PaymentDescription</cbc:PaymentDescription>
+            <cbc:FollowupContractIndicator>true</cbc:FollowupContractIndicator>
+            <cbc:BindingOnBuyerIndicator>true</cbc:BindingOnBuyerIndicator>
+            <cac:AwardingCriterion>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:AwardingCriterionTypeCode>CODE-001</cbc:AwardingCriterionTypeCode>
+                <cbc:Description>Value of Description</cbc:Description>
+                <cbc:WeightNumeric>1</cbc:WeightNumeric>
+                <cbc:Weight>Value of Weight</cbc:Weight>
+                <cbc:CalculationExpression>Value of CalculationExpression</cbc:CalculationExpression>
+                <cbc:CalculationExpressionCode>CODE-001</cbc:CalculationExpressionCode>
+                <cbc:MinimumQuantity>1</cbc:MinimumQuantity>
+                <cbc:MaximumQuantity>1</cbc:MaximumQuantity>
+                <cbc:MinimumAmount currencyID="USD">100.00</cbc:MinimumAmount>
+                <cbc:MaximumAmount currencyID="USD">100.00</cbc:MaximumAmount>
+                <cbc:MinimumImprovementBid>Value of MinimumImprovementBid</cbc:MinimumImprovementBid>
+                <cac:SubordinateAwardingCriterion></cac:SubordinateAwardingCriterion>
+            </cac:AwardingCriterion>
+            <cac:TechnicalCommitteePerson></cac:TechnicalCommitteePerson>
+        </cac:AwardingTerms>
+        <cac:AdditionalInformationParty></cac:AdditionalInformationParty>
+        <cac:DocumentProviderParty></cac:DocumentProviderParty>
+        <cac:TenderRecipientParty></cac:TenderRecipientParty>
+        <cac:ContractResponsibleParty></cac:ContractResponsibleParty>
+        <cac:TenderEvaluationParty></cac:TenderEvaluationParty>
+        <cac:TenderValidityPeriod></cac:TenderValidityPeriod>
+        <cac:ContractAcceptancePeriod></cac:ContractAcceptancePeriod>
+        <cac:AppealTerms>
+            <cbc:Description>Value of Description</cbc:Description>
+            <cac:PresentationPeriod></cac:PresentationPeriod>
+            <cac:AppealInformationParty></cac:AppealInformationParty>
+            <cac:AppealReceiverParty></cac:AppealReceiverParty>
+            <cac:MediationParty></cac:MediationParty>
+        </cac:AppealTerms>
+        <cac:Language></cac:Language>
+        <cac:BudgetAccountLine>
+            <cbc:ID>ID-001</cbc:ID>
+            <cbc:TotalAmount currencyID="USD">100.00</cbc:TotalAmount>
+            <cac:BudgetAccount>
+                <cbc:ID>ID-001</cbc:ID>
+                <cbc:BudgetYearNumeric>1</cbc:BudgetYearNumeric>
+                <cac:RequiredClassificationScheme>
+                    <cbc:ID>ID-001</cbc:ID>
+                    <cac:ClassificationCategory></cac:ClassificationCategory>
+                </cac:RequiredClassificationScheme>
+            </cac:BudgetAccount>
+        </cac:BudgetAccountLine>
+        <cac:ReplacedNoticeDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:ReplacedNoticeDocumentReference>
+    </cac:TenderingTerms>
+    <cac:TenderingProcess>
+        <cbc:ID>ID-001</cbc:ID>
+        <cbc:OriginalContractingSystemID>ID-001</cbc:OriginalContractingSystemID>
+        <cbc:Description>Value of Description</cbc:Description>
+        <cbc:NegotiationDescription>Value of NegotiationDescription</cbc:NegotiationDescription>
+        <cbc:ProcedureCode>CODE-001</cbc:ProcedureCode>
+        <cbc:UrgencyCode>CODE-001</cbc:UrgencyCode>
+        <cbc:ExpenseCode>CODE-001</cbc:ExpenseCode>
+        <cbc:PartPresentationCode>CODE-001</cbc:PartPresentationCode>
+        <cbc:ContractingSystemCode>CODE-001</cbc:ContractingSystemCode>
+        <cbc:SubmissionMethodCode>CODE-001</cbc:SubmissionMethodCode>
+        <cbc:CandidateReductionConstraintIndicator>true</cbc:CandidateReductionConstraintIndicator>
+        <cbc:GovernmentAgreementConstraintIndicator>true</cbc:GovernmentAgreementConstraintIndicator>
+        <cac:DocumentAvailabilityPeriod></cac:DocumentAvailabilityPeriod>
+        <cac:TenderSubmissionDeadlinePeriod></cac:TenderSubmissionDeadlinePeriod>
+        <cac:InvitationSubmissionPeriod></cac:InvitationSubmissionPeriod>
+        <cac:ParticipationRequestReceptionPeriod></cac:ParticipationRequestReceptionPeriod>
+        <cac:NoticeDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:NoticeDocumentReference>
+        <cac:AdditionalDocumentReference>
+            <cbc:ID>ID-001</cbc:ID>
+        </cac:AdditionalDocumentReference>
+        <cac:ProcessJustification>
+            <cbc:PreviousCancellationReasonCode>CODE-001</cbc:PreviousCancellationReasonCode>
+            <cbc:ProcessReasonCode>CODE-001</cbc:ProcessReasonCode>
+            <cbc:ProcessReason>Value of ProcessReason</cbc:ProcessReason>
+            <cbc:Description>Value of Description</cbc:Description>
+        </cac:ProcessJustification>
+        <cac:EconomicOperatorShortList>
+            <cbc:LimitationDescription>Value of LimitationDescription</cbc:LimitationDescription>
+            <cbc:ExpectedQuantity>1</cbc:ExpectedQuantity>
+            <cbc:MaximumQuantity>1</cbc:MaximumQuantity>
+            <cbc:MinimumQuantity>1</cbc:MinimumQuantity>
+            <cac:PreSelectedParty></cac:PreSelectedParty>
+        </cac:EconomicOperatorShortList>
+        <cac:OpenTenderEvent>
+            <cbc:IdentificationID>ID-001</cbc:IdentificationID>
+            <cbc:OccurrenceDate>2026-01-01</cbc:OccurrenceDate>
+            <cbc:OccurrenceTime>12:00:00</cbc:OccurrenceTime>
+            <cbc:TypeCode>CODE-001</cbc:TypeCode>
+            <cbc:Description>Value of Description</cbc:Description>
+            <cbc:CompletionIndicator>true</cbc:CompletionIndicator>
+            <cac:CurrentStatus></cac:CurrentStatus>
+            <cac:Contact></cac:Contact>
+            <cac:OccurenceLocation></cac:OccurenceLocation>
+        </cac:OpenTenderEvent>
+        <cac:AuctionTerms>
+            <cbc:AuctionConstraintIndicator>true</cbc:AuctionConstraintIndicator>
+            <cbc:JustificationDescription>Value of JustificationDescription</cbc:JustificationDescription>
+            <cbc:Description>Value of Description</cbc:Description>
+            <cbc:ProcessDescription>Value of ProcessDescription</cbc:ProcessDescription>
+            <cbc:ConditionsDescription>Value of ConditionsDescription</cbc:ConditionsDescription>
+            <cbc:ElectronicDeviceDescription>Value of ElectronicDeviceDescription</cbc:ElectronicDeviceDescription>
+            <cbc:AuctionURI>Value of AuctionURI</cbc:AuctionURI>
+        </cac:AuctionTerms>
+        <cac:FrameworkAgreement>
+            <cbc:ExpectedOperatorQuantity>1</cbc:ExpectedOperatorQuantity>
+            <cbc:MaximumOperatorQuantity>1</cbc:MaximumOperatorQuantity>
+            <cbc:Justification>Value of Justification</cbc:Justification>
+            <cbc:Frequency>Value of Frequency</cbc:Frequency>
+            <cac:DurationPeriod></cac:DurationPeriod>
+            <cac:SubsequentProcessTenderRequirement>
+                <cbc:Name>Value of Name</cbc:Name>
+            </cac:SubsequentProcessTenderRequirement>
+        </cac:FrameworkAgreement>
+    </cac:TenderingProcess>
+    <cac:ProcurementProject>
+        <cbc:Name>Value of Name</cbc:Name>
+    </cac:ProcurementProject>
+    <cac:ProcurementProjectLot>
+        <cbc:ID>ID-001</cbc:ID>
+    </cac:ProcurementProjectLot>
+</ContractNotice>
+
