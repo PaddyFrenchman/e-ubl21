@@ -137,18 +137,26 @@ func buildTaxSubtotalNode(s TaxSubtotal, currency string) xmlnode.Node {
 // "InvoicedQuantity" or "CreditedQuantity" - the only structural
 // difference EN 16931 makes between the two document types' lines (see
 // CreditNoteLine's doc comment in model.go).
+//
+// The line's cac:ClassifiedTaxCategory omits cbc:Percent when
+// VATCategoryID is "O" ("Not subject to VAT"): BR-O-05 requires the
+// Invoiced item VAT rate to be entirely absent for that category, not
+// merely zero - verified against the official EN16931-UBL-validation.xslt
+// (see plan step 14's Phase EN-3 investigation).
 func buildLineNode(lineElement, quantityElement string, l Line, currency string) xmlnode.Node {
+	categoryChildren := []xmlnode.Node{cbcLeaf("ID", l.VATCategoryID)}
+	if l.VATCategoryID != "O" {
+		categoryChildren = append(categoryChildren, cbcLeaf("Percent", formatRate(l.VATRate)))
+	}
+	categoryChildren = append(categoryChildren, cacParent("TaxScheme", cbcLeaf("ID", "VAT")))
+
 	return cacParent(lineElement,
 		cbcLeaf("ID", l.ID),
 		leafAttr("cbc", quantityElement, formatQuantity(l.Quantity), "unitCode", l.UnitCode),
 		cbcAmount("LineExtensionAmount", l.NetAmount, currency),
 		cacParent("Item",
 			cbcLeaf("Name", l.ItemName),
-			cacParent("ClassifiedTaxCategory",
-				cbcLeaf("ID", l.VATCategoryID),
-				cbcLeaf("Percent", formatRate(l.VATRate)),
-				cacParent("TaxScheme", cbcLeaf("ID", "VAT")),
-			),
+			cacParent("ClassifiedTaxCategory", categoryChildren...),
 		),
 		cacParent("Price", cbcAmount("PriceAmount", l.NetPrice, currency)),
 	)
@@ -178,6 +186,23 @@ func BuildInvoiceXML(doc InvoiceDocument) (string, error) {
 		buildPartyNode("AccountingSupplierParty", doc.Seller),
 		buildPartyNode("AccountingCustomerParty", doc.Buyer),
 	)
+
+	// cac:Delivery must precede cac:PaymentMeans in the UBL Invoice content
+	// model (see the UBL-Invoice-2.1.xsd element sequence); it is only
+	// emitted when ActualDeliveryDate and/or DeliveryCountryCode are set
+	// (BT-72/BT-80, required by BR-IC-11/BR-IC-12 for the
+	// "K"/intra-community-supply variant - see model.go).
+	if doc.ActualDeliveryDate != "" || doc.DeliveryCountryCode != "" {
+		var deliveryChildren []xmlnode.Node
+		if doc.ActualDeliveryDate != "" {
+			deliveryChildren = append(deliveryChildren, cbcLeaf("ActualDeliveryDate", doc.ActualDeliveryDate))
+		}
+		if doc.DeliveryCountryCode != "" {
+			deliveryChildren = append(deliveryChildren, cacParent("DeliveryLocation",
+				cacParent("Address", cacParent("Country", cbcLeaf("IdentificationCode", doc.DeliveryCountryCode)))))
+		}
+		children = append(children, cacParent("Delivery", deliveryChildren...))
+	}
 
 	for _, pm := range doc.PaymentMeans {
 		children = append(children, buildPaymentMeansNode(pm))

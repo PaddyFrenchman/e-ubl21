@@ -174,12 +174,23 @@ type InvoiceDocument struct {
 	DueDate              string
 	InvoiceTypeCode      string
 	DocumentCurrencyCode string
-	Seller               Party
-	Buyer                Party
-	PaymentMeans         []PaymentMeans
-	Lines                []Line
-	TaxBreakdown         []TaxSubtotal
-	Totals               Totals
+	// ActualDeliveryDate is BT-72 (cac:Delivery/cbc:ActualDeliveryDate),
+	// optional in general but required by BR-IC-11 whenever the document
+	// has an "Intra-community supply" (VAT category K) VAT breakdown entry
+	// and no Invoicing period (BG-14) is given instead. This v1 model does
+	// not support BG-14, so the K variant always sets this field.
+	ActualDeliveryDate string
+	// DeliveryCountryCode is BT-80
+	// (cac:Delivery/cac:DeliveryLocation/cac:Address/cac:Country/cbc:IdentificationCode),
+	// required by BR-IC-12 under the same "K" VAT breakdown condition as
+	// ActualDeliveryDate.
+	DeliveryCountryCode string
+	Seller              Party
+	Buyer               Party
+	PaymentMeans        []PaymentMeans
+	Lines               []Line
+	TaxBreakdown        []TaxSubtotal
+	Totals              Totals
 }
 
 // CreditNoteDocument mirrors InvoiceDocument with CreditNoteTypeCode (BT-3

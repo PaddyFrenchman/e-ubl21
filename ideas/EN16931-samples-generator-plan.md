@@ -166,6 +166,26 @@ Golden rule for the whole engine: **derive every downstream figure from the line
 
   Each variant is a small, targeted document, not one document trying to exercise every family simultaneously — this keeps each failure attributable to one rule family during debugging.
 
+  **Further corrections (verified during Phase EN-3, step 14, by actually
+  running every variant through the official Saxon + `EN16931-UBL-
+  validation.xslt` pipeline and fixing every real failure it reported —
+  not by re-reading the rule text alone):** the table above understated
+  several families' requirements.
+
+  | Rule | Finding |
+  |---|---|
+  | `BR-Z-02` | The **Zero-rated** family also requires the Seller VAT identifier, not only `S` — the table's "Rate = 0" entry for `Z` was incomplete. |
+  | `BR-E-02` | The **Exempt** family also requires the Seller VAT identifier. |
+  | `BR-S-10`/`BR-Z-10` | `S` and `Z` must **not** carry a VAT exemption reason at all (not just "not required" — actively forbidden). |
+  | `BR-O-05` | The **Not subject to VAT** invoice line must omit `cbc:Percent` on `cac:ClassifiedTaxCategory` entirely — a present-but-zero rate still fails. See `build.go`'s `buildLineNode`. |
+  | `BR-CO-26` | Since the `O` variant cannot carry a Seller VAT identifier, the Seller needs *some* other identifier (legal registration identifier used here) so a buyer can still identify the supplier. |
+  | `BR-IC-11` | The **Intra-community supply** (`K`) variant needs an Actual delivery date (BT-72, `cac:Delivery/cbc:ActualDeliveryDate`) or an Invoicing period — this v1 model only supports the former. |
+  | `BR-IC-12` | The `K` variant separately needs a Deliver-to country code (BT-80, `cac:Delivery/cac:DeliveryLocation/cac:Address/cac:Country/cbc:IdentificationCode`) — a second, independent `cac:Delivery` requirement from `BR-IC-11`. |
+
+  See `createsamples/en16931/variants.go` for the corrected, fully-verified
+  implementation of all seven variants (all confirmed zero `failed-assert`
+  and zero `fatal`-flagged entries against the official pipeline).
+
 ---
 
 ## 8. Negative corpus via mutation (mirrors MAIN doc §46.3)
@@ -295,7 +315,7 @@ This is the concrete, sequential task list to execute the plan above. It expands
 
 ### Full variant matrix (§7, Phase EN-3)
 
-14. [ ] Implement the `Z`, `E`, `AE`, `G`, `IC`, `O` VAT-category variants in `en16931/variants.go`, each toggling only the fields listed in the §7 table.
+14. [x] Implement the `Z`, `E`, `AE`, `G`, `IC`, `O` VAT-category variants in `en16931/variants.go`, each toggling only the fields listed in the §7 table.
 15. [ ] Extend `build.go`/`model.go` as needed to support `CreditNoteDocument` alongside `InvoiceDocument`.
 16. [ ] For each of the 7 variants × 2 document types (14 fixtures total), repeat the generate → run Saxon → inspect SVRL → fix loop from steps 11–12.
 17. [ ] Once all 14 fixtures are clean, wire them into a Go test that shells out to Saxon (or a fake/skippable stub when Saxon isn't installed) and asserts zero `failed-assert` elements per fixture.
