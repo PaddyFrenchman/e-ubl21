@@ -1,6 +1,7 @@
 // This file implements the UBL 2.1 sample document generator: given a root
 // element declaration, it recursively expands the schema's content model
-// into an in-memory xmlNode tree, which render.go then serializes to XML.
+// into an in-memory xmlNode tree, which the xmlnode package then serializes
+// to XML.
 //
 // Generation policy: every declared element - required or optional - is
 // covered somewhere in the generated document. Because the UBL common
@@ -20,15 +21,17 @@ package main
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/PaddyFrenchman/e-ubl21/createsamples/xmlnode"
 )
 
-type xmlNode struct {
-	Prefix     string
-	Name       string
-	Value      string
-	Attributes map[string]string
-	Children   []xmlNode
-}
+// xmlNode is a type alias (not a distinct type) for xmlnode.Node: the tree
+// type was extracted into the importable xmlnode package so that
+// createsamples/en16931's semantic generator can build and render the same
+// tree shape too (package main cannot be imported from elsewhere - see
+// ideas/EN16931-samples-generator-plan.md §4/§10). The alias keeps every
+// existing xmlNode{...} literal and []xmlNode usage below unchanged.
+type xmlNode = xmlnode.Node
 
 // genState carries the traversal state threaded through expandElement and
 // the flatten* helpers.
@@ -89,7 +92,7 @@ func generateCompleteSample(index schemaIndex, rootName, xsdDir, schemaFile stri
 	rootNode.Attributes["xmlns:cbc"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
 	rootNode.Attributes["xmlns:cac"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
 	rootNode.Attributes["xmlns:ext"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
-	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + renderXMLNode(rootNode, 0) + "\n", nil
+	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(rootNode, 0) + "\n", nil
 }
 
 // maxDepth guards against runaway or genuinely cyclic schema graphs. Generation

@@ -16,9 +16,13 @@
 //   - generate.go   - the minimal-mode sample document generator.
 //   - values.go     - deterministic sample value/enumeration generation for
 //     XSD simple types.
-//   - render.go     - XML serialization of the generated document tree.
 //   - qname.go      - small qualified-name string helpers shared by the
 //     other files.
+//
+// XML tree serialization lives in the sibling xmlnode package
+// (createsamples/xmlnode), not in this package, so that the EN 16931
+// semantic generator under createsamples/en16931 can reuse the same node
+// type and renderer (see ideas/EN16931-samples-generator-plan.md §4).
 package main
 
 import (

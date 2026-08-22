@@ -42,4 +42,8 @@ vacuum-report-*.json
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Downloaded third-party runtime tools (fetched via devsetup/download_*.sh,
+# reproducible from a pinned version + checksum; not committed as binaries)
+devsetup/tools/
 e-ubl21
