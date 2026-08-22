@@ -285,13 +285,13 @@ This is the concrete, sequential task list to execute the plan above. It expands
 ### Code lists and first fixture (§7, Phase EN-2)
 
 9. [x] Write `en16931/codelists.go` with curated legal values for currency, country, VAT category, invoice type code, unit code — each entry commented with its source code list (ISO 4217 / ISO 3166-1 / UNCL 5305 / UNTDID 1001 / UN/ECE Rec 20).
-10. [ ] Write `en16931/build.go` to convert a populated `InvoiceDocument` (VAT category `S`) into the shared `xmlNode` tree, reusing `createsamples.renderXMLNode` for serialization.
-11. [ ] Generate one `S`-variant Invoice XML file to a scratch path and manually run:
+10. [x] Write `en16931/build.go` to convert a populated `InvoiceDocument` (VAT category `S`) into the shared `xmlNode` tree, reusing `createsamples.renderXMLNode` for serialization.
+11. [x] Generate one `S`-variant Invoice XML file to a scratch path and manually run:
     ```bash
     java net.sf.saxon.Transform -s:<file>.xml -xsl:validation-assets/en16931/1.3.16/EN16931-UBL-validation.xslt -o:svrl.xml
     ```
-12. [ ] Inspect `svrl.xml` for `<svrl:failed-assert>` elements; if any appear, fix the model/arithmetic/code-list values causing them and repeat step 11 until zero fatals remain.
-13. [ ] Commit the working `S`-variant generation code once confirmed clean.
+12. [x] Inspect `svrl.xml` for `<svrl:failed-assert>` elements; if any appear, fix the model/arithmetic/code-list values causing them and repeat step 11 until zero fatals remain.
+13. [x] Commit the working `S`-variant generation code once confirmed clean.
 
 ### Full variant matrix (§7, Phase EN-3)
 
