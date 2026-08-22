@@ -32,16 +32,23 @@ paths:
                 properties:
                   service:
                     type: string
+                    example: e-ubl21
                   docs:
                     type: string
                     description: The path the Swagger UI is served from.
+                    example: /swagger/
                   oauth:
                     type: object
                     properties:
                       issuer:
                         type: string
+                        example: https://issuer.example.com
                       audience:
                         type: string
+                        example: e-ubl21
+                    example:
+                      issuer: https://issuer.example.com
+                      audience: e-ubl21
                 required:
                   - service
                   - docs
@@ -53,35 +60,13 @@ paths:
                   issuer: https://issuer.example.com
                   audience: e-ubl21
         '401':
-          description: Missing or invalid OAuth 2 bearer token.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: missing bearer token
+          $ref: '#/components/responses/Unauthorized'
         '405':
-          description: Method not allowed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: method not allowed
+          $ref: '#/components/responses/MethodNotAllowed'
         '429':
-          description: Rate limit exceeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: rate limit exceeded
+          $ref: '#/components/responses/RateLimited'
         '500':
-          description: 'Server misconfiguration: no OAuth signing secret is configured.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/Misconfigured'
   /healthz:
     get:
       operationId: HealthCheck
@@ -98,40 +83,19 @@ paths:
                 properties:
                   status:
                     type: string
+                    example: ok
                 required:
                   - status
               example:
                 status: ok
         '401':
-          description: Missing or invalid OAuth 2 bearer token.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: missing bearer token
+          $ref: '#/components/responses/Unauthorized'
         '405':
-          description: Method not allowed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: method not allowed
+          $ref: '#/components/responses/MethodNotAllowed'
         '429':
-          description: Rate limit exceeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: rate limit exceeded
+          $ref: '#/components/responses/RateLimited'
         '500':
-          description: 'Server misconfiguration: no OAuth signing secret is configured.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/Misconfigured'
   /metrics:
     get:
       operationId: Metrics
@@ -149,35 +113,13 @@ paths:
               schema:
                 type: string
         '401':
-          description: Missing or invalid OAuth 2 bearer token.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: missing bearer token
+          $ref: '#/components/responses/Unauthorized'
         '405':
-          description: Method not allowed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: method not allowed
+          $ref: '#/components/responses/MethodNotAllowed'
         '429':
-          description: Rate limit exceeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: rate limit exceeded
+          $ref: '#/components/responses/RateLimited'
         '500':
-          description: 'Server misconfiguration: no OAuth signing secret is configured.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/Misconfigured'
   /api/v1/ubl/upload:
     post:
       operationId: UBLUploadUploadXMLDocument
@@ -220,15 +162,19 @@ paths:
                   status:
                     type: string
                     enum: [pending]
+                    example: pending
                   id:
                     type: string
                     description: Identifier to retrieve this upload's status/content via GET /api/v1/ubl/{id}.
+                    example: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
                   document:
                     type: string
                     description: The UBL 2.1 root element name (e.g. Invoice, Order).
+                    example: Invoice
                   receivedAt:
                     type: string
                     format: date-time
+                    example: '2026-08-20T12:00:00Z'
                 required:
                   - status
                   - id
@@ -253,29 +199,11 @@ paths:
               example:
                 error: 'invalid XML payload: XML document root element is missing'
         '401':
-          description: Missing or invalid OAuth 2 bearer token.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: missing bearer token
+          $ref: '#/components/responses/Unauthorized'
         '405':
-          description: Method not allowed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: method not allowed
+          $ref: '#/components/responses/MethodNotAllowed'
         '429':
-          description: Rate limit exceeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: rate limit exceeded
+          $ref: '#/components/responses/RateLimited'
         '500':
           description: >-
             Server misconfiguration: no OAuth signing secret is configured.
@@ -285,6 +213,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: server is not configured with an OAuth signing secret
   /api/v1/ubl/{id}:
     get:
       operationId: UBLUploadGetXMLDocument
@@ -313,38 +243,46 @@ paths:
                 properties:
                   id:
                     type: string
+                    example: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
                   document:
                     type: string
+                    example: Invoice
                   status:
                     type: string
                     enum: [pending, valid, invalid]
+                    example: valid
                   receivedAt:
                     type: string
                     format: date-time
+                    example: '2026-08-20T12:00:00Z'
                   validatedAt:
                     type: string
                     format: date-time
                     description: Present once the worker has processed the document.
+                    example: '2026-08-20T12:00:01Z'
                   error:
                     type: string
                     description: 'Present only when status is "invalid": the XSD validation failure detail.'
+                    example: element X is not allowed
                   content:
                     type: string
                     description: The original raw XML payload.
+                    example: <Invoice>...</Invoice>
                 required:
                   - id
                   - document
                   - status
                   - receivedAt
                   - content
-        '401':
-          description: Missing or invalid OAuth 2 bearer token.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
               example:
-                error: missing bearer token
+                id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
+                document: Invoice
+                status: valid
+                receivedAt: '2026-08-20T12:00:00Z'
+                validatedAt: '2026-08-20T12:00:01Z'
+                content: <Invoice>...</Invoice>
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: No upload exists with the given id.
           content:
@@ -354,27 +292,11 @@ paths:
               example:
                 error: upload not found
         '405':
-          description: Method not allowed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: method not allowed
+          $ref: '#/components/responses/MethodNotAllowed'
         '429':
-          description: Rate limit exceeded.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: rate limit exceeded
+          $ref: '#/components/responses/RateLimited'
         '500':
-          description: 'Server misconfiguration: no OAuth signing secret is configured.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/Misconfigured'
 components:
   schemas:
     ErrorResponse:
@@ -383,9 +305,45 @@ components:
       properties:
         error:
           type: string
+          example: missing bearer token
       required:
         - error
       additionalProperties: false
+      example:
+        error: missing bearer token
+  responses:
+    Unauthorized:
+      description: Missing or invalid OAuth 2 bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: missing bearer token
+    MethodNotAllowed:
+      description: Method not allowed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: method not allowed
+    RateLimited:
+      description: Rate limit exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: rate limit exceeded
+    Misconfigured:
+      description: 'Server misconfiguration: no OAuth signing secret is configured.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: server is not configured with an OAuth signing secret
   securitySchemes:
     oauth2:
       type: oauth2

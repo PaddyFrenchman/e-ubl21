@@ -6,19 +6,24 @@
 // chain (auth.go, ratelimit.go) can genuinely produce on each of them, so
 // it stays an accurate description of server.go's behavior rather than
 // only of the UBL-specific handlers.
+//
+// The 401/405/429 responses, and the plain (no-extra-detail) 500, are
+// identical across every operation (they describe the same shared
+// middleware behavior), so they are defined once under
+// components.responses and referenced via $ref rather than repeated
+// verbatim on every operation - mirroring openapi.yaml, which uses the
+// same $ref-based structure to avoid duplicated descriptions.
 package server
 
-// errorResponseContent is the reusable "application/json" content object
-// referencing the shared ErrorResponse schema, used by every non-2xx
-// response below.
-func errorResponseContent() map[string]any {
-	return map[string]any{
-		"application/json": map[string]any{
-			"schema": map[string]any{"$ref": "#/components/schemas/ErrorResponse"},
-		},
-	}
+// responseRef returns a "$ref" pointer to the named entry under
+// components.responses.
+func responseRef(name string) map[string]any {
+	return map[string]any{"$ref": "#/components/responses/" + name}
 }
 
+// errorResponseWithExample builds a standalone (non-shared) error response
+// object: used for responses that are unique to a single operation (400,
+// 404) rather than common across all of them.
 func errorResponseWithExample(description, exampleError string) map[string]any {
 	return map[string]any{
 		"description": description,
@@ -31,28 +36,12 @@ func errorResponseWithExample(description, exampleError string) map[string]any {
 	}
 }
 
-// unauthorizedResponse, methodNotAllowedResponse, rateLimitedResponse and
-// misconfiguredResponse describe response codes every route behind
-// requireOAuth2 and the rate limiter can produce (see auth.go,
-// ratelimit.go, and requireGET in server.go), so they are attached to every
-// operation below rather than only the UBL endpoints.
-func unauthorizedResponse() map[string]any {
-	return errorResponseWithExample("Missing or invalid OAuth 2 bearer token.", "missing bearer token")
-}
-
-func methodNotAllowedResponse() map[string]any {
-	return errorResponseWithExample("Method not allowed.", "method not allowed")
-}
-
-func rateLimitedResponse() map[string]any {
-	return errorResponseWithExample("Rate limit exceeded.", "rate limit exceeded")
-}
-
 // misconfiguredResponse documents the fail-closed 500 every protected route
 // can return when the server has no configured OAuth signing secret (see
-// oauthValidator.requireOAuth2 in auth.go); the UBL upload endpoint can
-// additionally 500 for its own internal reasons (queue/storage failures),
-// documented separately on that operation.
+// oauthValidator.requireOAuth2 in auth.go). The UBL upload endpoint 500s
+// for an additional, distinct reason (queue/storage failures) and so gets
+// its own non-shared response with an extended description, built by
+// calling this with a non-empty extra.
 func misconfiguredResponse(extra string) map[string]any {
 	description := "Server misconfiguration: no OAuth signing secret is configured."
 	if extra != "" {
@@ -60,7 +49,23 @@ func misconfiguredResponse(extra string) map[string]any {
 	}
 	return map[string]any{
 		"description": description,
-		"content":     errorResponseContent(),
+		"content": map[string]any{
+			"application/json": map[string]any{
+				"schema":  map[string]any{"$ref": "#/components/schemas/ErrorResponse"},
+				"example": map[string]any{"error": "server is not configured with an OAuth signing secret"},
+			},
+		},
+	}
+}
+
+// commonErrorResponses returns the 401/405/429/500 responses shared by
+// every operation in the API (see components.responses in openAPIDocument).
+func commonErrorResponses() map[string]any {
+	return map[string]any{
+		"401": responseRef("Unauthorized"),
+		"405": responseRef("MethodNotAllowed"),
+		"429": responseRef("RateLimited"),
+		"500": responseRef("Misconfigured"),
 	}
 }
 
@@ -80,7 +85,7 @@ func openAPIDocument() map[string]any {
 		},
 		"paths": map[string]any{
 			"/": map[string]any{
-				"get": map[string]any{
+				"get": mergeResponses(map[string]any{
 					"operationId": "ServiceInfo",
 					"tags":        []string{"Service"},
 					"summary":     "Service information",
@@ -93,14 +98,15 @@ func openAPIDocument() map[string]any {
 									"schema": map[string]any{
 										"type": "object",
 										"properties": map[string]any{
-											"service": map[string]any{"type": "string"},
-											"docs":    map[string]any{"type": "string", "description": "The path the Swagger UI is served from."},
+											"service": map[string]any{"type": "string", "example": "e-ubl21"},
+											"docs":    map[string]any{"type": "string", "description": "The path the Swagger UI is served from.", "example": "/swagger/"},
 											"oauth": map[string]any{
 												"type": "object",
 												"properties": map[string]any{
-													"issuer":   map[string]any{"type": "string"},
-													"audience": map[string]any{"type": "string"},
+													"issuer":   map[string]any{"type": "string", "example": "https://issuer.example.com"},
+													"audience": map[string]any{"type": "string", "example": "e-ubl21"},
 												},
+												"example": map[string]any{"issuer": "https://issuer.example.com", "audience": "e-ubl21"},
 											},
 										},
 										"required": []string{"service", "docs", "oauth"},
@@ -113,15 +119,11 @@ func openAPIDocument() map[string]any {
 								},
 							},
 						},
-						"401": unauthorizedResponse(),
-						"405": methodNotAllowedResponse(),
-						"429": rateLimitedResponse(),
-						"500": misconfiguredResponse(""),
 					},
-				},
+				}),
 			},
 			"/healthz": map[string]any{
-				"get": map[string]any{
+				"get": mergeResponses(map[string]any{
 					"operationId": "HealthCheck",
 					"tags":        []string{"Service"},
 					"summary":     "Liveness check",
@@ -130,20 +132,20 @@ func openAPIDocument() map[string]any {
 							"description": "The service is up.",
 							"content": map[string]any{
 								"application/json": map[string]any{
-									"schema":  map[string]any{"type": "object", "properties": map[string]any{"status": map[string]any{"type": "string"}}, "required": []string{"status"}},
+									"schema": map[string]any{
+										"type":       "object",
+										"properties": map[string]any{"status": map[string]any{"type": "string", "example": "ok"}},
+										"required":   []string{"status"},
+									},
 									"example": map[string]any{"status": "ok"},
 								},
 							},
 						},
-						"401": unauthorizedResponse(),
-						"405": methodNotAllowedResponse(),
-						"429": rateLimitedResponse(),
-						"500": misconfiguredResponse(""),
 					},
-				},
+				}),
 			},
 			"/metrics": map[string]any{
-				"get": map[string]any{
+				"get": mergeResponses(map[string]any{
 					"operationId": "Metrics",
 					"tags":        []string{"Service"},
 					"summary":     "Prometheus metrics",
@@ -153,15 +155,11 @@ func openAPIDocument() map[string]any {
 							"description": "Metrics in Prometheus text exposition format.",
 							"content":     map[string]any{"text/plain": map[string]any{"schema": map[string]any{"type": "string"}}},
 						},
-						"401": unauthorizedResponse(),
-						"405": methodNotAllowedResponse(),
-						"429": rateLimitedResponse(),
-						"500": misconfiguredResponse(""),
 					},
-				},
+				}),
 			},
 			"/api/v1/ubl/upload": map[string]any{
-				"post": map[string]any{
+				"post": mergeResponses(map[string]any{
 					"operationId": "UBLUploadUploadXMLDocument",
 					"tags":        []string{"UBL"},
 					"summary":     "Upload a UBL 2.1 XML document",
@@ -183,10 +181,10 @@ func openAPIDocument() map[string]any {
 									"schema": map[string]any{
 										"type": "object",
 										"properties": map[string]any{
-											"status":     map[string]any{"type": "string", "enum": []string{"pending"}},
-											"id":         map[string]any{"type": "string", "description": "Identifier to retrieve this upload's status/content via GET /api/v1/ubl/{id}."},
-											"document":   map[string]any{"type": "string", "description": "The UBL 2.1 root element name (e.g. Invoice, Order)."},
-											"receivedAt": map[string]any{"type": "string", "format": "date-time"},
+											"status":     map[string]any{"type": "string", "enum": []string{"pending"}, "example": "pending"},
+											"id":         map[string]any{"type": "string", "description": "Identifier to retrieve this upload's status/content via GET /api/v1/ubl/{id}.", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
+											"document":   map[string]any{"type": "string", "description": "The UBL 2.1 root element name (e.g. Invoice, Order).", "example": "Invoice"},
+											"receivedAt": map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
 										},
 										"required": []string{"status", "id", "document", "receivedAt"},
 									},
@@ -203,15 +201,12 @@ func openAPIDocument() map[string]any {
 							"Invalid XML payload or an unrecognized document type. Note: this endpoint no longer performs synchronous XSD validation, so a schema-invalid (but well-formed, recognized-type) document is still accepted with 202 - check its status via GET /api/v1/ubl/{id} once processed.",
 							"invalid XML payload: XML document root element is missing",
 						),
-						"401": unauthorizedResponse(),
-						"405": methodNotAllowedResponse(),
-						"429": rateLimitedResponse(),
 						"500": misconfiguredResponse("Alternatively, the document could not be queued (e.g. the NATS/JetStream connection failed)."),
 					},
-				},
+				}),
 			},
 			"/api/v1/ubl/{id}": map[string]any{
-				"get": map[string]any{
+				"get": mergeResponses(map[string]any{
 					"operationId": "UBLUploadGetXMLDocument",
 					"tags":        []string{"UBL"},
 					"summary":     "Retrieve a previously accepted UBL 2.1 XML document",
@@ -233,37 +228,50 @@ func openAPIDocument() map[string]any {
 									"schema": map[string]any{
 										"type": "object",
 										"properties": map[string]any{
-											"id":          map[string]any{"type": "string"},
-											"document":    map[string]any{"type": "string"},
-											"status":      map[string]any{"type": "string", "enum": []string{"pending", "valid", "invalid"}},
-											"receivedAt":  map[string]any{"type": "string", "format": "date-time"},
-											"validatedAt": map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document."},
-											"error":       map[string]any{"type": "string", "description": "Present only when status is \"invalid\": the XSD validation failure detail."},
-											"content":     map[string]any{"type": "string", "description": "The original raw XML payload."},
+											"id":          map[string]any{"type": "string", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
+											"document":    map[string]any{"type": "string", "example": "Invoice"},
+											"status":      map[string]any{"type": "string", "enum": []string{"pending", "valid", "invalid"}, "example": "valid"},
+											"receivedAt":  map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
+											"validatedAt": map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document.", "example": "2026-08-20T12:00:01Z"},
+											"error":       map[string]any{"type": "string", "description": "Present only when status is \"invalid\": the XSD validation failure detail.", "example": "element X is not allowed"},
+											"content":     map[string]any{"type": "string", "description": "The original raw XML payload.", "example": "<Invoice>...</Invoice>"},
 										},
 										"required": []string{"id", "document", "status", "receivedAt", "content"},
+									},
+									"example": map[string]any{
+										"id":          "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c",
+										"document":    "Invoice",
+										"status":      "valid",
+										"receivedAt":  "2026-08-20T12:00:00Z",
+										"validatedAt": "2026-08-20T12:00:01Z",
+										"content":     "<Invoice>...</Invoice>",
 									},
 								},
 							},
 						},
-						"401": unauthorizedResponse(),
 						"404": errorResponseWithExample("No upload exists with the given id.", "upload not found"),
-						"405": methodNotAllowedResponse(),
-						"429": rateLimitedResponse(),
-						"500": misconfiguredResponse(""),
 					},
-				},
+				}),
 			},
 		},
 		"components": map[string]any{
 			"schemas": map[string]any{
 				"ErrorResponse": map[string]any{
-					"description":          "Standard error payload returned when a request is rejected.",
-					"type":                 "object",
-					"properties":           map[string]any{"error": map[string]any{"type": "string"}},
+					"description": "Standard error payload returned when a request is rejected.",
+					"type":        "object",
+					"properties": map[string]any{
+						"error": map[string]any{"type": "string", "example": "missing bearer token"},
+					},
 					"required":             []string{"error"},
 					"additionalProperties": false,
+					"example":              map[string]any{"error": "missing bearer token"},
 				},
+			},
+			"responses": map[string]any{
+				"Unauthorized":     errorResponseWithExample("Missing or invalid OAuth 2 bearer token.", "missing bearer token"),
+				"MethodNotAllowed": errorResponseWithExample("Method not allowed.", "method not allowed"),
+				"RateLimited":      errorResponseWithExample("Rate limit exceeded.", "rate limit exceeded"),
+				"Misconfigured":    misconfiguredResponse(""),
 			},
 			"securitySchemes": map[string]any{
 				"oauth2": map[string]any{
@@ -279,4 +287,16 @@ func openAPIDocument() map[string]any {
 			},
 		},
 	}
+}
+
+// mergeResponses takes an operation object whose "responses" entry only
+// lists the responses unique to that operation, and adds the shared
+// 401/405/429/500 responses (see commonErrorResponses) every operation in
+// this API can also produce, mutating and returning the same operation map.
+func mergeResponses(operation map[string]any) map[string]any {
+	responses := operation["responses"].(map[string]any)
+	for status, resp := range commonErrorResponses() {
+		responses[status] = resp
+	}
+	return operation
 }
