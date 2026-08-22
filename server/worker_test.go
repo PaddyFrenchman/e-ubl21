@@ -1,0 +1,165 @@
+package server
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/PaddyFrenchman/e-ubl21/queue"
+)
+
+// runTestWorker starts RunWorker in the background against cfg's NATS URL
+// and stops it via t.Cleanup once the test finishes.
+func runTestWorker(t *testing.T, cfg Config, overrides func(*WorkerConfig)) {
+	t.Helper()
+
+	workerCfg := WorkerConfig{NATSURL: cfg.NATSURL}
+	if overrides != nil {
+		overrides(&workerCfg)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- RunWorker(ctx, workerCfg) }()
+	t.Cleanup(func() {
+		cancel()
+		select {
+		case err := <-done:
+			if err != nil {
+				t.Errorf("RunWorker returned error: %v", err)
+			}
+		case <-time.After(5 * time.Second):
+			t.Error("RunWorker did not stop within 5s of cancellation")
+		}
+	})
+}
+
+// waitForStatus polls GET /api/v1/ubl/{id} until its status is no longer
+// "pending" (i.e. the worker has processed it) or the timeout elapses, at
+// which point it fails the test.
+func waitForStatus(t *testing.T, handler http.Handler, token, id string) map[string]any {
+	t.Helper()
+
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		res := doRequest(handler, http.MethodGet, "/api/v1/ubl/"+id, token, "", "")
+		if res.Code != http.StatusOK {
+			t.Fatalf("get status = %d, want %d; body=%s", res.Code, http.StatusOK, res.Body.String())
+		}
+		var stored map[string]any
+		if err := json.Unmarshal(res.Body.Bytes(), &stored); err != nil {
+			t.Fatalf("decode get response: %v", err)
+		}
+		if stored["status"] != string(queue.StatusPending) {
+			return stored
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("upload %s did not leave pending status within 5s", id)
+	return nil
+}
+
+func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {
+	t.Parallel()
+
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, nil)
+	handler, err := NewHandler(cfg)
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
+
+	res := doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, validInvoiceXML, "application/xml")
+	if res.Code != http.StatusAccepted {
+		t.Fatalf("upload status = %d, want %d; body=%s", res.Code, http.StatusAccepted, res.Body.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(res.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	id := payload["id"].(string)
+
+	stored := waitForStatus(t, handler, token, id)
+	if stored["status"] != string(queue.StatusValid) {
+		t.Fatalf("status = %v, want %q; record=%v", stored["status"], queue.StatusValid, stored)
+	}
+	if _, hasError := stored["error"]; hasError {
+		t.Fatalf("unexpected error field on a valid document: %v", stored["error"])
+	}
+	if stored["validatedAt"] == "" || stored["validatedAt"] == nil {
+		t.Fatal("missing validatedAt on a processed document")
+	}
+}
+
+func TestWorkerFlagsSchemaInvalidDocument(t *testing.T) {
+	t.Parallel()
+
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, nil)
+	handler, err := NewHandler(cfg)
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
+
+	res := doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, invalidInvoiceXML, "application/xml")
+	if res.Code != http.StatusAccepted {
+		t.Fatalf("upload status = %d, want %d; body=%s", res.Code, http.StatusAccepted, res.Body.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(res.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	id := payload["id"].(string)
+
+	stored := waitForStatus(t, handler, token, id)
+	if stored["status"] != string(queue.StatusInvalid) {
+		t.Fatalf("status = %v, want %q; record=%v", stored["status"], queue.StatusInvalid, stored)
+	}
+	errMsg, _ := stored["error"].(string)
+	if errMsg == "" {
+		t.Fatal("expected a non-empty error message for an invalid document")
+	}
+}
+
+func TestWorkerFilterRestrictsToOneDocumentType(t *testing.T) {
+	t.Parallel()
+
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, func(wc *WorkerConfig) {
+		wc.SubjectFilter = queue.DocumentSubject("Invoice")
+		wc.ConsumerName = "invoice-only-test-worker"
+	})
+	handler, err := NewHandler(cfg)
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
+
+	// Order is a recognized document type but this worker only consumes
+	// Invoice, so it must remain pending indefinitely (checked via a short,
+	// bounded wait rather than waitForStatus, which would otherwise time out
+	// the whole test).
+	res := doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, `<Order xmlns="urn:oasis:names:specification:ubl:schema:xsd:Order-2"/>`, "application/xml")
+	if res.Code != http.StatusAccepted {
+		t.Fatalf("upload status = %d, want %d; body=%s", res.Code, http.StatusAccepted, res.Body.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(res.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	id := payload["id"].(string)
+
+	time.Sleep(300 * time.Millisecond)
+	getRes := doRequest(handler, http.MethodGet, "/api/v1/ubl/"+id, token, "", "")
+	var stored map[string]any
+	if err := json.Unmarshal(getRes.Body.Bytes(), &stored); err != nil {
+		t.Fatalf("decode get response: %v", err)
+	}
+	if stored["status"] != string(queue.StatusPending) {
+		t.Fatalf("status = %v, want %q (Order should not be consumed by an Invoice-only worker)", stored["status"], queue.StatusPending)
+	}
+}

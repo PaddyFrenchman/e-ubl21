@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 
@@ -25,22 +26,41 @@ func newServeCmd(cfg *Config) *cobra.Command {
 func serve(ctx context.Context, stdout io.Writer, cfg *Config) error {
 	addr := net.JoinHostPort(cfg.Host, fmt.Sprintf("%d", cfg.Port))
 
-	server := &http.Server{
+	handler, err := newHandler(cfg)
+	if err != nil {
+		return fmt.Errorf("build HTTP handler: %w", err)
+	}
+
+	httpServer := &http.Server{
 		Addr:    addr,
-		Handler: newHandler(cfg),
+		Handler: handler,
 		BaseContext: func(net.Listener) context.Context {
 			return ctx
 		},
 	}
 
+	if cfg.TLSCertFile != "" || cfg.TLSKeyFile != "" {
+		if cfg.TLSCertFile == "" || cfg.TLSKeyFile == "" {
+			return fmt.Errorf("both --tls-cert-file and --tls-key-file must be set to enable TLS")
+		}
+		fmt.Fprintf(stdout, "starting server on %s (TLS)\n", addr)
+		return httpServer.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
+	}
+
 	fmt.Fprintf(stdout, "starting server on %s\n", addr)
-	return server.ListenAndServe()
+	return httpServer.ListenAndServe()
 }
 
-func newHandler(cfg *Config) http.Handler {
+func newHandler(cfg *Config) (http.Handler, error) {
 	return server.NewHandler(server.Config{
-		OpenAPIPath:   cfg.OpenAPIPath,
-		OAuthIssuer:   cfg.OAuthIssuer,
-		OAuthAudience: cfg.OAuthAudience,
+		OpenAPIPath:     cfg.OpenAPIPath,
+		SwaggerPath:     cfg.SwaggerPath,
+		OAuthIssuer:     cfg.OAuthIssuer,
+		OAuthAudience:   cfg.OAuthAudience,
+		OAuthHMACSecret: cfg.OAuthHMACSecret,
+		NATSURL:         cfg.NATSURL,
+		RateLimitRPS:    cfg.RateLimitRPS,
+		RateLimitBurst:  cfg.RateLimitBurst,
+		Logger:          slog.Default(),
 	})
 }

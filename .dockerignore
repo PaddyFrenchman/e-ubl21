@@ -1,0 +1,14 @@
+# Keep the build context small and avoid invalidating the Docker layer
+# cache with unrelated changes. XSD/ is intentionally NOT excluded: it is
+# embedded into the binary at build time via XSD/embed.go (go:embed).
+.git/
+.github/
+.venv/
+data/
+devsetup/
+docs/
+ideas/
+createsamples/samples/
+e-invoice/
+*.md
+e-ubl21

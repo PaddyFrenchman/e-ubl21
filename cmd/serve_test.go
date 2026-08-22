@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
@@ -15,11 +16,16 @@ func TestNewHandlerServesHealthAndOpenAPI(t *testing.T) {
 
 	issuer := "https://issuer.example.com"
 	audience := "e-ubl21"
-	handler := newHandler(&Config{
-		OpenAPIPath:   "/spec",
-		OAuthIssuer:   issuer,
-		OAuthAudience: audience,
+	handler, err := newHandler(&Config{
+		OpenAPIPath:     "/spec",
+		OAuthIssuer:     issuer,
+		OAuthAudience:   audience,
+		OAuthHMACSecret: "test-secret",
+		NATSURL:         queuetest.StartServer(t),
 	})
+	if err != nil {
+		t.Fatalf("newHandler: %v", err)
+	}
 
 	token := makeJWT(t, issuer, audience)
 

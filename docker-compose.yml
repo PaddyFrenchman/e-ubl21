@@ -1,0 +1,82 @@
+services:
+  nats:
+    image: nats:2.14-alpine
+    container_name: nats
+    restart: unless-stopped
+    command:
+      - "-js"
+      - "-sd"
+      - "/data"
+      - "-m"
+      - "8222"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # The HTTP API: accepts UBL uploads, performs cheap synchronous checks
+  # (well-formed XML, recognized document type), then queues the raw
+  # document on its per-document-type NATS JetStream subject
+  # (ubl.documents.<Type>) and returns immediately with the upload's id and
+  # a "pending" status. See server/upload.go.
+  api:
+    build: .
+    image: e-ubl21:latest
+    container_name: e-ubl21-api
+    restart: unless-stopped
+    command: ["serve"]
+    depends_on:
+      nats:
+        condition: service_healthy
+    environment:
+      EUBL21_HOST: "0.0.0.0"
+      EUBL21_PORT: "8080"
+      EUBL21_NATS_URL: "nats://nats:4222"
+      EUBL21_OAUTH_ISSUER: "${EUBL21_OAUTH_ISSUER:-}"
+      EUBL21_OAUTH_AUDIENCE: "${EUBL21_OAUTH_AUDIENCE:-e-ubl21}"
+      # Required for the API to start (see server/auth.go); override with a
+      # real, secret value in production, e.g. via an env file or secrets
+      # manager rather than committing one here.
+      EUBL21_OAUTH_HMAC_SECRET: "${EUBL21_OAUTH_HMAC_SECRET:-change-me-in-production}"
+      EUBL21_RATE_LIMIT_RPS: "${EUBL21_RATE_LIMIT_RPS:-5}"
+      EUBL21_RATE_LIMIT_BURST: "${EUBL21_RATE_LIMIT_BURST:-10}"
+    ports:
+      - "8080:8080"
+
+  # The validation worker: consumes queued documents from the
+  # ubl.documents.> subjects, validates each against its UBL 2.1 XSD
+  # (server/schema_catalog.go), records the outcome in the shared JetStream
+  # KV upload store, and publishes a result to the single output stream
+  # (ubl.validation.results). See server/worker.go.
+  #
+  # This service can be scaled horizontally (`docker compose up --scale
+  # worker=3`) - replicas share the same durable consumer name and
+  # JetStream load-balances documents across them.
+  worker:
+    build: .
+    image: e-ubl21:latest
+    container_name: e-ubl21-worker
+    restart: unless-stopped
+    command: ["worker"]
+    depends_on:
+      nats:
+        condition: service_healthy
+    environment:
+      EUBL21_NATS_URL: "nats://nats:4222"
+      EUBL21_WORKER_CONSUMER_NAME: "ubl-validator"
+      # Empty processes every document type from a single consumer; set to
+      # e.g. "ubl.documents.Invoice" to dedicate this worker to one
+      # document type's queue instead (see server/worker.go).
+      EUBL21_WORKER_SUBJECT_FILTER: ""
+      EUBL21_WORKER_METRICS_ADDR: ":9091"
+    ports:
+      - "9091:9091"
+
+volumes:
+  nats-data:

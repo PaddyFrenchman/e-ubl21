@@ -10,57 +10,48 @@ security:
 tags:
   - name: UBL
     description: UBL document upload and validation operations.
+  - name: Service
+    description: Service metadata, liveness and metrics endpoints.
 paths:
-  /api/v1/ubl/upload:
-    post:
-      operationId: UBLUploadUploadXMLDocument
+  /:
+    get:
+      operationId: ServiceInfo
       tags:
-        - UBL
-      summary: Upload a UBL 2.1 XML document
-      description: Accepts a UBL 2.1 XML payload for validation and processing.
-      security:
-        - oauth2: []
-      requestBody:
-        required: true
-        description: Raw XML document payload for a UBL 2.1 invoice or other supported document type.
-        content:
-          application/xml:
-            schema:
-              type: string
+        - Service
+      summary: Service information
+      description: >-
+        Returns the service name, the configured Swagger UI path, and the
+        configured OAuth issuer/audience.
       responses:
-        '202':
-          description: Document accepted for validation.
+        '200':
+          description: Service information.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status:
+                  service:
                     type: string
-                    example: accepted
-                  document:
+                  docs:
                     type: string
-                    example: ubl-2.1-xml
-                  receivedAt:
-                    type: string
-                    format: date-time
-                    example: '2026-08-20T12:00:00Z'
+                    description: The path the Swagger UI is served from.
+                  oauth:
+                    type: object
+                    properties:
+                      issuer:
+                        type: string
+                      audience:
+                        type: string
                 required:
-                  - status
-                  - document
-                  - receivedAt
+                  - service
+                  - docs
+                  - oauth
               example:
-                status: accepted
-                document: ubl-2.1-xml
-                receivedAt: '2026-08-20T12:00:00Z'
-        '400':
-          description: Invalid XML payload or malformed request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: invalid XML payload
+                service: e-ubl21
+                docs: /swagger/
+                oauth:
+                  issuer: https://issuer.example.com
+                  audience: e-ubl21
         '401':
           description: Missing or invalid OAuth 2 bearer token.
           content:
@@ -77,6 +68,313 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
                 error: method not allowed
+        '429':
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: rate limit exceeded
+        '500':
+          description: 'Server misconfiguration: no OAuth signing secret is configured.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /healthz:
+    get:
+      operationId: HealthCheck
+      tags:
+        - Service
+      summary: Liveness check
+      responses:
+        '200':
+          description: The service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                required:
+                  - status
+              example:
+                status: ok
+        '401':
+          description: Missing or invalid OAuth 2 bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: missing bearer token
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: method not allowed
+        '429':
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: rate limit exceeded
+        '500':
+          description: 'Server misconfiguration: no OAuth signing secret is configured.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /metrics:
+    get:
+      operationId: Metrics
+      tags:
+        - Service
+      summary: Prometheus metrics
+      description: >-
+        Exposes e_ubl21_* and standard Go runtime/process metrics in the
+        Prometheus text exposition format.
+      responses:
+        '200':
+          description: Metrics in Prometheus text exposition format.
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Missing or invalid OAuth 2 bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: missing bearer token
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: method not allowed
+        '429':
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: rate limit exceeded
+        '500':
+          description: 'Server misconfiguration: no OAuth signing secret is configured.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/ubl/upload:
+    post:
+      operationId: UBLUploadUploadXMLDocument
+      tags:
+        - UBL
+      summary: Upload a UBL 2.1 XML document
+      description: >-
+        Accepts an XML payload, and if it is well-formed and its root element
+        is a recognized UBL 2.1 main document type, queues it on its
+        per-document-type NATS JetStream subject for asynchronous XSD
+        validation and returns immediately with a pending status. Poll GET
+        /api/v1/ubl/{id} for the outcome once the worker has processed it.
+      requestBody:
+        required: true
+        description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type.
+        content:
+          application/xml:
+            schema:
+              type: string
+          text/xml:
+            schema:
+              type: string
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '202':
+          description: >-
+            Document is well-formed and its root element is a recognized UBL
+            2.1 document type. It has been queued for asynchronous XSD
+            validation; its status starts as "pending" and later becomes
+            "valid" or "invalid" once the worker processes it (see GET
+            /api/v1/ubl/{id}).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [pending]
+                  id:
+                    type: string
+                    description: Identifier to retrieve this upload's status/content via GET /api/v1/ubl/{id}.
+                  document:
+                    type: string
+                    description: The UBL 2.1 root element name (e.g. Invoice, Order).
+                  receivedAt:
+                    type: string
+                    format: date-time
+                required:
+                  - status
+                  - id
+                  - document
+                  - receivedAt
+              example:
+                status: pending
+                id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
+                document: Invoice
+                receivedAt: '2026-08-20T12:00:00Z'
+        '400':
+          description: >-
+            Invalid XML payload or an unrecognized document type. Note: this
+            endpoint no longer performs synchronous XSD validation, so a
+            schema-invalid (but well-formed, recognized-type) document is
+            still accepted with 202 - check its status via GET
+            /api/v1/ubl/{id} once processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: 'invalid XML payload: XML document root element is missing'
+        '401':
+          description: Missing or invalid OAuth 2 bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: missing bearer token
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: method not allowed
+        '429':
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: rate limit exceeded
+        '500':
+          description: >-
+            Server misconfiguration: no OAuth signing secret is configured.
+            Alternatively, the document could not be queued (e.g. the
+            NATS/JetStream connection failed).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/ubl/{id}:
+    get:
+      operationId: UBLUploadGetXMLDocument
+      tags:
+        - UBL
+      summary: Retrieve a previously accepted UBL 2.1 XML document
+      description: >-
+        Returns the upload's current status - "pending" (queued, not yet
+        processed), "valid" or "invalid" (processed by the worker) - along
+        with its original content and, once processed, the validation error
+        (if any) and timestamp.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The id returned by a previous successful upload.
+      responses:
+        '200':
+          description: The stored document, its current status, and its metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  document:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, valid, invalid]
+                  receivedAt:
+                    type: string
+                    format: date-time
+                  validatedAt:
+                    type: string
+                    format: date-time
+                    description: Present once the worker has processed the document.
+                  error:
+                    type: string
+                    description: 'Present only when status is "invalid": the XSD validation failure detail.'
+                  content:
+                    type: string
+                    description: The original raw XML payload.
+                required:
+                  - id
+                  - document
+                  - status
+                  - receivedAt
+                  - content
+        '401':
+          description: Missing or invalid OAuth 2 bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: missing bearer token
+        '404':
+          description: No upload exists with the given id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: upload not found
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: method not allowed
+        '429':
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: rate limit exceeded
+        '500':
+          description: 'Server misconfiguration: no OAuth signing secret is configured.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     ErrorResponse:
@@ -85,14 +383,13 @@ components:
       properties:
         error:
           type: string
-          example: invalid XML payload
       required:
         - error
       additionalProperties: false
   securitySchemes:
     oauth2:
       type: oauth2
-      description: OAuth 2 bearer token used to authenticate the caller.
+      description: OAuth 2 bearer token (HS256-signed JWT) used to authenticate the caller.
       flows:
         clientCredentials:
           tokenUrl: https://issuer.example.com/oauth/token

@@ -1,43 +1,110 @@
+// This file wires together the HTTP API: route registration, request
+// observability (log/slog + Prometheus, see logging.go/metrics.go),
+// OAuth2 bearer-token verification (see auth.go), and per-client rate
+// limiting (see ratelimit.go). The individual endpoint handlers live in
+// upload.go (UBL upload/retrieval, backed by the queue package's JetStream
+// KV upload store), schema_catalog.go (XSD validation, used here only to
+// recognize supported document types - actual validation happens
+// asynchronously in the worker, see worker.go) and openapi.go (the served
+// OpenAPI document).
 package server
 
 import (
+	"context"
 	"encoding/json"
-	"encoding/xml"
-	"errors"
 	"fmt"
-	"io"
+	"log/slog"
 	"net/http"
 	"strings"
-	"time"
 
-	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/PaddyFrenchman/e-ubl21/queue"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 // Config holds HTTP server configuration.
 type Config struct {
 	OpenAPIPath   string
+	SwaggerPath   string
 	OAuthIssuer   string
 	OAuthAudience string
+	// OAuthHMACSecret is the shared secret used to verify the HS256
+	// signature of bearer tokens. Required for any protected route to work;
+	// if empty, protected routes fail closed with 500 rather than skipping
+	// signature verification.
+	OAuthHMACSecret string
+	// NATSURL is the NATS server to connect to for queuing uploaded
+	// documents and reading/writing their status (see the queue package).
+	// Required: NewHandler returns an error if a connection cannot be
+	// established.
+	NATSURL string
+	// RateLimitRPS and RateLimitBurst configure the per-client-IP token
+	// bucket rate limiter applied to every route. Non-positive values fall
+	// back to sensible defaults (5 req/s, burst of 10).
+	RateLimitRPS   float64
+	RateLimitBurst int
+	// Logger receives structured request logs. Defaults to slog.Default().
+	Logger *slog.Logger
 }
 
-// NewHandler builds the OAuth2-protected HTTP API for UBL validation uploads.
-func NewHandler(cfg Config) http.Handler {
-	mux := http.NewServeMux()
-	openAPIPath := cfg.OpenAPIPath
-	if openAPIPath == "" {
-		openAPIPath = "/openapi.json"
-	}
-	if !strings.HasPrefix(openAPIPath, "/") {
-		openAPIPath = "/" + openAPIPath
+// NewHandler builds the OAuth2-protected HTTP API for UBL validation
+// uploads. It performs some upfront, potentially fallible setup (extracting
+// the embedded XSD schema tree and connecting to NATS/ensuring the
+// JetStream streams and KV bucket it depends on exist), so it can return an
+// error.
+func NewHandler(cfg Config) (http.Handler, error) {
+	logger := cfg.Logger
+	if logger == nil {
+		logger = slog.Default()
 	}
 
-	mux.HandleFunc("/", requireOAuth2(cfg.OAuthIssuer, cfg.OAuthAudience, func(w http.ResponseWriter, r *http.Request) {
+	openAPIPath := normalizePath(cfg.OpenAPIPath, "/openapi.json", false)
+	swaggerPath := normalizePath(cfg.SwaggerPath, "/swagger/", true)
+
+	catalog, err := loadSchemaCatalog()
+	if err != nil {
+		return nil, fmt.Errorf("load UBL 2.1 schema catalog: %w", err)
+	}
+	q, err := queue.Connect(cfg.NATSURL)
+	if err != nil {
+		return nil, fmt.Errorf("connect to NATS: %w", err)
+	}
+	if err := q.EnsureInfra(context.Background()); err != nil {
+		return nil, fmt.Errorf("ensure JetStream infrastructure: %w", err)
+	}
+	uploads := &uploadHandlers{catalog: catalog, queue: q}
+
+	auth := newOAuthValidator(cfg.OAuthHMACSecret, cfg.OAuthIssuer, cfg.OAuthAudience)
+
+	rps := cfg.RateLimitRPS
+	if rps <= 0 {
+		rps = 5
+	}
+	burst := cfg.RateLimitBurst
+	if burst <= 0 {
+		burst = 10
+	}
+	limiter, _ := newIPRateLimiter(rps, burst)
+
+	mux := http.NewServeMux()
+
+	// register wraps handler with request observability (always) and OAuth2
+	// bearer-token verification (unless public is true), then registers it
+	// under pattern on mux. route is the low-cardinality metrics label.
+	register := func(pattern, route string, public bool, handler http.HandlerFunc) {
+		if !public {
+			handler = auth.requireOAuth2(handler)
+		}
+		mux.HandleFunc(pattern, observabilityMiddleware(logger, route, handler))
+	}
+
+	register("/", "/", false, requireGET(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"service": "e-ubl21",
+			"docs":    swaggerPath,
 			"oauth": map[string]string{
 				"issuer":   cfg.OAuthIssuer,
 				"audience": cfg.OAuthAudience,
@@ -45,255 +112,64 @@ func NewHandler(cfg Config) http.Handler {
 		})
 	}))
 
-	mux.HandleFunc("/healthz", requireOAuth2(cfg.OAuthIssuer, cfg.OAuthAudience, func(w http.ResponseWriter, _ *http.Request) {
+	register("/healthz", "/healthz", false, requireGET(func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	}))
 
-	mux.HandleFunc(openAPIPath, requireOAuth2(cfg.OAuthIssuer, cfg.OAuthAudience, func(w http.ResponseWriter, _ *http.Request) {
+	register("/metrics", "/metrics", false, requireGET(metricsHandler()))
+
+	// The OpenAPI document and the Swagger UI that renders it are left
+	// unauthenticated (unlike every other route) so the API is
+	// self-discoverable without first obtaining a bearer token.
+	register(openAPIPath, openAPIPath, true, requireGET(func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, openAPIDocument())
 	}))
+	register(swaggerPath, swaggerPath, true, httpSwagger.Handler(httpSwagger.URL(openAPIPath)))
 
-	mux.HandleFunc("/api/v1/ubl/upload", requireOAuth2(cfg.OAuthIssuer, cfg.OAuthAudience, func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
+	// These two are registered as bare (method-agnostic) patterns, with the
+	// handlers themselves enforcing the allowed method and returning a
+	// proper 405 JSON error - not "POST /api/v1/ubl/upload"/"GET
+	// /api/v1/ubl/{id}" method-restricted patterns. That matters because
+	// the catch-all "/" pattern above (registered with no method
+	// restriction) would otherwise be the only pattern matching a
+	// wrong-method request to these paths, since Go's ServeMux only
+	// generates its own automatic 405 when some *other* registered pattern
+	// still matches the path; a method-restricted pattern simply doesn't
+	// match at all on a method mismatch, silently falling through to "/"'s
+	// own 404 instead.
+	register("/api/v1/ubl/upload", "/api/v1/ubl/upload", false, uploads.handleUpload)
+	register("/api/v1/ubl/{id}", "/api/v1/ubl/{id}", false, uploads.handleGetUpload)
 
-		body, err := readUploadBody(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if len(strings.TrimSpace(string(body))) == 0 {
-			http.Error(w, "request body is empty", http.StatusBadRequest)
-			return
-		}
-
-		if err := validateXMLPayload(body); err != nil {
-			http.Error(w, "invalid XML payload: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		writeJSON(w, http.StatusAccepted, map[string]any{
-			"status":     "accepted",
-			"document":   "ubl-2.1-xml",
-			"receivedAt": time.Now().UTC().Format(time.RFC3339),
-		})
-	}))
-
-	return mux
+	return limiter.middleware(mux), nil
 }
 
-func requireOAuth2(issuer, audience string, next http.HandlerFunc) http.HandlerFunc {
+// normalizePath ensures path is non-empty (falling back to def), starts
+// with a leading slash, and - if requireTrailingSlash is set (for subtree
+// routes like the Swagger UI) - ends with a trailing slash too.
+func normalizePath(path, def string, requireTrailingSlash bool) string {
+	if path == "" {
+		path = def
+	}
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	if requireTrailingSlash && !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	return path
+}
+
+// requireGET wraps next so any non-GET request gets a proper 405 JSON error
+// instead of silently being handled like a GET (the default for a plain,
+// method-agnostic mux pattern).
+func requireGET(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tokenString, err := bearerToken(r)
-		if err != nil {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": err.Error()})
-			return
-		}
-		if err := validateBearerToken(tokenString, issuer, audience); err != nil {
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": err.Error()})
+		if r.Method != http.MethodGet {
+			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 			return
 		}
 		next(w, r)
 	}
-}
-
-func bearerToken(r *http.Request) (string, error) {
-	authorization := r.Header.Get("Authorization")
-	if authorization == "" {
-		return "", errors.New("missing bearer token")
-	}
-	parts := strings.SplitN(authorization, " ", 2)
-	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") || strings.TrimSpace(parts[1]) == "" {
-		return "", errors.New("authorization header must use Bearer token")
-	}
-	return strings.TrimSpace(parts[1]), nil
-}
-
-func validateBearerToken(rawToken, issuer, audience string) error {
-	if rawToken == "" {
-		return errors.New("missing bearer token")
-	}
-	if !strings.Contains(rawToken, ".") {
-		return errors.New("token is not a JWT")
-	}
-
-	claims := jwt.MapClaims{}
-	parser := new(jwt.Parser)
-	_, _, err := parser.ParseUnverified(rawToken, claims)
-	if err != nil {
-		return fmt.Errorf("invalid JWT: %w", err)
-	}
-
-	if issuer != "" {
-		iss, ok := claims["iss"].(string)
-		if !ok || iss != issuer {
-			return fmt.Errorf("issuer claim mismatch: want %q", issuer)
-		}
-	}
-
-	if audience != "" {
-		if err := validateAudience(claims["aud"], audience); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func validateAudience(raw any, expected string) error {
-	switch v := raw.(type) {
-	case string:
-		if v == expected {
-			return nil
-		}
-		return fmt.Errorf("audience claim mismatch: want %q", expected)
-	case []any:
-		for _, item := range v {
-			if s, ok := item.(string); ok && s == expected {
-				return nil
-			}
-		}
-		return fmt.Errorf("audience claim mismatch: want %q", expected)
-	case []string:
-		for _, item := range v {
-			if item == expected {
-				return nil
-			}
-		}
-		return fmt.Errorf("audience claim mismatch: want %q", expected)
-	default:
-		return fmt.Errorf("audience claim mismatch: want %q", expected)
-	}
-}
-
-func openAPIDocument() map[string]any {
-	return map[string]any{
-		"openapi": "3.0.3",
-		"info": map[string]any{
-			"title":       "e-ubl21 API",
-			"version":     "0.1.0",
-			"description": "API for uploading and validating UBL 2.1 XML documents.",
-		},
-		"servers": []map[string]string{{"url": "https://api.example.com"}},
-		"security": []map[string][]string{{"oauth2": {}}},
-		"tags": []map[string]string{{"name": "UBL", "description": "UBL document upload and validation operations."}},
-		"paths": map[string]any{
-			"/api/v1/ubl/upload": map[string]any{
-				"post": map[string]any{
-					"operationId": "UBLUploadUploadXMLDocument",
-					"tags":        []string{"UBL"},
-					"summary":     "Upload a UBL 2.1 XML document",
-					"description": "Accepts a UBL 2.1 XML payload for validation and processing.",
-					"security":    []map[string][]string{{"oauth2": {}}},
-					"requestBody": map[string]any{
-						"required":    true,
-						"description": "Raw XML document payload for a UBL 2.1 invoice or other supported document type.",
-						"content": map[string]any{
-							"application/xml": map[string]any{
-								"schema": map[string]any{"type": "string"},
-							},
-						},
-					},
-					"responses": map[string]any{
-						"202": map[string]any{
-							"description": "Document accepted for validation.",
-							"content": map[string]any{
-								"application/json": map[string]any{
-									"schema": map[string]any{
-										"type": "object",
-										"properties": map[string]any{
-											"status": map[string]any{"type": "string"},
-											"document": map[string]any{"type": "string"},
-											"receivedAt": map[string]any{"type": "string", "format": "date-time"},
-										},
-										"required": []string{"status", "document", "receivedAt"},
-									},
-									"example": map[string]any{
-										"status":     "accepted",
-										"document":   "ubl-2.1-xml",
-										"receivedAt": "2026-08-20T12:00:00Z",
-									},
-								},
-							},
-						},
-						"400": map[string]any{
-							"description": "Invalid XML payload or malformed request.",
-							"content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"$ref": "#/components/schemas/ErrorResponse"}}},
-						},
-						"401": map[string]any{
-							"description": "Missing or invalid OAuth 2 bearer token.",
-							"content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"$ref": "#/components/schemas/ErrorResponse"}}},
-						},
-						"405": map[string]any{
-							"description": "Method not allowed.",
-							"content": map[string]any{"application/json": map[string]any{"schema": map[string]any{"$ref": "#/components/schemas/ErrorResponse"}}},
-						},
-					},
-				},
-			},
-		},
-		"components": map[string]any{
-			"schemas": map[string]any{
-				"ErrorResponse": map[string]any{
-					"description": "Standard error payload returned when a request is rejected.",
-					"type":        "object",
-					"properties": map[string]any{"error": map[string]any{"type": "string"}},
-					"required":    []string{"error"},
-					"additionalProperties": false,
-				},
-			},
-			"securitySchemes": map[string]any{
-				"oauth2": map[string]any{
-					"type":        "oauth2",
-					"description": "OAuth 2 bearer token used to authenticate the caller.",
-					"flows": map[string]any{
-						"clientCredentials": map[string]any{
-							"tokenUrl": "https://issuer.example.com/oauth/token",
-							"scopes":   map[string]string{},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func readUploadBody(r *http.Request) ([]byte, error) {
-	if r.ContentLength == 0 {
-		return nil, errors.New("request body is required")
-	}
-	body, err := io.ReadAll(io.LimitReader(r.Body, 10<<20))
-	if err != nil {
-		return nil, err
-	}
-	contentType := r.Header.Get("Content-Type")
-	if !strings.Contains(contentType, "xml") && !strings.Contains(contentType, "octet-stream") {
-		return nil, errors.New("content-type must be application/xml, text/xml, or application/octet-stream")
-	}
-	return body, nil
-}
-
-func validateXMLPayload(body []byte) error {
-	trimmed := strings.TrimSpace(string(body))
-	if trimmed == "" {
-		return errors.New("empty XML payload")
-	}
-	if strings.HasPrefix(trimmed, "<") == false {
-		return errors.New("payload is not XML")
-	}
-
-	var doc struct {
-		XMLName xml.Name
-	}
-	if err := xml.Unmarshal(body, &doc); err != nil {
-		return err
-	}
-	if doc.XMLName.Local == "" {
-		return errors.New("XML document root element is missing")
-	}
-	return nil
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {
