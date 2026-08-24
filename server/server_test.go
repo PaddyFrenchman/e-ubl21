@@ -61,11 +61,17 @@ func testConfig(t *testing.T, overrides func(*Config)) Config {
 
 func newTestHandler(t *testing.T, overrides func(*Config)) http.Handler {
 	t.Helper()
-	handler, err := NewHandler(testConfig(t, overrides))
+	return newApplicationHandler(t, testConfig(t, overrides))
+}
+
+func newApplicationHandler(t *testing.T, cfg Config) http.Handler {
+	t.Helper()
+	application, err := NewApplication(cfg)
 	if err != nil {
-		t.Fatalf("NewHandler: %v", err)
+		t.Fatalf("NewApplication: %v", err)
 	}
-	return handler
+	t.Cleanup(application.Close)
+	return application.Handler
 }
 
 func TestApplicationCloseReleasesNATSConnection(t *testing.T) {

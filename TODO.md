@@ -344,19 +344,28 @@ Remove avoidable control-plane lookups and repeated construction from hot paths.
 `queue.Client` caches the upload metadata KV and raw-content Object Store
 handles returned by `EnsureInfra`; synchronized lazy fallback remains available
 for callers that open an already-created deployment without initialization.
+Cold fallback discovery uses double-checked exclusive locking, so concurrent
+first callers coalesce into one KV lookup and one Object Store lookup.
 Normal record/content operations no longer repeat JetStream control-plane
 discovery. The API's OAuth validator now reuses an immutable configured JWT
-parser and key function, and the served OpenAPI map is constructed once.
+parser and key function. The OpenAPI map and its serialized JSON payload are
+both constructed once; `/openapi.json` writes the immutable cached bytes
+without walking and encoding the map per request.
 
-The lifecycle-owning `server.Application` closes its shared NATS connection
-after graceful HTTP shutdown; `NewHandler` remains as a compatibility wrapper.
+All API construction now uses lifecycle-owning `server.Application`, which
+closes its shared NATS connection after graceful HTTP shutdown. The former
+handler-only constructor was removed so callers cannot discard ownership.
 
 Comparative 100-iteration benchmarks on the development host measured cached
-KV handle access at 16 ns/op and zero allocations versus 99.9 us/op, 19.0 KiB,
-and 159 allocations for control-plane lookup. Cached JWT parsing measured
+KV handle access at 15.5 ns/op and zero allocations versus 93.7 us/op,
+18.8 KiB, and 159 allocations for control-plane lookup. Cached Object Store
+handle access measured 16.3 ns/op and zero allocations versus 79.3 us/op,
+18.7 KiB, and 160 allocations for control-plane lookup. Cached JWT parsing measured
 6.30 us/op and 49 allocations versus 7.80 us/op and 60 allocations when
-rebuilding configuration. Cached OpenAPI access measured 3.18 ns/op and zero
-allocations versus 47.3 us/op, 55.2 KiB, and 392 allocations when rebuilding.
+rebuilding configuration. OpenAPI endpoint-ready byte access measured
+3.87 ns/op with zero allocations, versus 98.2 us/op, 32.8 KiB, and 787
+allocations to serialize the cached map, or 129.5 us/op, 86.7 KiB, and 1,179
+allocations to rebuild and serialize it.
 
 ### Acceptance criteria
 

@@ -84,10 +84,7 @@ func TestWorkerMetricsMuxHealthStates(t *testing.T) {
 
 func TestHandlerRootAndNotFoundRoutes(t *testing.T) {
 	cfg := testConfig(t, nil)
-	h, err := NewHandler(cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	h := newApplicationHandler(t, cfg)
 	token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
 	for path, want := range map[string]int{"/": http.StatusOK, "/missing": http.StatusNotFound} {
 		res := doRequest(h, http.MethodGet, path, token, "", "")

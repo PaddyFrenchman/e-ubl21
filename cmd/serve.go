@@ -120,10 +120,6 @@ func runHTTPServer(ctx context.Context, httpServer *http.Server, shutdownTimeout
 	}
 }
 
-func newHandler(cfg *Config) (http.Handler, error) {
-	return server.NewHandler(serverConfig(cfg))
-}
-
 func serverConfig(cfg *Config) server.Config {
 	return server.Config{
 		OpenAPIPath:     cfg.OpenAPIPath,

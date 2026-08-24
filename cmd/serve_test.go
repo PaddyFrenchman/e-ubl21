@@ -8,26 +8,29 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
+	"github.com/PaddyFrenchman/e-ubl21/server"
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-func TestNewHandlerServesHealthAndOpenAPI(t *testing.T) {
+func TestNewApplicationServesHealthAndOpenAPI(t *testing.T) {
 	t.Parallel()
 
 	issuer := "https://issuer.example.com"
 	audience := "e-ubl21"
 	natsServer := queuetest.StartServer(t)
-	handler, err := newHandler(&Config{
+	application, err := server.NewApplication(serverConfig(&Config{
 		OpenAPIPath:     "/spec",
 		OAuthIssuer:     issuer,
 		OAuthAudience:   audience,
 		OAuthHMACSecret: "test-secret",
 		NATSURL:         natsServer.URL,
 		NATSOptions:     natsServer.Options,
-	})
+	}))
 	if err != nil {
-		t.Fatalf("newHandler: %v", err)
+		t.Fatalf("NewApplication: %v", err)
 	}
+	t.Cleanup(application.Close)
+	handler := application.Handler
 
 	token := makeJWT(t, issuer, audience)
 

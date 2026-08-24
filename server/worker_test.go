@@ -159,10 +159,7 @@ func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {
 
 	cfg := testConfig(t, nil)
 	runTestWorker(t, cfg, nil)
-	handler, err := NewHandler(cfg)
-	if err != nil {
-		t.Fatalf("NewHandler: %v", err)
-	}
+	handler := newApplicationHandler(t, cfg)
 	token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
 
 	res := doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, validInvoiceXML, "application/xml")
@@ -192,10 +189,7 @@ func TestWorkerFlagsSchemaInvalidDocument(t *testing.T) {
 
 	cfg := testConfig(t, nil)
 	runTestWorker(t, cfg, nil)
-	handler, err := NewHandler(cfg)
-	if err != nil {
-		t.Fatalf("NewHandler: %v", err)
-	}
+	handler := newApplicationHandler(t, cfg)
 	token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
 
 	res := doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, invalidInvoiceXML, "application/xml")
@@ -226,10 +220,7 @@ func TestWorkerFilterRestrictsToOneDocumentType(t *testing.T) {
 		wc.SubjectFilter = cfg.QueueNamespace.DocumentSubject("Invoice")
 		wc.ConsumerName = "invoice-only-test-worker"
 	})
-	handler, err := NewHandler(cfg)
-	if err != nil {
-		t.Fatalf("NewHandler: %v", err)
-	}
+	handler := newApplicationHandler(t, cfg)
 	token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
 
 	// Order is a recognized document type but this worker only consumes

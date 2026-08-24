@@ -37,20 +37,28 @@ func BenchmarkOAuthValidationParser(b *testing.B) {
 	})
 }
 
-func BenchmarkOpenAPIDocument(b *testing.B) {
-	b.Run("cached", func(b *testing.B) {
+func BenchmarkOpenAPIRepresentation(b *testing.B) {
+	b.Run("cached_json", func(b *testing.B) {
 		b.ReportAllocs()
 		for i := 0; i < b.N; i++ {
-			if openAPIDocument() == nil {
-				b.Fatal("nil OpenAPI document")
+			if len(cachedOpenAPIJSON) == 0 {
+				b.Fatal("empty OpenAPI JSON")
 			}
 		}
 	})
-	b.Run("rebuild_each_request", func(b *testing.B) {
+	b.Run("marshal_cached_map_each_request", func(b *testing.B) {
 		b.ReportAllocs()
 		for i := 0; i < b.N; i++ {
-			if buildOpenAPIDocument() == nil {
-				b.Fatal("nil OpenAPI document")
+			if len(mustMarshalOpenAPI(openAPIDocument())) == 0 {
+				b.Fatal("empty OpenAPI JSON")
+			}
+		}
+	})
+	b.Run("rebuild_and_marshal_each_request", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			if len(mustMarshalOpenAPI(buildOpenAPIDocument())) == 0 {
+				b.Fatal("empty OpenAPI JSON")
 			}
 		}
 	})

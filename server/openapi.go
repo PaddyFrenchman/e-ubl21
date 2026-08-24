@@ -2,7 +2,10 @@
 // configurable OpenAPIPath and rendered by the Swagger UI (see server.go).
 package server
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 func responseRef(name string) map[string]any {
 	return map[string]any{"$ref": "#/components/responses/" + name}
@@ -46,9 +49,18 @@ func commonErrorResponses() map[string]any {
 }
 
 var cachedOpenAPIDocument = buildOpenAPIDocument()
+var cachedOpenAPIJSON = mustMarshalOpenAPI(cachedOpenAPIDocument)
 
 func openAPIDocument() map[string]any {
 	return cachedOpenAPIDocument
+}
+
+func mustMarshalOpenAPI(document map[string]any) []byte {
+	encoded, err := json.Marshal(document)
+	if err != nil {
+		panic(fmt.Sprintf("marshal cached OpenAPI document: %v", err))
+	}
+	return encoded
 }
 
 func buildOpenAPIDocument() map[string]any {

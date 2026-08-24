@@ -33,14 +33,6 @@ type Config struct {
 	Logger          *slog.Logger
 }
 
-func NewHandler(cfg Config) (http.Handler, error) {
-	application, err := NewApplication(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return application.Handler, nil
-}
-
 // Application owns the API handler and its reusable runtime dependencies.
 // Close releases the NATS connection after HTTP shutdown has drained.
 type Application struct {
@@ -123,7 +115,9 @@ func NewApplication(cfg Config) (*Application, error) {
 	register("/metrics", "/metrics", false, requireGET(metricsHandler()))
 
 	register(openAPIPath, openAPIPath, true, requireGET(func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, openAPIDocument())
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(cachedOpenAPIJSON)
 	}))
 	register(swaggerPath, swaggerPath, true, httpSwagger.Handler(httpSwagger.URL(openAPIPath)))
 

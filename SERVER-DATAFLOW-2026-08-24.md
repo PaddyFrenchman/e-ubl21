@@ -1014,8 +1014,12 @@ rejects incoherent or impractically small limits.
 
 Resolved by TODO-007. `server.Application` now owns both the HTTP handler and
 the reusable queue client. The API command closes the application's NATS
-connection after bounded graceful HTTP shutdown. `NewHandler` remains as a
-compatibility wrapper for embedding and tests.
+connection after bounded graceful HTTP shutdown. All in-repository embedding
+and tests use `NewApplication`; the former handler-only constructor was removed
+so lifecycle ownership cannot be lost.
+
+The served OpenAPI representation is prebuilt and serialized once at process
+initialization; `/openapi.json` writes the immutable cached JSON bytes directly.
 
 ---
 

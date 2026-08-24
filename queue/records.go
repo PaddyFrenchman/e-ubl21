@@ -154,18 +154,18 @@ func (c *Client) uploadsBucket(ctx context.Context) (jetstream.KeyValue, error) 
 	if cached != nil {
 		return cached, nil
 	}
+	c.handlesMu.Lock()
+	defer c.handlesMu.Unlock()
+	if c.cachedUploadsKV != nil {
+		return c.cachedUploadsKV, nil
+	}
 	uploadsBucketName := c.Namespace.UploadsBucketName()
 	kv, err := c.JS.KeyValue(ctx, uploadsBucketName)
 	if err != nil {
 		return nil, fmt.Errorf("open %s KV bucket: %w", uploadsBucketName, err)
 	}
-	c.handlesMu.Lock()
-	if c.cachedUploadsKV == nil {
-		c.cachedUploadsKV = kv
-	}
-	cached = c.cachedUploadsKV
-	c.handlesMu.Unlock()
-	return cached, nil
+	c.cachedUploadsKV = kv
+	return kv, nil
 }
 
 func (c *Client) uploadContentStore(ctx context.Context) (jetstream.ObjectStore, error) {
@@ -175,16 +175,16 @@ func (c *Client) uploadContentStore(ctx context.Context) (jetstream.ObjectStore,
 	if cached != nil {
 		return cached, nil
 	}
+	c.handlesMu.Lock()
+	defer c.handlesMu.Unlock()
+	if c.cachedUploadContentStore != nil {
+		return c.cachedUploadContentStore, nil
+	}
 	bucketName := c.Namespace.UploadContentBucketName()
 	store, err := c.JS.ObjectStore(ctx, bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("open %s Object Store: %w", bucketName, err)
 	}
-	c.handlesMu.Lock()
-	if c.cachedUploadContentStore == nil {
-		c.cachedUploadContentStore = store
-	}
-	cached = c.cachedUploadContentStore
-	c.handlesMu.Unlock()
-	return cached, nil
+	c.cachedUploadContentStore = store
+	return store, nil
 }
