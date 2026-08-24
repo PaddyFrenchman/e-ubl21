@@ -156,7 +156,8 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	}
 	defer messages.Stop()
 	jobs := make(chan jetstream.Msg, settings.prefetch)
-	workerPullBufferCapacity.Set(float64(settings.prefetch))
+	workerJobsChannelCapacity.Set(float64(settings.prefetch))
+	workerNATSIteratorCapacity.Set(float64(localCapacity))
 	defer workerJobsChannelDepth.Set(0)
 
 	var workers sync.WaitGroup

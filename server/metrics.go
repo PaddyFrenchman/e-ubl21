@@ -52,9 +52,14 @@ var (
 		Help: "Current number of pulled documents waiting in the bounded Go jobs channel; excludes the NATS iterator's separately bounded internal buffer.",
 	})
 
-	workerPullBufferCapacity = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "e_ubl21_worker_pull_buffer_capacity",
-		Help: "Configured maximum number of documents waiting in the local worker buffer.",
+	workerJobsChannelCapacity = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_worker_jobs_channel_capacity",
+		Help: "Configured capacity of the bounded Go jobs channel.",
+	})
+
+	workerNATSIteratorCapacity = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_worker_nats_iterator_capacity",
+		Help: "Configured per-process NATS iterator message limit, equal to concurrency plus prefetch.",
 	})
 
 	workerRedeliveries = promauto.NewCounter(prometheus.CounterOpts{

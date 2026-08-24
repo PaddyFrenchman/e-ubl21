@@ -254,9 +254,9 @@ also sends `InProgress()` at half the AckWait interval, resetting the NATS
 redelivery timer through XML fetch, validation, and result persistence.
 
 Prometheus now exposes in-flight validations, the explicit Go jobs-channel
-depth, configured jobs-channel capacity, and observed redeliveries. The NATS
-iterator has its own bounded internal buffer and is deliberately not included
-in the jobs-channel depth metric. The end-to-end
+depth and capacity, the per-process NATS iterator capacity, and observed
+redeliveries. The NATS iterator's contents are deliberately not included in
+the jobs-channel depth metric. The end-to-end
 `BenchmarkWorkerValidationThroughput` covers Object Store, xmllint, KV and
 result publication for small, 1 MiB, and near-limit 9 MiB documents. A local
 three-document sample at concurrency/prefetch `2/2` measured 14.33, 15.76,
