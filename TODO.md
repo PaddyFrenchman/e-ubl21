@@ -23,7 +23,7 @@ The TODO identifier is **not** its implementation priority. The sections below a
 | Execution order | TODO | Summary |
 |---:|---|---|
 | 1 | **TODO-001** | ✅ DONE — Make JetStream stream, subject and KV names configurable |
-| 2 | **TODO-005** | Optimize upload parsing and eliminate unnecessary full-payload copies |
+| 2 | **TODO-005** | ✅ DONE — Optimize upload parsing and eliminate unnecessary full-payload copies |
 | 3 | **TODO-006** | Split the lightweight API document catalog from worker XSD extraction |
 | 4 | **TODO-002** | Separate upload metadata/status from raw XML content |
 | 5 | **TODO-004** | Optimize and bound `xmllint` validation execution |
@@ -36,7 +36,7 @@ The TODO identifier is **not** its implementation priority. The sections below a
 ```text
 Phase A — foundation
   TODO-001 ✅ DONE
-  TODO-005
+  TODO-005 ✅ DONE
   TODO-006
 
 Phase B — reduce data movement
@@ -139,25 +139,40 @@ A worker configured for one namespace does not consume documents, update upload 
 
 ---
 
-## TODO-005 — Optimize upload parsing and eliminate unnecessary full-payload copies
+## TODO-005 — Optimize upload parsing and eliminate unnecessary full-payload copies ✅ DONE
 
-The HTTP upload path currently converts the body to `string` multiple times and uses `xml.Unmarshal` over the full document merely to identify its root element.
+**Status:** Completed and re-verified on 2026-08-24.
+
+### Former state
+
+The HTTP upload path converted the body to `string` multiple times and used `xml.Unmarshal` over the full document merely to identify its root element. The old `io.LimitReader` size cap could also silently truncate an oversized payload instead of distinctly rejecting it.
 
 ### Goal
 
 Keep the synchronous API ingress path lightweight and proportional to the minimum work required before queuing.
 
+### Resolution
+
+The upload path now keeps the request body as `[]byte` throughout ingress, uses `bytes.TrimSpace` for cheap checks, and uses `xml.Decoder.Token()` only until the first `xml.StartElement`. Root recognition validates both local name and namespace against the UBL 2.1 schema catalog.
+
+The API deliberately does not claim to establish complete XML well-formedness synchronously. A syntactically valid recognized root can be accepted even if the tail is malformed; full well-formedness and XSD validation are performed asynchronously by the worker's `xmllint` run.
+
+Upload size enforcement now uses `http.MaxBytesReader`, with a declared-size fast rejection and deterministic `413 Payload Too Large` handling for oversized bodies, including unknown/chunked lengths.
+
+The raw XML is no longer converted to `string` or JSON-wrapped on the upload path. It is stored separately as bytes and the same body slice is passed to document publication. Any conversion to string now happens only on retrieval when producing the existing JSON response.
+
 ### Requirements
 
-- Use `bytes.TrimSpace` or streaming inspection rather than converting the full payload to `string` for empty/XML-prefix checks.
-- Use `xml.Decoder` and stop after the first `StartElement` to identify the root element and namespace.
-- Validate the expected UBL root namespace as well as the local element name.
-- Enforce the upload size limit exactly, rejecting oversized bodies instead of silently truncating via `io.LimitReader`.
-- Avoid additional full-body copies before publishing/storing the document.
+- [x] Use `bytes.TrimSpace` or streaming inspection rather than converting the full payload to `string` for empty/XML-prefix checks.
+- [x] Use `xml.Decoder` and stop after the first `StartElement` to identify the root element and namespace.
+- [x] Validate the expected UBL root namespace as well as the local element name.
+- [x] Enforce the upload size limit exactly, rejecting oversized bodies instead of silently truncating via `io.LimitReader`.
+- [x] Avoid additional full-body copies before publishing/storing the document.
+- [x] Correct API/comments/documentation so synchronous root recognition is not described as full-document well-formedness validation.
 
 ### Acceptance criteria
 
-Root-document detection does not parse the entire XML tree and does not require full-size `[]byte`→`string` copies. Oversized uploads are rejected deterministically.
+Root-document detection does not parse the entire XML tree and does not require full-size `[]byte`→`string` copies. Oversized uploads are rejected deterministically. Tests cover early root detection, namespace mismatch, exact-limit bodies and oversized bodies.
 
 ---
 
@@ -184,23 +199,28 @@ Starting the API service does not extract the full UBL XSD tree to disk.
 
 ## TODO-002 — Separate upload metadata/status from raw XML content
 
-`UploadRecord` currently stores the complete XML document together with mutable status metadata in one JetStream KV value. Updating a document from `pending` to `valid`/`invalid` therefore reads, unmarshals, re-marshals and rewrites the complete XML payload even though only status fields changed. Repeated status polling also returns the complete XML document every time.
+### Current state
+
+Partial progress was completed while closing TODO-005: `UploadRecord` no longer contains the raw XML, and raw content now lives in a separate namespace-scoped upload-content KV bucket. Status updates therefore no longer read or rewrite the document body.
+
+The remaining TODO-002 work is primarily about reducing data movement beyond that split: status polling still returns the full XML by default, and the JetStream work message still carries the raw XML payload rather than a small content reference/work descriptor.
 
 ### Goal
 
-Make status operations small and cheap regardless of document size.
+Make status operations and normal polling small and cheap regardless of document size, and avoid unnecessary duplication of raw XML through the asynchronous pipeline.
 
 ### Preferred architecture
 
-- Keep mutable upload metadata/status in `UBL_UPLOADS` KV.
-- Store immutable raw XML separately, preferably in a JetStream Object Store or equivalent blob-oriented store.
-- Queue a small work item containing the upload id/document metadata rather than duplicating the full XML in both durable status storage and the work stream, if benchmarks confirm this is advantageous.
-- Make `GET /api/v1/ubl/{id}` return status/metadata by default.
-- Expose raw XML through a separate endpoint or explicit `includeContent` mechanism.
+- [x] Keep mutable upload metadata/status separate from immutable raw XML content.
+- [x] Ensure status updates do not read or rewrite raw XML.
+- [ ] Make `GET /api/v1/ubl/{id}` return status/metadata by default.
+- [ ] Expose raw XML through a separate endpoint or explicit `includeContent` mechanism.
+- [ ] Evaluate queueing a small work item containing the upload id/document metadata instead of duplicating the full XML in the work stream, with benchmarks before changing the design.
+- [ ] Evaluate whether the current KV content store should remain KV or become JetStream Object Store/blob-oriented storage for large immutable XML.
 
 ### Acceptance criteria
 
-Changing an upload status must not read or rewrite the raw XML payload. Polling validation status must transfer only small metadata unless the caller explicitly asks for document content.
+Changing an upload status must not read or rewrite the raw XML payload. Polling validation status must transfer only small metadata unless the caller explicitly asks for document content. Any change from raw-payload queue messages to reference-based work messages must be justified by benchmark/reliability data.
 
 ---
 
