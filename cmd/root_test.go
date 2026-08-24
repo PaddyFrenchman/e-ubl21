@@ -114,3 +114,21 @@ func TestLoadConfigReadsWorkerValidationTimeout(t *testing.T) {
 		t.Fatalf("worker delivery config = concurrency %d, prefetch %d, ack wait %s, max deliver %d, max ack pending %d", cfg.WorkerConcurrency, cfg.WorkerPrefetch, cfg.WorkerAckWait, cfg.WorkerMaxDeliver, cfg.WorkerMaxAckPending)
 	}
 }
+
+func TestLoadConfigReadsHTTPResourceLimits(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	t.Setenv("EUBL21_HTTP_READ_HEADER_TIMEOUT", "2s")
+	t.Setenv("EUBL21_HTTP_READ_TIMEOUT", "45s")
+	t.Setenv("EUBL21_HTTP_WRITE_TIMEOUT", "30s")
+	t.Setenv("EUBL21_HTTP_IDLE_TIMEOUT", "90s")
+	t.Setenv("EUBL21_HTTP_SHUTDOWN_TIMEOUT", "7s")
+	t.Setenv("EUBL21_HTTP_MAX_HEADER_BYTES", "32768")
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.HTTPReadHeaderTimeout != 2*time.Second || cfg.HTTPReadTimeout != 45*time.Second || cfg.HTTPWriteTimeout != 30*time.Second || cfg.HTTPIdleTimeout != 90*time.Second || cfg.HTTPShutdownTimeout != 7*time.Second || cfg.HTTPMaxHeaderBytes != 32768 {
+		t.Fatalf("HTTP limits = %+v", cfg)
+	}
+}

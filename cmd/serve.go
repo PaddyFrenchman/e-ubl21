@@ -2,11 +2,16 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/server"
 	"github.com/spf13/cobra"
@@ -24,6 +29,8 @@ func newServeCmd(cfg *Config) *cobra.Command {
 }
 
 func serve(ctx context.Context, stdout io.Writer, cfg *Config) error {
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	addr := net.JoinHostPort(cfg.Host, fmt.Sprintf("%d", cfg.Port))
 
 	handler, err := newHandler(cfg)
@@ -31,24 +38,85 @@ func serve(ctx context.Context, stdout io.Writer, cfg *Config) error {
 		return fmt.Errorf("build HTTP handler: %w", err)
 	}
 
-	httpServer := &http.Server{
-		Addr:    addr,
-		Handler: handler,
-		BaseContext: func(net.Listener) context.Context {
-			return ctx
-		},
-	}
+	httpServer, shutdownTimeout := newHTTPServer(addr, handler, cfg)
 
 	if cfg.TLSCertFile != "" || cfg.TLSKeyFile != "" {
 		if cfg.TLSCertFile == "" || cfg.TLSKeyFile == "" {
 			return fmt.Errorf("both --tls-cert-file and --tls-key-file must be set to enable TLS")
 		}
 		fmt.Fprintf(stdout, "starting server on %s (TLS)\n", addr)
-		return httpServer.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
+		return runHTTPServer(ctx, httpServer, shutdownTimeout, func() error {
+			return httpServer.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
+		})
 	}
 
 	fmt.Fprintf(stdout, "starting server on %s\n", addr)
-	return httpServer.ListenAndServe()
+	return runHTTPServer(ctx, httpServer, shutdownTimeout, httpServer.ListenAndServe)
+}
+
+const defaultHTTPReadHeaderTimeout = 5 * time.Second
+const defaultHTTPReadTimeout = 60 * time.Second
+const defaultHTTPWriteTimeout = 60 * time.Second
+const defaultHTTPIdleTimeout = 2 * time.Minute
+const defaultHTTPShutdownTimeout = 15 * time.Second
+const defaultHTTPMaxHeaderBytes = 64 << 10
+
+func newHTTPServer(addr string, handler http.Handler, cfg *Config) (*http.Server, time.Duration) {
+	readHeaderTimeout := positiveDuration(cfg.HTTPReadHeaderTimeout, defaultHTTPReadHeaderTimeout)
+	readTimeout := positiveDuration(cfg.HTTPReadTimeout, defaultHTTPReadTimeout)
+	writeTimeout := positiveDuration(cfg.HTTPWriteTimeout, defaultHTTPWriteTimeout)
+	idleTimeout := positiveDuration(cfg.HTTPIdleTimeout, defaultHTTPIdleTimeout)
+	shutdownTimeout := positiveDuration(cfg.HTTPShutdownTimeout, defaultHTTPShutdownTimeout)
+	maxHeaderBytes := cfg.HTTPMaxHeaderBytes
+	if maxHeaderBytes <= 0 {
+		maxHeaderBytes = defaultHTTPMaxHeaderBytes
+	}
+	return &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: readHeaderTimeout,
+		ReadTimeout:       readTimeout,
+		WriteTimeout:      writeTimeout,
+		IdleTimeout:       idleTimeout,
+		MaxHeaderBytes:    maxHeaderBytes,
+	}, shutdownTimeout
+}
+
+func positiveDuration(value, fallback time.Duration) time.Duration {
+	if value <= 0 {
+		return fallback
+	}
+	return value
+}
+
+func runHTTPServer(ctx context.Context, httpServer *http.Server, shutdownTimeout time.Duration, listen func() error) error {
+	serveErr := make(chan error, 1)
+	go func() { serveErr <- listen() }()
+
+	select {
+	case err := <-serveErr:
+		if err == nil || errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return err
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			_ = httpServer.Close()
+			return fmt.Errorf("graceful HTTP shutdown: %w", err)
+		}
+		select {
+		case err := <-serveErr:
+			if err == nil || errors.Is(err, http.ErrServerClosed) {
+				return nil
+			}
+			return err
+		case <-shutdownCtx.Done():
+			_ = httpServer.Close()
+			return fmt.Errorf("wait for HTTP server shutdown: %w", shutdownCtx.Err())
+		}
+	}
 }
 
 func newHandler(cfg *Config) (http.Handler, error) {

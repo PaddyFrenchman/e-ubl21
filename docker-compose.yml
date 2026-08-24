@@ -51,6 +51,13 @@ services:
       EUBL21_OAUTH_HMAC_SECRET: "${EUBL21_OAUTH_HMAC_SECRET:-change-me-in-production}"
       EUBL21_RATE_LIMIT_RPS: "${EUBL21_RATE_LIMIT_RPS:-5}"
       EUBL21_RATE_LIMIT_BURST: "${EUBL21_RATE_LIMIT_BURST:-10}"
+      EUBL21_HTTP_READ_HEADER_TIMEOUT: "5s"
+      # Allows the full 10 MiB request body while bounding stalled uploads.
+      EUBL21_HTTP_READ_TIMEOUT: "60s"
+      EUBL21_HTTP_WRITE_TIMEOUT: "60s"
+      EUBL21_HTTP_IDLE_TIMEOUT: "2m"
+      EUBL21_HTTP_SHUTDOWN_TIMEOUT: "15s"
+      EUBL21_HTTP_MAX_HEADER_BYTES: "65536"
     ports:
       - "8080:8080"
 

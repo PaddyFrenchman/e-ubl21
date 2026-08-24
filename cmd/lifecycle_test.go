@@ -3,6 +3,9 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"errors"
+	"net"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -71,5 +74,89 @@ func TestWorkerStartsAndStopsOnContextCancellation(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("worker did not stop")
+	}
+}
+
+func TestNewHTTPServerAppliesResourceLimits(t *testing.T) {
+	cfg := &Config{
+		HTTPReadHeaderTimeout: 2 * time.Second,
+		HTTPReadTimeout:       45 * time.Second,
+		HTTPWriteTimeout:      30 * time.Second,
+		HTTPIdleTimeout:       90 * time.Second,
+		HTTPShutdownTimeout:   7 * time.Second,
+		HTTPMaxHeaderBytes:    32768,
+	}
+	srv, shutdownTimeout := newHTTPServer(":0", http.NotFoundHandler(), cfg)
+	if srv.ReadHeaderTimeout != 2*time.Second || srv.ReadTimeout != 45*time.Second || srv.WriteTimeout != 30*time.Second || srv.IdleTimeout != 90*time.Second || shutdownTimeout != 7*time.Second || srv.MaxHeaderBytes != 32768 {
+		t.Fatalf("HTTP server limits = %+v, shutdown = %s", srv, shutdownTimeout)
+	}
+}
+
+func TestRunHTTPServerGracefullyDrainsInFlightRequest(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	started := make(chan struct{})
+	release := make(chan struct{})
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		close(started)
+		<-release
+		w.WriteHeader(http.StatusNoContent)
+	})
+	srv, _ := newHTTPServer(":0", handler, &Config{})
+	done := make(chan error, 1)
+	go func() { done <- runHTTPServer(ctx, srv, time.Second, func() error { return srv.Serve(listener) }) }()
+	requestDone := make(chan error, 1)
+	go func() { _, err := http.Get("http://" + listener.Addr().String()); requestDone <- err }()
+	<-started
+	cancel()
+	select {
+	case err := <-done:
+		t.Fatalf("shutdown returned before in-flight request drained: %v", err)
+	case <-time.After(20 * time.Millisecond):
+	}
+	close(release)
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("server did not shut down")
+	}
+	if err := <-requestDone; err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRunHTTPServerBoundsShutdown(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	started := make(chan struct{})
+	release := make(chan struct{})
+	defer close(release)
+	srv, _ := newHTTPServer(":0", http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		close(started)
+		<-release
+	}), &Config{})
+	done := make(chan error, 1)
+	go func() {
+		done <- runHTTPServer(ctx, srv, 10*time.Millisecond, func() error { return srv.Serve(listener) })
+	}()
+	go func() { _, _ = http.Get("http://" + listener.Addr().String()) }()
+	<-started
+	cancel()
+	select {
+	case err := <-done:
+		if err == nil || !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("shutdown error = %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("shutdown was not bounded")
 	}
 }

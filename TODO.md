@@ -19,7 +19,7 @@ The TODO identifier is **not** its implementation priority.
 | 4 | **TODO-002** | ✅ DONE — Separate upload metadata/status from raw XML content and eliminate raw XML from work messages |
 | 5 | **TODO-004** | ✅ DONE — Optimize and bound `xmllint` validation execution |
 | 6 | **TODO-003** | ✅ DONE — Bound JetStream worker prefetch and make validation concurrency explicit |
-| 7 | **TODO-008** | Add HTTP resource/time-limit tuning and graceful API shutdown |
+| 7 | **TODO-008** | ✅ DONE — Add HTTP resource/time-limit tuning and graceful API shutdown |
 | 8 | **TODO-007** | Cache reusable JetStream/API runtime objects |
 
 ### Execution phases
@@ -38,7 +38,7 @@ Phase C — validation throughput
   TODO-003 ✅ DONE
 
 Phase D — production hardening and polish
-  TODO-008
+  TODO-008 ✅ DONE
   TODO-007
 ```
 
@@ -283,7 +283,9 @@ use `BenchmarkWorkerDeepBacklogMemory` for that stress verification.
 
 ---
 
-## TODO-008 — Add HTTP resource/time-limit tuning and graceful API shutdown
+## TODO-008 — Add HTTP resource/time-limit tuning and graceful API shutdown ✅ DONE
+
+**Status:** Completed and verified on 2026-08-24.
 
 ### Goal
 
@@ -291,10 +293,25 @@ Bound connection resource consumption and make rolling/container shutdown predic
 
 ### Requirements
 
-- Configure `ReadHeaderTimeout`, read/write/idle timeouts and `MaxHeaderBytes`.
-- Preserve legitimate large uploads within documented limits.
-- Add SIGINT/SIGTERM handling and `http.Server.Shutdown`.
-- Make deployment-specific timeout values configurable where useful.
+- [x] Configure `ReadHeaderTimeout`, read/write/idle timeouts and `MaxHeaderBytes`.
+- [x] Preserve legitimate large uploads within documented limits.
+- [x] Add SIGINT/SIGTERM handling and `http.Server.Shutdown`.
+- [x] Make deployment-specific timeout values configurable where useful.
+
+### Resolution
+
+The API server defaults to a 5-second header timeout, 60-second whole-request
+read timeout, 60-second write timeout, 2-minute keep-alive idle timeout,
+64 KiB aggregate request-header limit, and 15-second graceful-shutdown drain
+deadline. Each value is configurable by CLI, config file, or `EUBL21_*`
+environment variable. The 60-second read deadline applies to the complete
+request and preserves the independently enforced 10 MiB upload-size contract.
+
+`serve` now derives a signal-aware context from SIGINT/SIGTERM, stops accepting
+connections with `http.Server.Shutdown`, allows in-flight handlers to finish
+within the configured grace period, and force-closes the server if that period
+expires. Lifecycle tests cover both successful draining and the bounded
+deadline path; upload tests continue to accept bodies exactly at 10 MiB.
 
 ### Acceptance criteria
 

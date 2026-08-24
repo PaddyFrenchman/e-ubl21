@@ -21,3 +21,9 @@ All settings can be provided either as flags or environment variables prefixed w
 - `--openapi-path` / `EUBL21_OPENAPI_PATH`
 - `--oauth-issuer` / `EUBL21_OAUTH_ISSUER`
 - `--oauth-audience` / `EUBL21_OAUTH_AUDIENCE`
+- `--http-read-header-timeout` / `EUBL21_HTTP_READ_HEADER_TIMEOUT`
+- `--http-read-timeout` / `EUBL21_HTTP_READ_TIMEOUT`
+- `--http-write-timeout` / `EUBL21_HTTP_WRITE_TIMEOUT`
+- `--http-idle-timeout` / `EUBL21_HTTP_IDLE_TIMEOUT`
+- `--http-shutdown-timeout` / `EUBL21_HTTP_SHUTDOWN_TIMEOUT`
+- `--http-max-header-bytes` / `EUBL21_HTTP_MAX_HEADER_BYTES`

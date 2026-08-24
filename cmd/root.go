@@ -28,6 +28,12 @@ type Config struct {
 	RateLimitBurst          int
 	TLSCertFile             string
 	TLSKeyFile              string
+	HTTPReadHeaderTimeout   time.Duration
+	HTTPReadTimeout         time.Duration
+	HTTPWriteTimeout        time.Duration
+	HTTPIdleTimeout         time.Duration
+	HTTPShutdownTimeout     time.Duration
+	HTTPMaxHeaderBytes      int
 	WorkerConsumerName      string
 	WorkerSubjectFilter     string
 	WorkerMetricsAddr       string
@@ -74,6 +80,12 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().Int("rate-limit-burst", 10, "Per-client burst size allowed by the rate limiter")
 	rootCmd.PersistentFlags().String("tls-cert-file", "", "TLS certificate file (enables TLS together with --tls-key-file)")
 	rootCmd.PersistentFlags().String("tls-key-file", "", "TLS private key file (enables TLS together with --tls-cert-file)")
+	rootCmd.PersistentFlags().Duration("http-read-header-timeout", 5*time.Second, "Maximum time to read HTTP request headers")
+	rootCmd.PersistentFlags().Duration("http-read-timeout", 60*time.Second, "Maximum time to read an entire HTTP request, including an upload body")
+	rootCmd.PersistentFlags().Duration("http-write-timeout", 60*time.Second, "Maximum time to write an HTTP response")
+	rootCmd.PersistentFlags().Duration("http-idle-timeout", 2*time.Minute, "Maximum keep-alive idle time")
+	rootCmd.PersistentFlags().Duration("http-shutdown-timeout", 15*time.Second, "Maximum graceful-shutdown drain time")
+	rootCmd.PersistentFlags().Int("http-max-header-bytes", 64<<10, "Maximum total size of HTTP request headers")
 
 	mustBindFlag(v, rootCmd, "config")
 	mustBindFlag(v, rootCmd, "host")
@@ -89,6 +101,12 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	mustBindFlag(v, rootCmd, "rate-limit-burst")
 	mustBindFlag(v, rootCmd, "tls-cert-file")
 	mustBindFlag(v, rootCmd, "tls-key-file")
+	mustBindFlag(v, rootCmd, "http-read-header-timeout")
+	mustBindFlag(v, rootCmd, "http-read-timeout")
+	mustBindFlag(v, rootCmd, "http-write-timeout")
+	mustBindFlag(v, rootCmd, "http-idle-timeout")
+	mustBindFlag(v, rootCmd, "http-shutdown-timeout")
+	mustBindFlag(v, rootCmd, "http-max-header-bytes")
 
 	rootCmd.AddCommand(newServeCmd(cfg))
 	rootCmd.AddCommand(newWorkerCmd(v, cfg))
@@ -118,6 +136,12 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("queue-namespace", "")
 	v.SetDefault("rate-limit-rps", 5)
 	v.SetDefault("rate-limit-burst", 10)
+	v.SetDefault("http-read-header-timeout", 5*time.Second)
+	v.SetDefault("http-read-timeout", 60*time.Second)
+	v.SetDefault("http-write-timeout", 60*time.Second)
+	v.SetDefault("http-idle-timeout", 2*time.Minute)
+	v.SetDefault("http-shutdown-timeout", 15*time.Second)
+	v.SetDefault("http-max-header-bytes", 64<<10)
 	v.SetDefault("worker-consumer-name", "ubl-validator")
 	v.SetDefault("worker-subject-filter", "")
 	v.SetDefault("worker-metrics-addr", ":9091")
@@ -158,6 +182,12 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.RateLimitBurst = v.GetInt("rate-limit-burst")
 	cfg.TLSCertFile = v.GetString("tls-cert-file")
 	cfg.TLSKeyFile = v.GetString("tls-key-file")
+	cfg.HTTPReadHeaderTimeout = v.GetDuration("http-read-header-timeout")
+	cfg.HTTPReadTimeout = v.GetDuration("http-read-timeout")
+	cfg.HTTPWriteTimeout = v.GetDuration("http-write-timeout")
+	cfg.HTTPIdleTimeout = v.GetDuration("http-idle-timeout")
+	cfg.HTTPShutdownTimeout = v.GetDuration("http-shutdown-timeout")
+	cfg.HTTPMaxHeaderBytes = v.GetInt("http-max-header-bytes")
 	cfg.WorkerConsumerName = v.GetString("worker-consumer-name")
 	cfg.WorkerSubjectFilter = v.GetString("worker-subject-filter")
 	cfg.WorkerMetricsAddr = v.GetString("worker-metrics-addr")

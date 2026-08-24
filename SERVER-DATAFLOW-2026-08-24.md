@@ -998,13 +998,13 @@ Keep `/healthz` only if compatibility requires it.
 
 ---
 
-## 11.9 API server lacks graceful shutdown
+## 11.9 API server graceful shutdown — resolved (TODO-008)
 
-The worker handles termination signals explicitly; the API currently does not perform equivalent graceful HTTP shutdown.
-
-### Recommendation
-
-Handle SIGINT/SIGTERM in the server command and invoke `http.Server.Shutdown()` with a bounded grace period.
+The API now handles SIGINT/SIGTERM and invokes `http.Server.Shutdown()` with a
+configurable bounded grace period. It also configures explicit read-header,
+whole-request read, write, keep-alive idle, and request-header-size limits.
+Defaults preserve requests up to the independent 10 MiB upload limit while
+preventing stalled connections from remaining open indefinitely.
 
 ---
 
