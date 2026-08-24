@@ -1,31 +1,13 @@
 // This file defines the in-code OpenAPI 3.0.3 document served at the
 // configurable OpenAPIPath and rendered by the Swagger UI (see server.go).
-// It documents every route NewHandler actually registers - including the
-// operational "/", "/healthz" and "/metrics" endpoints, not just the UBL
-// upload/retrieval API - and every response code the shared middleware
-// chain (auth.go, ratelimit.go) can genuinely produce on each of them, so
-// it stays an accurate description of server.go's behavior rather than
-// only of the UBL-specific handlers.
-//
-// The 401/405/429 responses, and the plain (no-extra-detail) 500, are
-// identical across every operation (they describe the same shared
-// middleware behavior), so they are defined once under
-// components.responses and referenced via $ref rather than repeated
-// verbatim on every operation - mirroring openapi.yaml, which uses the
-// same $ref-based structure to avoid duplicated descriptions.
 package server
 
 import "fmt"
 
-// responseRef returns a "$ref" pointer to the named entry under
-// components.responses.
 func responseRef(name string) map[string]any {
 	return map[string]any{"$ref": "#/components/responses/" + name}
 }
 
-// errorResponseWithExample builds a standalone (non-shared) error response
-// object: used for responses that are unique to a single operation (400,
-// 404) rather than common across all of them.
 func errorResponseWithExample(description, exampleError string) map[string]any {
 	return map[string]any{
 		"description": description,
@@ -38,12 +20,6 @@ func errorResponseWithExample(description, exampleError string) map[string]any {
 	}
 }
 
-// misconfiguredResponse documents the fail-closed 500 every protected route
-// can return when the server has no configured OAuth signing secret (see
-// oauthValidator.requireOAuth2 in auth.go). The UBL upload endpoint 500s
-// for an additional, distinct reason (queue/storage failures) and so gets
-// its own non-shared response with an extended description, built by
-// calling this with a non-empty extra.
 func misconfiguredResponse(extra string) map[string]any {
 	description := "Server misconfiguration: no OAuth signing secret is configured."
 	if extra != "" {
@@ -60,8 +36,6 @@ func misconfiguredResponse(extra string) map[string]any {
 	}
 }
 
-// commonErrorResponses returns the 401/405/429/500 responses shared by
-// every operation in the API (see components.responses in openAPIDocument).
 func commonErrorResponses() map[string]any {
 	return map[string]any{
 		"401": responseRef("Unauthorized"),
@@ -165,7 +139,7 @@ func openAPIDocument() map[string]any {
 					"operationId": "UBLUploadUploadXMLDocument",
 					"tags":        []string{"UBL"},
 					"summary":     "Upload a UBL 2.1 XML document",
-					"description": "Accepts an XML payload, and if it has a syntactically valid root element that is a recognized UBL 2.1 main document type (local name and namespace), queues it on its per-document-type NATS JetStream subject for asynchronous XSD validation and returns immediately with a pending status. Full XML well-formedness and UBL 2.1 schema validity are established asynchronously by the worker, not by this endpoint. Poll GET /api/v1/ubl/{id} for the outcome once the worker has processed it.",
+					"description": "Accepts an XML payload, stores the raw XML once, and if its root local name and namespace identify a recognized UBL 2.1 main document type, queues a compact work descriptor for asynchronous XSD validation. Full XML well-formedness and UBL 2.1 schema validity are established asynchronously by the worker.",
 					"requestBody": map[string]any{
 						"required":    true,
 						"description": "Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.",
@@ -177,37 +151,25 @@ func openAPIDocument() map[string]any {
 					},
 					"responses": map[string]any{
 						"202": map[string]any{
-							"description": "The payload has a syntactically valid root element that is a recognized UBL 2.1 document type. It has been queued for asynchronous XSD validation (which also establishes full XML well-formedness); its status starts as \"pending\" and later becomes \"valid\" or \"invalid\" once the worker processes it (see GET /api/v1/ubl/{id}).",
+							"description": "The payload has a recognized UBL 2.1 root element and has been queued for asynchronous validation; status starts as pending and later becomes valid or invalid.",
 							"content": map[string]any{
 								"application/json": map[string]any{
 									"schema": map[string]any{
 										"type": "object",
 										"properties": map[string]any{
 											"status":     map[string]any{"type": "string", "enum": []string{"pending"}, "example": "pending"},
-											"id":         map[string]any{"type": "string", "description": "Identifier to retrieve this upload's status/content via GET /api/v1/ubl/{id}.", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
-											"document":   map[string]any{"type": "string", "description": "The UBL 2.1 root element name (e.g. Invoice, Order).", "example": "Invoice"},
+											"id":         map[string]any{"type": "string", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
+											"document":   map[string]any{"type": "string", "example": "Invoice"},
 											"receivedAt": map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
 										},
 										"required": []string{"status", "id", "document", "receivedAt"},
 									},
-									"example": map[string]any{
-										"status":     "pending",
-										"id":         "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c",
-										"document":   "Invoice",
-										"receivedAt": "2026-08-20T12:00:00Z",
-									},
 								},
 							},
 						},
-						"400": errorResponseWithExample(
-							"The payload has no syntactically valid root element, or that root element's local name and/or namespace does not match a recognized UBL 2.1 main document type. Note: this endpoint only checks the root element - it does not parse or validate the rest of the document - so a recognized-type document is still accepted with 202 even if it later turns out not to be fully well-formed XML or schema-valid; check its status via GET /api/v1/ubl/{id} once the worker has processed it.",
-							"invalid XML payload: XML document root element is missing",
-						),
-						"413": errorResponseWithExample(
-							"The request body exceeds the maximum allowed upload size (10 MiB). The oversized body is rejected outright rather than truncated and processed as if the truncated prefix were the whole document.",
-							fmt.Sprintf("request body exceeds the maximum allowed size of %d bytes", maxUploadBytes),
-						),
-						"500": misconfiguredResponse("Alternatively, the document could not be queued (e.g. the NATS/JetStream connection failed)."),
+						"400": errorResponseWithExample("The payload has no recognized UBL 2.1 root element.", "invalid XML payload: XML document root element is missing"),
+						"413": errorResponseWithExample("The request body exceeds the maximum allowed upload size (10 MiB).", fmt.Sprintf("request body exceeds the maximum allowed size of %d bytes", maxUploadBytes)),
+						"500": misconfiguredResponse("Alternatively, the document could not be stored or queued."),
 					},
 				}),
 			},
@@ -215,8 +177,8 @@ func openAPIDocument() map[string]any {
 				"get": mergeResponses(map[string]any{
 					"operationId": "UBLUploadGetXMLDocument",
 					"tags":        []string{"UBL"},
-					"summary":     "Retrieve a previously accepted UBL 2.1 XML document",
-					"description": "Returns the upload's current status - \"pending\" (queued, not yet processed), \"valid\" or \"invalid\" (processed by the worker) - along with its original content and, once processed, the validation error (if any) and timestamp.",
+					"summary":     "Retrieve upload status and metadata",
+					"description": "Returns the upload's current status and metadata without loading raw XML by default. Set includeContent=true only when the original XML payload is required.",
 					"parameters": []map[string]any{
 						{
 							"name":        "id",
@@ -225,10 +187,17 @@ func openAPIDocument() map[string]any {
 							"schema":      map[string]any{"type": "string"},
 							"description": "The id returned by a previous successful upload.",
 						},
+						{
+							"name":        "includeContent",
+							"in":          "query",
+							"required":    false,
+							"description": "When true, include the original raw XML payload. Defaults to false so normal status polling remains small.",
+							"schema":      map[string]any{"type": "boolean", "default": false},
+						},
 					},
 					"responses": map[string]any{
 						"200": map[string]any{
-							"description": "The stored document, its current status, and its metadata.",
+							"description": "Upload status and metadata. Content is present only when includeContent=true.",
 							"content": map[string]any{
 								"application/json": map[string]any{
 									"schema": map[string]any{
@@ -238,23 +207,16 @@ func openAPIDocument() map[string]any {
 											"document":    map[string]any{"type": "string", "example": "Invoice"},
 											"status":      map[string]any{"type": "string", "enum": []string{"pending", "valid", "invalid"}, "example": "valid"},
 											"receivedAt":  map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
-											"validatedAt": map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document.", "example": "2026-08-20T12:00:01Z"},
-											"error":       map[string]any{"type": "string", "description": "Present only when status is \"invalid\": the XSD validation failure detail.", "example": "element X is not allowed"},
-											"content":     map[string]any{"type": "string", "description": "The original raw XML payload.", "example": "<Invoice>...</Invoice>"},
+											"validatedAt": map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document."},
+											"error":       map[string]any{"type": "string", "description": "Present only when status is invalid."},
+											"content":     map[string]any{"type": "string", "description": "Original raw XML. Present only when includeContent=true."},
 										},
-										"required": []string{"id", "document", "status", "receivedAt", "content"},
-									},
-									"example": map[string]any{
-										"id":          "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c",
-										"document":    "Invoice",
-										"status":      "valid",
-										"receivedAt":  "2026-08-20T12:00:00Z",
-										"validatedAt": "2026-08-20T12:00:01Z",
-										"content":     "<Invoice>...</Invoice>",
+										"required": []string{"id", "document", "status", "receivedAt"},
 									},
 								},
 							},
 						},
+						"400": errorResponseWithExample("Invalid includeContent query parameter.", "includeContent must be true or false"),
 						"404": errorResponseWithExample("No upload exists with the given id.", "upload not found"),
 					},
 				}),
@@ -295,10 +257,6 @@ func openAPIDocument() map[string]any {
 	}
 }
 
-// mergeResponses takes an operation object whose "responses" entry only
-// lists the responses unique to that operation, and adds the shared
-// 401/405/429/500 responses (see commonErrorResponses) every operation in
-// this API can also produce, mutating and returning the same operation map.
 func mergeResponses(operation map[string]any) map[string]any {
 	responses := operation["responses"].(map[string]any)
 	for status, resp := range commonErrorResponses() {
