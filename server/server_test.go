@@ -68,6 +68,19 @@ func newTestHandler(t *testing.T, overrides func(*Config)) http.Handler {
 	return handler
 }
 
+func TestApplicationCloseReleasesNATSConnection(t *testing.T) {
+	application, err := NewApplication(testConfig(t, nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	connection := application.queue.NC
+	application.Close()
+	application.Close()
+	if !connection.IsClosed() {
+		t.Fatal("application Close did not close its NATS connection")
+	}
+}
+
 func doRequest(handler http.Handler, method, path, token, body, contentType string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(method, path, strings.NewReader(body))
 	if token != "" {

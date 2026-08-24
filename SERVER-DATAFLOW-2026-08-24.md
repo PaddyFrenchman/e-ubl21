@@ -1012,13 +1012,10 @@ rejects incoherent or impractically small limits.
 
 ## 11.10 NATS connection lifecycle in API
 
-The API creates a queue client when building the handler, but the handler abstraction does not visibly expose a close/shutdown hook for the NATS connection.
-
-This matters once graceful shutdown is implemented.
-
-### Recommendation
-
-Represent the server as a lifecycle-owning application object rather than returning only an `http.Handler`, or return a cleanup function alongside the handler.
+Resolved by TODO-007. `server.Application` now owns both the HTTP handler and
+the reusable queue client. The API command closes the application's NATS
+connection after bounded graceful HTTP shutdown. `NewHandler` remains as a
+compatibility wrapper for embedding and tests.
 
 ---
 

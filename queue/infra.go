@@ -53,23 +53,29 @@ func (c *Client) EnsureInfra(ctx context.Context) error {
 	}
 
 	uploadsBucketName := c.Namespace.UploadsBucketName()
-	if _, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
+	uploadsKV, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
 		Bucket:       uploadsBucketName,
 		Description:  "Durable metadata record (status, error, timestamps) for every UBL upload, keyed by upload id. Raw XML is stored separately in the upload-content Object Store.",
 		Storage:      jetstream.FileStorage,
 		MaxValueSize: uploadMetadataMaxValueSize,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("ensure %s KV bucket: %w", uploadsBucketName, err)
 	}
 
 	uploadContentBucketName := c.Namespace.UploadContentBucketName()
-	if _, err := c.JS.CreateOrUpdateObjectStore(ctx, jetstream.ObjectStoreConfig{
+	uploadContentStore, err := c.JS.CreateOrUpdateObjectStore(ctx, jetstream.ObjectStoreConfig{
 		Bucket:      uploadContentBucketName,
 		Description: "Immutable raw XML content of every UBL upload, keyed by upload id and chunked by JetStream Object Store.",
 		Storage:     jetstream.FileStorage,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("ensure %s Object Store: %w", uploadContentBucketName, err)
 	}
 
+	c.handlesMu.Lock()
+	c.cachedUploadsKV = uploadsKV
+	c.cachedUploadContentStore = uploadContentStore
+	c.handlesMu.Unlock()
 	return nil
 }

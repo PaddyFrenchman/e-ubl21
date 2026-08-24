@@ -33,12 +33,13 @@ func serve(ctx context.Context, stdout io.Writer, cfg *Config) error {
 	defer stop()
 	addr := net.JoinHostPort(cfg.Host, fmt.Sprintf("%d", cfg.Port))
 
-	handler, err := newHandler(cfg)
+	application, err := server.NewApplication(serverConfig(cfg))
 	if err != nil {
 		return fmt.Errorf("build HTTP handler: %w", err)
 	}
+	defer application.Close()
 
-	httpServer, shutdownTimeout := newHTTPServer(addr, handler, cfg)
+	httpServer, shutdownTimeout := newHTTPServer(addr, application.Handler, cfg)
 
 	if cfg.TLSCertFile != "" || cfg.TLSKeyFile != "" {
 		if cfg.TLSCertFile == "" || cfg.TLSKeyFile == "" {
@@ -120,7 +121,11 @@ func runHTTPServer(ctx context.Context, httpServer *http.Server, shutdownTimeout
 }
 
 func newHandler(cfg *Config) (http.Handler, error) {
-	return server.NewHandler(server.Config{
+	return server.NewHandler(serverConfig(cfg))
+}
+
+func serverConfig(cfg *Config) server.Config {
+	return server.Config{
 		OpenAPIPath:     cfg.OpenAPIPath,
 		SwaggerPath:     cfg.SwaggerPath,
 		OAuthIssuer:     cfg.OAuthIssuer,
@@ -132,5 +137,5 @@ func newHandler(cfg *Config) (http.Handler, error) {
 		RateLimitRPS:    cfg.RateLimitRPS,
 		RateLimitBurst:  cfg.RateLimitBurst,
 		Logger:          slog.Default(),
-	})
+	}
 }

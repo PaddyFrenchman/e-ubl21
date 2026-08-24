@@ -45,7 +45,13 @@ func commonErrorResponses() map[string]any {
 	}
 }
 
+var cachedOpenAPIDocument = buildOpenAPIDocument()
+
 func openAPIDocument() map[string]any {
+	return cachedOpenAPIDocument
+}
+
+func buildOpenAPIDocument() map[string]any {
 	return map[string]any{
 		"openapi": "3.0.3",
 		"info": map[string]any{

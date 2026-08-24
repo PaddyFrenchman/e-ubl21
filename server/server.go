@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go"
@@ -33,6 +34,33 @@ type Config struct {
 }
 
 func NewHandler(cfg Config) (http.Handler, error) {
+	application, err := NewApplication(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return application.Handler, nil
+}
+
+// Application owns the API handler and its reusable runtime dependencies.
+// Close releases the NATS connection after HTTP shutdown has drained.
+type Application struct {
+	Handler   http.Handler
+	queue     *queue.Client
+	closeOnce sync.Once
+}
+
+func (a *Application) Close() {
+	if a == nil {
+		return
+	}
+	a.closeOnce.Do(func() {
+		if a.queue != nil {
+			a.queue.Close()
+		}
+	})
+}
+
+func NewApplication(cfg Config) (*Application, error) {
 	logger := cfg.Logger
 	if logger == nil {
 		logger = slog.Default()
@@ -50,6 +78,7 @@ func NewHandler(cfg Config) (http.Handler, error) {
 		return nil, fmt.Errorf("connect to NATS: %w", err)
 	}
 	if err := q.EnsureInfra(context.Background()); err != nil {
+		q.Close()
 		return nil, fmt.Errorf("ensure JetStream infrastructure: %w", err)
 	}
 	uploads := &uploadHandlers{catalog: catalog, queue: q}
@@ -101,7 +130,7 @@ func NewHandler(cfg Config) (http.Handler, error) {
 	register("/api/v1/ubl/upload", "/api/v1/ubl/upload", false, uploads.handleUpload)
 	register("/api/v1/ubl/{id}", "/api/v1/ubl/{id}", false, uploads.handleGetUpload)
 
-	return limiter.middleware(mux), nil
+	return &Application{Handler: limiter.middleware(mux), queue: q}, nil
 }
 
 func normalizePath(path, def string, requireTrailingSlash bool) string {

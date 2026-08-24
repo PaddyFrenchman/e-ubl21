@@ -20,10 +20,27 @@ type oauthValidator struct {
 	secret   []byte
 	issuer   string
 	audience string
+	parser   *jwt.Parser
+	keyFunc  jwt.Keyfunc
 }
 
 func newOAuthValidator(secret, issuer, audience string) *oauthValidator {
-	return &oauthValidator{secret: []byte(secret), issuer: issuer, audience: audience}
+	secretBytes := []byte(secret)
+	options := []jwt.ParserOption{
+		jwt.WithValidMethods([]string{"HS256"}),
+		jwt.WithExpirationRequired(),
+	}
+	if issuer != "" {
+		options = append(options, jwt.WithIssuer(issuer))
+	}
+	if audience != "" {
+		options = append(options, jwt.WithAudience(audience))
+	}
+	return &oauthValidator{
+		secret: secretBytes, issuer: issuer, audience: audience,
+		parser:  jwt.NewParser(options...),
+		keyFunc: func(*jwt.Token) (any, error) { return secretBytes, nil },
+	}
 }
 
 // requireOAuth2 wraps next so it only runs once a valid bearer token has
@@ -55,20 +72,8 @@ func (v *oauthValidator) requireOAuth2(next http.HandlerFunc) http.HandlerFunc {
 // configured secret and enforcing exp/nbf plus, when configured,
 // issuer/audience claims.
 func (v *oauthValidator) validate(rawToken string) error {
-	options := []jwt.ParserOption{
-		jwt.WithValidMethods([]string{"HS256"}),
-		jwt.WithExpirationRequired(),
-	}
-	if v.issuer != "" {
-		options = append(options, jwt.WithIssuer(v.issuer))
-	}
-	if v.audience != "" {
-		options = append(options, jwt.WithAudience(v.audience))
-	}
-
 	claims := jwt.MapClaims{}
-	keyFunc := func(*jwt.Token) (any, error) { return v.secret, nil }
-	if _, err := jwt.ParseWithClaims(rawToken, claims, keyFunc, options...); err != nil {
+	if _, err := v.parser.ParseWithClaims(rawToken, claims, v.keyFunc); err != nil {
 		return fmt.Errorf("invalid bearer token: %w", err)
 	}
 	return nil

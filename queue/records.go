@@ -148,19 +148,43 @@ func (c *Client) GetUploadContent(ctx context.Context, id string) ([]byte, error
 }
 
 func (c *Client) uploadsBucket(ctx context.Context) (jetstream.KeyValue, error) {
+	c.handlesMu.RLock()
+	cached := c.cachedUploadsKV
+	c.handlesMu.RUnlock()
+	if cached != nil {
+		return cached, nil
+	}
 	uploadsBucketName := c.Namespace.UploadsBucketName()
 	kv, err := c.JS.KeyValue(ctx, uploadsBucketName)
 	if err != nil {
 		return nil, fmt.Errorf("open %s KV bucket: %w", uploadsBucketName, err)
 	}
-	return kv, nil
+	c.handlesMu.Lock()
+	if c.cachedUploadsKV == nil {
+		c.cachedUploadsKV = kv
+	}
+	cached = c.cachedUploadsKV
+	c.handlesMu.Unlock()
+	return cached, nil
 }
 
 func (c *Client) uploadContentStore(ctx context.Context) (jetstream.ObjectStore, error) {
+	c.handlesMu.RLock()
+	cached := c.cachedUploadContentStore
+	c.handlesMu.RUnlock()
+	if cached != nil {
+		return cached, nil
+	}
 	bucketName := c.Namespace.UploadContentBucketName()
 	store, err := c.JS.ObjectStore(ctx, bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("open %s Object Store: %w", bucketName, err)
 	}
-	return store, nil
+	c.handlesMu.Lock()
+	if c.cachedUploadContentStore == nil {
+		c.cachedUploadContentStore = store
+	}
+	cached = c.cachedUploadContentStore
+	c.handlesMu.Unlock()
+	return cached, nil
 }

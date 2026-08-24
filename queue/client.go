@@ -14,6 +14,7 @@ package queue
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -30,6 +31,10 @@ type Client struct {
 	// methods (EnsureInfra, PublishDocument, DocumentsConsumer, ...)
 	// derive names from. See Namespace for details.
 	Namespace Namespace
+
+	handlesMu                sync.RWMutex
+	cachedUploadsKV          jetstream.KeyValue
+	cachedUploadContentStore jetstream.ObjectStore
 }
 
 // Connect dials the NATS server at url and opens a JetStream context on

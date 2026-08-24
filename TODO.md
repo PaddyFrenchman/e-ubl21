@@ -20,7 +20,7 @@ The TODO identifier is **not** its implementation priority.
 | 5 | **TODO-004** | ✅ DONE — Optimize and bound `xmllint` validation execution |
 | 6 | **TODO-003** | ✅ DONE — Bound JetStream worker prefetch and make validation concurrency explicit |
 | 7 | **TODO-008** | ✅ DONE — Add HTTP resource/time-limit tuning and graceful API shutdown |
-| 8 | **TODO-007** | Cache reusable JetStream/API runtime objects |
+| 8 | **TODO-007** | ✅ DONE — Cache reusable JetStream/API runtime objects |
 
 ### Execution phases
 
@@ -39,7 +39,7 @@ Phase C — validation throughput
 
 Phase D — production hardening and polish
   TODO-008 ✅ DONE
-  TODO-007
+  TODO-007 ✅ DONE
 ```
 
 ---
@@ -324,7 +324,9 @@ Slow/stalled clients cannot hold API resources indefinitely and API shutdown dra
 
 ---
 
-## TODO-007 — Cache reusable JetStream/API runtime objects
+## TODO-007 — Cache reusable JetStream/API runtime objects ✅ DONE
+
+**Status:** Completed and verified on 2026-08-24.
 
 ### Goal
 
@@ -332,10 +334,29 @@ Remove avoidable control-plane lookups and repeated construction from hot paths.
 
 ### Requirements
 
-- Cache JetStream KV/Object Store handles after infrastructure initialization.
-- Prebuild immutable JWT parser/options where practical.
-- Precompute/cache the served OpenAPI representation.
-- Benchmark before/after.
+- [x] Cache JetStream KV/Object Store handles after infrastructure initialization.
+- [x] Prebuild immutable JWT parser/options where practical.
+- [x] Precompute/cache the served OpenAPI representation.
+- [x] Benchmark before/after.
+
+### Resolution
+
+`queue.Client` caches the upload metadata KV and raw-content Object Store
+handles returned by `EnsureInfra`; synchronized lazy fallback remains available
+for callers that open an already-created deployment without initialization.
+Normal record/content operations no longer repeat JetStream control-plane
+discovery. The API's OAuth validator now reuses an immutable configured JWT
+parser and key function, and the served OpenAPI map is constructed once.
+
+The lifecycle-owning `server.Application` closes its shared NATS connection
+after graceful HTTP shutdown; `NewHandler` remains as a compatibility wrapper.
+
+Comparative 100-iteration benchmarks on the development host measured cached
+KV handle access at 16 ns/op and zero allocations versus 99.9 us/op, 19.0 KiB,
+and 159 allocations for control-plane lookup. Cached JWT parsing measured
+6.30 us/op and 49 allocations versus 7.80 us/op and 60 allocations when
+rebuilding configuration. Cached OpenAPI access measured 3.18 ns/op and zero
+allocations versus 47.3 us/op, 55.2 KiB, and 392 allocations when rebuilding.
 
 ### Acceptance criteria
 
