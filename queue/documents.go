@@ -92,6 +92,13 @@ func (c *Client) PublishDocument(ctx context.Context, id, documentType string, r
 // documents (or, being a subject with no matching stream, from failing
 // only once messages should have started arriving).
 func (c *Client) DocumentsConsumer(ctx context.Context, durableName, filterSubject string) (jetstream.Consumer, error) {
+	return c.DocumentsConsumerWithConfig(ctx, durableName, filterSubject, 30*time.Second, 5, 0)
+}
+
+// DocumentsConsumerWithConfig creates the documents consumer with explicit
+// delivery/backpressure settings. maxAckPending bounds outstanding work
+// across the worker's active validations and local prefetch buffer.
+func (c *Client) DocumentsConsumerWithConfig(ctx context.Context, durableName, filterSubject string, ackWait time.Duration, maxDeliver, maxAckPending int) (jetstream.Consumer, error) {
 	if filterSubject == "" {
 		filterSubject = c.Namespace.DocumentsFilterSubject()
 	} else if !c.Namespace.HasDocumentSubject(filterSubject) {
@@ -103,8 +110,9 @@ func (c *Client) DocumentsConsumer(ctx context.Context, durableName, filterSubje
 		Description:   "Validates queued UBL 2.1 documents against their XSD and publishes the outcome.",
 		FilterSubject: filterSubject,
 		AckPolicy:     jetstream.AckExplicitPolicy,
-		AckWait:       30 * time.Second,
-		MaxDeliver:    5,
+		AckWait:       ackWait,
+		MaxDeliver:    maxDeliver,
+		MaxAckPending: maxAckPending,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create %s consumer on %s: %w", durableName, documentsStreamName, err)

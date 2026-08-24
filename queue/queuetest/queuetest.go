@@ -21,7 +21,7 @@ type Server struct {
 // StartServer starts an embedded, JetStream-enabled NATS server without a
 // TCP listener. Clients communicate over net.Pipe via nats.InProcessServer,
 // allowing the tests to run in network-restricted sandboxes.
-func StartServer(t *testing.T) Server {
+func StartServer(t testing.TB) Server {
 	t.Helper()
 
 	opts := natstest.DefaultTestOptions

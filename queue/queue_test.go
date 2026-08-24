@@ -136,6 +136,19 @@ func TestDocumentsConsumerFiltersByType(t *testing.T) {
 	}
 }
 
+func TestDocumentsConsumerAppliesExplicitBackpressureConfig(t *testing.T) {
+	client := newTestClient(t)
+	ctx := context.Background()
+	consumer, err := client.DocumentsConsumerWithConfig(ctx, "bounded-worker", "", 60*time.Second, 7, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info := consumer.CachedInfo()
+	if info.Config.AckWait != 60*time.Second || info.Config.MaxDeliver != 7 || info.Config.MaxAckPending != 4 {
+		t.Fatalf("consumer config = AckWait %s, MaxDeliver %d, MaxAckPending %d", info.Config.AckWait, info.Config.MaxDeliver, info.Config.MaxAckPending)
+	}
+}
+
 func TestUploadRecordLifecycle(t *testing.T) {
 	t.Parallel()
 	client := newTestClient(t)

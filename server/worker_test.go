@@ -131,6 +131,26 @@ func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
 	t.Fatal("worker did not update status before result publication failed")
 }
 
+func TestResolveWorkerRuntimeSettingsAlignsDeadlinesAndBounds(t *testing.T) {
+	settings, err := resolveWorkerRuntimeSettings(WorkerConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if settings.validationTimeout != 30*time.Second || settings.ackWait != 60*time.Second || settings.concurrency != 1 || settings.prefetch != 1 || settings.maxDeliver != 5 {
+		t.Fatalf("default settings = %+v", settings)
+	}
+	settings, err = resolveWorkerRuntimeSettings(WorkerConfig{ValidationTimeout: 10 * time.Second, AckWait: 20 * time.Second, Concurrency: 3, Prefetch: 4, MaxDeliver: 8})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if settings.concurrency+settings.prefetch != 7 || settings.maxDeliver != 8 {
+		t.Fatalf("explicit settings = %+v", settings)
+	}
+	if _, err := resolveWorkerRuntimeSettings(WorkerConfig{ValidationTimeout: 30 * time.Second, AckWait: 30 * time.Second}); err == nil {
+		t.Fatal("AckWait equal to validation timeout was accepted")
+	}
+}
+
 func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {
 	t.Parallel()
 

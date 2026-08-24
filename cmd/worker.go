@@ -27,11 +27,19 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	workerCmd.Flags().String("worker-subject-filter", "", "Restrict this worker to a single document type's queue (e.g. ubl.documents.Invoice); empty processes every document type")
 	workerCmd.Flags().String("worker-metrics-addr", ":9091", "Address the worker's Prometheus /metrics and /healthz are served on")
 	workerCmd.Flags().Duration("worker-validation-timeout", 30*time.Second, "Maximum xmllint execution time per document")
+	workerCmd.Flags().Int("worker-concurrency", 1, "Maximum documents validated concurrently per worker process")
+	workerCmd.Flags().Int("worker-prefetch", 1, "Maximum pulled documents buffered locally while validations are busy")
+	workerCmd.Flags().Duration("worker-ack-wait", 60*time.Second, "JetStream acknowledgement deadline; must exceed validation timeout")
+	workerCmd.Flags().Int("worker-max-deliver", 5, "Maximum JetStream delivery attempts for an operationally failing document")
 
 	mustBindLocalFlag(v, workerCmd, "worker-consumer-name")
 	mustBindLocalFlag(v, workerCmd, "worker-subject-filter")
 	mustBindLocalFlag(v, workerCmd, "worker-metrics-addr")
 	mustBindLocalFlag(v, workerCmd, "worker-validation-timeout")
+	mustBindLocalFlag(v, workerCmd, "worker-concurrency")
+	mustBindLocalFlag(v, workerCmd, "worker-prefetch")
+	mustBindLocalFlag(v, workerCmd, "worker-ack-wait")
+	mustBindLocalFlag(v, workerCmd, "worker-max-deliver")
 
 	return workerCmd
 }
@@ -54,6 +62,10 @@ func worker(ctx context.Context, cfg *Config) error {
 		SubjectFilter:     cfg.WorkerSubjectFilter,
 		MetricsAddr:       cfg.WorkerMetricsAddr,
 		ValidationTimeout: cfg.WorkerValidationTimeout,
+		Concurrency:       cfg.WorkerConcurrency,
+		Prefetch:          cfg.WorkerPrefetch,
+		AckWait:           cfg.WorkerAckWait,
+		MaxDeliver:        cfg.WorkerMaxDeliver,
 		Logger:            slog.Default(),
 	})
 }

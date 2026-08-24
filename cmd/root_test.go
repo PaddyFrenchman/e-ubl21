@@ -98,11 +98,18 @@ func TestLoadConfigReadsWorkerValidationTimeout(t *testing.T) {
 	v := viper.New()
 	configureViper(v)
 	t.Setenv("EUBL21_WORKER_VALIDATION_TIMEOUT", "750ms")
+	t.Setenv("EUBL21_WORKER_CONCURRENCY", "3")
+	t.Setenv("EUBL21_WORKER_PREFETCH", "4")
+	t.Setenv("EUBL21_WORKER_ACK_WAIT", "2s")
+	t.Setenv("EUBL21_WORKER_MAX_DELIVER", "9")
 	cfg := &Config{}
 	if err := loadConfig(v, cfg); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.WorkerValidationTimeout != 750*time.Millisecond {
 		t.Fatalf("validation timeout = %s", cfg.WorkerValidationTimeout)
+	}
+	if cfg.WorkerConcurrency != 3 || cfg.WorkerPrefetch != 4 || cfg.WorkerAckWait != 2*time.Second || cfg.WorkerMaxDeliver != 9 {
+		t.Fatalf("worker delivery config = concurrency %d, prefetch %d, ack wait %s, max deliver %d", cfg.WorkerConcurrency, cfg.WorkerPrefetch, cfg.WorkerAckWait, cfg.WorkerMaxDeliver)
 	}
 }

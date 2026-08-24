@@ -18,7 +18,7 @@ The TODO identifier is **not** its implementation priority.
 | 3 | **TODO-006** | ✅ DONE — Split the lightweight API document catalog from worker XSD extraction |
 | 4 | **TODO-002** | ✅ DONE — Separate upload metadata/status from raw XML content and eliminate raw XML from work messages |
 | 5 | **TODO-004** | ✅ DONE — Optimize and bound `xmllint` validation execution |
-| 6 | **TODO-003** | Bound JetStream worker prefetch and make validation concurrency explicit |
+| 6 | **TODO-003** | ✅ DONE — Bound JetStream worker prefetch and make validation concurrency explicit |
 | 7 | **TODO-008** | Add HTTP resource/time-limit tuning and graceful API shutdown |
 | 8 | **TODO-007** | Cache reusable JetStream/API runtime objects |
 
@@ -35,7 +35,7 @@ Phase B — reduce data movement
 
 Phase C — validation throughput
   TODO-004 ✅ DONE
-  TODO-003
+  TODO-003 ✅ DONE
 
 Phase D — production hardening and polish
   TODO-008
@@ -227,22 +227,44 @@ The normal validation path performs no per-document temporary-file write, cannot
 
 ---
 
-## TODO-003 — Bound JetStream worker prefetch and make validation concurrency explicit
+## TODO-003 — Bound JetStream worker prefetch and make validation concurrency explicit ✅ DONE
 
-The worker currently uses `consumer.Consume(worker.handle)` without explicit pull-buffer limits.
+**Status:** Completed on 2026-08-24.
+
+The former worker used `consumer.Consume(worker.handle)` without explicit
+pull-buffer limits or validation concurrency.
 
 ### Goal
 
 Apply explicit backpressure and make worker throughput/memory usage predictable.
 
+### Resolution
+
+The worker now uses `consumer.Messages()` with a bounded worker pool.
+`--worker-concurrency` controls active validations and `--worker-prefetch`
+caps the local waiting channel. JetStream `MaxAckPending` is set to
+`concurrency + prefetch`, providing a broker-side upper bound on outstanding
+work as well.
+
+The default validation timeout is `30s` and default `AckWait` is `60s`; startup
+rejects `AckWait <= ValidationTimeout`. While a message is active, the worker
+also sends `InProgress()` at half the AckWait interval, resetting the NATS
+redelivery timer through XML fetch, validation, and result persistence.
+
+Prometheus now exposes in-flight validations, buffered messages, configured
+buffer capacity, and observed redeliveries. The end-to-end
+`BenchmarkWorkerValidationThroughput` covers Object Store, xmllint, KV and
+result publication; a two-document local sample at concurrency/prefetch `2/2`
+measured approximately `18.1 docs/s`, `1.47 MB/op`, and `5,140 allocs/op`.
+
 ### Requirements
 
-- Add configurable worker concurrency.
-- Add configurable pull prefetch/buffer limits.
-- Evaluate `consumer.Messages()` with a bounded worker pool/semaphore.
-- Align `MaxAckPending`, `AckWait`, pull buffering and concurrency.
-- Add in-flight/buffered/redelivery metrics.
-- Benchmark throughput and memory.
+- [x] Add configurable worker concurrency.
+- [x] Add configurable pull prefetch/buffer limits.
+- [x] Use `consumer.Messages()` with a bounded worker pool.
+- [x] Align `MaxAckPending`, `AckWait`, pull buffering and concurrency.
+- [x] Add in-flight/buffered/redelivery metrics.
+- [x] Benchmark throughput and memory.
 
 ### Acceptance criteria
 
@@ -285,6 +307,68 @@ Remove avoidable control-plane lookups and repeated construction from hot paths.
 ### Acceptance criteria
 
 Normal upload/status/worker paths do not repeatedly discover infrastructure handles that can safely be reused.
+
+---
+
+## TODO-009 — Make upload acceptance recoverable across partial persistence failures
+
+The upload path currently performs Object Store write → KV write → work-message
+publish without a transaction. A KV or publish failure can leave orphaned XML
+or a permanently pending record.
+
+### Goal
+
+Make every durably accepted upload eventually queued, and make incomplete
+acceptance states observable and recoverable.
+
+### Requirements
+
+- Define explicit acceptance/enqueue lifecycle states.
+- Add idempotent reconciliation for partially completed uploads.
+- Remove or reclaim orphan content when acceptance cannot complete.
+- Add failure-injection tests for every persistence boundary.
+
+---
+
+## TODO-010 — Add raw upload-content retention and storage limits
+
+JetStream Object Store content currently has no application retention policy
+and can grow indefinitely.
+
+### Requirements
+
+- Define configurable raw-content retention.
+- Enforce or reconcile expiry across Object Store and metadata.
+- Expose storage/expiry metrics and operational documentation.
+
+---
+
+## TODO-011 — Add terminal processing failure and dead-letter handling
+
+The worker stops receiving a message after `MaxDeliver`, but repeated
+operational failures do not currently update the record to a terminal state or
+publish to an explicit dead-letter flow.
+
+### Requirements
+
+- Define `processing_failed`/dead-letter state and last-error/attempt metadata.
+- Capture messages that exhaust delivery attempts.
+- Add DLQ depth and terminal-failure metrics.
+- Support safe operator retry/replay.
+
+---
+
+## TODO-012 — Stream Object Store content directly into validation
+
+The worker currently materializes the complete Object Store object as a
+`[]byte` before passing it to xmllint. The 10 MiB ingress cap bounds this, but
+Object Store and xmllint both support streaming.
+
+### Goal
+
+Pipe immutable upload content directly from Object Store into xmllint stdin,
+preserving timeout, diagnostic, and retry behavior while eliminating the full
+worker-side XML buffer.
 
 ---
 

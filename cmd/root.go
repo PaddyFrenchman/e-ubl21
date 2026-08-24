@@ -32,6 +32,10 @@ type Config struct {
 	WorkerSubjectFilter     string
 	WorkerMetricsAddr       string
 	WorkerValidationTimeout time.Duration
+	WorkerConcurrency       int
+	WorkerPrefetch          int
+	WorkerAckWait           time.Duration
+	WorkerMaxDeliver        int
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -117,6 +121,10 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-subject-filter", "")
 	v.SetDefault("worker-metrics-addr", ":9091")
 	v.SetDefault("worker-validation-timeout", 30*time.Second)
+	v.SetDefault("worker-concurrency", 1)
+	v.SetDefault("worker-prefetch", 1)
+	v.SetDefault("worker-ack-wait", 60*time.Second)
+	v.SetDefault("worker-max-deliver", 5)
 	v.SetEnvPrefix("EUBL21")
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
@@ -152,6 +160,10 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerSubjectFilter = v.GetString("worker-subject-filter")
 	cfg.WorkerMetricsAddr = v.GetString("worker-metrics-addr")
 	cfg.WorkerValidationTimeout = v.GetDuration("worker-validation-timeout")
+	cfg.WorkerConcurrency = v.GetInt("worker-concurrency")
+	cfg.WorkerPrefetch = v.GetInt("worker-prefetch")
+	cfg.WorkerAckWait = v.GetDuration("worker-ack-wait")
+	cfg.WorkerMaxDeliver = v.GetInt("worker-max-deliver")
 
 	return nil
 }

@@ -397,7 +397,7 @@ silently subscribing to nothing (or, worse, to another namespace).
 4. load/extract the UBL XSD schema catalog;
 5. create or reuse a durable JetStream consumer;
 6. optionally start internal `/metrics` and `/healthz` HTTP service;
-7. begin consuming messages.
+7. start a bounded `consumer.Messages()` pull loop and worker pool.
 
 The default consumer name is:
 
@@ -408,6 +408,12 @@ ubl-validator
 The default filter means all UBL document subjects.
 
 Multiple replicas using the same durable consumer provide competing-consumer/load-balancing behavior.
+
+Worker backpressure is explicit: `MaxAckPending = concurrency + prefetch`,
+with defaults of one active validation and one locally buffered message. The
+default `AckWait` is 60 seconds versus a 30-second validation timeout, and an
+active message sends `InProgress()` every 30 seconds to reset its redelivery
+timer during fetch, validation and result persistence.
 
 ---
 
@@ -464,10 +470,11 @@ The worker considers both `valid` and `invalid` successful processing outcomes. 
 Transient processing failures are retried:
 
 - `xmllint` unavailable;
+- validation timeout;
 - upload-record update failure;
 - result publication failure.
 
-The worker issues a delayed NAK of approximately 10 seconds. The consumer configuration allows up to five deliveries and uses explicit acknowledgement.
+The worker issues a delayed NAK of approximately 10 seconds. The consumer configuration allows up to five deliveries and uses explicit acknowledgement. `AckWait`, `MaxDeliver`, concurrency and prefetch are configurable; startup rejects an AckWait that does not exceed the validation timeout.
 
 An impossible unsupported document type is terminated instead of retried.
 
@@ -869,7 +876,7 @@ Treat result events as explicitly idempotent:
 
 ---
 
-## 11.4 No explicit dead-letter flow
+## 11.4 No explicit dead-letter flow — tracked by TODO-011
 
 The consumer has `MaxDeliver: 5`, but the application does not expose a deliberate terminal processing-failure workflow.
 
@@ -1096,7 +1103,9 @@ However its contract should be made explicit before external consumers depend on
 
 Application metrics cover validations but not broker state.
 
-Production operation needs visibility into:
+TODO-003 added in-flight, bounded-buffer-capacity/current-buffer, and observed
+redelivery metrics. Production operation still needs broker/control-plane
+visibility into:
 
 ```text
 consumer lag

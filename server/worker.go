@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
@@ -26,16 +27,65 @@ type WorkerConfig struct {
 	SubjectFilter     string
 	MetricsAddr       string
 	ValidationTimeout time.Duration
+	Concurrency       int
+	Prefetch          int
+	AckWait           time.Duration
+	MaxDeliver        int
 	Logger            *slog.Logger
 }
 
 const defaultWorkerConsumerName = "ubl-validator"
 const defaultValidationTimeout = 30 * time.Second
+const defaultWorkerConcurrency = 1
+const defaultWorkerPrefetch = 1
+const defaultWorkerAckWait = 60 * time.Second
+const defaultWorkerMaxDeliver = 5
+
+type workerRuntimeSettings struct {
+	validationTimeout time.Duration
+	concurrency       int
+	prefetch          int
+	ackWait           time.Duration
+	maxDeliver        int
+}
+
+func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, error) {
+	s := workerRuntimeSettings{
+		validationTimeout: cfg.ValidationTimeout,
+		concurrency:       cfg.Concurrency,
+		prefetch:          cfg.Prefetch,
+		ackWait:           cfg.AckWait,
+		maxDeliver:        cfg.MaxDeliver,
+	}
+	if s.validationTimeout <= 0 {
+		s.validationTimeout = defaultValidationTimeout
+	}
+	if s.concurrency <= 0 {
+		s.concurrency = defaultWorkerConcurrency
+	}
+	if s.prefetch <= 0 {
+		s.prefetch = defaultWorkerPrefetch
+	}
+	if s.ackWait <= 0 {
+		s.ackWait = defaultWorkerAckWait
+	}
+	if s.maxDeliver <= 0 {
+		s.maxDeliver = defaultWorkerMaxDeliver
+	}
+	if s.ackWait <= s.validationTimeout {
+		return workerRuntimeSettings{}, fmt.Errorf("worker ack wait (%s) must exceed validation timeout (%s)", s.ackWait, s.validationTimeout)
+	}
+	return s, nil
+}
 
 func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	logger := cfg.Logger
 	if logger == nil {
 		logger = slog.Default()
+	}
+	settings, err := resolveWorkerRuntimeSettings(cfg)
+	if err != nil {
+		return err
 	}
 
 	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
@@ -57,7 +107,8 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	if consumerName == "" {
 		consumerName = defaultWorkerConsumerName
 	}
-	consumer, err := q.DocumentsConsumer(ctx, consumerName, cfg.SubjectFilter)
+	maxAckPending := settings.concurrency + settings.prefetch
+	consumer, err := q.DocumentsConsumerWithConfig(ctx, consumerName, cfg.SubjectFilter, settings.ackWait, settings.maxDeliver, maxAckPending)
 	if err != nil {
 		return fmt.Errorf("create documents consumer: %w", err)
 	}
@@ -77,23 +128,69 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		}()
 	}
 
-	validationTimeout := cfg.ValidationTimeout
-	if validationTimeout <= 0 {
-		validationTimeout = defaultValidationTimeout
-	}
-	worker := &documentWorker{queue: q, catalog: catalog, logger: logger, validationTimeout: validationTimeout}
-	consumeCtx, err := consumer.Consume(worker.handle)
+	worker := &documentWorker{queue: q, catalog: catalog, logger: logger, validationTimeout: settings.validationTimeout, progressInterval: settings.ackWait / 2}
+	messages, err := consumer.Messages(jetstream.PullMaxMessages(maxAckPending))
 	if err != nil {
-		return fmt.Errorf("start consuming: %w", err)
+		return fmt.Errorf("start pulling documents: %w", err)
 	}
-	defer consumeCtx.Stop()
+	defer messages.Stop()
+	jobs := make(chan jetstream.Msg, settings.prefetch)
+	workerPullBufferCapacity.Set(float64(settings.prefetch))
+	defer workerBufferedMessages.Set(0)
+
+	var workers sync.WaitGroup
+	for i := 0; i < settings.concurrency; i++ {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			for msg := range jobs {
+				workerBufferedMessages.Set(float64(len(jobs)))
+				worker.process(msg)
+			}
+		}()
+	}
 
 	logger.Info("worker started",
 		"consumer", consumerName,
 		"queueNamespace", nonEmpty(cfg.QueueNamespace.String(), "(default)"),
 		"subjectFilter", nonEmpty(cfg.SubjectFilter, q.Namespace.DocumentsFilterSubject()),
+		"concurrency", settings.concurrency,
+		"prefetch", settings.prefetch,
+		"ackWait", settings.ackWait,
 	)
-	<-ctx.Done()
+
+	pullDone := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			messages.Stop()
+		case <-pullDone:
+		}
+	}()
+	for {
+		msg, nextErr := messages.Next()
+		if nextErr != nil {
+			if ctx.Err() != nil {
+				break
+			}
+			close(pullDone)
+			close(jobs)
+			workers.Wait()
+			return fmt.Errorf("pull document: %w", nextErr)
+		}
+		select {
+		case jobs <- msg:
+			workerBufferedMessages.Set(float64(len(jobs)))
+		case <-ctx.Done():
+			break
+		}
+		if ctx.Err() != nil {
+			break
+		}
+	}
+	close(pullDone)
+	close(jobs)
+	workers.Wait()
 	logger.Info("worker shutting down")
 	return nil
 }
@@ -110,9 +207,42 @@ type documentWorker struct {
 	catalog           *validationCatalog
 	logger            *slog.Logger
 	validationTimeout time.Duration
+	progressInterval  time.Duration
 }
 
 const nakRetryDelay = 10 * time.Second
+
+func (w *documentWorker) process(msg jetstream.Msg) {
+	workerValidationsInFlight.Inc()
+	defer workerValidationsInFlight.Dec()
+	if metadata, err := msg.Metadata(); err == nil && metadata.NumDelivered > 1 {
+		workerRedeliveries.Inc()
+	}
+	stopProgress := startProgressHeartbeats(msg, w.progressInterval)
+	defer stopProgress()
+	w.handle(msg)
+}
+
+func startProgressHeartbeats(msg jetstream.Msg, interval time.Duration) func() {
+	if interval <= 0 {
+		return func() {}
+	}
+	stop := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				_ = msg.InProgress()
+			case <-stop:
+				return
+			}
+		}
+	}()
+	var once sync.Once
+	return func() { once.Do(func() { close(stop) }) }
+}
 
 func (w *documentWorker) handle(msg jetstream.Msg) {
 	start := time.Now()
