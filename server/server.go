@@ -18,16 +18,16 @@ import (
 )
 
 type Config struct {
-	OpenAPIPath   string
-	SwaggerPath   string
-	OAuthIssuer   string
-	OAuthAudience string
+	OpenAPIPath     string
+	SwaggerPath     string
+	OAuthIssuer     string
+	OAuthAudience   string
 	OAuthHMACSecret string
-	NATSURL string
-	QueueNamespace queue.Namespace
-	RateLimitRPS   float64
-	RateLimitBurst int
-	Logger *slog.Logger
+	NATSURL         string
+	QueueNamespace  queue.Namespace
+	RateLimitRPS    float64
+	RateLimitBurst  int
+	Logger          *slog.Logger
 }
 
 func NewHandler(cfg Config) (http.Handler, error) {
@@ -78,17 +78,21 @@ func NewHandler(cfg Config) (http.Handler, error) {
 		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"service": "e-ubl21",
-			"docs": swaggerPath,
-			"oauth": map[string]string{"issuer": cfg.OAuthIssuer, "audience": cfg.OAuthAudience},
+			"docs":    swaggerPath,
+			"oauth": map[string]string{
+				"issuer":   cfg.OAuthIssuer,
+				"audience": cfg.OAuthAudience,
+			},
 		})
 	}))
+
 	register("/healthz", "/healthz", false, requireGET(func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	}))
 	register("/metrics", "/metrics", false, requireGET(metricsHandler()))
 
 	register(openAPIPath, openAPIPath, true, requireGET(func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, todo002OpenAPIDocument(openAPIDocument()))
+		writeJSON(w, http.StatusOK, openAPIDocument())
 	}))
 	register(swaggerPath, swaggerPath, true, httpSwagger.Handler(httpSwagger.URL(openAPIPath)))
 
