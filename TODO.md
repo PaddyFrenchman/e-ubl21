@@ -16,6 +16,43 @@ TODO-003
 
 Identifiers are never reused. If an item is completed or cancelled, its identifier remains reserved so references in commits, documentation, issues and discussions stay stable.
 
+The TODO identifier is **not** its implementation priority. The sections below are intentionally ordered by the recommended execution sequence while preserving permanent IDs.
+
+## Recommended implementation order
+
+| Execution order | TODO | Summary |
+|---:|---|---|
+| 1 | **TODO-001** | Make JetStream stream, subject and KV names configurable |
+| 2 | **TODO-005** | Optimize upload parsing and eliminate unnecessary full-payload copies |
+| 3 | **TODO-006** | Split the lightweight API document catalog from worker XSD extraction |
+| 4 | **TODO-002** | Separate upload metadata/status from raw XML content |
+| 5 | **TODO-004** | Optimize and bound `xmllint` validation execution |
+| 6 | **TODO-003** | Bound JetStream worker prefetch and make validation concurrency explicit |
+| 7 | **TODO-008** | Add HTTP resource/time-limit tuning and graceful API shutdown |
+| 8 | **TODO-007** | Cache reusable JetStream/API runtime objects |
+
+### Execution phases
+
+```text
+Phase A — foundation
+  TODO-001
+  TODO-005
+  TODO-006
+
+Phase B — reduce data movement
+  TODO-002
+
+Phase C — validation throughput
+  TODO-004
+  TODO-003
+
+Phase D — production hardening and polish
+  TODO-008
+  TODO-007
+```
+
+---
+
 ## TODO-001 — Make JetStream stream, subject and KV names configurable
 
 The current queue topology is partly hard-coded in `queue/subjects.go`:
@@ -83,74 +120,6 @@ A worker configured for one namespace must never consume documents, update uploa
 
 ---
 
-## TODO-002 — Separate upload metadata/status from raw XML content
-
-`UploadRecord` currently stores the complete XML document together with mutable status metadata in one JetStream KV value. Updating a document from `pending` to `valid`/`invalid` therefore reads, unmarshals, re-marshals and rewrites the complete XML payload even though only status fields changed. Repeated status polling also returns the complete XML document every time.
-
-### Goal
-
-Make status operations small and cheap regardless of document size.
-
-### Preferred architecture
-
-- Keep mutable upload metadata/status in `UBL_UPLOADS` KV.
-- Store immutable raw XML separately, preferably in a JetStream Object Store or equivalent blob-oriented store.
-- Queue a small work item containing the upload id/document metadata rather than duplicating the full XML in both durable status storage and the work stream, if benchmarks confirm this is advantageous.
-- Make `GET /api/v1/ubl/{id}` return status/metadata by default.
-- Expose raw XML through a separate endpoint or explicit `includeContent` mechanism.
-
-### Acceptance criteria
-
-Changing an upload status must not read or rewrite the raw XML payload. Polling validation status must transfer only small metadata unless the caller explicitly asks for document content.
-
----
-
-## TODO-003 — Bound JetStream worker prefetch and make validation concurrency explicit
-
-The worker currently calls `consumer.Consume(worker.handle)` without pull-buffer options. The NATS Go client defaults `PullMaxMessages` to 500 messages. With uploads allowed up to 10 MiB, an unconstrained message-count buffer can create excessive memory pressure.
-
-### Goal
-
-Apply explicit backpressure and make worker throughput/memory usage predictable.
-
-### Requirements
-
-- Add configurable worker concurrency.
-- Add configurable pull prefetch/buffer limits, preferably byte-based for large variable-sized XML payloads.
-- Evaluate `consumer.Messages()` with a bounded worker pool/semaphore for work-queue processing.
-- Ensure `MaxAckPending`, `AckWait`, pull buffering and worker concurrency are coherent.
-- Add metrics for in-flight validations, buffered work and redelivery.
-- Benchmark throughput and memory with small, medium and near-limit XML documents.
-
-### Acceptance criteria
-
-Worker memory usage must remain bounded under a backlog of maximum-size uploads, and configured concurrency must directly control the number of simultaneous validations.
-
----
-
-## TODO-004 — Optimize and bound `xmllint` validation execution
-
-The current validator writes every queued XML payload to a temporary file and launches a new `xmllint` process for it. This adds filesystem I/O and process startup overhead, and execution currently has no per-document timeout.
-
-### Goal
-
-Reduce validation overhead while preserving the proven libxml2 validation behavior.
-
-### Requirements
-
-- Feed the XML document to `xmllint` through stdin (`-`) instead of creating a temporary XML file for each validation.
-- Use `exec.CommandContext` with a configurable validation timeout.
-- Consider `--nonet`/equivalent resource isolation where compatible with the embedded UBL schemas.
-- Capture and normalize validation diagnostics without unbounded output.
-- Benchmark process-per-document `xmllint` after the stdin change.
-- Only if process startup remains a material bottleneck, evaluate a reusable/native libxml2 validation backend with precompiled schemas.
-
-### Acceptance criteria
-
-The normal validation path performs no per-document temporary-file write, cannot run indefinitely, and has benchmark data documenting validation throughput and latency.
-
----
-
 ## TODO-005 — Optimize upload parsing and eliminate unnecessary full-payload copies
 
 The HTTP upload path currently converts the body to `string` multiple times and uses `xml.Unmarshal` over the full document merely to identify its root element.
@@ -194,24 +163,71 @@ Starting the API service does not extract the full UBL XSD tree to disk.
 
 ---
 
-## TODO-007 — Cache reusable JetStream/API runtime objects
+## TODO-002 — Separate upload metadata/status from raw XML content
 
-Several frequently used operations recreate or look up reusable state, including opening the upload KV bucket for each record operation. Other immutable objects such as JWT parser configuration and the OpenAPI JSON document can also be prepared once.
+`UploadRecord` currently stores the complete XML document together with mutable status metadata in one JetStream KV value. Updating a document from `pending` to `valid`/`invalid` therefore reads, unmarshals, re-marshals and rewrites the complete XML payload even though only status fields changed. Repeated status polling also returns the complete XML document every time.
 
 ### Goal
 
-Remove avoidable control-plane lookups and repeated construction from request/worker hot paths.
+Make status operations small and cheap regardless of document size.
 
-### Requirements
+### Preferred architecture
 
-- Cache the JetStream KV/Object Store handles in the queue client after infrastructure initialization.
-- Prebuild immutable JWT parser/options where practical.
-- Precompute/cache the served OpenAPI representation rather than reconstructing the map for each request.
-- Benchmark before and after so this remains a measured micro-optimization rather than speculative complexity.
+- Keep mutable upload metadata/status in `UBL_UPLOADS` KV.
+- Store immutable raw XML separately, preferably in a JetStream Object Store or equivalent blob-oriented store.
+- Queue a small work item containing the upload id/document metadata rather than duplicating the full XML in both durable status storage and the work stream, if benchmarks confirm this is advantageous.
+- Make `GET /api/v1/ubl/{id}` return status/metadata by default.
+- Expose raw XML through a separate endpoint or explicit `includeContent` mechanism.
 
 ### Acceptance criteria
 
-Normal upload, status and worker paths do not perform repeated infrastructure-handle discovery when the underlying handle can safely be reused.
+Changing an upload status must not read or rewrite the raw XML payload. Polling validation status must transfer only small metadata unless the caller explicitly asks for document content.
+
+---
+
+## TODO-004 — Optimize and bound `xmllint` validation execution
+
+The current validator writes every queued XML payload to a temporary file and launches a new `xmllint` process for it. This adds filesystem I/O and process startup overhead, and execution currently has no per-document timeout.
+
+### Goal
+
+Reduce validation overhead while preserving the proven libxml2 validation behavior.
+
+### Requirements
+
+- Feed the XML document to `xmllint` through stdin (`-`) instead of creating a temporary XML file for each validation.
+- Use `exec.CommandContext` with a configurable validation timeout.
+- Consider `--nonet`/equivalent resource isolation where compatible with the embedded UBL schemas.
+- Capture and normalize validation diagnostics without unbounded output.
+- Benchmark process-per-document `xmllint` after the stdin change.
+- Only if process startup remains a material bottleneck, evaluate a reusable/native libxml2 validation backend with precompiled schemas.
+
+### Acceptance criteria
+
+The normal validation path performs no per-document temporary-file write, cannot run indefinitely, and has benchmark data documenting validation throughput and latency.
+
+---
+
+## TODO-003 — Bound JetStream worker prefetch and make validation concurrency explicit
+
+The worker currently calls `consumer.Consume(worker.handle)` without pull-buffer options. The NATS Go client defaults `PullMaxMessages` to 500 messages. With uploads allowed up to 10 MiB, an unconstrained message-count buffer can create excessive memory pressure.
+
+### Goal
+
+Apply explicit backpressure and make worker throughput/memory usage predictable.
+
+### Requirements
+
+- Add configurable worker concurrency.
+- Add configurable pull prefetch/buffer limits, preferably byte-based for large variable-sized XML payloads.
+- Evaluate `consumer.Messages()` with a bounded worker pool/semaphore for work-queue processing.
+- Ensure `MaxAckPending`, `AckWait`, pull buffering and worker concurrency are coherent.
+- Add metrics for in-flight validations, buffered work and redelivery.
+- Benchmark throughput and memory with small, medium and near-limit XML documents.
+
+### Acceptance criteria
+
+Worker memory usage must remain bounded under a backlog of maximum-size uploads, and configured concurrency must directly control the number of simultaneous validations.
 
 ---
 
@@ -233,6 +249,27 @@ Bound connection resource consumption and make rolling/container shutdown predic
 ### Acceptance criteria
 
 Slow/stalled clients cannot hold API resources indefinitely, and API shutdown drains in-flight requests within a bounded grace period.
+
+---
+
+## TODO-007 — Cache reusable JetStream/API runtime objects
+
+Several frequently used operations recreate or look up reusable state, including opening the upload KV bucket for each record operation. Other immutable objects such as JWT parser configuration and the OpenAPI JSON document can also be prepared once.
+
+### Goal
+
+Remove avoidable control-plane lookups and repeated construction from request/worker hot paths.
+
+### Requirements
+
+- Cache the JetStream KV/Object Store handles in the queue client after infrastructure initialization.
+- Prebuild immutable JWT parser/options where practical.
+- Precompute/cache the served OpenAPI representation rather than reconstructing the map for each request.
+- Benchmark before and after so this remains a measured micro-optimization rather than speculative complexity.
+
+### Acceptance criteria
+
+Normal upload, status and worker paths do not perform repeated infrastructure-handle discovery when the underlying handle can safely be reused.
 
 ---
 
