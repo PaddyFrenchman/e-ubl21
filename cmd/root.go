@@ -36,6 +36,7 @@ type Config struct {
 	WorkerPrefetch          int
 	WorkerAckWait           time.Duration
 	WorkerMaxDeliver        int
+	WorkerMaxAckPending     int
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -125,6 +126,7 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-prefetch", 1)
 	v.SetDefault("worker-ack-wait", 60*time.Second)
 	v.SetDefault("worker-max-deliver", 5)
+	v.SetDefault("worker-max-ack-pending", 0)
 	v.SetEnvPrefix("EUBL21")
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
@@ -164,6 +166,7 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerPrefetch = v.GetInt("worker-prefetch")
 	cfg.WorkerAckWait = v.GetDuration("worker-ack-wait")
 	cfg.WorkerMaxDeliver = v.GetInt("worker-max-deliver")
+	cfg.WorkerMaxAckPending = v.GetInt("worker-max-ack-pending")
 
 	return nil
 }

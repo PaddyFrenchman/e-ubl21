@@ -31,7 +31,10 @@ type WorkerConfig struct {
 	Prefetch          int
 	AckWait           time.Duration
 	MaxDeliver        int
-	Logger            *slog.Logger
+	// MaxAckPending is the fleet-wide outstanding-message limit on the shared
+	// durable consumer. Zero derives Concurrency + Prefetch for one replica.
+	MaxAckPending int
+	Logger        *slog.Logger
 }
 
 const defaultWorkerConsumerName = "ubl-validator"
@@ -47,6 +50,7 @@ type workerRuntimeSettings struct {
 	prefetch          int
 	ackWait           time.Duration
 	maxDeliver        int
+	maxAckPending     int
 }
 
 func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, error) {
@@ -56,6 +60,7 @@ func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, erro
 		prefetch:          cfg.Prefetch,
 		ackWait:           cfg.AckWait,
 		maxDeliver:        cfg.MaxDeliver,
+		maxAckPending:     cfg.MaxAckPending,
 	}
 	if s.validationTimeout <= 0 {
 		s.validationTimeout = defaultValidationTimeout
@@ -71,6 +76,13 @@ func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, erro
 	}
 	if s.maxDeliver <= 0 {
 		s.maxDeliver = defaultWorkerMaxDeliver
+	}
+	localCapacity := s.concurrency + s.prefetch
+	if s.maxAckPending <= 0 {
+		s.maxAckPending = localCapacity
+	}
+	if s.maxAckPending < localCapacity {
+		return workerRuntimeSettings{}, fmt.Errorf("worker max ack pending (%d) must be at least concurrency + prefetch (%d)", s.maxAckPending, localCapacity)
 	}
 	if s.ackWait <= s.validationTimeout {
 		return workerRuntimeSettings{}, fmt.Errorf("worker ack wait (%s) must exceed validation timeout (%s)", s.ackWait, s.validationTimeout)
@@ -95,6 +107,9 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	defer q.Close()
 
 	if err := q.EnsureInfra(ctx); err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
 		return fmt.Errorf("ensure JetStream infrastructure: %w", err)
 	}
 
@@ -107,9 +122,12 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	if consumerName == "" {
 		consumerName = defaultWorkerConsumerName
 	}
-	maxAckPending := settings.concurrency + settings.prefetch
-	consumer, err := q.DocumentsConsumerWithConfig(ctx, consumerName, cfg.SubjectFilter, settings.ackWait, settings.maxDeliver, maxAckPending)
+	localCapacity := settings.concurrency + settings.prefetch
+	consumer, err := q.DocumentsConsumerWithConfig(ctx, consumerName, cfg.SubjectFilter, settings.ackWait, settings.maxDeliver, settings.maxAckPending)
 	if err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
 		return fmt.Errorf("create documents consumer: %w", err)
 	}
 
@@ -129,8 +147,11 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	}
 
 	worker := &documentWorker{queue: q, catalog: catalog, logger: logger, validationTimeout: settings.validationTimeout, progressInterval: settings.ackWait / 2}
-	messages, err := consumer.Messages(jetstream.PullMaxMessages(maxAckPending))
+	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
 	if err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
 		return fmt.Errorf("start pulling documents: %w", err)
 	}
 	defer messages.Stop()
@@ -157,6 +178,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		"concurrency", settings.concurrency,
 		"prefetch", settings.prefetch,
 		"ackWait", settings.ackWait,
+		"maxAckPending", settings.maxAckPending,
 	)
 
 	pullDone := make(chan struct{})

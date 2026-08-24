@@ -31,6 +31,7 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	workerCmd.Flags().Int("worker-prefetch", 1, "Maximum pulled documents buffered locally while validations are busy")
 	workerCmd.Flags().Duration("worker-ack-wait", 60*time.Second, "JetStream acknowledgement deadline; must exceed validation timeout")
 	workerCmd.Flags().Int("worker-max-deliver", 5, "Maximum JetStream delivery attempts for an operationally failing document")
+	workerCmd.Flags().Int("worker-max-ack-pending", 0, "Fleet-wide outstanding limit on the shared durable consumer (0 uses this replica's concurrency + prefetch)")
 
 	mustBindLocalFlag(v, workerCmd, "worker-consumer-name")
 	mustBindLocalFlag(v, workerCmd, "worker-subject-filter")
@@ -40,6 +41,7 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	mustBindLocalFlag(v, workerCmd, "worker-prefetch")
 	mustBindLocalFlag(v, workerCmd, "worker-ack-wait")
 	mustBindLocalFlag(v, workerCmd, "worker-max-deliver")
+	mustBindLocalFlag(v, workerCmd, "worker-max-ack-pending")
 
 	return workerCmd
 }
@@ -66,6 +68,7 @@ func worker(ctx context.Context, cfg *Config) error {
 		Prefetch:          cfg.WorkerPrefetch,
 		AckWait:           cfg.WorkerAckWait,
 		MaxDeliver:        cfg.WorkerMaxDeliver,
+		MaxAckPending:     cfg.WorkerMaxAckPending,
 		Logger:            slog.Default(),
 	})
 }

@@ -243,8 +243,10 @@ Apply explicit backpressure and make worker throughput/memory usage predictable.
 The worker now uses `consumer.Messages()` with a bounded worker pool.
 `--worker-concurrency` controls active validations and `--worker-prefetch`
 caps the local waiting channel. JetStream `MaxAckPending` is set to
-`concurrency + prefetch`, providing a broker-side upper bound on outstanding
-work as well.
+`concurrency + prefetch` by default, providing a broker-side upper bound on
+outstanding work as well. `--worker-max-ack-pending` can raise the shared
+durable consumer's fleet-wide limit for multiple replicas, but cannot be set
+below one replica's local capacity.
 
 The default validation timeout is `30s` and default `AckWait` is `60s`; startup
 rejects `AckWait <= ValidationTimeout`. While a message is active, the worker
@@ -254,8 +256,11 @@ redelivery timer through XML fetch, validation, and result persistence.
 Prometheus now exposes in-flight validations, buffered messages, configured
 buffer capacity, and observed redeliveries. The end-to-end
 `BenchmarkWorkerValidationThroughput` covers Object Store, xmllint, KV and
-result publication; a two-document local sample at concurrency/prefetch `2/2`
-measured approximately `18.1 docs/s`, `1.47 MB/op`, and `5,140 allocs/op`.
+result publication for small, 1 MiB, and near-limit 9 MiB documents. A local
+three-document sample at concurrency/prefetch `2/2` measured 14.33, 15.76,
+and 10.15 docs/s respectively. Allocations per operation were 1.27 MB,
+13.97 MB, and 102.11 MB. These end-to-end figures include the embedded broker
+and Object Store client path, not only the validator subprocess.
 
 ### Requirements
 

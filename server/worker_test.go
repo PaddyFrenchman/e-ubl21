@@ -136,18 +136,21 @@ func TestResolveWorkerRuntimeSettingsAlignsDeadlinesAndBounds(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if settings.validationTimeout != 30*time.Second || settings.ackWait != 60*time.Second || settings.concurrency != 1 || settings.prefetch != 1 || settings.maxDeliver != 5 {
+	if settings.validationTimeout != 30*time.Second || settings.ackWait != 60*time.Second || settings.concurrency != 1 || settings.prefetch != 1 || settings.maxDeliver != 5 || settings.maxAckPending != 2 {
 		t.Fatalf("default settings = %+v", settings)
 	}
-	settings, err = resolveWorkerRuntimeSettings(WorkerConfig{ValidationTimeout: 10 * time.Second, AckWait: 20 * time.Second, Concurrency: 3, Prefetch: 4, MaxDeliver: 8})
+	settings, err = resolveWorkerRuntimeSettings(WorkerConfig{ValidationTimeout: 10 * time.Second, AckWait: 20 * time.Second, Concurrency: 3, Prefetch: 4, MaxDeliver: 8, MaxAckPending: 12})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if settings.concurrency+settings.prefetch != 7 || settings.maxDeliver != 8 {
+	if settings.concurrency+settings.prefetch != 7 || settings.maxDeliver != 8 || settings.maxAckPending != 12 {
 		t.Fatalf("explicit settings = %+v", settings)
 	}
 	if _, err := resolveWorkerRuntimeSettings(WorkerConfig{ValidationTimeout: 30 * time.Second, AckWait: 30 * time.Second}); err == nil {
 		t.Fatal("AckWait equal to validation timeout was accepted")
+	}
+	if _, err := resolveWorkerRuntimeSettings(WorkerConfig{Concurrency: 3, Prefetch: 4, MaxAckPending: 6}); err == nil {
+		t.Fatal("MaxAckPending below local capacity was accepted")
 	}
 }
 

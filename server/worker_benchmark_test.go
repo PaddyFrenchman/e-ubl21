@@ -3,6 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
+	"io"
+	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,8 +18,24 @@ import (
 // Run with a fixed benchtime (for example -benchtime=10x) when comparing
 // concurrency/prefetch configurations.
 func BenchmarkWorkerValidationThroughput(b *testing.B) {
-	server := queuetest.StartServer(b)
-	q, err := queue.ConnectWithOptions(server.URL, queue.DefaultNamespace, server.Options...)
+	cases := []struct {
+		name    string
+		padding int
+	}{
+		{name: "small"},
+		{name: "medium_1MiB", padding: 1 << 20},
+		{name: "near_limit_9MiB", padding: 9 << 20},
+	}
+	for _, tc := range cases {
+		b.Run(tc.name, func(b *testing.B) {
+			benchmarkWorkerValidationThroughput(b, tc.padding)
+		})
+	}
+}
+
+func benchmarkWorkerValidationThroughput(b *testing.B, padding int) {
+	natsServer := queuetest.StartServer(b)
+	q, err := queue.ConnectWithOptions(natsServer.URL, queue.DefaultNamespace, natsServer.Options...)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -30,13 +49,14 @@ func BenchmarkWorkerValidationThroughput(b *testing.B) {
 	done := make(chan error, 1)
 	go func() {
 		done <- RunWorker(workerCtx, WorkerConfig{
-			NATSURL:           server.URL,
-			NATSOptions:       server.Options,
+			NATSURL:           natsServer.URL,
+			NATSOptions:       natsServer.Options,
 			ConsumerName:      "worker-benchmark",
 			ValidationTimeout: 30 * time.Second,
 			AckWait:           60 * time.Second,
 			Concurrency:       2,
 			Prefetch:          2,
+			Logger:            slog.New(slog.NewTextHandler(io.Discard, nil)),
 		})
 	}()
 	defer func() {
@@ -57,14 +77,19 @@ func BenchmarkWorkerValidationThroughput(b *testing.B) {
 		time.Sleep(10 * time.Millisecond)
 	}
 
+	body := validInvoiceXML
+	if padding > 0 {
+		body = strings.Replace(body, "</Invoice>", "<!--"+strings.Repeat("x", padding)+"--></Invoice>", 1)
+	}
 	ids := make([]string, b.N)
 	b.ReportAllocs()
+	b.SetBytes(int64(len(body)))
 	b.ResetTimer()
 	started := time.Now()
 	for i := 0; i < b.N; i++ {
 		id, _ := queue.NewID()
 		ids[i] = id
-		if err := q.PutUploadContent(ctx, id, []byte(validInvoiceXML)); err != nil {
+		if err := q.PutUploadContent(ctx, id, []byte(body)); err != nil {
 			b.Fatal(err)
 		}
 		if err := q.PutUploadRecord(ctx, queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusPending, ReceivedAt: time.Now().Format(time.RFC3339)}); err != nil {
