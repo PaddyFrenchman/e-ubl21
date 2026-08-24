@@ -162,14 +162,23 @@ paths:
                   status:
                     type: string
                     enum: [pending]
+                    example: pending
                   id:
                     type: string
+                    example: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
                   document:
                     type: string
+                    example: Invoice
                   receivedAt:
                     type: string
                     format: date-time
+                    example: '2026-08-20T12:00:00Z'
                 required: [status, id, document, receivedAt]
+              example:
+                status: pending
+                id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
+                document: Invoice
+                receivedAt: '2026-08-20T12:00:00Z'
         '400':
           description: Invalid or unsupported root element.
           content:
@@ -246,12 +255,15 @@ paths:
                     type: string
                     format: date-time
                     description: Present once the worker has processed the document.
+                    example: '2026-08-20T12:00:01Z'
                   error:
                     type: string
                     description: Present only when status is invalid.
+                    example: 'Invoice: element content does not follow the schema'
                   content:
                     type: string
                     description: The original raw XML payload. Present only when includeContent=true.
+                    example: '<?xml version="1.0" encoding="UTF-8"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">...</Invoice>'
                 required: [id, document, status, receivedAt]
               example:
                 id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c

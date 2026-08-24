@@ -409,8 +409,12 @@ The default filter means all UBL document subjects.
 
 Multiple replicas using the same durable consumer provide competing-consumer/load-balancing behavior.
 
-Worker backpressure is explicit: `MaxAckPending = concurrency + prefetch`,
-with defaults of one active validation and one locally buffered message. The
+Worker backpressure is explicit: `MaxAckPending = concurrency + prefetch` for
+one replica by default, with defaults of one active validation and one locally
+buffered message. Because `MaxAckPending` belongs to the shared durable
+consumer, multi-replica deployments set it to at least
+`replicas * (concurrency + prefetch)` while each replica keeps its local pull
+limit at `concurrency + prefetch`. The
 default `AckWait` is 60 seconds versus a 30-second validation timeout, and an
 active message sends `InProgress()` every 30 seconds to reset its redelivery
 timer during fetch, validation and result persistence.

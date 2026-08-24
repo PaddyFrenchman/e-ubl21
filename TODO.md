@@ -253,14 +253,17 @@ rejects `AckWait <= ValidationTimeout`. While a message is active, the worker
 also sends `InProgress()` at half the AckWait interval, resetting the NATS
 redelivery timer through XML fetch, validation, and result persistence.
 
-Prometheus now exposes in-flight validations, buffered messages, configured
-buffer capacity, and observed redeliveries. The end-to-end
+Prometheus now exposes in-flight validations, the explicit Go jobs-channel
+depth, configured jobs-channel capacity, and observed redeliveries. The NATS
+iterator has its own bounded internal buffer and is deliberately not included
+in the jobs-channel depth metric. The end-to-end
 `BenchmarkWorkerValidationThroughput` covers Object Store, xmllint, KV and
 result publication for small, 1 MiB, and near-limit 9 MiB documents. A local
 three-document sample at concurrency/prefetch `2/2` measured 14.33, 15.76,
 and 10.15 docs/s respectively. Allocations per operation were 1.27 MB,
-13.97 MB, and 102.11 MB. These end-to-end figures include the embedded broker
-and Object Store client path, not only the validator subprocess.
+13.97 MB, and 102.11 MB. These end-to-end B/op figures include the embedded
+broker and Object Store client path, not only the validator subprocess; they
+measure cumulative allocations, not peak live heap or RSS.
 
 ### Requirements
 
@@ -273,7 +276,10 @@ and Object Store client path, not only the validator subprocess.
 
 ### Acceptance criteria
 
-Worker memory usage remains bounded under backlog and configured concurrency directly controls simultaneous validations.
+The architecture bounds live raw-document work to configured concurrency and
+bounds descriptor buffering independently of backlog depth. The throughput
+benchmark does not by itself prove peak live heap/RSS under a deep backlog;
+use `BenchmarkWorkerDeepBacklogMemory` for that stress verification.
 
 ---
 

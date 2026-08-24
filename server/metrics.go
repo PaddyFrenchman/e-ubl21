@@ -47,9 +47,9 @@ var (
 		Help: "Current number of documents actively being processed by this worker process.",
 	})
 
-	workerBufferedMessages = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "e_ubl21_worker_buffered_messages",
-		Help: "Current number of pulled documents waiting in the bounded local worker buffer.",
+	workerJobsChannelDepth = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_worker_jobs_channel_depth",
+		Help: "Current number of pulled documents waiting in the bounded Go jobs channel; excludes the NATS iterator's separately bounded internal buffer.",
 	})
 
 	workerPullBufferCapacity = promauto.NewGauge(prometheus.GaugeOpts{

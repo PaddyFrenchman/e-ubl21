@@ -157,7 +157,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	defer messages.Stop()
 	jobs := make(chan jetstream.Msg, settings.prefetch)
 	workerPullBufferCapacity.Set(float64(settings.prefetch))
-	defer workerBufferedMessages.Set(0)
+	defer workerJobsChannelDepth.Set(0)
 
 	var workers sync.WaitGroup
 	for i := 0; i < settings.concurrency; i++ {
@@ -165,7 +165,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		go func() {
 			defer workers.Done()
 			for msg := range jobs {
-				workerBufferedMessages.Set(float64(len(jobs)))
+				workerJobsChannelDepth.Set(float64(len(jobs)))
 				worker.process(msg)
 			}
 		}()
@@ -202,7 +202,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		}
 		select {
 		case jobs <- msg:
-			workerBufferedMessages.Set(float64(len(jobs)))
+			workerJobsChannelDepth.Set(float64(len(jobs)))
 		case <-ctx.Done():
 			break
 		}
