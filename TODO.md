@@ -22,7 +22,7 @@ The TODO identifier is **not** its implementation priority. The sections below a
 
 | Execution order | TODO | Summary |
 |---:|---|---|
-| 1 | **TODO-001** | Make JetStream stream, subject and KV names configurable |
+| 1 | **TODO-001** | ✅ DONE — Make JetStream stream, subject and KV names configurable |
 | 2 | **TODO-005** | Optimize upload parsing and eliminate unnecessary full-payload copies |
 | 3 | **TODO-006** | Split the lightweight API document catalog from worker XSD extraction |
 | 4 | **TODO-002** | Separate upload metadata/status from raw XML content |
@@ -35,7 +35,7 @@ The TODO identifier is **not** its implementation priority. The sections below a
 
 ```text
 Phase A — foundation
-  TODO-001
+  TODO-001 ✅ DONE
   TODO-005
   TODO-006
 
@@ -53,9 +53,13 @@ Phase D — production hardening and polish
 
 ---
 
-## TODO-001 — Make JetStream stream, subject and KV names configurable
+## TODO-001 — Make JetStream stream, subject and KV names configurable ✅ DONE
 
-The current queue topology is partly hard-coded in `queue/subjects.go`:
+**Status:** Completed and re-verified on 2026-08-24.
+
+### Former state
+
+The queue topology was partly hard-coded in `queue/subjects.go`:
 
 - work stream: `UBL_DOCUMENTS`
 - document subject prefix: `ubl.documents.`
@@ -63,7 +67,7 @@ The current queue topology is partly hard-coded in `queue/subjects.go`:
 - result subject: `ubl.validation.results`
 - upload KV bucket: `UBL_UPLOADS`
 
-Only the NATS URL and worker subject filter are currently configurable.
+Only the NATS URL and worker subject filter were configurable.
 
 ### Goal
 
@@ -77,7 +81,7 @@ Example:
 EUBL21_QUEUE_NAMESPACE=eubl21.prod
 ```
 
-Derived subjects could then be:
+Derived subjects:
 
 ```text
 eubl21.prod.documents.Invoice
@@ -85,7 +89,7 @@ eubl21.prod.documents.CreditNote
 eubl21.prod.validation.results
 ```
 
-Derived JetStream/KV resource names should follow a stable normalization rule, for example:
+Derived JetStream/KV resource names:
 
 ```text
 EUBL21_PROD_DOCUMENTS
@@ -93,30 +97,45 @@ EUBL21_PROD_VALIDATION_RESULTS
 EUBL21_PROD_UPLOADS
 ```
 
+### Resolution
+
+Implemented through `queue.Namespace`, with `--queue-namespace` / `EUBL21_QUEUE_NAMESPACE` configuration shared by API and worker processes.
+
+Namespace values are validated as empty/default or dot-separated lowercase alphanumeric segments matching:
+
+```text
+^[a-z0-9]+(\.[a-z0-9]+)*$
+```
+
+This prevents distinct configured namespace strings from normalizing to the same JetStream stream/KV resource prefix. Ambiguous values such as `eubl21--prod`, `eubl21_prod`, `EUBL21.Prod`, leading/trailing dots and consecutive dots are rejected at configuration time.
+
+The empty namespace preserves the original pre-namespace stream, subject and KV names for backwards compatibility.
+
 ### Requirements
 
-- Add a queue namespace/prefix setting to Cobra/Viper configuration.
-- Support `EUBL21_QUEUE_NAMESPACE`.
-- Remove direct dependencies on hard-coded subject prefixes from publishers and consumers.
-- Derive the work stream, result stream and upload KV bucket names consistently.
-- Ensure `EnsureInfra()` uses the derived names.
-- Ensure `DocumentSubject()` and `DocumentTypeFromSubject()` use the configured namespace.
-- Validate worker filters against the configured namespace.
-- Keep defaults that preserve existing local behavior.
-- Update `docker-compose.yml` with an explicit development namespace.
-- Update queue/server architecture documentation.
-- Add integration tests proving two namespaces can coexist on the same JetStream server without cross-consuming messages or records.
+- [x] Add a queue namespace/prefix setting to Cobra/Viper configuration.
+- [x] Support `EUBL21_QUEUE_NAMESPACE`.
+- [x] Remove direct dependencies on hard-coded subject prefixes from publishers and consumers.
+- [x] Derive the work stream, result stream and upload KV bucket names consistently.
+- [x] Ensure `EnsureInfra()` uses the derived names.
+- [x] Ensure document subject generation/parsing uses the configured namespace.
+- [x] Validate worker filters against the configured namespace.
+- [x] Keep defaults that preserve existing local behavior.
+- [x] Update `docker-compose.yml` with an explicit development namespace.
+- [x] Update queue/server architecture documentation.
+- [x] Add integration tests proving two namespaces can coexist on the same JetStream server without cross-consuming messages or records.
+- [x] Reject namespace forms that could collide after JetStream resource-name normalization.
 
 ### Acceptance criteria
 
-A single NATS/JetStream cluster must be able to host at least two isolated e-ubl21 deployments such as:
+A single NATS/JetStream cluster can host isolated e-ubl21 deployments such as:
 
 ```text
 eubl21.dev.documents.*
 eubl21.prod.documents.*
 ```
 
-A worker configured for one namespace must never consume documents, update upload records, or publish result events belonging to another namespace.
+A worker configured for one namespace does not consume documents, update upload records, or publish result events belonging to another namespace. Namespace isolation is covered by integration tests, and malformed/collision-prone namespaces are rejected before startup.
 
 ---
 
