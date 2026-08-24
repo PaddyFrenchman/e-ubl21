@@ -3,9 +3,20 @@
 **Project:** e-ubl21 / UBL-21 e-invoice validation  
 **Updated:** 2026-08-24
 
-## Queue configuration
+## Numbering convention
 
-### TODO: make JetStream stream, subject and KV names configurable
+Every identified project TODO receives a permanent sequential identifier:
+
+```text
+TODO-001
+TODO-002
+TODO-003
+...
+```
+
+Identifiers are never reused. If an item is completed or cancelled, its identifier remains reserved so references in commits, documentation, issues and discussions stay stable.
+
+## TODO-001 — Make JetStream stream, subject and KV names configurable
 
 The current queue topology is partly hard-coded in `queue/subjects.go`:
 
