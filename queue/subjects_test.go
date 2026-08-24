@@ -30,18 +30,18 @@ func TestDefaultNamespacePreservesLegacyNames(t *testing.T) {
 	}
 
 	// NewNamespace("") must be indistinguishable from the zero value.
-	if got := queue.NewNamespace(""); got != queue.DefaultNamespace {
-		t.Errorf("NewNamespace(\"\") = %q, want DefaultNamespace", got)
+	if got, err := queue.NewNamespace(""); err != nil || got != queue.DefaultNamespace {
+		t.Errorf("NewNamespace(\"\") = (%q, %v), want (DefaultNamespace, nil)", got, err)
 	}
-	if got := queue.NewNamespace("   "); got != queue.DefaultNamespace {
-		t.Errorf("NewNamespace(\"   \") = %q, want DefaultNamespace", got)
+	if got, err := queue.NewNamespace("   "); err != nil || got != queue.DefaultNamespace {
+		t.Errorf("NewNamespace(\"   \") = (%q, %v), want (DefaultNamespace, nil)", got, err)
 	}
 }
 
 func TestNamespaceDerivesNamesFromExample(t *testing.T) {
 	t.Parallel()
 	// The exact example from TODO.md's TODO-001.
-	ns := queue.NewNamespace("eubl21.prod")
+	ns := queue.MustNamespace("eubl21.prod")
 
 	if got, want := ns.DocumentSubject("Invoice"), "eubl21.prod.documents.Invoice"; got != want {
 		t.Errorf("DocumentSubject(%q) = %q, want %q", "Invoice", got, want)
@@ -65,7 +65,7 @@ func TestNamespaceDerivesNamesFromExample(t *testing.T) {
 
 func TestNamespaceDocumentTypeRoundTrip(t *testing.T) {
 	t.Parallel()
-	for _, ns := range []queue.Namespace{queue.DefaultNamespace, queue.NewNamespace("eubl21.dev"), queue.NewNamespace("eubl21.prod")} {
+	for _, ns := range []queue.Namespace{queue.DefaultNamespace, queue.MustNamespace("eubl21.dev"), queue.MustNamespace("eubl21.prod")} {
 		subject := ns.DocumentSubject("Invoice")
 		if got := ns.DocumentTypeFromSubject(subject); got != "Invoice" {
 			t.Errorf("namespace %q: DocumentTypeFromSubject(%q) = %q, want %q", ns, subject, got, "Invoice")
@@ -75,8 +75,8 @@ func TestNamespaceDocumentTypeRoundTrip(t *testing.T) {
 		}
 	}
 
-	dev := queue.NewNamespace("eubl21.dev")
-	prod := queue.NewNamespace("eubl21.prod")
+	dev := queue.MustNamespace("eubl21.dev")
+	prod := queue.MustNamespace("eubl21.prod")
 	if dev.HasDocumentSubject(prod.DocumentSubject("Invoice")) {
 		t.Error("dev namespace must not recognize a prod namespace subject as its own")
 	}
@@ -88,17 +88,107 @@ func TestNamespaceResourceNameNormalization(t *testing.T) {
 		namespace string
 		want      string
 	}{
+		{"eubl21", "EUBL21"},
 		{"eubl21.dev", "EUBL21_DEV"},
 		{"eubl21.prod", "EUBL21_PROD"},
-		{"Eubl21.Prod", "EUBL21_PROD"},
-		{"eubl21--prod", "EUBL21_PROD"},
-		{"eubl21.prod.", "EUBL21_PROD"},
-		{".eubl21.prod", "EUBL21_PROD"},
+		{"eubl21.prod.eu", "EUBL21_PROD_EU"},
 	}
 	for _, tc := range cases {
-		ns := queue.NewNamespace(tc.namespace)
+		ns, err := queue.NewNamespace(tc.namespace)
+		if err != nil {
+			t.Errorf("NewNamespace(%q): unexpected error: %v", tc.namespace, err)
+			continue
+		}
 		if got := ns.DocumentsStreamName(); got != tc.want+"_DOCUMENTS" {
 			t.Errorf("NewNamespace(%q).DocumentsStreamName() = %q, want %q", tc.namespace, got, tc.want+"_DOCUMENTS")
 		}
+	}
+}
+
+// TestNewNamespaceRejectsAmbiguousOrMalformedValues locks in the hardening
+// fix for the normalization-collision issue: without character-set
+// validation, distinct raw namespace values such as "eubl21.prod" and
+// "eubl21--prod" (or "Eubl21.Prod") would derive the exact same physical
+// stream/subject/bucket names (both "EUBL21_PROD..."), silently colliding.
+// NewNamespace now rejects every value outside the safe, unambiguous
+// dot-separated-lowercase-alphanumeric format up front.
+func TestNewNamespaceRejectsAmbiguousOrMalformedValues(t *testing.T) {
+	t.Parallel()
+	invalid := []string{
+		"eubl21--prod", // dashes are not part of the allowed charset
+		"Eubl21.Prod",  // mixed case would collide with "eubl21.prod"
+		"eubl21.prod.", // trailing separator
+		".eubl21.prod", // leading separator
+		"eubl21..prod", // consecutive separators
+		"eubl21_prod",  // underscores collide with the derived resource-name separator
+		"eubl21 prod",  // whitespace inside the value (not merely surrounding it)
+		"eubl21.pröd",  // non-ASCII
+	}
+	for _, raw := range invalid {
+		if _, err := queue.NewNamespace(raw); err == nil {
+			t.Errorf("NewNamespace(%q): expected an error, got none", raw)
+		}
+	}
+
+	// Confirm the specific collision example from the hardening review no
+	// longer exists: "eubl21.prod" and "eubl21--prod" cannot both become
+	// valid namespaces deriving "EUBL21_PROD_DOCUMENTS".
+	if _, err := queue.NewNamespace("eubl21--prod"); err == nil {
+		t.Fatal("NewNamespace(\"eubl21--prod\"): expected an error")
+	}
+	prod, err := queue.NewNamespace("eubl21.prod")
+	if err != nil {
+		t.Fatalf("NewNamespace(\"eubl21.prod\"): unexpected error: %v", err)
+	}
+	if got, want := prod.DocumentsStreamName(), "EUBL21_PROD_DOCUMENTS"; got != want {
+		t.Errorf("DocumentsStreamName() = %q, want %q", got, want)
+	}
+}
+
+// TestNamespaceMatchesTODO001CheckExamples verifies NewNamespace's accepted
+// and rejected forms match TODO-001-CHECK.MD's rule
+// (^[a-z0-9]+(?:\.[a-z0-9]+)*$) and its worked examples verbatim.
+func TestNamespaceMatchesTODO001CheckExamples(t *testing.T) {
+	t.Parallel()
+
+	valid := []string{
+		"eubl21",
+		"eubl21.dev",
+		"eubl21.test",
+		"eubl21.prod",
+		"customer1.prod",
+	}
+	for _, raw := range valid {
+		if _, err := queue.NewNamespace(raw); err != nil {
+			t.Errorf("NewNamespace(%q): unexpected error: %v", raw, err)
+		}
+	}
+
+	invalid := []string{
+		"eubl21--prod",
+		"eubl21_prod",
+		".eubl21.prod",
+		"eubl21.prod.",
+		"eubl21..prod",
+		"EUBL21.Prod",
+	}
+	for _, raw := range invalid {
+		if _, err := queue.NewNamespace(raw); err == nil {
+			t.Errorf("NewNamespace(%q): expected an error, got none", raw)
+		}
+	}
+
+	// The check doc's worked example: eubl21.prod derives the subjects
+	// eubl21.prod.documents.Invoice / eubl21.prod.validation.results and
+	// the NATS resource prefix EUBL21_PROD.
+	ns := queue.MustNamespace("eubl21.prod")
+	if got, want := ns.DocumentSubject("Invoice"), "eubl21.prod.documents.Invoice"; got != want {
+		t.Errorf("DocumentSubject(%q) = %q, want %q", "Invoice", got, want)
+	}
+	if got, want := ns.ResultsSubject(), "eubl21.prod.validation.results"; got != want {
+		t.Errorf("ResultsSubject() = %q, want %q", got, want)
+	}
+	if got, want := ns.DocumentsStreamName(), "EUBL21_PROD_DOCUMENTS"; got != want {
+		t.Errorf("DocumentsStreamName() = %q, want %q", got, want)
 	}
 }

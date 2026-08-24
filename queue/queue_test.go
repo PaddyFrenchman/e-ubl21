@@ -235,8 +235,8 @@ func TestPublishResult(t *testing.T) {
 func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	t.Parallel()
 	url := queuetest.StartServer(t)
-	dev := newTestClientWithNamespace(t, url, queue.NewNamespace("eubl21.dev"))
-	prod := newTestClientWithNamespace(t, url, queue.NewNamespace("eubl21.prod"))
+	dev := newTestClientWithNamespace(t, url, queue.MustNamespace("eubl21.dev"))
+	prod := newTestClientWithNamespace(t, url, queue.MustNamespace("eubl21.prod"))
 
 	if dev.Namespace.DocumentsStreamName() == prod.Namespace.DocumentsStreamName() {
 		t.Fatal("dev and prod must derive distinct documents stream names")

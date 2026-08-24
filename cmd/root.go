@@ -60,7 +60,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().String("oauth-audience", "", "OAuth audience")
 	rootCmd.PersistentFlags().String("oauth-hmac-secret", "", "Shared secret used to verify HS256 bearer token signatures (required for protected routes)")
 	rootCmd.PersistentFlags().String("nats-url", "nats://localhost:4222", "NATS server URL used to queue uploads and read/write their status")
-	rootCmd.PersistentFlags().String("queue-namespace", "", "Queue namespace scoping every JetStream stream/subject/KV bucket name (e.g. \"eubl21.prod\"), so multiple deployments can share one NATS cluster; empty preserves the original hard-coded names")
+	rootCmd.PersistentFlags().String("queue-namespace", "", "Queue namespace scoping every JetStream stream/subject/KV bucket name (dot-separated lowercase alphanumeric segments, e.g. \"eubl21.prod\"), so multiple deployments can share one NATS cluster; empty preserves the original hard-coded names")
 	rootCmd.PersistentFlags().Float64("rate-limit-rps", 5, "Per-client requests/second allowed before rate limiting")
 	rootCmd.PersistentFlags().Int("rate-limit-burst", 10, "Per-client burst size allowed by the rate limiter")
 	rootCmd.PersistentFlags().String("tls-cert-file", "", "TLS certificate file (enables TLS together with --tls-key-file)")
@@ -134,7 +134,11 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.OAuthAudience = v.GetString("oauth-audience")
 	cfg.OAuthHMACSecret = v.GetString("oauth-hmac-secret")
 	cfg.NATSURL = v.GetString("nats-url")
-	cfg.QueueNamespace = queue.NewNamespace(v.GetString("queue-namespace"))
+	namespace, err := queue.NewNamespace(v.GetString("queue-namespace"))
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+	cfg.QueueNamespace = namespace
 	cfg.RateLimitRPS = v.GetFloat64("rate-limit-rps")
 	cfg.RateLimitBurst = v.GetInt("rate-limit-burst")
 	cfg.TLSCertFile = v.GetString("tls-cert-file")

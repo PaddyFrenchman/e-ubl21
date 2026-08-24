@@ -64,7 +64,18 @@ func TestLoadConfigReadsQueueNamespaceFromEnvironment(t *testing.T) {
 		t.Fatalf("load config: %v", err)
 	}
 
-	if want := queue.NewNamespace("eubl21.prod"); cfg.QueueNamespace != want {
+	if want := queue.MustNamespace("eubl21.prod"); cfg.QueueNamespace != want {
 		t.Fatalf("queue namespace = %q, want %q", cfg.QueueNamespace, want)
+	}
+}
+
+func TestLoadConfigRejectsInvalidQueueNamespace(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	t.Setenv("EUBL21_QUEUE_NAMESPACE", "eubl21--prod")
+
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err == nil {
+		t.Fatal("load config: expected an error for a malformed queue namespace, got none")
 	}
 }
