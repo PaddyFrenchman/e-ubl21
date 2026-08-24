@@ -197,10 +197,11 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 	}
 	paths := spec["paths"].(map[string]any)
 	getUpload := paths["/api/v1/ubl/{id}"].(map[string]any)["get"].(map[string]any)
-	params := getUpload["parameters"].([]map[string]any)
+	params := getUpload["parameters"].([]any)
 	found := false
-	for _, p := range params {
-		if p["name"] == "includeContent" {
+	for _, raw := range params {
+		p, ok := raw.(map[string]any)
+		if ok && p["name"] == "includeContent" {
 			found = true
 		}
 	}
