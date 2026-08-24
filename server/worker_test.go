@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go"
 )
 
 // runTestWorker starts RunWorker in the background against cfg's NATS URL
@@ -15,7 +16,7 @@ import (
 func runTestWorker(t *testing.T, cfg Config, overrides func(*WorkerConfig)) {
 	t.Helper()
 
-	workerCfg := WorkerConfig{NATSURL: cfg.NATSURL, QueueNamespace: cfg.QueueNamespace}
+	workerCfg := WorkerConfig{NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace}
 	if overrides != nil {
 		overrides(&workerCfg)
 	}
@@ -59,6 +60,75 @@ func waitForStatus(t *testing.T, handler http.Handler, token, id string) map[str
 	}
 	t.Fatalf("upload %s did not leave pending status within 5s", id)
 	return nil
+}
+
+func TestWorkerTerminatesPoisonMessagesAndRetriesMissingContent(t *testing.T) {
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, nil)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	if err := q.EnsureInfra(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := queue.NewID()
+	messages := []*nats.Msg{
+		{Subject: q.Namespace.DocumentSubject("Invoice"), Data: []byte(`{`)},
+		{Subject: q.Namespace.DocumentSubject("Invoice"), Data: []byte(`{"id":"` + id + `","documentType":"Order","receivedAt":"now"}`), Header: nats.Header{queue.HeaderUploadID: []string{id}}},
+		{Subject: q.Namespace.DocumentSubject("Unknown"), Data: []byte(`{"id":"` + id + `","documentType":"Unknown","receivedAt":"now"}`), Header: nats.Header{queue.HeaderUploadID: []string{id}}},
+		{Subject: q.Namespace.DocumentSubject("Invoice"), Data: []byte(`{"id":"` + id + `","documentType":"Invoice","receivedAt":"now"}`), Header: nats.Header{queue.HeaderUploadID: []string{id}}},
+	}
+	for _, msg := range messages {
+		if _, err := q.JS.PublishMsg(context.Background(), msg); err != nil {
+			t.Fatal(err)
+		}
+	}
+	missingRecordID, _ := queue.NewID()
+	if err := q.PutUploadContent(context.Background(), missingRecordID, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDocument(context.Background(), missingRecordID, "Invoice", time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(150 * time.Millisecond)
+}
+
+func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, nil)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	if err := q.EnsureInfra(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	id, _ := queue.NewID()
+	if err := q.PutUploadContent(context.Background(), id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PutUploadRecord(context.Background(), queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusPending, ReceivedAt: time.Now().Format(time.RFC3339)}); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.JS.DeleteStream(context.Background(), q.Namespace.ResultsStreamName()); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDocument(context.Background(), id, "Invoice", time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		record, err := q.GetUploadRecord(context.Background(), id)
+		if err == nil && record.Status == queue.StatusValid {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("worker did not update status before result publication failed")
 }
 
 func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {

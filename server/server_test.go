@@ -43,13 +43,15 @@ const invalidInvoiceXML = `<?xml version="1.0" encoding="UTF-8"?>
 
 func testConfig(t *testing.T, overrides func(*Config)) Config {
 	t.Helper()
+	natsServer := queuetest.StartServer(t)
 	cfg := Config{
 		OpenAPIPath:     "/spec",
 		SwaggerPath:     "/docs/",
 		OAuthIssuer:     "https://issuer.example.com",
 		OAuthAudience:   "e-ubl21",
 		OAuthHMACSecret: testSecret,
-		NATSURL:         queuetest.StartServer(t),
+		NATSURL:         natsServer.URL,
+		NATSOptions:     natsServer.Options,
 	}
 	if overrides != nil {
 		overrides(&cfg)

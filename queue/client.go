@@ -39,11 +39,21 @@ type Client struct {
 // backoff) rather than giving up, since e-ubl21's services are expected to
 // tolerate NATS restarts.
 func Connect(url string, namespace Namespace) (*Client, error) {
-	nc, err := nats.Connect(url,
+	return ConnectWithOptions(url, namespace)
+}
+
+// ConnectWithOptions is Connect with additional low-level NATS client
+// options. It is primarily useful for dependency injection in tests, such as
+// connecting to an embedded server without opening a TCP listener.
+func ConnectWithOptions(url string, namespace Namespace, options ...nats.Option) (*Client, error) {
+	options = append([]nats.Option{
 		nats.Name("e-ubl21"),
 		nats.MaxReconnects(-1),
-		nats.ReconnectWait(2*time.Second),
+		nats.ReconnectWait(2 * time.Second),
 		nats.RetryOnFailedConnect(true),
+	}, options...)
+	nc, err := nats.Connect(url,
+		options...,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("connect to NATS at %s: %w", url, err)

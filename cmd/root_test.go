@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -8,6 +9,18 @@ import (
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/spf13/viper"
 )
+
+func TestRootCommandBuildsAndPrintsHelp(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	root := NewRootCmd(viper.New(), &stdout, &stderr)
+	root.SetArgs([]string{"--help"})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) {
+		t.Fatalf("help missing subcommands: %s", stdout.String())
+	}
+}
 
 func TestLoadConfigReadsFileAndEnvironment(t *testing.T) {
 	tempDir := t.TempDir()

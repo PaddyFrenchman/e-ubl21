@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -24,6 +25,7 @@ type Config struct {
 	OAuthAudience   string
 	OAuthHMACSecret string
 	NATSURL         string
+	NATSOptions     []nats.Option
 	QueueNamespace  queue.Namespace
 	RateLimitRPS    float64
 	RateLimitBurst  int
@@ -43,7 +45,7 @@ func NewHandler(cfg Config) (http.Handler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load UBL 2.1 schema catalog: %w", err)
 	}
-	q, err := queue.Connect(cfg.NATSURL, cfg.QueueNamespace)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("connect to NATS: %w", err)
 	}

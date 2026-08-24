@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,6 +21,7 @@ type Config struct {
 	OAuthAudience       string
 	OAuthHMACSecret     string
 	NATSURL             string
+	NATSOptions         []nats.Option
 	QueueNamespace      queue.Namespace
 	RateLimitRPS        float64
 	RateLimitBurst      int

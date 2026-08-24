@@ -45,6 +45,7 @@ func worker(ctx context.Context, cfg *Config) error {
 
 	return server.RunWorker(ctx, server.WorkerConfig{
 		NATSURL:        cfg.NATSURL,
+		NATSOptions:    cfg.NATSOptions,
 		QueueNamespace: cfg.QueueNamespace,
 		ConsumerName:   cfg.WorkerConsumerName,
 		SubjectFilter:  cfg.WorkerSubjectFilter,

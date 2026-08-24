@@ -14,11 +14,13 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
 type WorkerConfig struct {
 	NATSURL        string
+	NATSOptions    []nats.Option
 	QueueNamespace queue.Namespace
 	ConsumerName   string
 	SubjectFilter  string
@@ -34,7 +36,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		logger = slog.Default()
 	}
 
-	q, err := queue.Connect(cfg.NATSURL, cfg.QueueNamespace)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
 	if err != nil {
 		return fmt.Errorf("connect to NATS: %w", err)
 	}

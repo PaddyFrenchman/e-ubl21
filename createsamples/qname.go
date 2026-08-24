@@ -26,6 +26,7 @@ func prefixPart(q string) string {
 
 func trimUBLDocumentType(name string) string {
 	name = strings.TrimPrefix(name, "UBL-")
+	name = strings.TrimSuffix(name, ".xsd")
 	name = strings.TrimSuffix(name, "-2.1")
-	return strings.TrimSuffix(name, ".xsd")
+	return name
 }

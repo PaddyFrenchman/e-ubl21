@@ -59,6 +59,7 @@ func newHandler(cfg *Config) (http.Handler, error) {
 		OAuthAudience:   cfg.OAuthAudience,
 		OAuthHMACSecret: cfg.OAuthHMACSecret,
 		NATSURL:         cfg.NATSURL,
+		NATSOptions:     cfg.NATSOptions,
 		QueueNamespace:  cfg.QueueNamespace,
 		RateLimitRPS:    cfg.RateLimitRPS,
 		RateLimitBurst:  cfg.RateLimitBurst,

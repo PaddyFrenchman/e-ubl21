@@ -19,9 +19,9 @@ func newTestClient(t *testing.T) *queue.Client {
 // newTestClientWithNamespace connects to the given NATS URL scoped to
 // namespace, letting a test start multiple namespace-scoped clients against
 // the same embedded server (see TestNamespacesDoNotCrossConsume).
-func newTestClientWithNamespace(t *testing.T, url string, namespace queue.Namespace) *queue.Client {
+func newTestClientWithNamespace(t *testing.T, server queuetest.Server, namespace queue.Namespace) *queue.Client {
 	t.Helper()
-	client, err := queue.Connect(url, namespace)
+	client, err := queue.ConnectWithOptions(server.URL, namespace, server.Options...)
 	if err != nil {
 		t.Fatalf("connect: %v", err)
 	}
@@ -348,9 +348,9 @@ func TestPublishResult(t *testing.T) {
 // raw content.
 func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	t.Parallel()
-	url := queuetest.StartServer(t)
-	dev := newTestClientWithNamespace(t, url, queue.MustNamespace("eubl21.dev"))
-	prod := newTestClientWithNamespace(t, url, queue.MustNamespace("eubl21.prod"))
+	server := queuetest.StartServer(t)
+	dev := newTestClientWithNamespace(t, server, queue.MustNamespace("eubl21.dev"))
+	prod := newTestClientWithNamespace(t, server, queue.MustNamespace("eubl21.prod"))
 
 	if dev.Namespace.DocumentsStreamName() == prod.Namespace.DocumentsStreamName() {
 		t.Fatal("dev and prod must derive distinct documents stream names")

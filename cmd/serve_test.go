@@ -16,12 +16,14 @@ func TestNewHandlerServesHealthAndOpenAPI(t *testing.T) {
 
 	issuer := "https://issuer.example.com"
 	audience := "e-ubl21"
+	natsServer := queuetest.StartServer(t)
 	handler, err := newHandler(&Config{
 		OpenAPIPath:     "/spec",
 		OAuthIssuer:     issuer,
 		OAuthAudience:   audience,
 		OAuthHMACSecret: "test-secret",
-		NATSURL:         queuetest.StartServer(t),
+		NATSURL:         natsServer.URL,
+		NATSOptions:     natsServer.Options,
 	})
 	if err != nil {
 		t.Fatalf("newHandler: %v", err)
