@@ -21,11 +21,9 @@ import (
 // worker once validation completes.
 //
 // UploadRecord deliberately does not carry the upload's raw XML content:
-// that is stored separately (see PutUploadContent/GetUploadContent), so
-// that UpdateUploadStatus - called once per document by the worker, and
-// far more often than any human ever calls PutUploadRecord directly -
-// never has to read or rewrite the (potentially large) document body just
-// to flip a status field.
+// that is stored separately in JetStream Object Store (see
+// PutUploadContent/GetUploadContent), so status updates never have to read
+// or rewrite the potentially large document body.
 type UploadRecord struct {
 	ID           string           `json:"id"`
 	DocumentType string           `json:"documentType"`
@@ -37,9 +35,7 @@ type UploadRecord struct {
 
 // ValidID reports whether id has the shape produced by NewID: a 32-character
 // lowercase hex string. Callers must check this before using an
-// externally-supplied id (e.g. a GET /api/v1/ubl/{id} path parameter) as a
-// KV key, both to reject garbage early and to keep the constraint on what a
-// valid upload id looks like in one place.
+// externally-supplied id as a JetStream key/object name.
 var ValidID = regexp.MustCompile(`^[0-9a-f]{32}$`).MatchString
 
 // NewID generates a new random upload id (128 bits of randomness, hex
@@ -52,15 +48,12 @@ func NewID() (string, error) {
 	return hex.EncodeToString(buf), nil
 }
 
-// ErrRecordNotFound is returned by GetUploadRecord (or GetUploadContent)
-// when id does not exist (or is not well-formed).
+// ErrRecordNotFound is returned by GetUploadRecord or GetUploadContent when
+// id does not exist (or is not well-formed).
 var ErrRecordNotFound = errors.New("upload record not found")
 
 // PutUploadRecord creates or overwrites the metadata record for record.ID.
-// It never reads or writes the upload's raw XML content - see
-// PutUploadContent - so callers that only need to change status/metadata
-// (e.g. UpdateUploadStatus) pay a cost proportional to the small metadata
-// record, not to the document size.
+// It never reads or writes raw XML content.
 func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error {
 	if !ValidID(record.ID) {
 		return fmt.Errorf("invalid upload id %q", record.ID)
@@ -79,9 +72,8 @@ func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error
 	return nil
 }
 
-// GetUploadRecord retrieves the metadata record for id, or
-// ErrRecordNotFound if none exists. It does not fetch the upload's raw XML
-// content - see GetUploadContent.
+// GetUploadRecord retrieves the metadata record for id, or ErrRecordNotFound
+// if none exists. It does not fetch the upload's raw XML content.
 func (c *Client) GetUploadRecord(ctx context.Context, id string) (UploadRecord, error) {
 	if !ValidID(id) {
 		return UploadRecord{}, ErrRecordNotFound
@@ -105,11 +97,8 @@ func (c *Client) GetUploadRecord(ctx context.Context, id string) (UploadRecord, 
 }
 
 // UpdateUploadStatus loads the metadata record for id, applies the given
-// validation outcome, and writes it back. Used by the worker once it has
-// validated (or failed to validate) a document. Because UploadRecord no
-// longer carries the raw XML content, this reads and rewrites only the
-// small metadata record - the (potentially large) document content stored
-// via PutUploadContent is never touched.
+// validation outcome, and writes it back. The raw XML object is never read
+// or rewritten.
 func (c *Client) UpdateUploadStatus(ctx context.Context, id string, status ValidationStatus, validationErr string, validatedAt time.Time) error {
 	record, err := c.GetUploadRecord(ctx, id)
 	if err != nil {
@@ -121,44 +110,41 @@ func (c *Client) UpdateUploadStatus(ctx context.Context, id string, status Valid
 	return c.PutUploadRecord(ctx, record)
 }
 
-// PutUploadContent stores content as the immutable raw XML body for
-// upload id, in the separate upload-content KV bucket (see
-// Namespace.UploadContentBucketName). content is written to the KV entry
-// directly, with no JSON wrapping and no []byte<->string conversion, so
-// storing an upload's content costs exactly one copy (the unavoidable
-// network/storage write), not an extra copy on top of it.
+// PutUploadContent stores content as the immutable raw XML object for upload
+// id. JetStream Object Store chunks large objects internally rather than
+// requiring the complete XML to fit in a single KV value.
 func (c *Client) PutUploadContent(ctx context.Context, id string, content []byte) error {
 	if !ValidID(id) {
 		return fmt.Errorf("invalid upload id %q", id)
 	}
-	kv, err := c.uploadContentBucket(ctx)
+	store, err := c.uploadContentStore(ctx)
 	if err != nil {
 		return err
 	}
-	if _, err := kv.Put(ctx, id, content); err != nil {
+	if _, err := store.PutBytes(ctx, id, content); err != nil {
 		return fmt.Errorf("put upload content %s: %w", id, err)
 	}
 	return nil
 }
 
-// GetUploadContent retrieves the raw XML content previously stored for id
-// via PutUploadContent, or ErrRecordNotFound if none exists.
+// GetUploadContent retrieves the raw XML object previously stored for id,
+// or ErrRecordNotFound if none exists.
 func (c *Client) GetUploadContent(ctx context.Context, id string) ([]byte, error) {
 	if !ValidID(id) {
 		return nil, ErrRecordNotFound
 	}
-	kv, err := c.uploadContentBucket(ctx)
+	store, err := c.uploadContentStore(ctx)
 	if err != nil {
 		return nil, err
 	}
-	entry, err := kv.Get(ctx, id)
+	content, err := store.GetBytes(ctx, id)
 	if err != nil {
-		if errors.Is(err, jetstream.ErrKeyNotFound) {
+		if errors.Is(err, jetstream.ErrObjectNotFound) {
 			return nil, ErrRecordNotFound
 		}
 		return nil, fmt.Errorf("get upload content %s: %w", id, err)
 	}
-	return entry.Value(), nil
+	return content, nil
 }
 
 func (c *Client) uploadsBucket(ctx context.Context) (jetstream.KeyValue, error) {
@@ -170,11 +156,11 @@ func (c *Client) uploadsBucket(ctx context.Context) (jetstream.KeyValue, error) 
 	return kv, nil
 }
 
-func (c *Client) uploadContentBucket(ctx context.Context) (jetstream.KeyValue, error) {
-	uploadContentBucketName := c.Namespace.UploadContentBucketName()
-	kv, err := c.JS.KeyValue(ctx, uploadContentBucketName)
+func (c *Client) uploadContentStore(ctx context.Context) (jetstream.ObjectStore, error) {
+	bucketName := c.Namespace.UploadContentBucketName()
+	store, err := c.JS.ObjectStore(ctx, bucketName)
 	if err != nil {
-		return nil, fmt.Errorf("open %s KV bucket: %w", uploadContentBucketName, err)
+		return nil, fmt.Errorf("open %s Object Store: %w", bucketName, err)
 	}
-	return kv, nil
+	return store, nil
 }
