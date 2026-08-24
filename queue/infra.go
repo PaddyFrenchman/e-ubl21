@@ -19,25 +19,19 @@ const documentsStreamMaxAge = 7 * 24 * time.Hour
 const resultsStreamMaxAge = 7 * 24 * time.Hour
 
 // uploadMetadataMaxValueSize caps a single upload metadata KV entry's
-// size. Since the raw XML content is stored separately (see
-// uploadContentMaxValueSize), a metadata record only ever holds a handful
-// of small fields (id, document type, status, error message, timestamps),
-// so this is generous headroom rather than a tight fit.
+// size. The raw XML content is stored separately in an Object Store, so a
+// metadata record only ever holds a handful of small fields (id, document
+// type, status, error message and timestamps).
 const uploadMetadataMaxValueSize = 64 << 10
 
-// uploadContentMaxValueSize caps a single upload content KV entry's size:
-// the 10 MiB upload body cap enforced by the HTTP API, plus a safety
-// margin.
-const uploadContentMaxValueSize = 12 << 20
-
-// EnsureInfra idempotently creates the streams and KV bucket the queue
-// package depends on. Both the HTTP API and the validation worker call
-// this on startup, since either may start first.
+// EnsureInfra idempotently creates the streams, metadata KV bucket and raw
+// XML Object Store the queue package depends on. Both the HTTP API and the
+// validation worker call this on startup, since either may start first.
 func (c *Client) EnsureInfra(ctx context.Context) error {
 	documentsStreamName := c.Namespace.DocumentsStreamName()
 	if _, err := c.JS.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
 		Name:        documentsStreamName,
-		Description: "Incoming UBL 2.1 documents awaiting XSD validation, one subject per document type.",
+		Description: "Incoming UBL 2.1 validation work descriptors, one subject per document type.",
 		Subjects:    []string{c.Namespace.documentSubjectWildcard()},
 		Retention:   jetstream.WorkQueuePolicy,
 		Storage:     jetstream.FileStorage,
@@ -61,7 +55,7 @@ func (c *Client) EnsureInfra(ctx context.Context) error {
 	uploadsBucketName := c.Namespace.UploadsBucketName()
 	if _, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
 		Bucket:       uploadsBucketName,
-		Description:  "Durable metadata record (status, error, timestamps) for every UBL upload, keyed by upload id. The raw XML content itself lives in the separate upload-content bucket.",
+		Description:  "Durable metadata record (status, error, timestamps) for every UBL upload, keyed by upload id. Raw XML is stored separately in the upload-content Object Store.",
 		Storage:      jetstream.FileStorage,
 		MaxValueSize: uploadMetadataMaxValueSize,
 	}); err != nil {
@@ -69,13 +63,12 @@ func (c *Client) EnsureInfra(ctx context.Context) error {
 	}
 
 	uploadContentBucketName := c.Namespace.UploadContentBucketName()
-	if _, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
-		Bucket:       uploadContentBucketName,
-		Description:  "Immutable raw XML content of every UBL upload, keyed by the same upload id as the metadata bucket.",
-		Storage:      jetstream.FileStorage,
-		MaxValueSize: uploadContentMaxValueSize,
+	if _, err := c.JS.CreateOrUpdateObjectStore(ctx, jetstream.ObjectStoreConfig{
+		Bucket:      uploadContentBucketName,
+		Description: "Immutable raw XML content of every UBL upload, keyed by upload id and chunked by JetStream Object Store.",
+		Storage:     jetstream.FileStorage,
 	}); err != nil {
-		return fmt.Errorf("ensure %s KV bucket: %w", uploadContentBucketName, err)
+		return fmt.Errorf("ensure %s Object Store: %w", uploadContentBucketName, err)
 	}
 
 	return nil
