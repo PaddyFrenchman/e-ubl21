@@ -188,6 +188,9 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.HTTPIdleTimeout = v.GetDuration("http-idle-timeout")
 	cfg.HTTPShutdownTimeout = v.GetDuration("http-shutdown-timeout")
 	cfg.HTTPMaxHeaderBytes = v.GetInt("http-max-header-bytes")
+	if err := validateHTTPConfig(cfg); err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
 	cfg.WorkerConsumerName = v.GetString("worker-consumer-name")
 	cfg.WorkerSubjectFilter = v.GetString("worker-subject-filter")
 	cfg.WorkerMetricsAddr = v.GetString("worker-metrics-addr")
@@ -198,5 +201,32 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerMaxDeliver = v.GetInt("worker-max-deliver")
 	cfg.WorkerMaxAckPending = v.GetInt("worker-max-ack-pending")
 
+	return nil
+}
+
+const minimumHTTPTimeout = time.Second
+const minimumHTTPMaxHeaderBytes = 4 << 10
+
+func validateHTTPConfig(cfg *Config) error {
+	for _, setting := range []struct {
+		name  string
+		value time.Duration
+	}{
+		{"http-read-header-timeout", cfg.HTTPReadHeaderTimeout},
+		{"http-read-timeout", cfg.HTTPReadTimeout},
+		{"http-write-timeout", cfg.HTTPWriteTimeout},
+		{"http-idle-timeout", cfg.HTTPIdleTimeout},
+		{"http-shutdown-timeout", cfg.HTTPShutdownTimeout},
+	} {
+		if setting.value < minimumHTTPTimeout {
+			return fmt.Errorf("%s must be at least %s", setting.name, minimumHTTPTimeout)
+		}
+	}
+	if cfg.HTTPReadTimeout < cfg.HTTPReadHeaderTimeout {
+		return fmt.Errorf("http-read-timeout (%s) must be at least http-read-header-timeout (%s)", cfg.HTTPReadTimeout, cfg.HTTPReadHeaderTimeout)
+	}
+	if cfg.HTTPMaxHeaderBytes < minimumHTTPMaxHeaderBytes {
+		return fmt.Errorf("http-max-header-bytes must be at least %d", minimumHTTPMaxHeaderBytes)
+	}
 	return nil
 }

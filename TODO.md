@@ -305,7 +305,12 @@ read timeout, 60-second write timeout, 2-minute keep-alive idle timeout,
 64 KiB aggregate request-header limit, and 15-second graceful-shutdown drain
 deadline. Each value is configurable by CLI, config file, or `EUBL21_*`
 environment variable. The 60-second read deadline applies to the complete
-request and preserves the independently enforced 10 MiB upload-size contract.
+request: it allows normal uploads up to the independently enforced 10 MiB
+limit while deliberately rejecting clients that cannot finish within that
+time. Deployments serving slower WAN/VPN clients can raise the deadline.
+
+Configuration loading rejects timeouts below one second, a whole-request read
+timeout shorter than the header timeout, and header limits below 4 KiB.
 
 `serve` now derives a signal-aware context from SIGINT/SIGTERM, stops accepting
 connections with `http.Server.Shutdown`, allows in-flight handlers to finish

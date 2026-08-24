@@ -132,3 +132,25 @@ func TestLoadConfigReadsHTTPResourceLimits(t *testing.T) {
 		t.Fatalf("HTTP limits = %+v", cfg)
 	}
 }
+
+func TestLoadConfigRejectsIncoherentHTTPResourceLimits(t *testing.T) {
+	for _, tc := range []struct {
+		name, key, value string
+	}{
+		{"read shorter than headers", "EUBL21_HTTP_READ_TIMEOUT", "2s"},
+		{"impractical write timeout", "EUBL21_HTTP_WRITE_TIMEOUT", "1ms"},
+		{"tiny header limit", "EUBL21_HTTP_MAX_HEADER_BYTES", "1024"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			v := viper.New()
+			configureViper(v)
+			if tc.name == "read shorter than headers" {
+				t.Setenv("EUBL21_HTTP_READ_HEADER_TIMEOUT", "10s")
+			}
+			t.Setenv(tc.key, tc.value)
+			if err := loadConfig(v, &Config{}); err == nil {
+				t.Fatal("incoherent HTTP configuration was accepted")
+			}
+		})
+	}
+}

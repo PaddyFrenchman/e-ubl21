@@ -1003,8 +1003,10 @@ Keep `/healthz` only if compatibility requires it.
 The API now handles SIGINT/SIGTERM and invokes `http.Server.Shutdown()` with a
 configurable bounded grace period. It also configures explicit read-header,
 whole-request read, write, keep-alive idle, and request-header-size limits.
-Defaults preserve requests up to the independent 10 MiB upload limit while
-preventing stalled connections from remaining open indefinitely.
+Defaults allow normal requests up to the independent 10 MiB upload limit while
+requiring the complete request to arrive within 60 seconds; slower-client
+deployments can raise that configurable deadline. Configuration validation
+rejects incoherent or impractically small limits.
 
 ---
 

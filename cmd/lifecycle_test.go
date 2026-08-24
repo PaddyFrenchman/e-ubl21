@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -158,5 +159,52 @@ func TestRunHTTPServerBoundsShutdown(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("shutdown was not bounded")
+	}
+}
+
+func TestHTTPServerAcceptsNearLimitBodyWithinReadDeadline(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const bodySize = (10 << 20) - 1024
+	received := make(chan int64, 1)
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n, err := io.Copy(io.Discard, http.MaxBytesReader(w, r.Body, 10<<20))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		received <- n
+		w.WriteHeader(http.StatusNoContent)
+	})
+	cfg := &Config{
+		HTTPReadHeaderTimeout: time.Second,
+		HTTPReadTimeout:       5 * time.Second,
+		HTTPWriteTimeout:      5 * time.Second,
+		HTTPIdleTimeout:       time.Second,
+		HTTPShutdownTimeout:   time.Second,
+		HTTPMaxHeaderBytes:    64 << 10,
+	}
+	srv, shutdownTimeout := newHTTPServer(":0", handler, cfg)
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- runHTTPServer(ctx, srv, shutdownTimeout, func() error { return srv.Serve(listener) }) }()
+
+	response, err := http.Post("http://"+listener.Addr().String(), "application/xml", strings.NewReader(strings.Repeat("x", bodySize)))
+	if err != nil {
+		cancel()
+		t.Fatal(err)
+	}
+	_ = response.Body.Close()
+	if response.StatusCode != http.StatusNoContent {
+		t.Fatalf("status = %d", response.StatusCode)
+	}
+	if n := <-received; n != bodySize {
+		t.Fatalf("received %d bytes, want %d", n, bodySize)
+	}
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatal(err)
 	}
 }
