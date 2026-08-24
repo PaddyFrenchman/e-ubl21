@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/spf13/viper"
@@ -90,5 +91,18 @@ func TestLoadConfigRejectsInvalidQueueNamespace(t *testing.T) {
 	cfg := &Config{}
 	if err := loadConfig(v, cfg); err == nil {
 		t.Fatal("load config: expected an error for a malformed queue namespace, got none")
+	}
+}
+
+func TestLoadConfigReadsWorkerValidationTimeout(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	t.Setenv("EUBL21_WORKER_VALIDATION_TIMEOUT", "750ms")
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.WorkerValidationTimeout != 750*time.Millisecond {
+		t.Fatalf("validation timeout = %s", cfg.WorkerValidationTimeout)
 	}
 }

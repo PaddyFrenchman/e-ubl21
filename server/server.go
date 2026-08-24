@@ -41,7 +41,7 @@ func NewHandler(cfg Config) (http.Handler, error) {
 	openAPIPath := normalizePath(cfg.OpenAPIPath, "/openapi.json", false)
 	swaggerPath := normalizePath(cfg.SwaggerPath, "/swagger/", true)
 
-	catalog, err := loadSchemaCatalog()
+	catalog, err := loadDocumentCatalog()
 	if err != nil {
 		return nil, fmt.Errorf("load UBL 2.1 schema catalog: %w", err)
 	}

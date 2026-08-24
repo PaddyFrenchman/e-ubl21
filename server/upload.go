@@ -34,7 +34,7 @@ const maxUploadBytes = 10 << 20
 var errPayloadTooLarge = fmt.Errorf("request body exceeds the maximum allowed size of %d bytes", maxUploadBytes)
 
 type uploadHandlers struct {
-	catalog *schemaCatalog
+	catalog *documentCatalog
 	queue   *queue.Client
 }
 

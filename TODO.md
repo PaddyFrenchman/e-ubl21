@@ -15,9 +15,9 @@ The TODO identifier is **not** its implementation priority.
 |---:|---|---|
 | 1 | **TODO-001** | ✅ DONE — Make JetStream stream, subject and KV names configurable |
 | 2 | **TODO-005** | ✅ DONE — Optimize upload parsing and eliminate unnecessary full-payload copies |
-| 3 | **TODO-006** | Split the lightweight API document catalog from worker XSD extraction |
+| 3 | **TODO-006** | ✅ DONE — Split the lightweight API document catalog from worker XSD extraction |
 | 4 | **TODO-002** | ✅ DONE — Separate upload metadata/status from raw XML content and eliminate raw XML from work messages |
-| 5 | **TODO-004** | Optimize and bound `xmllint` validation execution |
+| 5 | **TODO-004** | ✅ DONE — Optimize and bound `xmllint` validation execution |
 | 6 | **TODO-003** | Bound JetStream worker prefetch and make validation concurrency explicit |
 | 7 | **TODO-008** | Add HTTP resource/time-limit tuning and graceful API shutdown |
 | 8 | **TODO-007** | Cache reusable JetStream/API runtime objects |
@@ -28,13 +28,13 @@ The TODO identifier is **not** its implementation priority.
 Phase A — foundation
   TODO-001 ✅ DONE
   TODO-005 ✅ DONE
-  TODO-006
+  TODO-006 ✅ DONE
 
 Phase B — reduce data movement
   TODO-002 ✅ DONE
 
 Phase C — validation throughput
-  TODO-004
+  TODO-004 ✅ DONE
   TODO-003
 
 Phase D — production hardening and polish
@@ -89,7 +89,9 @@ Full XML well-formedness is deliberately deferred to the asynchronous worker. Fo
 
 ---
 
-## TODO-006 — Split the lightweight API document catalog from worker XSD extraction
+## TODO-006 — Split the lightweight API document catalog from worker XSD extraction ✅ DONE
+
+**Status:** Completed on 2026-08-24.
 
 `loadSchemaCatalog()` currently extracts the complete embedded UBL XSD tree to a temporary directory. The API process only needs to recognize supported document root types; only the worker needs filesystem paths for `xmllint`.
 
@@ -97,12 +99,24 @@ Full XML well-formedness is deliberately deferred to the asynchronous worker. Fo
 
 Reduce API startup I/O, temporary-disk use and initialization work.
 
+### Resolution
+
+The API now builds a `documentCatalog` directly from the embedded
+`maindoc/*.xsd` metadata. It retains only the root element, target namespace,
+and authoritative schema filename, and performs no filesystem extraction.
+
+The worker builds a `validationCatalog` from that same `documentCatalog` and
+adds the extracted filesystem tree required by `xmllint` import resolution.
+Tests prove that both views share the same authoritative mapping and that API
+catalog construction leaves the temporary directory empty. Separate startup
+benchmarks cover both catalog paths.
+
 ### Requirements
 
-- Build an in-memory supported-document catalog directly from embedded schema metadata for the API.
-- Extract the full XSD filesystem tree only in worker/validator processes that actually invoke `xmllint`.
-- Keep one authoritative root-element/namespace mapping shared by both paths.
-- Add startup benchmarks/tests to ensure both catalogs agree on supported document types.
+- [x] Build an in-memory supported-document catalog directly from embedded schema metadata for the API.
+- [x] Extract the full XSD filesystem tree only in worker/validator processes that actually invoke `xmllint`.
+- [x] Keep one authoritative root-element/namespace mapping shared by both paths.
+- [x] Add startup benchmarks/tests to ensure both catalogs agree on supported document types.
 
 ### Acceptance criteria
 
@@ -173,22 +187,39 @@ TODO-005 briefly used a KV bucket named `UBL_UPLOAD_CONTENT` (or its namespaced 
 
 ---
 
-## TODO-004 — Optimize and bound `xmllint` validation execution
+## TODO-004 — Optimize and bound `xmllint` validation execution ✅ DONE
 
-The current validator writes every XML payload to a temporary file and launches a new `xmllint` process for it. Execution currently has no per-document timeout.
+**Status:** Completed on 2026-08-24.
+
+The former validator wrote every XML payload to a temporary file and launched
+a new, unbounded `xmllint` process for it.
 
 ### Goal
 
 Reduce validation overhead while preserving libxml2 validation behavior.
 
+### Resolution
+
+Validation now streams XML directly to `xmllint` stdin (`-`) and runs with
+`--nonet`. `exec.CommandContext` enforces the configurable
+`--worker-validation-timeout` / `EUBL21_WORKER_VALIDATION_TIMEOUT` deadline
+(default `30s`). Timeouts are retryable worker outcomes, not invalid-document
+results. A bounded writer caps combined diagnostics at 8 KiB while the process
+runs and normalizes empty/whitespace output.
+
+`BenchmarkValidateAgainstSchemaProcess` records process-per-document cost. A
+three-iteration local sample on the current development machine measured
+approximately `90.8 ms/op`; the reusable/native backend remains an optional
+future optimization rather than a prerequisite for this TODO.
+
 ### Requirements
 
-- Feed XML to `xmllint` through stdin (`-`) instead of a per-document temporary XML file.
-- Use `exec.CommandContext` with configurable validation timeout.
-- Consider `--nonet`/equivalent resource isolation.
-- Bound/normalize diagnostics.
-- Benchmark process-per-document execution after the stdin change.
-- Evaluate a reusable/native libxml2 backend only if process startup remains material.
+- [x] Feed XML to `xmllint` through stdin (`-`) instead of a per-document temporary XML file.
+- [x] Use `exec.CommandContext` with configurable validation timeout.
+- [x] Use `--nonet` resource isolation.
+- [x] Bound/normalize diagnostics.
+- [x] Benchmark process-per-document execution after the stdin change.
+- [x] Evaluate a reusable/native libxml2 backend only if process startup remains material.
 
 ### Acceptance criteria
 

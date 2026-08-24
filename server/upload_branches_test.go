@@ -24,8 +24,8 @@ func directUploadHandler(t *testing.T) (*uploadHandlers, *queue.Client) {
 	}
 	t.Cleanup(q.Close)
 	return &uploadHandlers{
-		catalog: &schemaCatalog{entryByElement: map[string]schemaEntry{
-			"Invoice": {path: "unused", namespace: "urn:test"},
+		catalog: &documentCatalog{entryByElement: map[string]schemaEntry{
+			"Invoice": {file: "unused", namespace: "urn:test"},
 		}},
 		queue: q,
 	}, q

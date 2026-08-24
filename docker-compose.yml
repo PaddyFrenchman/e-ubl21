@@ -84,6 +84,9 @@ services:
       # document type's queue instead (see server/worker.go).
       EUBL21_WORKER_SUBJECT_FILTER: ""
       EUBL21_WORKER_METRICS_ADDR: ":9091"
+      # Hard deadline for each xmllint subprocess. Timed-out validations are
+      # retried rather than recorded as invalid documents.
+      EUBL21_WORKER_VALIDATION_TIMEOUT: "30s"
     ports:
       - "9091:9091"
 

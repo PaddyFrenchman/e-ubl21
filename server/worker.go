@@ -19,16 +19,18 @@ import (
 )
 
 type WorkerConfig struct {
-	NATSURL        string
-	NATSOptions    []nats.Option
-	QueueNamespace queue.Namespace
-	ConsumerName   string
-	SubjectFilter  string
-	MetricsAddr    string
-	Logger         *slog.Logger
+	NATSURL           string
+	NATSOptions       []nats.Option
+	QueueNamespace    queue.Namespace
+	ConsumerName      string
+	SubjectFilter     string
+	MetricsAddr       string
+	ValidationTimeout time.Duration
+	Logger            *slog.Logger
 }
 
 const defaultWorkerConsumerName = "ubl-validator"
+const defaultValidationTimeout = 30 * time.Second
 
 func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	logger := cfg.Logger
@@ -46,7 +48,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		return fmt.Errorf("ensure JetStream infrastructure: %w", err)
 	}
 
-	catalog, err := loadSchemaCatalog()
+	catalog, err := loadValidationCatalog()
 	if err != nil {
 		return fmt.Errorf("load UBL 2.1 schema catalog: %w", err)
 	}
@@ -75,7 +77,11 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		}()
 	}
 
-	worker := &documentWorker{queue: q, catalog: catalog, logger: logger}
+	validationTimeout := cfg.ValidationTimeout
+	if validationTimeout <= 0 {
+		validationTimeout = defaultValidationTimeout
+	}
+	worker := &documentWorker{queue: q, catalog: catalog, logger: logger, validationTimeout: validationTimeout}
 	consumeCtx, err := consumer.Consume(worker.handle)
 	if err != nil {
 		return fmt.Errorf("start consuming: %w", err)
@@ -100,9 +106,10 @@ func nonEmpty(value, fallback string) string {
 }
 
 type documentWorker struct {
-	queue   *queue.Client
-	catalog *schemaCatalog
-	logger  *slog.Logger
+	queue             *queue.Client
+	catalog           *validationCatalog
+	logger            *slog.Logger
+	validationTimeout time.Duration
 }
 
 const nakRetryDelay = 10 * time.Second
@@ -156,12 +163,18 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		return
 	}
 
-	validationErr := validateAgainstSchema(schemaPath, content)
+	validationErr := validateAgainstSchema(ctx, schemaPath, content, w.validationTimeout)
 	validatedAt := time.Now()
 
 	if validationErr != nil && errors.Is(validationErr, errXMLLintUnavailable) {
 		logger.Error("xmllint unavailable; will retry", "error", validationErr)
 		recordValidationOutcome("validator_unavailable")
+		_ = msg.NakWithDelay(nakRetryDelay)
+		return
+	}
+	if validationErr != nil && errors.Is(validationErr, errValidationTimeout) {
+		logger.Error("schema validation timed out; will retry", "error", validationErr)
+		recordValidationOutcome("validation_timeout")
 		_ = msg.NakWithDelay(nakRetryDelay)
 		return
 	}

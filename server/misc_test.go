@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -119,7 +120,7 @@ func TestSchemaCatalogParsingAndValidationErrors(t *testing.T) {
 	if _, _, err := rootElementOf(filepath.Join(dir, "missing")); err == nil {
 		t.Fatal("expected missing XSD error")
 	}
-	if err := validateAgainstSchema(valid, []byte(`<Wrong/>`)); err == nil {
+	if err := validateAgainstSchema(context.Background(), valid, []byte(`<Wrong/>`), time.Second); err == nil {
 		t.Fatal("expected validation failure")
 	}
 }

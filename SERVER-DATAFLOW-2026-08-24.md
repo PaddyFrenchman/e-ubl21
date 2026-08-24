@@ -238,9 +238,9 @@ This is a useful design choice: workers can route and correlate a document witho
 `e-ubl21 serve` performs the following high-level initialization:
 
 1. Cobra/Viper resolve configuration.
-2. `server.NewHandler()` loads the UBL schema catalog.
-3. Embedded `XSD/` assets are extracted to a temporary filesystem tree because `xmllint` requires real filesystem paths.
-4. The catalog maps every UBL main-document root element to its corresponding XSD.
+2. `server.NewHandler()` builds the lightweight UBL document catalog directly from embedded maindoc metadata.
+3. The API performs no XSD extraction; only workers materialize the embedded tree required by `xmllint`.
+4. The catalog maps every UBL main-document root element to its expected namespace and authoritative schema filename.
 5. The API connects to NATS.
 6. `queue.EnsureInfra()` creates/updates the streams and KV bucket.
 7. OAuth validation, rate limiting, logging and Prometheus middleware are wired.
@@ -259,7 +259,7 @@ The current upload path is intentionally asynchronous.
 sequenceDiagram
     participant Client
     participant API
-    participant Catalog as UBL Schema Catalog
+    participant Catalog as In-memory Document Catalog
     participant KV as UBL_UPLOADS KV
     participant JS as UBL_DOCUMENTS
 
@@ -267,8 +267,8 @@ sequenceDiagram
     API->>API: rate-limit + auth + request logging
     API->>API: read body, max nominally 10 MiB
     API->>API: parse XML / determine root element
-    API->>Catalog: schemaPathFor(root)
-    Catalog-->>API: supported / unsupported
+    API->>Catalog: expectedNamespaceFor(root)
+    Catalog-->>API: expected namespace / unsupported
     API->>API: generate 128-bit upload id
     API->>KV: PutUploadRecord(status=pending, content=XML)
     API->>JS: Publish ubl.documents.<Type>
@@ -282,7 +282,7 @@ The API currently performs only inexpensive checks before accepting work:
 1. request body exists and does not exceed the configured upload size limit (10 MiB), enforced exactly via `http.MaxBytesReader` rather than silently truncated (see `TODO-005`);
 2. content type contains `xml` or `octet-stream`;
 3. a syntactically valid root element is present - detected via a single `xml.Decoder.Token()` pass that stops at the first `xml.StartElement`, not a full-document parse;
-4. the root element's local name **and** namespace match a recognized UBL 2.1 main document type (see `schemaCatalog.expectedNamespaceFor`).
+4. the root element's local name **and** namespace match a recognized UBL 2.1 main document type (see `documentCatalog.expectedNamespaceFor`).
 
 Because detection stops at the first `xml.StartElement`, the API deliberately does **not** establish that the rest of the document is well-formed XML: a payload with a syntactically valid, recognized root element but a malformed tail is still accepted with `202` (see `TestRootElementOfPayloadStopsAtFirstStartElement` in `server/upload_test.go`). Full XML well-formedness, like schema validity, is established later by the worker's `xmllint` run, which requires well-formed input to even attempt schema validation.
 
@@ -417,7 +417,7 @@ Multiple replicas using the same durable consumer provide competing-consumer/loa
 sequenceDiagram
     participant JS as UBL_DOCUMENTS
     participant Worker
-    participant Catalog
+    participant Catalog as Extracted Validation Catalog
     participant xmllint
     participant KV as UBL_UPLOADS
     participant Results as UBL_VALIDATION_RESULTS
@@ -438,10 +438,10 @@ sequenceDiagram
 The worker executes:
 
 ```text
-xmllint --noout --schema <main-document-xsd> <temporary-upload.xml>
+xmllint --nonet --noout --schema <main-document-xsd> -
 ```
 
-The OASIS schema assets are embedded in the Go binary and extracted once to a process-local temporary tree.
+The OASIS schema assets are embedded in the Go binary and extracted once to a worker-local temporary tree. Each XML payload is streamed over stdin, so validation creates no per-document temporary XML file.
 
 ### Outcome handling
 
@@ -925,29 +925,21 @@ This makes production diagnosis considerably easier.
 
 ---
 
-## 11.6 `xmllint` execution is not bounded by a validation timeout
+## 11.6 `xmllint` execution timeout ✅ RESOLVED
 
-`validateAgainstSchema()` uses `exec.Command`, not a context-bound `exec.CommandContext` with a specific validation deadline.
+`validateAgainstSchema()` now uses `exec.CommandContext` with a per-document deadline configured through `--worker-validation-timeout` / `EUBL21_WORKER_VALIDATION_TIMEOUT` (default `30s`).
 
-### Risk
+### Former risk
 
 A hung/hostile/problematic external validator process could occupy a worker indefinitely.
 
-### Recommendation
+### Resolution
 
-Use a configurable validation timeout:
-
-```text
-EUBL21_XSD_VALIDATION_TIMEOUT
-```
-
-and execute the validator with context cancellation.
-
-Also bound:
-
-- output capture size;
-- temporary-file usage;
-- concurrent validator subprocess count.
+XML is streamed to `xmllint --nonet ... -`, eliminating per-document temp
+files. Combined stdout/stderr is captured through an 8 KiB bounded writer,
+and timeout outcomes are retried instead of being recorded as invalid.
+Concurrent subprocess count is handled by the explicit worker concurrency work
+in TODO-003.
 
 ---
 
@@ -1037,7 +1029,7 @@ An arbitrary XML document whose root happened to be named `Invoice` could pass t
 
 ### Resolution
 
-`rootElementOfPayload` now returns both the root element's local name and namespace URI (via a single `xml.Decoder.Token()` pass that stops at the first `xml.StartElement`), and `schemaCatalog.expectedNamespaceFor` exposes each recognized document type's UBL 2.1 target namespace (parsed from each XSD's `targetNamespace` attribute at catalog build time). The upload handler rejects a document unless both match:
+`rootElementOfPayload` now returns both the root element's local name and namespace URI (via a single `xml.Decoder.Token()` pass that stops at the first `xml.StartElement`), and `documentCatalog.expectedNamespaceFor` exposes each recognized document type's UBL 2.1 target namespace (parsed directly from embedded maindoc metadata without extracting XSD files). The upload handler rejects a document unless both match:
 
 ```text
 Local = Invoice

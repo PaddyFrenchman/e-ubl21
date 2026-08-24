@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go"
@@ -12,24 +13,25 @@ import (
 )
 
 type Config struct {
-	ConfigFile          string
-	Host                string
-	Port                int
-	OpenAPIPath         string
-	SwaggerPath         string
-	OAuthIssuer         string
-	OAuthAudience       string
-	OAuthHMACSecret     string
-	NATSURL             string
-	NATSOptions         []nats.Option
-	QueueNamespace      queue.Namespace
-	RateLimitRPS        float64
-	RateLimitBurst      int
-	TLSCertFile         string
-	TLSKeyFile          string
-	WorkerConsumerName  string
-	WorkerSubjectFilter string
-	WorkerMetricsAddr   string
+	ConfigFile              string
+	Host                    string
+	Port                    int
+	OpenAPIPath             string
+	SwaggerPath             string
+	OAuthIssuer             string
+	OAuthAudience           string
+	OAuthHMACSecret         string
+	NATSURL                 string
+	NATSOptions             []nats.Option
+	QueueNamespace          queue.Namespace
+	RateLimitRPS            float64
+	RateLimitBurst          int
+	TLSCertFile             string
+	TLSKeyFile              string
+	WorkerConsumerName      string
+	WorkerSubjectFilter     string
+	WorkerMetricsAddr       string
+	WorkerValidationTimeout time.Duration
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -114,6 +116,7 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-consumer-name", "ubl-validator")
 	v.SetDefault("worker-subject-filter", "")
 	v.SetDefault("worker-metrics-addr", ":9091")
+	v.SetDefault("worker-validation-timeout", 30*time.Second)
 	v.SetEnvPrefix("EUBL21")
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
@@ -148,6 +151,7 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerConsumerName = v.GetString("worker-consumer-name")
 	cfg.WorkerSubjectFilter = v.GetString("worker-subject-filter")
 	cfg.WorkerMetricsAddr = v.GetString("worker-metrics-addr")
+	cfg.WorkerValidationTimeout = v.GetDuration("worker-validation-timeout")
 
 	return nil
 }
