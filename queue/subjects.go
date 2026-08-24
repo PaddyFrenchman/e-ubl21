@@ -16,17 +16,19 @@ const (
 )
 
 // legacyDocumentsStreamName, legacyResultsStreamName, legacyUploadsBucketName,
-// legacyDocumentSubjectPrefix and legacyResultsSubject are the fixed
-// stream/subject/bucket names e-ubl21 used before the queue namespace
-// setting existed. DefaultNamespace ("") reproduces these exactly, so
-// deployments that do not set EUBL21_QUEUE_NAMESPACE keep working against
-// their existing JetStream state without any migration.
+// legacyUploadContentBucketName, legacyDocumentSubjectPrefix and
+// legacyResultsSubject are the fixed stream/subject/bucket names e-ubl21
+// used before the queue namespace setting existed. DefaultNamespace ("")
+// reproduces these exactly, so deployments that do not set
+// EUBL21_QUEUE_NAMESPACE keep working against their existing JetStream
+// state without any migration.
 const (
-	legacyDocumentsStreamName   = "UBL_DOCUMENTS"
-	legacyResultsStreamName     = "UBL_VALIDATION_RESULTS"
-	legacyUploadsBucketName     = "UBL_UPLOADS"
-	legacyDocumentSubjectPrefix = "ubl.documents."
-	legacyResultsSubject        = "ubl.validation.results"
+	legacyDocumentsStreamName     = "UBL_DOCUMENTS"
+	legacyResultsStreamName       = "UBL_VALIDATION_RESULTS"
+	legacyUploadsBucketName       = "UBL_UPLOADS"
+	legacyUploadContentBucketName = "UBL_UPLOAD_CONTENT"
+	legacyDocumentSubjectPrefix   = "ubl.documents."
+	legacyResultsSubject          = "ubl.validation.results"
 )
 
 // DefaultNamespace is the queue namespace used when EUBL21_QUEUE_NAMESPACE
@@ -182,13 +184,27 @@ func (n Namespace) ResultsStreamName() string {
 }
 
 // UploadsBucketName is the JetStream KV bucket, within this namespace,
-// holding the durable record (status, error, original content) for every
-// upload, keyed by upload id.
+// holding the durable metadata record (status, error, timestamps) for
+// every upload, keyed by upload id. The raw XML content itself is stored
+// separately - see UploadContentBucketName - so that updating an upload's
+// status never has to read or rewrite its (potentially large) content.
 func (n Namespace) UploadsBucketName() string {
 	if n == DefaultNamespace {
 		return legacyUploadsBucketName
 	}
 	return n.resourcePrefix() + "_UPLOADS"
+}
+
+// UploadContentBucketName is the JetStream KV bucket, within this
+// namespace, holding the immutable raw XML content of every upload, keyed
+// by the same upload id as UploadsBucketName. Kept separate from the
+// mutable status/metadata record so that repeated status updates/polling
+// never need to read or rewrite the (potentially large) document content.
+func (n Namespace) UploadContentBucketName() string {
+	if n == DefaultNamespace {
+		return legacyUploadContentBucketName
+	}
+	return n.resourcePrefix() + "_UPLOAD_CONTENT"
 }
 
 // resourcePrefix normalizes the namespace's raw value into the prefix used

@@ -281,16 +281,17 @@ The API currently performs only inexpensive checks before accepting work:
 
 1. request body exists and does not exceed the configured upload size limit (10 MiB), enforced exactly via `http.MaxBytesReader` rather than silently truncated (see `TODO-005`);
 2. content type contains `xml` or `octet-stream`;
-3. payload is well-formed enough to have a root element - detected via a single `xml.Decoder.Token()` pass that stops at the first `xml.StartElement`, not a full-document parse;
-4. a root element exists;
-5. the root element's local name **and** namespace match a recognized UBL 2.1 main document type (see `schemaCatalog.expectedNamespaceFor`).
+3. a syntactically valid root element is present - detected via a single `xml.Decoder.Token()` pass that stops at the first `xml.StartElement`, not a full-document parse;
+4. the root element's local name **and** namespace match a recognized UBL 2.1 main document type (see `schemaCatalog.expectedNamespaceFor`).
+
+Because detection stops at the first `xml.StartElement`, the API deliberately does **not** establish that the rest of the document is well-formed XML: a payload with a syntactically valid, recognized root element but a malformed tail is still accepted with `202` (see `TestRootElementOfPayloadStopsAtFirstStartElement` in `server/upload_test.go`). Full XML well-formedness, like schema validity, is established later by the worker's `xmllint` run, which requires well-formed input to even attempt schema validation.
 
 The API **does not invoke `xmllint` synchronously**.
 
 That means:
 
 ```text
-well-formed XML + recognized UBL document root
+syntactically valid root element + recognized UBL document type
                         │
                         ▼
                   202 Accepted
@@ -299,7 +300,7 @@ well-formed XML + recognized UBL document root
                     pending
 ```
 
-A structurally invalid UBL document can therefore still receive `202`; its XSD failure appears asynchronously after the worker processes it.
+A document that is not fully well-formed XML, or that is well-formed but structurally invalid UBL, can therefore still receive `202`; both failure modes surface asynchronously once the worker's `xmllint` run processes it.
 
 ### Persist-before-publish ordering
 
@@ -1210,16 +1211,13 @@ Current server pipeline:
 XML
  │
  ▼
-well-formedness
- │
- ▼
-UBL type recognition
+root element recognition (local name + namespace)
  │
  ▼
 queue
  │
  ▼
-UBL 2.1 XSD validation
+UBL 2.1 XSD validation (well-formedness + schema, via xmllint)
  │
  ▼
 result
@@ -1231,16 +1229,13 @@ Future pipeline may become:
 XML
  │
  ▼
-well-formedness
- │
- ▼
-UBL recognition
+root element recognition (local name + namespace)
  │
  ▼
 queue
  │
  ▼
-UBL 2.1 XSD
+UBL 2.1 XSD validation (well-formedness + schema)
  │
  ├─ fail -> result
  │

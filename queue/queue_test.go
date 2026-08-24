@@ -136,11 +136,13 @@ func TestUploadRecordLifecycle(t *testing.T) {
 		ID:           id,
 		DocumentType: "Invoice",
 		Status:       queue.StatusPending,
-		Content:      "<Invoice/>",
 		ReceivedAt:   time.Now().UTC().Format(time.RFC3339),
 	}
 	if err := client.PutUploadRecord(ctx, record); err != nil {
 		t.Fatalf("put record: %v", err)
+	}
+	if err := client.PutUploadContent(ctx, id, []byte("<Invoice/>")); err != nil {
+		t.Fatalf("put content: %v", err)
 	}
 
 	got, err := client.GetUploadRecord(ctx, id)
@@ -166,8 +168,91 @@ func TestUploadRecordLifecycle(t *testing.T) {
 	if updated.Error != "missing required element" {
 		t.Fatalf("error = %q", updated.Error)
 	}
-	if updated.Content != "<Invoice/>" {
-		t.Fatalf("content lost after update: %q", updated.Content)
+
+	content, err := client.GetUploadContent(ctx, id)
+	if err != nil {
+		t.Fatalf("get content after status update: %v", err)
+	}
+	if string(content) != "<Invoice/>" {
+		t.Fatalf("content lost after status update: %q", content)
+	}
+}
+
+// TestPutUploadContentAndGet proves the acceptance criterion of separating
+// raw content from mutable status/metadata: content is stored and
+// retrieved independently of any UploadRecord, and GetUploadContent
+// reports ErrRecordNotFound for an id that was never given content, even
+// if a status/metadata record already exists for that id (i.e. the two
+// stores are genuinely independent, not implicitly linked).
+func TestPutUploadContentAndGet(t *testing.T) {
+	t.Parallel()
+	client := newTestClient(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	id, _ := queue.NewID()
+	body := []byte("<Invoice><cbc:ID>INV-1</cbc:ID></Invoice>")
+	if err := client.PutUploadContent(ctx, id, body); err != nil {
+		t.Fatalf("put content: %v", err)
+	}
+
+	got, err := client.GetUploadContent(ctx, id)
+	if err != nil {
+		t.Fatalf("get content: %v", err)
+	}
+	if string(got) != string(body) {
+		t.Fatalf("content = %q, want %q", got, body)
+	}
+
+	otherID, _ := queue.NewID()
+	if err := client.PutUploadRecord(ctx, queue.UploadRecord{
+		ID:           otherID,
+		DocumentType: "Invoice",
+		Status:       queue.StatusPending,
+		ReceivedAt:   time.Now().UTC().Format(time.RFC3339),
+	}); err != nil {
+		t.Fatalf("put record for otherID: %v", err)
+	}
+	if _, err := client.GetUploadContent(ctx, otherID); err != queue.ErrRecordNotFound {
+		t.Fatalf("GetUploadContent for a record with no stored content: err = %v, want %v", err, queue.ErrRecordNotFound)
+	}
+}
+
+// TestUpdateUploadStatusDoesNotTouchContent proves that repeated status
+// updates (as performed by the worker via UpdateUploadStatus) never read or
+// rewrite the upload's raw content: it is stored once and left untouched
+// across multiple status transitions.
+func TestUpdateUploadStatusDoesNotTouchContent(t *testing.T) {
+	t.Parallel()
+	client := newTestClient(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	id, _ := queue.NewID()
+	body := []byte("<Invoice/>")
+	if err := client.PutUploadContent(ctx, id, body); err != nil {
+		t.Fatalf("put content: %v", err)
+	}
+	if err := client.PutUploadRecord(ctx, queue.UploadRecord{
+		ID:           id,
+		DocumentType: "Invoice",
+		Status:       queue.StatusPending,
+		ReceivedAt:   time.Now().UTC().Format(time.RFC3339),
+	}); err != nil {
+		t.Fatalf("put record: %v", err)
+	}
+
+	for _, status := range []queue.ValidationStatus{queue.StatusValid, queue.StatusInvalid, queue.StatusValid} {
+		if err := client.UpdateUploadStatus(ctx, id, status, "", time.Now()); err != nil {
+			t.Fatalf("update status to %q: %v", status, err)
+		}
+		content, err := client.GetUploadContent(ctx, id)
+		if err != nil {
+			t.Fatalf("get content after updating status to %q: %v", status, err)
+		}
+		if string(content) != string(body) {
+			t.Fatalf("content changed after updating status to %q: got %q, want %q", status, content, body)
+		}
 	}
 }
 
@@ -246,6 +331,9 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	}
 	if dev.Namespace.UploadsBucketName() == prod.Namespace.UploadsBucketName() {
 		t.Fatal("dev and prod must derive distinct uploads bucket names")
+	}
+	if dev.Namespace.UploadContentBucketName() == prod.Namespace.UploadContentBucketName() {
+		t.Fatal("dev and prod must derive distinct upload content bucket names")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -330,5 +418,23 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	// rather than silently creating a cross-namespace consumer.
 	if _, err := prod.DocumentsConsumer(ctx, "prod-cross-namespace-worker", dev.Namespace.DocumentSubject("Invoice")); err == nil {
 		t.Fatal("expected an error creating a prod consumer filtered to a dev namespace subject")
+	}
+
+	// Upload content, like upload records, must be isolated per namespace.
+	if err := dev.PutUploadContent(ctx, id, []byte("<Invoice/>dev")); err != nil {
+		t.Fatalf("put dev content: %v", err)
+	}
+	if _, err := prod.GetUploadContent(ctx, id); err != queue.ErrRecordNotFound {
+		t.Fatalf("prod.GetUploadContent for a dev-only id: err = %v, want %v", err, queue.ErrRecordNotFound)
+	}
+	if err := prod.PutUploadContent(ctx, id, []byte("<Invoice/>prod")); err != nil {
+		t.Fatalf("put prod content: %v", err)
+	}
+	devContent, err := dev.GetUploadContent(ctx, id)
+	if err != nil {
+		t.Fatalf("get dev content: %v", err)
+	}
+	if string(devContent) != "<Invoice/>dev" {
+		t.Fatalf("dev content = %q, want %q (prod's write must not have leaked into dev's namespace)", devContent, "<Invoice/>dev")
 	}
 }

@@ -13,18 +13,24 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-// UploadRecord is the durable, canonical record of a single accepted
-// upload, stored in the queue Namespace's uploads KV bucket (see
+// UploadRecord is the durable, canonical metadata record of a single
+// accepted upload, stored in the queue Namespace's uploads KV bucket (see
 // Namespace.UploadsBucketName) keyed by ID. It is the sole source of truth
-// for GET /api/v1/ubl/{id}: created (Status Pending) by the HTTP API when a
-// document is queued, then updated by the worker once validation
-// completes.
+// for GET /api/v1/ubl/{id}'s status/metadata fields: created (Status
+// Pending) by the HTTP API when a document is queued, then updated by the
+// worker once validation completes.
+//
+// UploadRecord deliberately does not carry the upload's raw XML content:
+// that is stored separately (see PutUploadContent/GetUploadContent), so
+// that UpdateUploadStatus - called once per document by the worker, and
+// far more often than any human ever calls PutUploadRecord directly -
+// never has to read or rewrite the (potentially large) document body just
+// to flip a status field.
 type UploadRecord struct {
 	ID           string           `json:"id"`
 	DocumentType string           `json:"documentType"`
 	Status       ValidationStatus `json:"status"`
 	Error        string           `json:"error,omitempty"`
-	Content      string           `json:"content"`
 	ReceivedAt   string           `json:"receivedAt"`
 	ValidatedAt  string           `json:"validatedAt,omitempty"`
 }
@@ -46,11 +52,15 @@ func NewID() (string, error) {
 	return hex.EncodeToString(buf), nil
 }
 
-// ErrRecordNotFound is returned by GetUploadRecord when id does not exist
-// (or is not well-formed).
+// ErrRecordNotFound is returned by GetUploadRecord (or GetUploadContent)
+// when id does not exist (or is not well-formed).
 var ErrRecordNotFound = errors.New("upload record not found")
 
-// PutUploadRecord creates or overwrites the record for record.ID.
+// PutUploadRecord creates or overwrites the metadata record for record.ID.
+// It never reads or writes the upload's raw XML content - see
+// PutUploadContent - so callers that only need to change status/metadata
+// (e.g. UpdateUploadStatus) pay a cost proportional to the small metadata
+// record, not to the document size.
 func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error {
 	if !ValidID(record.ID) {
 		return fmt.Errorf("invalid upload id %q", record.ID)
@@ -69,8 +79,9 @@ func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error
 	return nil
 }
 
-// GetUploadRecord retrieves the record for id, or ErrRecordNotFound if none
-// exists.
+// GetUploadRecord retrieves the metadata record for id, or
+// ErrRecordNotFound if none exists. It does not fetch the upload's raw XML
+// content - see GetUploadContent.
 func (c *Client) GetUploadRecord(ctx context.Context, id string) (UploadRecord, error) {
 	if !ValidID(id) {
 		return UploadRecord{}, ErrRecordNotFound
@@ -93,9 +104,12 @@ func (c *Client) GetUploadRecord(ctx context.Context, id string) (UploadRecord, 
 	return record, nil
 }
 
-// UpdateUploadStatus loads the record for id, applies the given validation
-// outcome, and writes it back. Used by the worker once it has validated (or
-// failed to validate) a document.
+// UpdateUploadStatus loads the metadata record for id, applies the given
+// validation outcome, and writes it back. Used by the worker once it has
+// validated (or failed to validate) a document. Because UploadRecord no
+// longer carries the raw XML content, this reads and rewrites only the
+// small metadata record - the (potentially large) document content stored
+// via PutUploadContent is never touched.
 func (c *Client) UpdateUploadStatus(ctx context.Context, id string, status ValidationStatus, validationErr string, validatedAt time.Time) error {
 	record, err := c.GetUploadRecord(ctx, id)
 	if err != nil {
@@ -107,11 +121,60 @@ func (c *Client) UpdateUploadStatus(ctx context.Context, id string, status Valid
 	return c.PutUploadRecord(ctx, record)
 }
 
+// PutUploadContent stores content as the immutable raw XML body for
+// upload id, in the separate upload-content KV bucket (see
+// Namespace.UploadContentBucketName). content is written to the KV entry
+// directly, with no JSON wrapping and no []byte<->string conversion, so
+// storing an upload's content costs exactly one copy (the unavoidable
+// network/storage write), not an extra copy on top of it.
+func (c *Client) PutUploadContent(ctx context.Context, id string, content []byte) error {
+	if !ValidID(id) {
+		return fmt.Errorf("invalid upload id %q", id)
+	}
+	kv, err := c.uploadContentBucket(ctx)
+	if err != nil {
+		return err
+	}
+	if _, err := kv.Put(ctx, id, content); err != nil {
+		return fmt.Errorf("put upload content %s: %w", id, err)
+	}
+	return nil
+}
+
+// GetUploadContent retrieves the raw XML content previously stored for id
+// via PutUploadContent, or ErrRecordNotFound if none exists.
+func (c *Client) GetUploadContent(ctx context.Context, id string) ([]byte, error) {
+	if !ValidID(id) {
+		return nil, ErrRecordNotFound
+	}
+	kv, err := c.uploadContentBucket(ctx)
+	if err != nil {
+		return nil, err
+	}
+	entry, err := kv.Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, jetstream.ErrKeyNotFound) {
+			return nil, ErrRecordNotFound
+		}
+		return nil, fmt.Errorf("get upload content %s: %w", id, err)
+	}
+	return entry.Value(), nil
+}
+
 func (c *Client) uploadsBucket(ctx context.Context) (jetstream.KeyValue, error) {
 	uploadsBucketName := c.Namespace.UploadsBucketName()
 	kv, err := c.JS.KeyValue(ctx, uploadsBucketName)
 	if err != nil {
 		return nil, fmt.Errorf("open %s KV bucket: %w", uploadsBucketName, err)
+	}
+	return kv, nil
+}
+
+func (c *Client) uploadContentBucket(ctx context.Context) (jetstream.KeyValue, error) {
+	uploadContentBucketName := c.Namespace.UploadContentBucketName()
+	kv, err := c.JS.KeyValue(ctx, uploadContentBucketName)
+	if err != nil {
+		return nil, fmt.Errorf("open %s KV bucket: %w", uploadContentBucketName, err)
 	}
 	return kv, nil
 }

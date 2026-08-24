@@ -165,7 +165,7 @@ func openAPIDocument() map[string]any {
 					"operationId": "UBLUploadUploadXMLDocument",
 					"tags":        []string{"UBL"},
 					"summary":     "Upload a UBL 2.1 XML document",
-					"description": "Accepts an XML payload, and if it is well-formed and its root element is a recognized UBL 2.1 main document type, queues it on its per-document-type NATS JetStream subject for asynchronous XSD validation and returns immediately with a pending status. Poll GET /api/v1/ubl/{id} for the outcome once the worker has processed it.",
+					"description": "Accepts an XML payload, and if it has a syntactically valid root element that is a recognized UBL 2.1 main document type (local name and namespace), queues it on its per-document-type NATS JetStream subject for asynchronous XSD validation and returns immediately with a pending status. Full XML well-formedness and UBL 2.1 schema validity are established asynchronously by the worker, not by this endpoint. Poll GET /api/v1/ubl/{id} for the outcome once the worker has processed it.",
 					"requestBody": map[string]any{
 						"required":    true,
 						"description": "Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.",
@@ -177,7 +177,7 @@ func openAPIDocument() map[string]any {
 					},
 					"responses": map[string]any{
 						"202": map[string]any{
-							"description": "Document is well-formed and its root element is a recognized UBL 2.1 document type. It has been queued for asynchronous XSD validation; its status starts as \"pending\" and later becomes \"valid\" or \"invalid\" once the worker processes it (see GET /api/v1/ubl/{id}).",
+							"description": "The payload has a syntactically valid root element that is a recognized UBL 2.1 document type. It has been queued for asynchronous XSD validation (which also establishes full XML well-formedness); its status starts as \"pending\" and later becomes \"valid\" or \"invalid\" once the worker processes it (see GET /api/v1/ubl/{id}).",
 							"content": map[string]any{
 								"application/json": map[string]any{
 									"schema": map[string]any{
@@ -200,7 +200,7 @@ func openAPIDocument() map[string]any {
 							},
 						},
 						"400": errorResponseWithExample(
-							"Invalid XML payload, or the root element's local name and/or namespace does not match a recognized UBL 2.1 main document type. Note: this endpoint no longer performs synchronous XSD validation, so a schema-invalid (but well-formed, recognized-type) document is still accepted with 202 - check its status via GET /api/v1/ubl/{id} once processed.",
+							"The payload has no syntactically valid root element, or that root element's local name and/or namespace does not match a recognized UBL 2.1 main document type. Note: this endpoint only checks the root element - it does not parse or validate the rest of the document - so a recognized-type document is still accepted with 202 even if it later turns out not to be fully well-formed XML or schema-valid; check its status via GET /api/v1/ubl/{id} once the worker has processed it.",
 							"invalid XML payload: XML document root element is missing",
 						),
 						"413": errorResponseWithExample(

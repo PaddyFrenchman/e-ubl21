@@ -18,9 +18,17 @@ const documentsStreamMaxAge = 7 * 24 * time.Hour
 // retained for downstream consumers to pick up.
 const resultsStreamMaxAge = 7 * 24 * time.Hour
 
-// uploadRecordMaxValueSize caps a single KV entry's size: the 10 MiB upload
-// body cap enforced by the HTTP API, plus room for JSON metadata overhead.
-const uploadRecordMaxValueSize = 12 << 20
+// uploadMetadataMaxValueSize caps a single upload metadata KV entry's
+// size. Since the raw XML content is stored separately (see
+// uploadContentMaxValueSize), a metadata record only ever holds a handful
+// of small fields (id, document type, status, error message, timestamps),
+// so this is generous headroom rather than a tight fit.
+const uploadMetadataMaxValueSize = 64 << 10
+
+// uploadContentMaxValueSize caps a single upload content KV entry's size:
+// the 10 MiB upload body cap enforced by the HTTP API, plus a safety
+// margin.
+const uploadContentMaxValueSize = 12 << 20
 
 // EnsureInfra idempotently creates the streams and KV bucket the queue
 // package depends on. Both the HTTP API and the validation worker call
@@ -53,11 +61,21 @@ func (c *Client) EnsureInfra(ctx context.Context) error {
 	uploadsBucketName := c.Namespace.UploadsBucketName()
 	if _, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
 		Bucket:       uploadsBucketName,
-		Description:  "Durable record (status, content, validation outcome) for every UBL upload, keyed by upload id.",
+		Description:  "Durable metadata record (status, error, timestamps) for every UBL upload, keyed by upload id. The raw XML content itself lives in the separate upload-content bucket.",
 		Storage:      jetstream.FileStorage,
-		MaxValueSize: uploadRecordMaxValueSize,
+		MaxValueSize: uploadMetadataMaxValueSize,
 	}); err != nil {
 		return fmt.Errorf("ensure %s KV bucket: %w", uploadsBucketName, err)
+	}
+
+	uploadContentBucketName := c.Namespace.UploadContentBucketName()
+	if _, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
+		Bucket:       uploadContentBucketName,
+		Description:  "Immutable raw XML content of every UBL upload, keyed by the same upload id as the metadata bucket.",
+		Storage:      jetstream.FileStorage,
+		MaxValueSize: uploadContentMaxValueSize,
+	}); err != nil {
+		return fmt.Errorf("ensure %s KV bucket: %w", uploadContentBucketName, err)
 	}
 
 	return nil

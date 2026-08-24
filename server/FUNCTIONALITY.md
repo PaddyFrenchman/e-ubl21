@@ -13,17 +13,17 @@ Client ────────────────────────�
                                    │      (per-document-type,                    ▲
                                    │       work-queue stream)                    │
                                    ▼                                             │
-                            KV_UBL_UPLOADS ◄───────────────────────────── worker (validates via xmllint,
-                         (status: pending/                                       updates KV, publishes result)
-                          valid/invalid)
+                     KV_UBL_UPLOADS (status)  ◄───────────────────────── worker (validates via xmllint,
+                     KV_UBL_UPLOAD_CONTENT         updates status KV,           updates status KV, publishes result)
+                     (raw XML, write-once)          never touches content
                                    ▲
                                    │
-GET /api/v1/ubl/{id} ──────────────┘
+GET /api/v1/ubl/{id} ──────────────┘ (reads both KV buckets)
 ```
 
 - **API** ([server.go](server.go), [upload.go](upload.go)): performs only cheap, synchronous
-  checks on upload (well-formed XML, recognized document type), then queues the document and
-  returns immediately.
+  checks on upload (syntactically valid root element, recognized document type by local name and
+  namespace), then queues the document and returns immediately.
 - **Worker** ([worker.go](worker.go)): consumes queued documents, performs the actual XSD
   validation, records the outcome, and publishes a result.
 - **queue package** ([../queue](../queue)): all NATS JetStream wiring (streams, KV bucket,
@@ -119,17 +119,23 @@ Implemented in [../queue](../queue) ([client.go](../queue/client.go),
 Implemented in [upload.go](upload.go):
 
 - Rejects non-`POST` requests with `405 Method Not Allowed`.
-- Reads the request body (capped at 10 MiB via `io.LimitReader`); rejects empty bodies with
+- Reads the request body, capped at 10 MiB and enforced exactly via `http.MaxBytesReader` (an
+  already-oversized `Content-Length` is rejected before any read); an oversized body is rejected
+  outright with `413 Payload Too Large` rather than silently truncated. Rejects empty bodies with
   `400 Bad Request`.
 - Requires a `Content-Type` header containing `xml` or `octet-stream`; otherwise `400`.
-- Validates that the payload is **well-formed XML with a root element**, and extracts that
-  root element's local name (e.g. `Invoice`, `Order`).
-- Performs a cheap catalog lookup (no `xmllint` invocation) to confirm the root element is a
-  recognized UBL 2.1 main document type; an unrecognized type is rejected immediately with
-  `400 Bad Request` rather than being queued.
-- **No XSD validation happens synchronously here anymore** - see section 5. A document that
-  is well-formed and of a recognized type is always queued, even if it will later turn out to
-  be schema-invalid.
+- Validates that the payload has a **syntactically valid root element**, and extracts that root
+  element's local name and namespace URI (e.g. `Invoice` in
+  `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2`) via a single `xml.Decoder.Token()` pass
+  that stops at the first `xml.StartElement` - it does not parse or otherwise establish that the
+  rest of the document is well-formed XML.
+- Performs a cheap catalog lookup (no `xmllint` invocation) to confirm the root element's local
+  name **and** namespace match a recognized UBL 2.1 main document type; an unrecognized type (or a
+  recognized local name in the wrong namespace) is rejected immediately with `400 Bad Request`
+  rather than being queued.
+- **No XSD validation happens synchronously here anymore** - see section 5. A document with a
+  recognized root element is always queued, even if it will later turn out not to be fully
+  well-formed XML, or to be well-formed but schema-invalid.
 - On success: generates a random id, writes a `"pending"` `UploadRecord` to the JetStream KV
   bucket (section 3), publishes the raw document to its per-document-type subject, and
   responds `202 Accepted`:

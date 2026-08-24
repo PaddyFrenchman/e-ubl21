@@ -46,11 +46,11 @@ func TestRootElementOfPayloadRejectsMalformedInput(t *testing.T) {
 
 // TestRootElementOfPayloadStopsAtFirstStartElement proves the acceptance
 // criterion that root-document detection does not parse the entire XML
-// tree: the payload's root element is well-formed, but everything after it
-// is deliberately broken (mismatched/unclosed tags that would fail a
-// full-document parse). rootElementOfPayload must still succeed, because it
-// stops at the first xml.StartElement token rather than decoding the rest
-// of the document.
+// tree: the payload's root element opening tag is syntactically valid, but
+// everything after it is deliberately broken (mismatched/unclosed tags
+// that would fail a full-document parse). rootElementOfPayload must still
+// succeed, because it stops at the first xml.StartElement token rather
+// than decoding the rest of the document.
 func TestRootElementOfPayloadStopsAtFirstStartElement(t *testing.T) {
 	t.Parallel()
 
