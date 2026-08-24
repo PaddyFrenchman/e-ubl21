@@ -23,8 +23,8 @@ services:
   # The HTTP API: accepts UBL uploads, performs cheap synchronous checks
   # (well-formed XML, recognized document type), then queues the raw
   # document on its per-document-type NATS JetStream subject
-  # (ubl.documents.<Type>) and returns immediately with the upload's id and
-  # a "pending" status. See server/upload.go.
+  # (<EUBL21_QUEUE_NAMESPACE>.documents.<Type>) and returns immediately with
+  # the upload's id and a "pending" status. See server/upload.go.
   api:
     build: .
     image: e-ubl21:latest
@@ -38,6 +38,11 @@ services:
       EUBL21_HOST: "0.0.0.0"
       EUBL21_PORT: "8080"
       EUBL21_NATS_URL: "nats://nats:4222"
+      # Scopes every JetStream stream, subject and KV bucket name to this
+      # deployment (see queue.Namespace), so other e-ubl21 deployments (e.g.
+      # a "eubl21.prod" one) can safely share the same NATS cluster without
+      # colliding on names. Must match the worker service's value below.
+      EUBL21_QUEUE_NAMESPACE: "${EUBL21_QUEUE_NAMESPACE:-eubl21.dev}"
       EUBL21_OAUTH_ISSUER: "${EUBL21_OAUTH_ISSUER:-}"
       EUBL21_OAUTH_AUDIENCE: "${EUBL21_OAUTH_AUDIENCE:-e-ubl21}"
       # Required for the API to start (see server/auth.go); override with a
@@ -50,10 +55,11 @@ services:
       - "8080:8080"
 
   # The validation worker: consumes queued documents from the
-  # ubl.documents.> subjects, validates each against its UBL 2.1 XSD
-  # (server/schema_catalog.go), records the outcome in the shared JetStream
-  # KV upload store, and publishes a result to the single output stream
-  # (ubl.validation.results). See server/worker.go.
+  # <EUBL21_QUEUE_NAMESPACE>.documents.> subjects, validates each against
+  # its UBL 2.1 XSD (server/schema_catalog.go), records the outcome in the
+  # shared JetStream KV upload store, and publishes a result to the single
+  # output stream (<EUBL21_QUEUE_NAMESPACE>.validation.results). See
+  # server/worker.go.
   #
   # This service can be scaled horizontally (`docker compose up --scale
   # worker=3`) - replicas share the same durable consumer name and
@@ -69,9 +75,12 @@ services:
         condition: service_healthy
     environment:
       EUBL21_NATS_URL: "nats://nats:4222"
+      # Must match the api service's EUBL21_QUEUE_NAMESPACE above so the
+      # worker consumes the same namespace's documents stream.
+      EUBL21_QUEUE_NAMESPACE: "${EUBL21_QUEUE_NAMESPACE:-eubl21.dev}"
       EUBL21_WORKER_CONSUMER_NAME: "ubl-validator"
       # Empty processes every document type from a single consumer; set to
-      # e.g. "ubl.documents.Invoice" to dedicate this worker to one
+      # e.g. "<namespace>.documents.Invoice" to dedicate this worker to one
       # document type's queue instead (see server/worker.go).
       EUBL21_WORKER_SUBJECT_FILTER: ""
       EUBL21_WORKER_METRICS_ADDR: ":9091"

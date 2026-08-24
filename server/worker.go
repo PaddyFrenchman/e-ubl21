@@ -1,12 +1,12 @@
 // This file implements the background validation worker: it consumes
 // queued UBL documents from the per-document-type NATS JetStream subjects
-// (see queue.DocumentsConsumer), validates each against its UBL 2.1 XSD
-// using the same xmllint-based logic the HTTP API previously ran
+// (see queue.Client.DocumentsConsumer), validates each against its UBL 2.1
+// XSD using the same xmllint-based logic the HTTP API previously ran
 // synchronously (schema_catalog.go), records the outcome in the JetStream
 // KV upload store so GET /api/v1/ubl/{id} reflects it, and publishes a
 // ValidationResult to the single output results stream
-// (queue.ResultsSubject). It is exposed to the CLI as `e-ubl21 worker`
-// (see cmd/worker.go).
+// (queue.Namespace.ResultsSubject). It is exposed to the CLI as
+// `e-ubl21 worker` (see cmd/worker.go).
 package server
 
 import (
@@ -25,14 +25,22 @@ import (
 type WorkerConfig struct {
 	// NATSURL is the NATS server to connect to.
 	NATSURL string
+	// QueueNamespace scopes every JetStream stream, subject and KV bucket
+	// this worker uses (see queue.Namespace). Defaults to
+	// queue.DefaultNamespace, preserving e-ubl21's original hard-coded
+	// names. Must match the namespace the HTTP API producing this
+	// worker's documents was started with.
+	QueueNamespace queue.Namespace
 	// ConsumerName is the durable JetStream consumer name. Defaults to
 	// "ubl-validator". Running multiple worker replicas with the same
 	// ConsumerName and SubjectFilter load-balances documents across them.
 	ConsumerName string
 	// SubjectFilter selects which document type(s) this worker processes.
-	// Defaults to queue.DocumentsFilterSubject (every document type). Set
-	// it to queue.DocumentSubject("Invoice") (for example) to dedicate a
-	// worker to a single document type's queue.
+	// Defaults to QueueNamespace.DocumentsFilterSubject() (every document
+	// type in the configured namespace). Set it to
+	// QueueNamespace.DocumentSubject("Invoice") (for example) to dedicate
+	// a worker to a single document type's queue. It is an error to set
+	// this to a subject belonging to a different namespace.
 	SubjectFilter string
 	// MetricsAddr, if non-empty, serves GET /metrics (Prometheus) and
 	// GET /healthz on this address for the worker process. Unlike the API's
@@ -55,7 +63,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		logger = slog.Default()
 	}
 
-	q, err := queue.Connect(cfg.NATSURL)
+	q, err := queue.Connect(cfg.NATSURL, cfg.QueueNamespace)
 	if err != nil {
 		return fmt.Errorf("connect to NATS: %w", err)
 	}
@@ -103,7 +111,8 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 
 	logger.Info("worker started",
 		"consumer", consumerName,
-		"subjectFilter", nonEmpty(cfg.SubjectFilter, queue.DocumentsFilterSubject),
+		"queueNamespace", nonEmpty(cfg.QueueNamespace.String(), "(default)"),
+		"subjectFilter", nonEmpty(cfg.SubjectFilter, q.Namespace.DocumentsFilterSubject()),
 	)
 	<-ctx.Done()
 	logger.Info("worker shutting down")
@@ -135,7 +144,7 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 	ctx := context.Background()
 
 	id := msg.Headers().Get(queue.HeaderUploadID)
-	documentType := queue.DocumentTypeFromSubject(msg.Subject())
+	documentType := w.queue.Namespace.DocumentTypeFromSubject(msg.Subject())
 	logger := w.logger.With("id", id, "documentType", documentType)
 
 	schemaPath, ok := w.catalog.schemaPathFor(documentType)

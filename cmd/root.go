@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,6 +20,7 @@ type Config struct {
 	OAuthAudience       string
 	OAuthHMACSecret     string
 	NATSURL             string
+	QueueNamespace      queue.Namespace
 	RateLimitRPS        float64
 	RateLimitBurst      int
 	TLSCertFile         string
@@ -58,6 +60,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().String("oauth-audience", "", "OAuth audience")
 	rootCmd.PersistentFlags().String("oauth-hmac-secret", "", "Shared secret used to verify HS256 bearer token signatures (required for protected routes)")
 	rootCmd.PersistentFlags().String("nats-url", "nats://localhost:4222", "NATS server URL used to queue uploads and read/write their status")
+	rootCmd.PersistentFlags().String("queue-namespace", "", "Queue namespace scoping every JetStream stream/subject/KV bucket name (e.g. \"eubl21.prod\"), so multiple deployments can share one NATS cluster; empty preserves the original hard-coded names")
 	rootCmd.PersistentFlags().Float64("rate-limit-rps", 5, "Per-client requests/second allowed before rate limiting")
 	rootCmd.PersistentFlags().Int("rate-limit-burst", 10, "Per-client burst size allowed by the rate limiter")
 	rootCmd.PersistentFlags().String("tls-cert-file", "", "TLS certificate file (enables TLS together with --tls-key-file)")
@@ -72,6 +75,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	mustBindFlag(v, rootCmd, "oauth-audience")
 	mustBindFlag(v, rootCmd, "oauth-hmac-secret")
 	mustBindFlag(v, rootCmd, "nats-url")
+	mustBindFlag(v, rootCmd, "queue-namespace")
 	mustBindFlag(v, rootCmd, "rate-limit-rps")
 	mustBindFlag(v, rootCmd, "rate-limit-burst")
 	mustBindFlag(v, rootCmd, "tls-cert-file")
@@ -102,6 +106,7 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("openapi-path", "/openapi.json")
 	v.SetDefault("swagger-path", "/swagger/")
 	v.SetDefault("nats-url", "nats://localhost:4222")
+	v.SetDefault("queue-namespace", "")
 	v.SetDefault("rate-limit-rps", 5)
 	v.SetDefault("rate-limit-burst", 10)
 	v.SetDefault("worker-consumer-name", "ubl-validator")
@@ -129,6 +134,7 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.OAuthAudience = v.GetString("oauth-audience")
 	cfg.OAuthHMACSecret = v.GetString("oauth-hmac-secret")
 	cfg.NATSURL = v.GetString("nats-url")
+	cfg.QueueNamespace = queue.NewNamespace(v.GetString("queue-namespace"))
 	cfg.RateLimitRPS = v.GetFloat64("rate-limit-rps")
 	cfg.RateLimitBurst = v.GetInt("rate-limit-burst")
 	cfg.TLSCertFile = v.GetString("tls-cert-file")

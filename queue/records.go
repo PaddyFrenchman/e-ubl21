@@ -14,10 +14,11 @@ import (
 )
 
 // UploadRecord is the durable, canonical record of a single accepted
-// upload, stored in the UploadsBucketName KV bucket keyed by ID. It is the
-// sole source of truth for GET /api/v1/ubl/{id}: created (Status Pending)
-// by the HTTP API when a document is queued, then updated by the worker
-// once validation completes.
+// upload, stored in the queue Namespace's uploads KV bucket (see
+// Namespace.UploadsBucketName) keyed by ID. It is the sole source of truth
+// for GET /api/v1/ubl/{id}: created (Status Pending) by the HTTP API when a
+// document is queued, then updated by the worker once validation
+// completes.
 type UploadRecord struct {
 	ID           string           `json:"id"`
 	DocumentType string           `json:"documentType"`
@@ -107,9 +108,10 @@ func (c *Client) UpdateUploadStatus(ctx context.Context, id string, status Valid
 }
 
 func (c *Client) uploadsBucket(ctx context.Context) (jetstream.KeyValue, error) {
-	kv, err := c.JS.KeyValue(ctx, UploadsBucketName)
+	uploadsBucketName := c.Namespace.UploadsBucketName()
+	kv, err := c.JS.KeyValue(ctx, uploadsBucketName)
 	if err != nil {
-		return nil, fmt.Errorf("open %s KV bucket: %w", UploadsBucketName, err)
+		return nil, fmt.Errorf("open %s KV bucket: %w", uploadsBucketName, err)
 	}
 	return kv, nil
 }

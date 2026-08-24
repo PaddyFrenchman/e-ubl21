@@ -5,6 +5,11 @@
 // status - replacing local filesystem persistence entirely, so both the
 // HTTP API (producer) and the validation worker (consumer) can run as
 // independent processes/replicas with no shared disk.
+//
+// Every physical stream/subject/bucket name is derived from a Namespace
+// (see Namespace and Client.Namespace), so multiple e-ubl21 deployments
+// (e.g. dev and prod) can share one NATS/JetStream cluster without
+// colliding on names.
 package queue
 
 import (
@@ -15,19 +20,25 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-// Client bundles a NATS connection with its JetStream context, and is the
-// single dependency both the HTTP API and the validation worker need to
-// interact with the queue.
+// Client bundles a NATS connection with its JetStream context and the
+// queue Namespace it operates in, and is the single dependency both the
+// HTTP API and the validation worker need to interact with the queue.
 type Client struct {
 	NC *nats.Conn
 	JS jetstream.JetStream
+	// Namespace scopes every stream, subject and KV bucket this client's
+	// methods (EnsureInfra, PublishDocument, DocumentsConsumer, ...)
+	// derive names from. See Namespace for details.
+	Namespace Namespace
 }
 
 // Connect dials the NATS server at url and opens a JetStream context on
-// top of it. The connection is configured to reconnect indefinitely (with
+// top of it, scoping the returned Client to namespace (use DefaultNamespace
+// to preserve e-ubl21's original, pre-namespace stream/subject/bucket
+// names). The connection is configured to reconnect indefinitely (with
 // backoff) rather than giving up, since e-ubl21's services are expected to
 // tolerate NATS restarts.
-func Connect(url string) (*Client, error) {
+func Connect(url string, namespace Namespace) (*Client, error) {
 	nc, err := nats.Connect(url,
 		nats.Name("e-ubl21"),
 		nats.MaxReconnects(-1),
@@ -42,7 +53,7 @@ func Connect(url string) (*Client, error) {
 		nc.Close()
 		return nil, fmt.Errorf("create JetStream context: %w", err)
 	}
-	return &Client{NC: nc, JS: js}, nil
+	return &Client{NC: nc, JS: js, Namespace: namespace}, nil
 }
 
 // Close closes the underlying NATS connection.

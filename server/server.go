@@ -37,6 +37,11 @@ type Config struct {
 	// Required: NewHandler returns an error if a connection cannot be
 	// established.
 	NATSURL string
+	// QueueNamespace scopes every JetStream stream, subject and KV bucket
+	// this API instance uses (see queue.Namespace). Defaults to
+	// queue.DefaultNamespace, preserving e-ubl21's original hard-coded
+	// names.
+	QueueNamespace queue.Namespace
 	// RateLimitRPS and RateLimitBurst configure the per-client-IP token
 	// bucket rate limiter applied to every route. Non-positive values fall
 	// back to sensible defaults (5 req/s, burst of 10).
@@ -64,7 +69,7 @@ func NewHandler(cfg Config) (http.Handler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load UBL 2.1 schema catalog: %w", err)
 	}
-	q, err := queue.Connect(cfg.NATSURL)
+	q, err := queue.Connect(cfg.NATSURL, cfg.QueueNamespace)
 	if err != nil {
 		return nil, fmt.Errorf("connect to NATS: %w", err)
 	}

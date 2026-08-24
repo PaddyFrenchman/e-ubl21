@@ -15,7 +15,7 @@ import (
 func runTestWorker(t *testing.T, cfg Config, overrides func(*WorkerConfig)) {
 	t.Helper()
 
-	workerCfg := WorkerConfig{NATSURL: cfg.NATSURL}
+	workerCfg := WorkerConfig{NATSURL: cfg.NATSURL, QueueNamespace: cfg.QueueNamespace}
 	if overrides != nil {
 		overrides(&workerCfg)
 	}
@@ -130,7 +130,7 @@ func TestWorkerFilterRestrictsToOneDocumentType(t *testing.T) {
 
 	cfg := testConfig(t, nil)
 	runTestWorker(t, cfg, func(wc *WorkerConfig) {
-		wc.SubjectFilter = queue.DocumentSubject("Invoice")
+		wc.SubjectFilter = cfg.QueueNamespace.DocumentSubject("Invoice")
 		wc.ConsumerName = "invoice-only-test-worker"
 	})
 	handler, err := NewHandler(cfg)

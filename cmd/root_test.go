@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/spf13/viper"
 )
 
@@ -36,5 +37,34 @@ func TestLoadConfigReadsFileAndEnvironment(t *testing.T) {
 
 	if cfg.OpenAPIPath != "/spec" {
 		t.Fatalf("openapi path = %q, want %q", cfg.OpenAPIPath, "/spec")
+	}
+}
+
+func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+
+	if cfg.QueueNamespace != queue.DefaultNamespace {
+		t.Fatalf("queue namespace = %q, want DefaultNamespace", cfg.QueueNamespace)
+	}
+}
+
+func TestLoadConfigReadsQueueNamespaceFromEnvironment(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	t.Setenv("EUBL21_QUEUE_NAMESPACE", "eubl21.prod")
+
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+
+	if want := queue.NewNamespace("eubl21.prod"); cfg.QueueNamespace != want {
+		t.Fatalf("queue namespace = %q, want %q", cfg.QueueNamespace, want)
 	}
 }

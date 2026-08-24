@@ -24,8 +24,8 @@ const (
 	StatusInvalid ValidationStatus = "invalid"
 )
 
-// ValidationResult is the payload published to ResultsSubject once a
-// document has been processed by the worker.
+// ValidationResult is the payload published to Namespace.ResultsSubject
+// once a document has been processed by the worker.
 type ValidationResult struct {
 	ID           string           `json:"id"`
 	DocumentType string           `json:"documentType"`
@@ -34,13 +34,14 @@ type ValidationResult struct {
 	ValidatedAt  string           `json:"validatedAt"`
 }
 
-// PublishResult publishes result to the single output results stream.
+// PublishResult publishes result to this client's namespace's single
+// output results stream.
 func (c *Client) PublishResult(ctx context.Context, result ValidationResult) error {
 	payload, err := json.Marshal(result)
 	if err != nil {
 		return fmt.Errorf("marshal validation result for %s: %w", result.ID, err)
 	}
-	msg := nats.NewMsg(ResultsSubject)
+	msg := nats.NewMsg(c.Namespace.ResultsSubject())
 	msg.Data = payload
 	msg.Header.Set(HeaderUploadID, result.ID)
 	msg.Header.Set(HeaderDocumentType, result.DocumentType)

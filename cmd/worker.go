@@ -44,10 +44,11 @@ func worker(ctx context.Context, cfg *Config) error {
 	defer stop()
 
 	return server.RunWorker(ctx, server.WorkerConfig{
-		NATSURL:       cfg.NATSURL,
-		ConsumerName:  cfg.WorkerConsumerName,
-		SubjectFilter: cfg.WorkerSubjectFilter,
-		MetricsAddr:   cfg.WorkerMetricsAddr,
-		Logger:        slog.Default(),
+		NATSURL:        cfg.NATSURL,
+		QueueNamespace: cfg.QueueNamespace,
+		ConsumerName:   cfg.WorkerConsumerName,
+		SubjectFilter:  cfg.WorkerSubjectFilter,
+		MetricsAddr:    cfg.WorkerMetricsAddr,
+		Logger:         slog.Default(),
 	})
 }

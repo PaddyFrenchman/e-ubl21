@@ -199,7 +199,15 @@ This is a sound service split because API instances and validation workers can b
 
 The queue layer is not merely planned; it is already implemented.
 
-| Resource | Current name / subject | Purpose | Retention |
+Every stream, subject and KV bucket name below is derived from a
+configurable queue namespace (`--queue-namespace` / `EUBL21_QUEUE_NAMESPACE`,
+see `queue.Namespace`). Leaving it unset (`DefaultNamespace`, `""`)
+reproduces the exact names below; setting it (e.g. `eubl21.prod`) derives
+namespaced equivalents instead (e.g. `EUBL21_PROD_DOCUMENTS`,
+`eubl21.prod.documents.<Type>`), so multiple deployments can share one
+NATS/JetStream cluster without colliding.
+
+| Resource | Name / subject (`DefaultNamespace`) | Purpose | Retention |
 |---|---|---|---|
 | Work stream | `UBL_DOCUMENTS` | Incoming UBL documents awaiting XSD validation | JetStream `WorkQueuePolicy`, file storage, 7-day `MaxAge` |
 | Per-type work subject | `ubl.documents.<Type>` | Routes work by UBL root document type, e.g. `ubl.documents.Invoice` | Belongs to `UBL_DOCUMENTS` |
@@ -344,9 +352,12 @@ for a dedicated Invoice worker pool.
 
 ### Current configurability
 
-The NATS URL and worker subject filter are configurable. The physical stream/subject topology itself is currently hard-coded in `queue/subjects.go`.
+The NATS URL, queue namespace and worker subject filter are all
+configurable. Physical stream/subject/KV bucket names are derived from the
+queue namespace (`--queue-namespace` / `EUBL21_QUEUE_NAMESPACE`, see
+`queue.Namespace` in `queue/subjects.go`) rather than hard-coded.
 
-Current fixed names include:
+Names shown with the default (unset) namespace:
 
 ```text
 UBL_DOCUMENTS
@@ -356,7 +367,22 @@ ubl.documents.
 ubl.validation.results
 ```
 
-This should become configurable through a single queue namespace/prefix. See `TODO.md`.
+Setting `EUBL21_QUEUE_NAMESPACE=eubl21.prod` derives instead:
+
+```text
+EUBL21_PROD_DOCUMENTS
+EUBL21_PROD_VALIDATION_RESULTS
+EUBL21_PROD_UPLOADS
+eubl21.prod.documents.
+eubl21.prod.validation.results
+```
+
+A worker's subject filter is validated against its configured namespace
+(`Namespace.HasDocumentSubject`) before it is used to create a consumer, so
+a misconfigured cross-namespace filter fails fast at startup instead of
+silently subscribing to nothing (or, worse, to another namespace).
+`docker-compose.yml` sets an explicit development namespace
+(`EUBL21_QUEUE_NAMESPACE=eubl21.dev`) to make this concrete.
 
 ---
 
@@ -751,19 +777,22 @@ This should be CI-friendly and deterministic.
 
 The current server is a good asynchronous UBL XSD-validation MVP. The following gaps matter before calling it production-grade.
 
-## 11.1 Queue topology is not configurable
+## 11.1 Queue topology is not configurable — resolved (TODO-001)
 
-### Current state
+### Former state
 
-Stream names, subject prefixes and KV bucket names are hard-coded.
+Stream names, subject prefixes and KV bucket names were hard-coded.
 
 ### Risk
 
-Multiple environments sharing one NATS cluster cannot be safely isolated by configuration alone.
+Multiple environments sharing one NATS cluster could not be safely isolated by configuration alone.
 
-### Recommendation
+### Resolution
 
-Introduce a configurable queue namespace/prefix and derive all physical names from it. Track this in `TODO.md`.
+A configurable queue namespace/prefix (`--queue-namespace` /
+`EUBL21_QUEUE_NAMESPACE`, `queue.Namespace`) now derives every physical
+stream, subject and KV bucket name; see section 4 above. Tracked as
+`TODO-001` in `TODO.md`.
 
 ---
 
@@ -1234,7 +1263,7 @@ Before adding EN 16931 to the server, harden the existing asynchronous UBL valid
 Recommended progression:
 
 ```text
-1. Queue namespace configurability
+1. Queue namespace configurability (done — TODO-001)
 2. Namespace-aware UBL document recognition
 3. Explicit asynchronous lifecycle states
 4. Reliable enqueue failure/reconciliation behavior
