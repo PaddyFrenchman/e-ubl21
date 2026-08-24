@@ -1,0 +1,19 @@
+name: TODO-002 branch validation
+
+on:
+  push:
+    branches: [todo-002]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Run Go tests
+        run: go test ./...
