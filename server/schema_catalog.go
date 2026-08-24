@@ -1,13 +1,14 @@
 // This file resolves an uploaded UBL document's root element to its
 // authoritative main-document XSD (embedded via the XSD/embed.go package)
-// and performs real schema validation against it using the xmllint CLI
-// (part of libxml2), the same independent validation oracle used by
-// createsamples (see .github/create-samples.md section 7). xmllint operates
-// on real files, so the embedded schema tree is extracted to a temporary
-// directory once at startup.
+// and performs real schema validation against it using the xmllint CLI.
+// API startup reads only maindoc metadata into memory. Because xmllint needs
+// real paths for XSD imports, only worker startup extracts the complete
+// embedded tree to a temporary directory.
 package server
 
 import (
+	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -17,23 +18,31 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
 )
 
-// schemaCatalog resolves UBL 2.1 root elements (local name + expected
-// namespace) to the on-disk path of their main-document XSD, once the
-// embedded schema tree has been extracted.
-type schemaCatalog struct {
-	dir            string
+// documentCatalog is the API's lightweight, in-memory index of supported
+// document roots. Building it reads only embedded maindoc metadata and does
+// not create files or directories.
+type documentCatalog struct {
 	entryByElement map[string]schemaEntry
+}
+
+// validationCatalog is the worker-only view. It shares the authoritative
+// document metadata and adds the extracted filesystem root needed by
+// xmllint for resolving imported schemas.
+type validationCatalog struct {
+	*documentCatalog
+	dir string
 }
 
 // schemaEntry is a single recognized UBL 2.1 main document type: its
 // extracted XSD path and the target namespace that document's root element
 // must be declared in (see schemaCatalog.expectedNamespaceFor).
 type schemaEntry struct {
-	path      string
+	file      string
 	namespace string
 }
 
@@ -48,12 +57,15 @@ type xsdElementRef struct {
 }
 
 var (
-	catalogOnce  sync.Once
-	catalogValue *schemaCatalog
-	catalogErr   error
-	xmllintOnce  sync.Once
-	xmllintErr   error
-	xmllintPath  string
+	documentCatalogOnce    sync.Once
+	documentCatalogValue   *documentCatalog
+	documentCatalogErr     error
+	validationCatalogOnce  sync.Once
+	validationCatalogValue *validationCatalog
+	validationCatalogErr   error
+	xmllintOnce            sync.Once
+	xmllintErr             error
+	xmllintPath            string
 )
 
 // errXMLLintUnavailable is wrapped into the error returned by
@@ -61,18 +73,57 @@ var (
 // can distinguish "server misconfigured" (500) from "document is invalid"
 // (400) with errors.Is.
 var errXMLLintUnavailable = errors.New("xmllint (libxml2) is required for UBL 2.1 schema validation; install it and restart the server")
+var errValidationTimeout = errors.New("schema validation timed out")
 
-// loadSchemaCatalog extracts the embedded XSD tree to a temporary directory
-// and indexes every maindoc/*.xsd by its declared root element, memoizing
-// the result for the lifetime of the process.
-func loadSchemaCatalog() (*schemaCatalog, error) {
-	catalogOnce.Do(func() {
-		catalogValue, catalogErr = buildSchemaCatalog()
+// loadDocumentCatalog indexes embedded maindoc metadata in memory. This is
+// the only catalog the API loads, so API startup performs no XSD extraction.
+func loadDocumentCatalog() (*documentCatalog, error) {
+	documentCatalogOnce.Do(func() {
+		documentCatalogValue, documentCatalogErr = buildDocumentCatalog()
 	})
-	return catalogValue, catalogErr
+	return documentCatalogValue, documentCatalogErr
 }
 
-func buildSchemaCatalog() (*schemaCatalog, error) {
+func buildDocumentCatalog() (*documentCatalog, error) {
+	entries, err := fs.ReadDir(xsdschemas.FS, "maindoc")
+	if err != nil {
+		return nil, fmt.Errorf("list embedded maindoc schemas: %w", err)
+	}
+	catalog := &documentCatalog{entryByElement: map[string]schemaEntry{}}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".xsd") {
+			continue
+		}
+		content, err := xsdschemas.FS.ReadFile(filepath.Join("maindoc", entry.Name()))
+		if err != nil {
+			return nil, fmt.Errorf("read embedded %s: %w", entry.Name(), err)
+		}
+		root, namespace, err := rootElementFromXSD(content)
+		if err != nil {
+			return nil, fmt.Errorf("parse root element of %s: %w", entry.Name(), err)
+		}
+		if root != "" {
+			catalog.entryByElement[root] = schemaEntry{file: entry.Name(), namespace: namespace}
+		}
+	}
+	return catalog, nil
+}
+
+// loadValidationCatalog extracts the complete embedded schema tree only for
+// workers that perform xmllint validation.
+func loadValidationCatalog() (*validationCatalog, error) {
+	validationCatalogOnce.Do(func() {
+		documents, err := loadDocumentCatalog()
+		if err != nil {
+			validationCatalogErr = err
+			return
+		}
+		validationCatalogValue, validationCatalogErr = buildValidationCatalog(documents)
+	})
+	return validationCatalogValue, validationCatalogErr
+}
+
+func buildValidationCatalog(documents *documentCatalog) (*validationCatalog, error) {
 	dir, err := os.MkdirTemp("", "e-ubl21-xsd-*")
 	if err != nil {
 		return nil, fmt.Errorf("create schema extraction dir: %w", err)
@@ -98,27 +149,7 @@ func buildSchemaCatalog() (*schemaCatalog, error) {
 		return nil, fmt.Errorf("extract embedded XSD tree: %w", err)
 	}
 
-	mainDir := filepath.Join(dir, "maindoc")
-	entries, err := os.ReadDir(mainDir)
-	if err != nil {
-		return nil, fmt.Errorf("list extracted maindoc schemas: %w", err)
-	}
-
-	catalog := &schemaCatalog{dir: dir, entryByElement: map[string]schemaEntry{}}
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".xsd") {
-			continue
-		}
-		path := filepath.Join(mainDir, entry.Name())
-		root, namespace, err := rootElementOf(path)
-		if err != nil {
-			return nil, fmt.Errorf("parse root element of %s: %w", entry.Name(), err)
-		}
-		if root != "" {
-			catalog.entryByElement[root] = schemaEntry{path: path, namespace: namespace}
-		}
-	}
-	return catalog, nil
+	return &validationCatalog{documentCatalog: documents, dir: dir}, nil
 }
 
 // rootElementOf returns the UBL main-document XSD at path's declared root
@@ -129,6 +160,10 @@ func rootElementOf(path string) (localName, namespace string, err error) {
 	if err != nil {
 		return "", "", err
 	}
+	return rootElementFromXSD(content)
+}
+
+func rootElementFromXSD(content []byte) (localName, namespace string, err error) {
 	var doc xsdRootElement
 	if err := xml.Unmarshal(content, &doc); err != nil {
 		return "", "", err
@@ -143,9 +178,12 @@ func rootElementOf(path string) (localName, namespace string, err error) {
 
 // schemaPathFor returns the extracted main-document XSD path for rootElement,
 // or false if rootElement is not a recognized UBL 2.1 document type.
-func (c *schemaCatalog) schemaPathFor(rootElement string) (string, bool) {
+func (c *validationCatalog) schemaPathFor(rootElement string) (string, bool) {
 	entry, ok := c.entryByElement[rootElement]
-	return entry.path, ok
+	if !ok {
+		return "", false
+	}
+	return filepath.Join(c.dir, "maindoc", entry.file), ok
 }
 
 // expectedNamespaceFor returns the UBL 2.1 target namespace rootElement's
@@ -155,7 +193,7 @@ func (c *schemaCatalog) schemaPathFor(rootElement string) (string, bool) {
 // by the upload handler to reject a document whose root local name happens
 // to match a recognized type but whose namespace does not - see
 // SERVER-DATAFLOW-2026-08-24.md section 11.11.
-func (c *schemaCatalog) expectedNamespaceFor(rootElement string) (string, bool) {
+func (c *documentCatalog) expectedNamespaceFor(rootElement string) (string, bool) {
 	entry, ok := c.entryByElement[rootElement]
 	return entry.namespace, ok
 }
@@ -173,31 +211,76 @@ func ensureXMLLint() error {
 	return xmllintErr
 }
 
-// validateAgainstSchema writes body to a temporary file and validates it
-// with `xmllint --noout --schema schemaPath`, returning a trimmed,
-// human-readable error combining stdout/stderr on failure.
-func validateAgainstSchema(schemaPath string, body []byte) error {
+const maxValidationDiagnosticBytes = 8 << 10
+
+// validateAgainstSchema streams body to xmllint over stdin. CommandContext
+// enforces a hard per-document deadline, while --nonet prevents schemas from
+// fetching network resources during validation.
+func validateAgainstSchema(ctx context.Context, schemaPath string, body []byte, timeout time.Duration) error {
 	if err := ensureXMLLint(); err != nil {
 		return err
 	}
+	if timeout <= 0 {
+		timeout = defaultValidationTimeout
+	}
+	validationCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
-	tmp, err := os.CreateTemp("", "e-ubl21-upload-*.xml")
+	cmd := exec.CommandContext(validationCtx, xmllintPath, "--nonet", "--noout", "--schema", schemaPath, "-")
+	cmd.Stdin = bytes.NewReader(body)
+	diagnostics := &boundedDiagnosticBuffer{}
+	cmd.Stdout = diagnostics
+	cmd.Stderr = diagnostics
+	err := cmd.Run()
+	if errors.Is(validationCtx.Err(), context.DeadlineExceeded) {
+		return fmt.Errorf("%w after %s", errValidationTimeout, timeout)
+	}
+	if errors.Is(validationCtx.Err(), context.Canceled) {
+		return fmt.Errorf("schema validation canceled: %w", validationCtx.Err())
+	}
 	if err != nil {
-		return fmt.Errorf("create temp upload file: %w", err)
-	}
-	defer os.Remove(tmp.Name())
-	if _, err := tmp.Write(body); err != nil {
-		tmp.Close()
-		return fmt.Errorf("write temp upload file: %w", err)
-	}
-	if err := tmp.Close(); err != nil {
-		return fmt.Errorf("close temp upload file: %w", err)
-	}
-
-	cmd := exec.Command(xmllintPath, "--noout", "--schema", schemaPath, tmp.Name())
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("schema validation failed: %s", strings.TrimSpace(string(output)))
+		return fmt.Errorf("schema validation failed: %s", diagnostics.String())
 	}
 	return nil
+}
+
+type boundedDiagnosticBuffer struct {
+	data      []byte
+	truncated bool
+}
+
+func (b *boundedDiagnosticBuffer) Write(p []byte) (int, error) {
+	written := len(p)
+	remaining := maxValidationDiagnosticBytes - len(b.data)
+	if remaining <= 0 {
+		b.truncated = true
+		return written, nil
+	}
+	if len(p) > remaining {
+		b.data = append(b.data, p[:remaining]...)
+		b.truncated = true
+		return written, nil
+	}
+	b.data = append(b.data, p...)
+	return written, nil
+}
+
+func (b *boundedDiagnosticBuffer) String() string {
+	diagnostic := normalizeValidationDiagnostics(b.data)
+	if !b.truncated {
+		return diagnostic
+	}
+	const suffix = "... [truncated]"
+	if len(diagnostic) > maxValidationDiagnosticBytes-len(suffix) {
+		diagnostic = diagnostic[:maxValidationDiagnosticBytes-len(suffix)]
+	}
+	return diagnostic + suffix
+}
+
+func normalizeValidationDiagnostics(output []byte) string {
+	diagnostic := strings.TrimSpace(string(output))
+	if diagnostic == "" {
+		return "xmllint exited without diagnostics"
+	}
+	return diagnostic
 }

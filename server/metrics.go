@@ -41,6 +41,26 @@ var (
 		Help:    "Worker document validation duration in seconds, labeled by document type.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"document_type"})
+
+	workerValidationsInFlight = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_worker_validations_in_flight",
+		Help: "Current number of documents actively being processed by this worker process.",
+	})
+
+	workerBufferedMessages = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_worker_buffered_messages",
+		Help: "Current number of pulled documents waiting in the bounded local worker buffer.",
+	})
+
+	workerPullBufferCapacity = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_worker_pull_buffer_capacity",
+		Help: "Configured maximum number of documents waiting in the local worker buffer.",
+	})
+
+	workerRedeliveries = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "e_ubl21_worker_redeliveries_total",
+		Help: "Total documents observed with a JetStream delivery count greater than one.",
+	})
 )
 
 // recordUploadOutcome increments the upload counter for outcome, e.g.

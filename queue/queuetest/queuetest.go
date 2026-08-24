@@ -8,17 +8,24 @@ import (
 	"testing"
 
 	natstest "github.com/nats-io/nats-server/v2/test"
+	"github.com/nats-io/nats.go"
 )
 
-// StartServer starts an embedded NATS server with JetStream enabled on a
-// random free port, storing its JetStream state under a fresh t.TempDir().
-// The server is automatically shut down via t.Cleanup. It returns the URL
-// to pass to queue.Connect.
-func StartServer(t *testing.T) string {
+// Server describes an embedded NATS server and the option clients need to
+// connect to it without opening a TCP socket.
+type Server struct {
+	URL     string
+	Options []nats.Option
+}
+
+// StartServer starts an embedded, JetStream-enabled NATS server without a
+// TCP listener. Clients communicate over net.Pipe via nats.InProcessServer,
+// allowing the tests to run in network-restricted sandboxes.
+func StartServer(t testing.TB) Server {
 	t.Helper()
 
 	opts := natstest.DefaultTestOptions
-	opts.Port = -1 // let the OS choose a free port
+	opts.DontListen = true
 	opts.JetStream = true
 	opts.StoreDir = t.TempDir()
 
@@ -28,5 +35,8 @@ func StartServer(t *testing.T) string {
 		srv.WaitForShutdown()
 	})
 
-	return srv.ClientURL()
+	return Server{
+		URL:     "nats://in-process:4222",
+		Options: []nats.Option{nats.InProcessServer(srv)},
+	}
 }

@@ -31,31 +31,36 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		printUsage()
+	if err := run(os.Args[1:]); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
 
-	switch os.Args[1] {
+func run(args []string) error {
+	if len(args) == 0 {
+		printUsage()
+		return fmt.Errorf("a command is required")
+	}
+
+	switch args[0] {
 	case "inventory":
-		if err := runInventory(os.Args[2:]); err != nil {
-			fmt.Fprintln(os.Stderr, "inventory error:", err)
-			os.Exit(1)
+		if err := runInventory(args[1:]); err != nil {
+			return fmt.Errorf("inventory error: %w", err)
 		}
 	case "generate":
-		if err := runGenerate(os.Args[2:]); err != nil {
-			fmt.Fprintln(os.Stderr, "generate error:", err)
-			os.Exit(1)
+		if err := runGenerate(args[1:]); err != nil {
+			return fmt.Errorf("generate error: %w", err)
 		}
 	case "validate":
-		if err := runValidate(os.Args[2:]); err != nil {
-			fmt.Fprintln(os.Stderr, "validate error:", err)
-			os.Exit(1)
+		if err := runValidate(args[1:]); err != nil {
+			return fmt.Errorf("validate error: %w", err)
 		}
 	default:
 		printUsage()
-		os.Exit(1)
+		return fmt.Errorf("unknown command %q", args[0])
 	}
+	return nil
 }
 
 func printUsage() {

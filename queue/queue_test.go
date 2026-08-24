@@ -1,6 +1,7 @@
 package queue_test
 
 import (
+	"bytes"
 	"context"
 	"testing"
 	"time"
@@ -18,9 +19,9 @@ func newTestClient(t *testing.T) *queue.Client {
 // newTestClientWithNamespace connects to the given NATS URL scoped to
 // namespace, letting a test start multiple namespace-scoped clients against
 // the same embedded server (see TestNamespacesDoNotCrossConsume).
-func newTestClientWithNamespace(t *testing.T, url string, namespace queue.Namespace) *queue.Client {
+func newTestClientWithNamespace(t *testing.T, server queuetest.Server, namespace queue.Namespace) *queue.Client {
 	t.Helper()
-	client, err := queue.Connect(url, namespace)
+	client, err := queue.ConnectWithOptions(server.URL, namespace, server.Options...)
 	if err != nil {
 		t.Fatalf("connect: %v", err)
 	}
@@ -45,7 +46,7 @@ func TestPublishDocumentAndConsume(t *testing.T) {
 		t.Fatalf("new id: %v", err)
 	}
 	receivedAt := time.Now()
-	if err := client.PublishDocument(ctx, id, "Invoice", receivedAt, []byte("<Invoice/>")); err != nil {
+	if err := client.PublishDocument(ctx, id, "Invoice", receivedAt); err != nil {
 		t.Fatalf("publish document: %v", err)
 	}
 
@@ -69,8 +70,18 @@ func TestPublishDocumentAndConsume(t *testing.T) {
 		if got := msg.Headers().Get(queue.HeaderUploadID); got != id {
 			t.Fatalf("upload id header = %q, want %q", got, id)
 		}
-		if string(msg.Data()) != "<Invoice/>" {
-			t.Fatalf("data = %q", msg.Data())
+		item, err := queue.DecodeDocumentWorkItem(msg.Data())
+		if err != nil {
+			t.Fatalf("decode work item: %v", err)
+		}
+		if item.ID != id || item.DocumentType != "Invoice" {
+			t.Fatalf("work item = %+v", item)
+		}
+		if len(msg.Data()) >= 256 {
+			t.Fatalf("work descriptor unexpectedly large: %d bytes", len(msg.Data()))
+		}
+		if bytes.Contains(msg.Data(), []byte("<Invoice")) {
+			t.Fatalf("work descriptor contains raw XML: %q", msg.Data())
 		}
 		if err := msg.Ack(); err != nil {
 			t.Fatalf("ack: %v", err)
@@ -88,10 +99,10 @@ func TestDocumentsConsumerFiltersByType(t *testing.T) {
 
 	invoiceID, _ := queue.NewID()
 	orderID, _ := queue.NewID()
-	if err := client.PublishDocument(ctx, invoiceID, "Invoice", time.Now(), []byte("<Invoice/>")); err != nil {
+	if err := client.PublishDocument(ctx, invoiceID, "Invoice", time.Now()); err != nil {
 		t.Fatalf("publish invoice: %v", err)
 	}
-	if err := client.PublishDocument(ctx, orderID, "Order", time.Now(), []byte("<Order/>")); err != nil {
+	if err := client.PublishDocument(ctx, orderID, "Order", time.Now()); err != nil {
 		t.Fatalf("publish order: %v", err)
 	}
 
@@ -122,6 +133,19 @@ func TestDocumentsConsumerFiltersByType(t *testing.T) {
 		t.Fatalf("unexpected second message delivered: subject=%s", msg.Subject())
 	case <-time.After(300 * time.Millisecond):
 		// expected: the Order message must not reach this filtered consumer
+	}
+}
+
+func TestDocumentsConsumerAppliesExplicitBackpressureConfig(t *testing.T) {
+	client := newTestClient(t)
+	ctx := context.Background()
+	consumer, err := client.DocumentsConsumerWithConfig(ctx, "bounded-worker", "", 60*time.Second, 7, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info := consumer.CachedInfo()
+	if info.Config.AckWait != 60*time.Second || info.Config.MaxDeliver != 7 || info.Config.MaxAckPending != 4 {
+		t.Fatalf("consumer config = AckWait %s, MaxDeliver %d, MaxAckPending %d", info.Config.AckWait, info.Config.MaxDeliver, info.Config.MaxAckPending)
 	}
 }
 
@@ -182,8 +206,7 @@ func TestUploadRecordLifecycle(t *testing.T) {
 // raw content from mutable status/metadata: content is stored and
 // retrieved independently of any UploadRecord, and GetUploadContent
 // reports ErrRecordNotFound for an id that was never given content, even
-// if a status/metadata record already exists for that id (i.e. the two
-// stores are genuinely independent, not implicitly linked).
+// if a status/metadata record already exists for that id.
 func TestPutUploadContentAndGet(t *testing.T) {
 	t.Parallel()
 	client := newTestClient(t)
@@ -200,7 +223,7 @@ func TestPutUploadContentAndGet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get content: %v", err)
 	}
-	if string(got) != string(body) {
+	if !bytes.Equal(got, body) {
 		t.Fatalf("content = %q, want %q", got, body)
 	}
 
@@ -219,9 +242,7 @@ func TestPutUploadContentAndGet(t *testing.T) {
 }
 
 // TestUpdateUploadStatusDoesNotTouchContent proves that repeated status
-// updates (as performed by the worker via UpdateUploadStatus) never read or
-// rewrite the upload's raw content: it is stored once and left untouched
-// across multiple status transitions.
+// updates never read or rewrite the upload's raw content.
 func TestUpdateUploadStatusDoesNotTouchContent(t *testing.T) {
 	t.Parallel()
 	client := newTestClient(t)
@@ -250,9 +271,29 @@ func TestUpdateUploadStatusDoesNotTouchContent(t *testing.T) {
 		if err != nil {
 			t.Fatalf("get content after updating status to %q: %v", status, err)
 		}
-		if string(content) != string(body) {
+		if !bytes.Equal(content, body) {
 			t.Fatalf("content changed after updating status to %q: got %q, want %q", status, content, body)
 		}
+	}
+}
+
+func TestUploadContentObjectStoreHandlesLargeXML(t *testing.T) {
+	t.Parallel()
+	client := newTestClient(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	id, _ := queue.NewID()
+	body := bytes.Repeat([]byte("x"), 2<<20)
+	if err := client.PutUploadContent(ctx, id, body); err != nil {
+		t.Fatalf("put large content: %v", err)
+	}
+	got, err := client.GetUploadContent(ctx, id)
+	if err != nil {
+		t.Fatalf("get large content: %v", err)
+	}
+	if !bytes.Equal(got, body) {
+		t.Fatalf("large content mismatch: got %d bytes, want %d", len(got), len(body))
 	}
 }
 
@@ -267,6 +308,9 @@ func TestGetUploadRecordNotFound(t *testing.T) {
 	}
 	if _, err := client.GetUploadRecord(ctx, "not-a-valid-id"); err != queue.ErrRecordNotFound {
 		t.Fatalf("err = %v, want %v", err, queue.ErrRecordNotFound)
+	}
+	if _, err := client.GetUploadContent(ctx, "00000000000000000000000000000000"); err != queue.ErrRecordNotFound {
+		t.Fatalf("content err = %v, want %v", err, queue.ErrRecordNotFound)
 	}
 }
 
@@ -312,16 +356,14 @@ func TestPublishResult(t *testing.T) {
 	}
 }
 
-// TestNamespacesDoNotCrossConsume proves the acceptance criteria for
-// TODO-001: two e-ubl21 deployments configured with different queue
-// namespaces can share the same JetStream server without a worker or
-// upload-status read/write in one namespace ever observing the other
-// namespace's documents, results or upload records.
+// TestNamespacesDoNotCrossConsume proves different queue namespaces can
+// share the same JetStream server without cross-observing work, metadata or
+// raw content.
 func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	t.Parallel()
-	url := queuetest.StartServer(t)
-	dev := newTestClientWithNamespace(t, url, queue.MustNamespace("eubl21.dev"))
-	prod := newTestClientWithNamespace(t, url, queue.MustNamespace("eubl21.prod"))
+	server := queuetest.StartServer(t)
+	dev := newTestClientWithNamespace(t, server, queue.MustNamespace("eubl21.dev"))
+	prod := newTestClientWithNamespace(t, server, queue.MustNamespace("eubl21.prod"))
 
 	if dev.Namespace.DocumentsStreamName() == prod.Namespace.DocumentsStreamName() {
 		t.Fatal("dev and prod must derive distinct documents stream names")
@@ -339,8 +381,6 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// A worker consuming prod's namespace must never see a document
-	// published to dev's namespace.
 	devConsumer, err := dev.DocumentsConsumer(ctx, "dev-worker", "")
 	if err != nil {
 		t.Fatalf("dev consumer: %v", err)
@@ -365,7 +405,7 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	defer prodCC.Stop()
 
 	id, _ := queue.NewID()
-	if err := dev.PublishDocument(ctx, id, "Invoice", time.Now(), []byte("<Invoice/>")); err != nil {
+	if err := dev.PublishDocument(ctx, id, "Invoice", time.Now()); err != nil {
 		t.Fatalf("publish to dev: %v", err)
 	}
 
@@ -380,12 +420,8 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	case msg := <-prodReceived:
 		t.Fatalf("prod consumer unexpectedly received a document published to dev's namespace: subject=%s", msg.Subject())
 	case <-time.After(300 * time.Millisecond):
-		// expected: prod must not observe dev's document
 	}
 
-	// An upload record written under one namespace must not be readable
-	// (or overwritable) through the other namespace's client, even when
-	// both use the exact same upload id.
 	if err := dev.PutUploadRecord(ctx, queue.UploadRecord{
 		ID:           id,
 		DocumentType: "Invoice",
@@ -411,16 +447,13 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 		t.Fatalf("get dev record: %v", err)
 	}
 	if devRecord.Status != queue.StatusValid {
-		t.Fatalf("dev record status = %q, want %q (prod's write must not have leaked into dev's namespace)", devRecord.Status, queue.StatusValid)
+		t.Fatalf("dev record status = %q, want %q", devRecord.Status, queue.StatusValid)
 	}
 
-	// A worker's subject filter from another namespace must be rejected
-	// rather than silently creating a cross-namespace consumer.
 	if _, err := prod.DocumentsConsumer(ctx, "prod-cross-namespace-worker", dev.Namespace.DocumentSubject("Invoice")); err == nil {
 		t.Fatal("expected an error creating a prod consumer filtered to a dev namespace subject")
 	}
 
-	// Upload content, like upload records, must be isolated per namespace.
 	if err := dev.PutUploadContent(ctx, id, []byte("<Invoice/>dev")); err != nil {
 		t.Fatalf("put dev content: %v", err)
 	}
@@ -435,6 +468,6 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 		t.Fatalf("get dev content: %v", err)
 	}
 	if string(devContent) != "<Invoice/>dev" {
-		t.Fatalf("dev content = %q, want %q (prod's write must not have leaked into dev's namespace)", devContent, "<Invoice/>dev")
+		t.Fatalf("dev content = %q, want %q", devContent, "<Invoice/>dev")
 	}
 }

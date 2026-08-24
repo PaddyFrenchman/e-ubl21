@@ -1,12 +1,8 @@
-// This file implements the background validation worker: it consumes
-// queued UBL documents from the per-document-type NATS JetStream subjects
-// (see queue.Client.DocumentsConsumer), validates each against its UBL 2.1
-// XSD using the same xmllint-based logic the HTTP API previously ran
-// synchronously (schema_catalog.go), records the outcome in the JetStream
-// KV upload store so GET /api/v1/ubl/{id} reflects it, and publishes a
-// ValidationResult to the single output results stream
-// (queue.Namespace.ResultsSubject). It is exposed to the CLI as
-// `e-ubl21 worker` (see cmd/worker.go).
+// This file implements the background validation worker. The documents
+// stream carries compact work descriptors; the worker dereferences each
+// upload's immutable raw XML from JetStream Object Store, validates it
+// against the UBL 2.1 XSD, records the outcome in metadata KV, and publishes
+// a ValidationResult.
 package server
 
 import (
@@ -15,55 +11,84 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-// WorkerConfig configures the validation worker.
 type WorkerConfig struct {
-	// NATSURL is the NATS server to connect to.
-	NATSURL string
-	// QueueNamespace scopes every JetStream stream, subject and KV bucket
-	// this worker uses (see queue.Namespace). Defaults to
-	// queue.DefaultNamespace, preserving e-ubl21's original hard-coded
-	// names. Must match the namespace the HTTP API producing this
-	// worker's documents was started with.
-	QueueNamespace queue.Namespace
-	// ConsumerName is the durable JetStream consumer name. Defaults to
-	// "ubl-validator". Running multiple worker replicas with the same
-	// ConsumerName and SubjectFilter load-balances documents across them.
-	ConsumerName string
-	// SubjectFilter selects which document type(s) this worker processes.
-	// Defaults to QueueNamespace.DocumentsFilterSubject() (every document
-	// type in the configured namespace). Set it to
-	// QueueNamespace.DocumentSubject("Invoice") (for example) to dedicate
-	// a worker to a single document type's queue. It is an error to set
-	// this to a subject belonging to a different namespace.
-	SubjectFilter string
-	// MetricsAddr, if non-empty, serves GET /metrics (Prometheus) and
-	// GET /healthz on this address for the worker process. Unlike the API's
-	// routes, these are unauthenticated: they are meant to be reachable
-	// only from an internal operator/monitoring network, not the public
-	// internet.
-	MetricsAddr string
-	// Logger receives structured logs. Defaults to slog.Default().
-	Logger *slog.Logger
+	NATSURL           string
+	NATSOptions       []nats.Option
+	QueueNamespace    queue.Namespace
+	ConsumerName      string
+	SubjectFilter     string
+	MetricsAddr       string
+	ValidationTimeout time.Duration
+	Concurrency       int
+	Prefetch          int
+	AckWait           time.Duration
+	MaxDeliver        int
+	Logger            *slog.Logger
 }
 
 const defaultWorkerConsumerName = "ubl-validator"
+const defaultValidationTimeout = 30 * time.Second
+const defaultWorkerConcurrency = 1
+const defaultWorkerPrefetch = 1
+const defaultWorkerAckWait = 60 * time.Second
+const defaultWorkerMaxDeliver = 5
 
-// RunWorker connects to NATS, ensures the required JetStream
-// streams/KV bucket exist, and processes documents until ctx is canceled.
-// It returns once the consumer and any metrics server have shut down.
+type workerRuntimeSettings struct {
+	validationTimeout time.Duration
+	concurrency       int
+	prefetch          int
+	ackWait           time.Duration
+	maxDeliver        int
+}
+
+func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, error) {
+	s := workerRuntimeSettings{
+		validationTimeout: cfg.ValidationTimeout,
+		concurrency:       cfg.Concurrency,
+		prefetch:          cfg.Prefetch,
+		ackWait:           cfg.AckWait,
+		maxDeliver:        cfg.MaxDeliver,
+	}
+	if s.validationTimeout <= 0 {
+		s.validationTimeout = defaultValidationTimeout
+	}
+	if s.concurrency <= 0 {
+		s.concurrency = defaultWorkerConcurrency
+	}
+	if s.prefetch <= 0 {
+		s.prefetch = defaultWorkerPrefetch
+	}
+	if s.ackWait <= 0 {
+		s.ackWait = defaultWorkerAckWait
+	}
+	if s.maxDeliver <= 0 {
+		s.maxDeliver = defaultWorkerMaxDeliver
+	}
+	if s.ackWait <= s.validationTimeout {
+		return workerRuntimeSettings{}, fmt.Errorf("worker ack wait (%s) must exceed validation timeout (%s)", s.ackWait, s.validationTimeout)
+	}
+	return s, nil
+}
+
 func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	logger := cfg.Logger
 	if logger == nil {
 		logger = slog.Default()
 	}
+	settings, err := resolveWorkerRuntimeSettings(cfg)
+	if err != nil {
+		return err
+	}
 
-	q, err := queue.Connect(cfg.NATSURL, cfg.QueueNamespace)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
 	if err != nil {
 		return fmt.Errorf("connect to NATS: %w", err)
 	}
@@ -73,7 +98,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		return fmt.Errorf("ensure JetStream infrastructure: %w", err)
 	}
 
-	catalog, err := loadSchemaCatalog()
+	catalog, err := loadValidationCatalog()
 	if err != nil {
 		return fmt.Errorf("load UBL 2.1 schema catalog: %w", err)
 	}
@@ -82,7 +107,8 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	if consumerName == "" {
 		consumerName = defaultWorkerConsumerName
 	}
-	consumer, err := q.DocumentsConsumer(ctx, consumerName, cfg.SubjectFilter)
+	maxAckPending := settings.concurrency + settings.prefetch
+	consumer, err := q.DocumentsConsumerWithConfig(ctx, consumerName, cfg.SubjectFilter, settings.ackWait, settings.maxDeliver, maxAckPending)
 	if err != nil {
 		return fmt.Errorf("create documents consumer: %w", err)
 	}
@@ -102,19 +128,69 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		}()
 	}
 
-	worker := &documentWorker{queue: q, catalog: catalog, logger: logger}
-	consumeCtx, err := consumer.Consume(worker.handle)
+	worker := &documentWorker{queue: q, catalog: catalog, logger: logger, validationTimeout: settings.validationTimeout, progressInterval: settings.ackWait / 2}
+	messages, err := consumer.Messages(jetstream.PullMaxMessages(maxAckPending))
 	if err != nil {
-		return fmt.Errorf("start consuming: %w", err)
+		return fmt.Errorf("start pulling documents: %w", err)
 	}
-	defer consumeCtx.Stop()
+	defer messages.Stop()
+	jobs := make(chan jetstream.Msg, settings.prefetch)
+	workerPullBufferCapacity.Set(float64(settings.prefetch))
+	defer workerBufferedMessages.Set(0)
+
+	var workers sync.WaitGroup
+	for i := 0; i < settings.concurrency; i++ {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			for msg := range jobs {
+				workerBufferedMessages.Set(float64(len(jobs)))
+				worker.process(msg)
+			}
+		}()
+	}
 
 	logger.Info("worker started",
 		"consumer", consumerName,
 		"queueNamespace", nonEmpty(cfg.QueueNamespace.String(), "(default)"),
 		"subjectFilter", nonEmpty(cfg.SubjectFilter, q.Namespace.DocumentsFilterSubject()),
+		"concurrency", settings.concurrency,
+		"prefetch", settings.prefetch,
+		"ackWait", settings.ackWait,
 	)
-	<-ctx.Done()
+
+	pullDone := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			messages.Stop()
+		case <-pullDone:
+		}
+	}()
+	for {
+		msg, nextErr := messages.Next()
+		if nextErr != nil {
+			if ctx.Err() != nil {
+				break
+			}
+			close(pullDone)
+			close(jobs)
+			workers.Wait()
+			return fmt.Errorf("pull document: %w", nextErr)
+		}
+		select {
+		case jobs <- msg:
+			workerBufferedMessages.Set(float64(len(jobs)))
+		case <-ctx.Done():
+			break
+		}
+		if ctx.Err() != nil {
+			break
+		}
+	}
+	close(pullDone)
+	close(jobs)
+	workers.Wait()
 	logger.Info("worker shutting down")
 	return nil
 }
@@ -126,45 +202,109 @@ func nonEmpty(value, fallback string) string {
 	return value
 }
 
-// documentWorker processes a single queued document per handle call.
 type documentWorker struct {
-	queue   *queue.Client
-	catalog *schemaCatalog
-	logger  *slog.Logger
+	queue             *queue.Client
+	catalog           *validationCatalog
+	logger            *slog.Logger
+	validationTimeout time.Duration
+	progressInterval  time.Duration
 }
 
-// nakRetryDelay is used when a message could not be fully processed for a
-// transient reason (the validator is unavailable, or the KV/results-stream
-// writes failed), so JetStream retries delivery shortly instead of
-// immediately hot-looping.
 const nakRetryDelay = 10 * time.Second
+
+func (w *documentWorker) process(msg jetstream.Msg) {
+	workerValidationsInFlight.Inc()
+	defer workerValidationsInFlight.Dec()
+	if metadata, err := msg.Metadata(); err == nil && metadata.NumDelivered > 1 {
+		workerRedeliveries.Inc()
+	}
+	stopProgress := startProgressHeartbeats(msg, w.progressInterval)
+	defer stopProgress()
+	w.handle(msg)
+}
+
+func startProgressHeartbeats(msg jetstream.Msg, interval time.Duration) func() {
+	if interval <= 0 {
+		return func() {}
+	}
+	stop := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				_ = msg.InProgress()
+			case <-stop:
+				return
+			}
+		}
+	}()
+	var once sync.Once
+	return func() { once.Do(func() { close(stop) }) }
+}
 
 func (w *documentWorker) handle(msg jetstream.Msg) {
 	start := time.Now()
 	ctx := context.Background()
 
+	item, err := queue.DecodeDocumentWorkItem(msg.Data())
+	if err != nil {
+		w.logger.Error("invalid document work descriptor; terminating message", "error", err, "subject", msg.Subject())
+		recordValidationOutcome("invalid_work_item")
+		_ = msg.Term()
+		return
+	}
+
 	id := msg.Headers().Get(queue.HeaderUploadID)
 	documentType := w.queue.Namespace.DocumentTypeFromSubject(msg.Subject())
-	logger := w.logger.With("id", id, "documentType", documentType)
+	headerDocumentType := msg.Headers().Get(queue.HeaderDocumentType)
+	logger := w.logger.With("id", item.ID, "documentType", item.DocumentType)
+
+	// The descriptor, subject and headers deliberately duplicate identity
+	// fields. Refuse inconsistent messages before dereferencing content so a
+	// corrupt/misrouted work item cannot validate another upload's object.
+	if id != item.ID || documentType != item.DocumentType || (headerDocumentType != "" && headerDocumentType != item.DocumentType) {
+		logger.Error("inconsistent document work descriptor; terminating message",
+			"headerID", id,
+			"subjectDocumentType", documentType,
+			"headerDocumentType", headerDocumentType,
+		)
+		recordValidationOutcome("invalid_work_item")
+		_ = msg.Term()
+		return
+	}
 
 	schemaPath, ok := w.catalog.schemaPathFor(documentType)
 	if !ok {
-		// The API rejects unrecognized document types before ever queuing
-		// them, so this should not happen in practice; treat it as a
-		// permanent failure (retrying will never succeed) rather than
-		// redelivering forever.
 		logger.Error("no schema found for queued document type; terminating message")
 		recordValidationOutcome("unsupported_document_type")
 		_ = msg.Term()
 		return
 	}
 
-	validationErr := validateAgainstSchema(schemaPath, msg.Data())
+	content, err := w.queue.GetUploadContent(ctx, id)
+	if err != nil {
+		// The API stores content before publishing the descriptor. Failure to
+		// retrieve it is therefore an operational/storage failure worth retrying.
+		logger.Error("failed to load upload content; will retry", "error", err)
+		recordValidationOutcome("content_unavailable")
+		_ = msg.NakWithDelay(nakRetryDelay)
+		return
+	}
+
+	validationErr := validateAgainstSchema(ctx, schemaPath, content, w.validationTimeout)
 	validatedAt := time.Now()
 
 	if validationErr != nil && errors.Is(validationErr, errXMLLintUnavailable) {
 		logger.Error("xmllint unavailable; will retry", "error", validationErr)
 		recordValidationOutcome("validator_unavailable")
+		_ = msg.NakWithDelay(nakRetryDelay)
+		return
+	}
+	if validationErr != nil && errors.Is(validationErr, errValidationTimeout) {
+		logger.Error("schema validation timed out; will retry", "error", validationErr)
+		recordValidationOutcome("validation_timeout")
 		_ = msg.NakWithDelay(nakRetryDelay)
 		return
 	}

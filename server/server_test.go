@@ -14,9 +14,7 @@ import (
 
 const testSecret = "test-secret"
 
-// validInvoiceXML is a minimal but genuinely schema-valid UBL 2.1 Invoice,
-// satisfying every element UBL-Invoice-2.1.xsd requires (see
-// createsamples/samples/Invoice for a richer, generator-produced example).
+// validInvoiceXML is a minimal but genuinely schema-valid UBL 2.1 Invoice.
 const validInvoiceXML = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
@@ -35,10 +33,8 @@ const validInvoiceXML = `<?xml version="1.0" encoding="UTF-8"?>
   </cac:InvoiceLine>
 </Invoice>`
 
-// invalidInvoiceXML is well-formed XML, and its root element ("Invoice") is
-// a recognized UBL 2.1 document type, but it omits required elements (e.g.
-// IssueDate, LegalMonetaryTotal, InvoiceLine), so it must fail XSD
-// validation.
+// invalidInvoiceXML is well-formed and has a recognized root, but omits
+// required UBL elements and must fail XSD validation in the worker.
 const invalidInvoiceXML = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
@@ -47,13 +43,15 @@ const invalidInvoiceXML = `<?xml version="1.0" encoding="UTF-8"?>
 
 func testConfig(t *testing.T, overrides func(*Config)) Config {
 	t.Helper()
+	natsServer := queuetest.StartServer(t)
 	cfg := Config{
 		OpenAPIPath:     "/spec",
 		SwaggerPath:     "/docs/",
 		OAuthIssuer:     "https://issuer.example.com",
 		OAuthAudience:   "e-ubl21",
 		OAuthHMACSecret: testSecret,
-		NATSURL:         queuetest.StartServer(t),
+		NATSURL:         natsServer.URL,
+		NATSOptions:     natsServer.Options,
 	}
 	if overrides != nil {
 		overrides(&cfg)
@@ -109,10 +107,8 @@ func TestNewHandlerQueuesUploadAndPersistsPendingRecord(t *testing.T) {
 		t.Fatal("missing id field")
 	}
 
-	// No worker is running in this test, so the record must still be
-	// "pending" - this is the queued-but-not-yet-processed state the async
-	// upload flow introduces (see worker_test.go for the full
-	// upload -> worker -> validated pipeline).
+	// TODO-002: default polling is metadata-only. No worker is running, so
+	// the record must remain pending and must not include the raw XML.
 	getRes := doRequest(handler, http.MethodGet, "/api/v1/ubl/"+id, token, "", "")
 	if getRes.Code != http.StatusOK {
 		t.Fatalf("get status = %d, want %d; body=%s", getRes.Code, http.StatusOK, getRes.Body.String())
@@ -124,11 +120,44 @@ func TestNewHandlerQueuesUploadAndPersistsPendingRecord(t *testing.T) {
 	if stored["status"] != "pending" {
 		t.Fatalf("stored status = %v, want %q", stored["status"], "pending")
 	}
-	if stored["content"] != validInvoiceXML {
-		t.Fatalf("stored content mismatch: got %v", stored["content"])
+	if _, hasContent := stored["content"]; hasContent {
+		t.Fatal("default status poll must not include raw XML content")
 	}
 	if _, hasValidatedAt := stored["validatedAt"]; hasValidatedAt {
 		t.Fatal("validatedAt should not be set before the worker has processed the document")
+	}
+
+	// Explicit content retrieval preserves the original API capability
+	// without burdening normal status polling.
+	contentRes := doRequest(handler, http.MethodGet, "/api/v1/ubl/"+id+"?includeContent=true", token, "", "")
+	if contentRes.Code != http.StatusOK {
+		t.Fatalf("get content status = %d, want %d; body=%s", contentRes.Code, http.StatusOK, contentRes.Body.String())
+	}
+	var withContent map[string]any
+	if err := json.Unmarshal(contentRes.Body.Bytes(), &withContent); err != nil {
+		t.Fatalf("decode content response: %v", err)
+	}
+	if withContent["content"] != validInvoiceXML {
+		t.Fatalf("stored content mismatch: got %v", withContent["content"])
+	}
+}
+
+func TestNewHandlerGetRejectsInvalidIncludeContent(t *testing.T) {
+	t.Parallel()
+
+	handler := newTestHandler(t, nil)
+	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", testSecret, time.Hour)
+
+	res := doRequest(handler, http.MethodGet, "/api/v1/ubl/00000000000000000000000000000000?includeContent=perhaps", token, "", "")
+	if res.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body=%s", res.Code, http.StatusBadRequest, res.Body.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(res.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if payload["error"] != "includeContent must be true or false" {
+		t.Fatalf("error = %v", payload["error"])
 	}
 }
 
@@ -156,12 +185,6 @@ func TestNewHandlerRejectsUnsupportedDocumentType(t *testing.T) {
 	}
 }
 
-// TestNewHandlerRejectsRecognizedLocalNameInWrongNamespace proves the
-// TODO-005 namespace-recognition requirement: a root element whose local
-// name matches a recognized UBL 2.1 document type but whose namespace does
-// not match that type's UBL 2.1 XSD is rejected up front rather than
-// accepted and left to fail asynchronously in the worker (see
-// SERVER-DATAFLOW-2026-08-24.md section 11.11).
 func TestNewHandlerRejectsRecognizedLocalNameInWrongNamespace(t *testing.T) {
 	t.Parallel()
 
@@ -192,10 +215,6 @@ func TestNewHandlerRejectsRecognizedLocalNameInWrongNamespace(t *testing.T) {
 	}
 }
 
-// TestNewHandlerRejectsOversizedUploadDeterministically proves the
-// TODO-005 acceptance criterion that oversized uploads are rejected
-// deterministically (413) rather than silently truncated to the size
-// limit and processed as if that truncated prefix were the whole document.
 func TestNewHandlerRejectsOversizedUploadDeterministically(t *testing.T) {
 	t.Parallel()
 
@@ -216,10 +235,6 @@ func TestNewHandlerRejectsOversizedUploadDeterministically(t *testing.T) {
 	}
 }
 
-// TestNewHandlerUploadErrorsAreJSON guards against a regression where
-// POST /api/v1/ubl/upload's 400/500 responses were plain text (via
-// http.Error) instead of the documented application/json ErrorResponse
-// schema, unlike every other error response in the API.
 func TestNewHandlerUploadErrorsAreJSON(t *testing.T) {
 	t.Parallel()
 
@@ -291,7 +306,6 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 	t.Parallel()
 
 	handler := newTestHandler(t, nil)
-
 	specRes := doRequest(handler, http.MethodGet, "/spec", "", "", "")
 	if specRes.Code != http.StatusOK {
 		t.Fatalf("spec status = %d, want %d", specRes.Code, http.StatusOK)
@@ -308,8 +322,21 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 	if _, ok := paths["/api/v1/ubl/upload"]; !ok {
 		t.Fatal("missing upload path in specification")
 	}
-	if _, ok := paths["/api/v1/ubl/{id}"]; !ok {
+	retrieval, ok := paths["/api/v1/ubl/{id}"].(map[string]any)
+	if !ok {
 		t.Fatal("missing retrieval path in specification")
+	}
+	get := retrieval["get"].(map[string]any)
+	params := get["parameters"].([]any)
+	foundIncludeContent := false
+	for _, raw := range params {
+		param, ok := raw.(map[string]any)
+		if ok && param["name"] == "includeContent" {
+			foundIncludeContent = true
+		}
+	}
+	if !foundIncludeContent {
+		t.Fatal("retrieval operation missing includeContent query parameter")
 	}
 	components := spec["components"].(map[string]any)
 	securitySchemes := components["securitySchemes"].(map[string]any)
@@ -322,7 +349,6 @@ func TestNewHandlerServesSwaggerUIPublicly(t *testing.T) {
 	t.Parallel()
 
 	handler := newTestHandler(t, nil)
-
 	res := doRequest(handler, http.MethodGet, "/docs/index.html", "", "", "")
 	if res.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusOK)
@@ -347,7 +373,6 @@ func TestNewHandlerRejectsBadSignature(t *testing.T) {
 
 	handler := newTestHandler(t, nil)
 	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", "wrong-secret", time.Hour)
-
 	res := doRequest(handler, http.MethodGet, "/healthz", token, "", "")
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusUnauthorized)
@@ -359,7 +384,6 @@ func TestNewHandlerRejectsExpiredToken(t *testing.T) {
 
 	handler := newTestHandler(t, nil)
 	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", testSecret, -time.Hour)
-
 	res := doRequest(handler, http.MethodGet, "/healthz", token, "", "")
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusUnauthorized)
@@ -371,7 +395,6 @@ func TestNewHandlerFailsClosedWithoutHMACSecret(t *testing.T) {
 
 	handler := newTestHandler(t, func(cfg *Config) { cfg.OAuthHMACSecret = "" })
 	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", testSecret, time.Hour)
-
 	res := doRequest(handler, http.MethodGet, "/healthz", token, "", "")
 	if res.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusInternalServerError)
@@ -384,12 +407,8 @@ func TestNewHandlerExposesMetrics(t *testing.T) {
 	handler := newTestHandler(t, nil)
 	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", testSecret, time.Hour)
 
-	// A CounterVec/HistogramVec only emits samples for label combinations
-	// that have actually been observed at least once, so make one request
-	// first to guarantee e_ubl21_http_requests_total has a sample by the
-	// time /metrics itself is scraped.
+	// Vector metrics only emit samples for observed label combinations.
 	doRequest(handler, http.MethodGet, "/healthz", token, "", "")
-
 	res := doRequest(handler, http.MethodGet, "/metrics", token, "", "")
 	if res.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusOK)

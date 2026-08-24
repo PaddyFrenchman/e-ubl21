@@ -3,10 +3,15 @@ package server
 import (
 	"encoding/xml"
 	"errors"
+	"io"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
+
+type failingUploadReader struct{}
+
+func (failingUploadReader) Read([]byte) (int, error) { return 0, errors.New("read failed") }
 
 func TestRootElementOfPayloadReturnsLocalNameAndNamespace(t *testing.T) {
 	t.Parallel()
@@ -123,5 +128,15 @@ func TestReadUploadBodyAcceptsBodyAtExactlyTheLimit(t *testing.T) {
 	}
 	if len(body) != maxUploadBytes {
 		t.Fatalf("body length = %d, want %d", len(body), maxUploadBytes)
+	}
+}
+
+func TestReadUploadBodyPropagatesGenericReadFailure(t *testing.T) {
+	req := httptest.NewRequest("POST", "/api/v1/ubl/upload", nil)
+	req.Body = io.NopCloser(failingUploadReader{})
+	req.ContentLength = -1
+	req.Header.Set("Content-Type", "application/xml")
+	if _, err := readUploadBody(httptest.NewRecorder(), req); err == nil || err.Error() != "read failed" {
+		t.Fatalf("readUploadBody error = %v", err)
 	}
 }

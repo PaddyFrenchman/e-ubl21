@@ -129,12 +129,10 @@ paths:
       description: >-
         Accepts an XML payload, and if it has a syntactically valid root
         element that is a recognized UBL 2.1 main document type (local name
-        and namespace), queues it on its per-document-type NATS JetStream
-        subject for asynchronous XSD validation and returns immediately with
-        a pending status. Full XML well-formedness and UBL 2.1 schema
-        validity are established asynchronously by the worker, not by this
-        endpoint. Poll GET /api/v1/ubl/{id} for the outcome once the worker
-        has processed it.
+        and namespace), stores the raw XML once and queues a compact work
+        descriptor on its per-document-type NATS JetStream subject for
+        asynchronous XSD validation. Full XML well-formedness and UBL 2.1
+        schema validity are established asynchronously by the worker.
       requestBody:
         required: true
         description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.
@@ -154,10 +152,8 @@ paths:
           description: >-
             The payload has a syntactically valid root element that is a
             recognized UBL 2.1 document type. It has been queued for
-            asynchronous XSD validation (which also establishes full XML
-            well-formedness); its status starts as "pending" and later
-            becomes "valid" or "invalid" once the worker processes it (see
-            GET /api/v1/ubl/{id}).
+            asynchronous XSD validation; its status starts as pending and
+            later becomes valid or invalid.
           content:
             application/json:
               schema:
@@ -166,85 +162,48 @@ paths:
                   status:
                     type: string
                     enum: [pending]
-                    example: pending
                   id:
                     type: string
-                    description: Identifier to retrieve this upload's status/content via GET /api/v1/ubl/{id}.
-                    example: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
                   document:
                     type: string
-                    description: The UBL 2.1 root element name (e.g. Invoice, Order).
-                    example: Invoice
                   receivedAt:
                     type: string
                     format: date-time
-                    example: '2026-08-20T12:00:00Z'
-                required:
-                  - status
-                  - id
-                  - document
-                  - receivedAt
-              example:
-                status: pending
-                id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
-                document: Invoice
-                receivedAt: '2026-08-20T12:00:00Z'
+                required: [status, id, document, receivedAt]
         '400':
-          description: >-
-            The payload has no syntactically valid root element, or that
-            root element's local name and/or namespace does not match a
-            recognized UBL 2.1 main document type. Note: this endpoint only
-            checks the root element - it does not parse or validate the
-            rest of the document - so a recognized-type document is still
-            accepted with 202 even if it later turns out not to be fully
-            well-formed XML or schema-valid; check its status via GET
-            /api/v1/ubl/{id} once the worker has processed it.
+          description: Invalid or unsupported root element.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: 'invalid XML payload: XML document root element is missing'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
         '413':
-          description: >-
-            The request body exceeds the maximum allowed upload size (10
-            MiB). The oversized body is rejected outright rather than
-            truncated and processed as if the truncated prefix were the
-            whole document.
+          description: Request body exceeds the 10 MiB upload limit.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: request body exceeds the maximum allowed size of 10485760 bytes
         '429':
           $ref: '#/components/responses/RateLimited'
         '500':
-          description: >-
-            Server misconfiguration: no OAuth signing secret is configured.
-            Alternatively, the document could not be queued (e.g. the
-            NATS/JetStream connection failed).
+          description: Server or queue/storage failure.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: server is not configured with an OAuth signing secret
   /api/v1/ubl/{id}:
     get:
       operationId: UBLUploadGetXMLDocument
       tags:
         - UBL
-      summary: Retrieve a previously accepted UBL 2.1 XML document
+      summary: Retrieve upload status and metadata
       description: >-
-        Returns the upload's current status - "pending" (queued, not yet
-        processed), "valid" or "invalid" (processed by the worker) - along
-        with its original content and, once processed, the validation error
-        (if any) and timestamp.
+        Returns the upload's current status and metadata without loading the
+        raw XML by default. Set includeContent=true only when the original
+        XML payload is required.
       parameters:
         - name: id
           in: path
@@ -252,9 +211,18 @@ paths:
           schema:
             type: string
           description: The id returned by a previous successful upload.
+        - name: includeContent
+          in: query
+          required: false
+          description: >-
+            When true, include the original raw XML payload in the response.
+            Defaults to false so normal status polling remains small.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
-          description: The stored document, its current status, and its metadata.
+          description: Upload status and metadata. Content is present only when includeContent=true.
           content:
             application/json:
               schema:
@@ -278,28 +246,27 @@ paths:
                     type: string
                     format: date-time
                     description: Present once the worker has processed the document.
-                    example: '2026-08-20T12:00:01Z'
                   error:
                     type: string
-                    description: 'Present only when status is "invalid": the XSD validation failure detail.'
-                    example: element X is not allowed
+                    description: Present only when status is invalid.
                   content:
                     type: string
-                    description: The original raw XML payload.
-                    example: <Invoice>...</Invoice>
-                required:
-                  - id
-                  - document
-                  - status
-                  - receivedAt
-                  - content
+                    description: The original raw XML payload. Present only when includeContent=true.
+                required: [id, document, status, receivedAt]
               example:
                 id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
                 document: Invoice
                 status: valid
                 receivedAt: '2026-08-20T12:00:00Z'
                 validatedAt: '2026-08-20T12:00:01Z'
-                content: <Invoice>...</Invoice>
+        '400':
+          description: Invalid includeContent query parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: includeContent must be true or false
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -308,8 +275,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: upload not found
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
         '429':
@@ -325,11 +290,8 @@ components:
         error:
           type: string
           example: missing bearer token
-      required:
-        - error
+      required: [error]
       additionalProperties: false
-      example:
-        error: missing bearer token
   responses:
     Unauthorized:
       description: Missing or invalid OAuth 2 bearer token.
@@ -337,32 +299,24 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: missing bearer token
     MethodNotAllowed:
       description: Method not allowed.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: method not allowed
     RateLimited:
       description: Rate limit exceeded.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: rate limit exceeded
     Misconfigured:
       description: 'Server misconfiguration: no OAuth signing secret is configured.'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: server is not configured with an OAuth signing secret
   securitySchemes:
     oauth2:
       type: oauth2
