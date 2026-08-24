@@ -156,6 +156,66 @@ func TestNewHandlerRejectsUnsupportedDocumentType(t *testing.T) {
 	}
 }
 
+// TestNewHandlerRejectsRecognizedLocalNameInWrongNamespace proves the
+// TODO-005 namespace-recognition requirement: a root element whose local
+// name matches a recognized UBL 2.1 document type but whose namespace does
+// not match that type's UBL 2.1 XSD is rejected up front rather than
+// accepted and left to fail asynchronously in the worker (see
+// SERVER-DATAFLOW-2026-08-24.md section 11.11).
+func TestNewHandlerRejectsRecognizedLocalNameInWrongNamespace(t *testing.T) {
+	t.Parallel()
+
+	handler := newTestHandler(t, nil)
+	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", testSecret, time.Hour)
+
+	for _, tc := range []struct {
+		name string
+		body string
+	}{
+		{"wrong namespace", `<Invoice xmlns="urn:example:not-ubl"><cbc:ID>1</cbc:ID></Invoice>`},
+		{"no namespace at all", `<Invoice><cbc:ID>1</cbc:ID></Invoice>`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, tc.body, "application/xml")
+			if res.Code != http.StatusBadRequest {
+				t.Fatalf("status = %d, want %d; body=%s", res.Code, http.StatusBadRequest, res.Body.String())
+			}
+			var payload map[string]any
+			if err := json.Unmarshal(res.Body.Bytes(), &payload); err != nil {
+				t.Fatalf("decode response: %v", err)
+			}
+			errMsg, _ := payload["error"].(string)
+			if !strings.Contains(errMsg, "not a recognized main document") {
+				t.Fatalf("error = %q, want it to mention the document type was not recognized", errMsg)
+			}
+		})
+	}
+}
+
+// TestNewHandlerRejectsOversizedUploadDeterministically proves the
+// TODO-005 acceptance criterion that oversized uploads are rejected
+// deterministically (413) rather than silently truncated to the size
+// limit and processed as if that truncated prefix were the whole document.
+func TestNewHandlerRejectsOversizedUploadDeterministically(t *testing.T) {
+	t.Parallel()
+
+	handler := newTestHandler(t, nil)
+	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", testSecret, time.Hour)
+
+	oversized := strings.Repeat("a", maxUploadBytes+1)
+	res := doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, oversized, "application/xml")
+	if res.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("status = %d, want %d; body=%s", res.Code, http.StatusRequestEntityTooLarge, res.Body.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(res.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("413 response body is not JSON: %v (body=%s)", err, res.Body.String())
+	}
+	if _, ok := payload["error"].(string); !ok {
+		t.Fatalf("response body missing string \"error\" field: %v", payload)
+	}
+}
+
 // TestNewHandlerUploadErrorsAreJSON guards against a regression where
 // POST /api/v1/ubl/upload's 400/500 responses were plain text (via
 // http.Error) instead of the documented application/json ErrorResponse

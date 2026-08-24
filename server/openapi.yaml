@@ -134,7 +134,7 @@ paths:
         /api/v1/ubl/{id} for the outcome once the worker has processed it.
       requestBody:
         required: true
-        description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type.
+        description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.
         content:
           application/xml:
             schema:
@@ -187,11 +187,12 @@ paths:
                 receivedAt: '2026-08-20T12:00:00Z'
         '400':
           description: >-
-            Invalid XML payload or an unrecognized document type. Note: this
-            endpoint no longer performs synchronous XSD validation, so a
-            schema-invalid (but well-formed, recognized-type) document is
-            still accepted with 202 - check its status via GET
-            /api/v1/ubl/{id} once processed.
+            Invalid XML payload, or the root element's local name and/or
+            namespace does not match a recognized UBL 2.1 main document type.
+            Note: this endpoint no longer performs synchronous XSD
+            validation, so a schema-invalid (but well-formed,
+            recognized-type) document is still accepted with 202 - check its
+            status via GET /api/v1/ubl/{id} once processed.
           content:
             application/json:
               schema:
@@ -202,6 +203,18 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
+        '413':
+          description: >-
+            The request body exceeds the maximum allowed upload size (10
+            MiB). The oversized body is rejected outright rather than
+            truncated and processed as if the truncated prefix were the
+            whole document.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: request body exceeds the maximum allowed size of 10485760 bytes
         '429':
           $ref: '#/components/responses/RateLimited'
         '500':

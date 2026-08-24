@@ -279,11 +279,11 @@ sequenceDiagram
 
 The API currently performs only inexpensive checks before accepting work:
 
-1. request body exists;
+1. request body exists and does not exceed the configured upload size limit (10 MiB), enforced exactly via `http.MaxBytesReader` rather than silently truncated (see `TODO-005`);
 2. content type contains `xml` or `octet-stream`;
-3. payload is well-formed XML;
+3. payload is well-formed enough to have a root element - detected via a single `xml.Decoder.Token()` pass that stops at the first `xml.StartElement`, not a full-document parse;
 4. a root element exists;
-5. the root element local name is present in the UBL schema catalog.
+5. the root element's local name **and** namespace match a recognized UBL 2.1 main document type (see `schemaCatalog.expectedNamespaceFor`).
 
 The API **does not invoke `xmllint` synchronously**.
 
@@ -1016,9 +1016,11 @@ Represent the server as a lifecycle-owning application object rather than return
 
 ---
 
-## 11.11 Root-element recognition should include namespace
+## 11.11 Root-element recognition should include namespace — resolved (TODO-005)
 
-The upload detector currently obtains the XML root's local name and compares that local name to the main-document catalog.
+### Former state
+
+The upload detector obtained the XML root's local name and compared only that local name to the main-document catalog.
 
 UBL identity is more safely represented as:
 
@@ -1028,30 +1030,32 @@ UBL identity is more safely represented as:
 
 rather than local name alone.
 
-### Example risk
+### Former risk
 
-An arbitrary XML document whose root happens to be named `Invoice` could pass the cheap recognition stage and be queued, only to fail later under XSD.
+An arbitrary XML document whose root happened to be named `Invoice` could pass the cheap recognition stage and be queued, only to fail later under XSD.
 
-### Recommendation
+### Resolution
 
-Validate both:
+`rootElementOfPayload` now returns both the root element's local name and namespace URI (via a single `xml.Decoder.Token()` pass that stops at the first `xml.StartElement`), and `schemaCatalog.expectedNamespaceFor` exposes each recognized document type's UBL 2.1 target namespace (parsed from each XSD's `targetNamespace` attribute at catalog build time). The upload handler rejects a document unless both match:
 
 ```text
 Local = Invoice
 Namespace = urn:oasis:names:specification:ubl:schema:xsd:Invoice-2
 ```
 
-before acceptance.
+before acceptance. See `TODO-005` in `TODO.md`.
 
 ---
 
-## 11.12 Request-size enforcement has an edge case
+## 11.12 Request-size enforcement has an edge case — resolved (TODO-005)
 
-`io.LimitReader(r.Body, 10<<20)` limits bytes read, but without reading one extra byte or explicitly checking body length it can silently truncate a payload larger than the limit rather than distinctly report `413 Payload Too Large`.
+### Former state
 
-### Recommendation
+`io.LimitReader(r.Body, 10<<20)` limited bytes read, but without reading one extra byte or explicitly checking body length it could silently truncate a payload larger than the limit rather than distinctly report `413 Payload Too Large`.
 
-Use `http.MaxBytesReader` or read up to `limit + 1` and reject oversized requests explicitly.
+### Resolution
+
+`readUploadBody` now rejects a declared oversized `Content-Length` before reading anything, and otherwise wraps the body in `http.MaxBytesReader`, returning a distinct `413 Payload Too Large` (via `errPayloadTooLarge`) instead of silently truncating. Tracked as `TODO-005` in `TODO.md`.
 
 ---
 
@@ -1264,7 +1268,7 @@ Recommended progression:
 
 ```text
 1. Queue namespace configurability (done — TODO-001)
-2. Namespace-aware UBL document recognition
+2. Namespace-aware UBL document recognition (done — TODO-005)
 3. Explicit asynchronous lifecycle states
 4. Reliable enqueue failure/reconciliation behavior
 5. Validator execution timeout/resource bounds

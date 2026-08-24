@@ -21,16 +21,26 @@ import (
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
 )
 
-// schemaCatalog resolves UBL 2.1 root element names to the on-disk path of
-// their main-document XSD, once the embedded schema tree has been extracted.
+// schemaCatalog resolves UBL 2.1 root elements (local name + expected
+// namespace) to the on-disk path of their main-document XSD, once the
+// embedded schema tree has been extracted.
 type schemaCatalog struct {
-	dir           string
-	pathByElement map[string]string
+	dir            string
+	entryByElement map[string]schemaEntry
+}
+
+// schemaEntry is a single recognized UBL 2.1 main document type: its
+// extracted XSD path and the target namespace that document's root element
+// must be declared in (see schemaCatalog.expectedNamespaceFor).
+type schemaEntry struct {
+	path      string
+	namespace string
 }
 
 type xsdRootElement struct {
-	XMLName  xml.Name        `xml:"schema"`
-	Elements []xsdElementRef `xml:"element"`
+	XMLName         xml.Name        `xml:"schema"`
+	TargetNamespace string          `xml:"targetNamespace,attr"`
+	Elements        []xsdElementRef `xml:"element"`
 }
 
 type xsdElementRef struct {
@@ -94,45 +104,60 @@ func buildSchemaCatalog() (*schemaCatalog, error) {
 		return nil, fmt.Errorf("list extracted maindoc schemas: %w", err)
 	}
 
-	catalog := &schemaCatalog{dir: dir, pathByElement: map[string]string{}}
+	catalog := &schemaCatalog{dir: dir, entryByElement: map[string]schemaEntry{}}
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".xsd") {
 			continue
 		}
 		path := filepath.Join(mainDir, entry.Name())
-		root, err := rootElementOf(path)
+		root, namespace, err := rootElementOf(path)
 		if err != nil {
 			return nil, fmt.Errorf("parse root element of %s: %w", entry.Name(), err)
 		}
 		if root != "" {
-			catalog.pathByElement[root] = path
+			catalog.entryByElement[root] = schemaEntry{path: path, namespace: namespace}
 		}
 	}
 	return catalog, nil
 }
 
-func rootElementOf(path string) (string, error) {
+// rootElementOf returns the UBL main-document XSD at path's declared root
+// element local name and the schema's targetNamespace (the namespace that
+// element must be qualified with).
+func rootElementOf(path string) (localName, namespace string, err error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	var doc xsdRootElement
 	if err := xml.Unmarshal(content, &doc); err != nil {
-		return "", err
+		return "", "", err
 	}
 	for _, element := range doc.Elements {
 		if element.Name != "" {
-			return element.Name, nil
+			return element.Name, doc.TargetNamespace, nil
 		}
 	}
-	return "", nil
+	return "", "", nil
 }
 
 // schemaPathFor returns the extracted main-document XSD path for rootElement,
 // or false if rootElement is not a recognized UBL 2.1 document type.
 func (c *schemaCatalog) schemaPathFor(rootElement string) (string, bool) {
-	path, ok := c.pathByElement[rootElement]
-	return path, ok
+	entry, ok := c.entryByElement[rootElement]
+	return entry.path, ok
+}
+
+// expectedNamespaceFor returns the UBL 2.1 target namespace rootElement's
+// XSD requires its root element to be qualified with (e.g.
+// "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" for "Invoice"),
+// or false if rootElement is not a recognized UBL 2.1 document type. Used
+// by the upload handler to reject a document whose root local name happens
+// to match a recognized type but whose namespace does not - see
+// SERVER-DATAFLOW-2026-08-24.md section 11.11.
+func (c *schemaCatalog) expectedNamespaceFor(rootElement string) (string, bool) {
+	entry, ok := c.entryByElement[rootElement]
+	return entry.namespace, ok
 }
 
 // ensureXMLLint verifies the xmllint binary is available on PATH, once.

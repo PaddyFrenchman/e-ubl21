@@ -15,6 +15,8 @@
 // same $ref-based structure to avoid duplicated descriptions.
 package server
 
+import "fmt"
+
 // responseRef returns a "$ref" pointer to the named entry under
 // components.responses.
 func responseRef(name string) map[string]any {
@@ -166,7 +168,7 @@ func openAPIDocument() map[string]any {
 					"description": "Accepts an XML payload, and if it is well-formed and its root element is a recognized UBL 2.1 main document type, queues it on its per-document-type NATS JetStream subject for asynchronous XSD validation and returns immediately with a pending status. Poll GET /api/v1/ubl/{id} for the outcome once the worker has processed it.",
 					"requestBody": map[string]any{
 						"required":    true,
-						"description": "Raw XML document payload for a UBL 2.1 invoice or other supported main document type.",
+						"description": "Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.",
 						"content": map[string]any{
 							"application/xml":          map[string]any{"schema": map[string]any{"type": "string"}},
 							"text/xml":                 map[string]any{"schema": map[string]any{"type": "string"}},
@@ -198,8 +200,12 @@ func openAPIDocument() map[string]any {
 							},
 						},
 						"400": errorResponseWithExample(
-							"Invalid XML payload or an unrecognized document type. Note: this endpoint no longer performs synchronous XSD validation, so a schema-invalid (but well-formed, recognized-type) document is still accepted with 202 - check its status via GET /api/v1/ubl/{id} once processed.",
+							"Invalid XML payload, or the root element's local name and/or namespace does not match a recognized UBL 2.1 main document type. Note: this endpoint no longer performs synchronous XSD validation, so a schema-invalid (but well-formed, recognized-type) document is still accepted with 202 - check its status via GET /api/v1/ubl/{id} once processed.",
 							"invalid XML payload: XML document root element is missing",
+						),
+						"413": errorResponseWithExample(
+							"The request body exceeds the maximum allowed upload size (10 MiB). The oversized body is rejected outright rather than truncated and processed as if the truncated prefix were the whole document.",
+							fmt.Sprintf("request body exceeds the maximum allowed size of %d bytes", maxUploadBytes),
 						),
 						"500": misconfiguredResponse("Alternatively, the document could not be queued (e.g. the NATS/JetStream connection failed)."),
 					},
