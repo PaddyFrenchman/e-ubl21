@@ -31,7 +31,6 @@ type WorkerConfig struct {
 	Prefetch               int
 	AckWait                time.Duration
 	MaxDeliver             int
-	EN16931Mandatory       bool
 	JavaExecutable         string
 	SaxonJARPath           string
 	XMLResolverJARPath     string
@@ -44,6 +43,9 @@ type WorkerConfig struct {
 	UploadContentRetention time.Duration
 	UploadContentMaxBytes  int64
 	Logger                 *slog.Logger
+	// en16931Validator is an internal test seam. Production callers cannot set
+	// it and always pass through checksum verification below.
+	en16931Validator EN16931Validator
 }
 
 const defaultWorkerConsumerName = "ubl-validator"
@@ -112,8 +114,8 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	if err != nil {
 		return err
 	}
-	var en16931Validator EN16931Validator
-	if cfg.EN16931Mandatory {
+	en16931Validator := cfg.en16931Validator
+	if en16931Validator == nil {
 		saxonRuntime := resolveSaxonRuntimeConfig(cfg)
 		if err := ensureSaxonRuntime(ctx, saxonRuntime); err != nil {
 			return err

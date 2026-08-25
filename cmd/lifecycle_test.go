@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
+	"github.com/PaddyFrenchman/e-ubl21/server"
 )
 
 func testCommandConfig(t *testing.T) *Config {
@@ -57,16 +58,23 @@ func TestServeCommandRunsConfiguredFunction(t *testing.T) {
 }
 
 func TestWorkerStartsAndStopsOnContextCancellation(t *testing.T) {
-	s := queuetest.StartServer(t)
-	cfg := &Config{
-		NATSURL:           s.URL,
-		NATSOptions:       s.Options,
-		WorkerMetricsAddr: "",
+	previous := runWorker
+	t.Cleanup(func() { runWorker = previous })
+	started := make(chan struct{})
+	runWorker = func(ctx context.Context, _ server.WorkerConfig) error {
+		close(started)
+		<-ctx.Done()
+		return nil
 	}
+	cfg := &Config{WorkerMetricsAddr: ""}
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	go func() { done <- worker(ctx, cfg) }()
-	time.Sleep(50 * time.Millisecond)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("worker runner was not called")
+	}
 	cancel()
 	select {
 	case err := <-done:

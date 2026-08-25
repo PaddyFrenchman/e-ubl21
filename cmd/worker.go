@@ -14,6 +14,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var runWorker = server.RunWorker
+
 func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	saxon := validationassets.Saxon()
 	en16931 := validationassets.EN16931()
@@ -29,13 +31,12 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	workerCmd.Flags().String("worker-consumer-name", "ubl-validator", "Durable JetStream consumer name (run multiple replicas with the same name to load-balance)")
 	workerCmd.Flags().String("worker-subject-filter", "", "Restrict this worker to a single document type's queue (e.g. ubl.documents.Invoice); empty processes every document type")
 	workerCmd.Flags().String("worker-metrics-addr", ":9091", "Address the worker's Prometheus /metrics and /healthz are served on")
-	workerCmd.Flags().Duration("worker-validation-timeout", 30*time.Second, "Maximum xmllint execution time per document")
+	workerCmd.Flags().Duration("worker-validation-timeout", 30*time.Second, "Maximum total validation time per document")
 	workerCmd.Flags().Int("worker-concurrency", 1, "Maximum documents validated concurrently per worker process")
 	workerCmd.Flags().Int("worker-prefetch", 1, "Maximum pulled documents buffered locally while validations are busy")
 	workerCmd.Flags().Duration("worker-ack-wait", 60*time.Second, "JetStream acknowledgement deadline; must exceed validation timeout")
 	workerCmd.Flags().Int("worker-max-deliver", 5, "Maximum application processing attempts before a durable dead-letter transition")
 	workerCmd.Flags().Int("worker-max-ack-pending", 0, "Fleet-wide outstanding limit on the shared durable consumer (0 uses this replica's concurrency + prefetch)")
-	workerCmd.Flags().Bool("worker-en16931-mandatory", true, "Require the pinned local EN 16931/Saxon runtime and fail startup when it is unavailable")
 	workerCmd.Flags().String("worker-java-executable", "java", "Java executable used for Saxon")
 	workerCmd.Flags().String("worker-saxon-jar-path", saxon.SaxonJARPath, "Path to the pinned Saxon-HE JAR")
 	workerCmd.Flags().String("worker-xmlresolver-jar-path", saxon.XMLResolverJARPath, "Path to the pinned xmlresolver JAR")
@@ -52,7 +53,6 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	mustBindLocalFlag(v, workerCmd, "worker-ack-wait")
 	mustBindLocalFlag(v, workerCmd, "worker-max-deliver")
 	mustBindLocalFlag(v, workerCmd, "worker-max-ack-pending")
-	mustBindLocalFlag(v, workerCmd, "worker-en16931-mandatory")
 	mustBindLocalFlag(v, workerCmd, "worker-java-executable")
 	mustBindLocalFlag(v, workerCmd, "worker-saxon-jar-path")
 	mustBindLocalFlag(v, workerCmd, "worker-xmlresolver-jar-path")
@@ -73,7 +73,7 @@ func worker(ctx context.Context, cfg *Config) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	return server.RunWorker(ctx, server.WorkerConfig{
+	return runWorker(ctx, server.WorkerConfig{
 		NATSURL:                cfg.NATSURL,
 		NATSOptions:            cfg.NATSOptions,
 		QueueNamespace:         cfg.QueueNamespace,
@@ -86,7 +86,6 @@ func worker(ctx context.Context, cfg *Config) error {
 		AckWait:                cfg.WorkerAckWait,
 		MaxDeliver:             cfg.WorkerMaxDeliver,
 		MaxAckPending:          cfg.WorkerMaxAckPending,
-		EN16931Mandatory:       cfg.WorkerEN16931Mandatory,
 		JavaExecutable:         cfg.WorkerJavaExecutable,
 		SaxonJARPath:           cfg.WorkerSaxonJARPath,
 		XMLResolverJARPath:     cfg.WorkerXMLResolverJARPath,

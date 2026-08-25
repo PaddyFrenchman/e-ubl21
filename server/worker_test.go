@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -21,6 +22,15 @@ func runTestWorker(t *testing.T, cfg Config, overrides func(*WorkerConfig)) {
 	workerCfg := WorkerConfig{
 		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace,
 		UploadContentRetention: cfg.UploadContentRetention, UploadContentMaxBytes: cfg.UploadContentMaxBytes,
+		en16931Validator: en16931ValidatorFunc(func(_ context.Context, xml io.Reader) (queue.ValidationStageResult, error) {
+			if _, err := io.Copy(io.Discard, xml); err != nil {
+				return queue.ValidationStageResult{}, err
+			}
+			return queue.ValidationStageResult{
+				Layer: queue.ValidationLayerEN16931, Version: "test", Valid: true,
+				ValidatedAt: time.Now().UTC().Format(time.RFC3339Nano),
+			}, nil
+		}),
 	}
 	if overrides != nil {
 		overrides(&workerCfg)
@@ -681,7 +691,7 @@ func TestMandatoryWorkerRunsOrderedEN16931Pipeline(t *testing.T) {
 	}
 	cfg := testConfig(t, nil)
 	runTestWorker(t, cfg, func(worker *WorkerConfig) {
-		worker.EN16931Mandatory = true
+		worker.en16931Validator = nil
 		worker.JavaExecutable = runtime.javaExecutable
 		worker.SaxonJARPath = runtime.saxonJARPath
 		worker.XMLResolverJARPath = runtime.xmlResolverJARPath
@@ -773,8 +783,8 @@ func TestWorkerFlagsSchemaInvalidDocument(t *testing.T) {
 func assertHTTPXSDStage(t *testing.T, stored map[string]any, valid bool) {
 	t.Helper()
 	stages, ok := stored["validationStages"].([]any)
-	if !ok || len(stages) != 1 {
-		t.Fatalf("validationStages = %#v, want one XSD stage", stored["validationStages"])
+	if !ok || len(stages) == 0 {
+		t.Fatalf("validationStages = %#v, want XSD stage first", stored["validationStages"])
 	}
 	stage, ok := stages[0].(map[string]any)
 	if !ok || stage["layer"] != string(queue.ValidationLayerUBL21XSD) || stage["version"] != "2.1" || stage["valid"] != valid {

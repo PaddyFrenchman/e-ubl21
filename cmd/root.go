@@ -46,7 +46,6 @@ type Config struct {
 	WorkerAckWait                time.Duration
 	WorkerMaxDeliver             int
 	WorkerMaxAckPending          int
-	WorkerEN16931Mandatory       bool
 	WorkerJavaExecutable         string
 	WorkerSaxonJARPath           string
 	WorkerXMLResolverJARPath     string
@@ -169,7 +168,6 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-ack-wait", 60*time.Second)
 	v.SetDefault("worker-max-deliver", 5)
 	v.SetDefault("worker-max-ack-pending", 0)
-	v.SetDefault("worker-en16931-mandatory", true)
 	v.SetDefault("worker-java-executable", "java")
 	v.SetDefault("worker-saxon-startup-timeout", 30*time.Second)
 	v.SetEnvPrefix("EUBL21")
@@ -226,7 +224,6 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerAckWait = v.GetDuration("worker-ack-wait")
 	cfg.WorkerMaxDeliver = v.GetInt("worker-max-deliver")
 	cfg.WorkerMaxAckPending = v.GetInt("worker-max-ack-pending")
-	cfg.WorkerEN16931Mandatory = v.GetBool("worker-en16931-mandatory")
 	cfg.WorkerJavaExecutable = v.GetString("worker-java-executable")
 	cfg.WorkerSaxonJARPath = v.GetString("worker-saxon-jar-path")
 	cfg.WorkerXMLResolverJARPath = v.GetString("worker-xmlresolver-jar-path")

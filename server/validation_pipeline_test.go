@@ -147,6 +147,34 @@ func TestDocumentValidationPipelineSkipsENForStructuralUBL(t *testing.T) {
 	}
 }
 
+func TestDocumentValidationPipelineRequiresENForBillingDocuments(t *testing.T) {
+	for _, documentType := range []string{"Invoice", "CreditNote"} {
+		t.Run(documentType, func(t *testing.T) {
+			source := &memoryValidationContentSource{content: []byte("<" + documentType + "/>")}
+			pipeline := newDocumentValidationPipeline(source, nil, time.Second)
+			pipeline.xsdValidate = func(context.Context, string, io.Reader, time.Duration) error { return nil }
+
+			result, err := pipeline.Validate(context.Background(), "upload", documentType, "billing.xsd")
+			if err == nil || !strings.Contains(err.Error(), "EN 16931 validator is required for "+documentType) || !reflect.DeepEqual(result, documentValidationResult{}) {
+				t.Fatalf("result/error = %+v / %v", result, err)
+			}
+			if source.opens != 1 || !source.readers[0].closed {
+				t.Fatalf("XSD stream lifecycle: opens=%d readers=%+v", source.opens, source.readers)
+			}
+		})
+	}
+
+	t.Run("Order remains XSD-only", func(t *testing.T) {
+		source := &memoryValidationContentSource{content: []byte(`<Order/>`)}
+		pipeline := newDocumentValidationPipeline(source, nil, time.Second)
+		pipeline.xsdValidate = func(context.Context, string, io.Reader, time.Duration) error { return nil }
+		result, err := pipeline.Validate(context.Background(), "upload", "Order", "order.xsd")
+		if err != nil || result.Status != queue.StatusValid || len(result.Stages) != 1 {
+			t.Fatalf("result/error = %+v / %v", result, err)
+		}
+	})
+}
+
 func TestDocumentValidationPipelineReturnsOperationalFailures(t *testing.T) {
 	t.Run("XSD process failure", func(t *testing.T) {
 		source := &memoryValidationContentSource{content: []byte(`<Invoice/>`)}

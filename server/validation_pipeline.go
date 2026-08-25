@@ -29,8 +29,7 @@ type documentValidationResult struct {
 }
 
 // documentValidationPipeline owns mandatory stage ordering and short-circuit
-// policy. A nil EN 16931 validator is supported only for direct-library staged
-// rollout mode; the production worker CLI always supplies the verified runtime.
+// policy. Invoice and CreditNote can never succeed without an EN validator.
 type documentValidationPipeline struct {
 	content     validationContentSource
 	en16931     EN16931Validator
@@ -93,7 +92,10 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 	}
 
 	stages := queue.ValidationStages{xsdStage}
-	if requiresEN16931(documentType) && pipeline.en16931 != nil {
+	if requiresEN16931(documentType) {
+		if pipeline.en16931 == nil {
+			return documentValidationResult{}, fmt.Errorf("EN 16931 validator is required for %s", documentType)
+		}
 		var enStage queue.ValidationStageResult
 		enErr := pipeline.withContent(validationCtx, uploadID, func(reader io.Reader) error {
 			var err error

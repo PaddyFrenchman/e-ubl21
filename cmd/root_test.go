@@ -23,6 +23,17 @@ func TestRootCommandBuildsAndPrintsHelp(t *testing.T) {
 	}
 }
 
+func TestWorkerCommandMakesEN16931MandatoryAndDescribesOverallTimeout(t *testing.T) {
+	worker := newWorkerCmd(viper.New(), &Config{})
+	if flag := worker.Flags().Lookup("worker-en16931-mandatory"); flag != nil {
+		t.Fatal("worker still exposes an EN 16931 disable switch")
+	}
+	timeout := worker.Flags().Lookup("worker-validation-timeout")
+	if timeout == nil || timeout.Usage != "Maximum total validation time per document" {
+		t.Fatalf("validation timeout help = %#v", timeout)
+	}
+}
+
 func TestLoadConfigReadsFileAndEnvironment(t *testing.T) {
 	tempDir := t.TempDir()
 	configFile := filepath.Join(tempDir, "config.yaml")
@@ -69,8 +80,8 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	if cfg.UploadContentRetention != 30*24*time.Hour || cfg.UploadContentMaxBytes != 10<<30 {
 		t.Fatalf("default upload content limits = retention %s, max bytes %d", cfg.UploadContentRetention, cfg.UploadContentMaxBytes)
 	}
-	if !cfg.WorkerEN16931Mandatory || cfg.WorkerJavaExecutable != "java" || cfg.WorkerSaxonStartupTimeout != 30*time.Second {
-		t.Fatalf("default worker EN 16931 runtime config = mandatory %t, java %q, startup timeout %s", cfg.WorkerEN16931Mandatory, cfg.WorkerJavaExecutable, cfg.WorkerSaxonStartupTimeout)
+	if cfg.WorkerJavaExecutable != "java" || cfg.WorkerSaxonStartupTimeout != 30*time.Second {
+		t.Fatalf("default worker EN 16931 runtime config = java %q, startup timeout %s", cfg.WorkerJavaExecutable, cfg.WorkerSaxonStartupTimeout)
 	}
 }
 
@@ -109,7 +120,6 @@ func TestLoadConfigReadsWorkerValidationTimeout(t *testing.T) {
 	t.Setenv("EUBL21_WORKER_ACK_WAIT", "2s")
 	t.Setenv("EUBL21_WORKER_MAX_DELIVER", "9")
 	t.Setenv("EUBL21_WORKER_MAX_ACK_PENDING", "12")
-	t.Setenv("EUBL21_WORKER_EN16931_MANDATORY", "false")
 	t.Setenv("EUBL21_WORKER_JAVA_EXECUTABLE", "/test/java")
 	t.Setenv("EUBL21_WORKER_SAXON_STARTUP_TIMEOUT", "4s")
 	cfg := &Config{}
@@ -122,8 +132,8 @@ func TestLoadConfigReadsWorkerValidationTimeout(t *testing.T) {
 	if cfg.WorkerConcurrency != 3 || cfg.WorkerPrefetch != 4 || cfg.WorkerAckWait != 2*time.Second || cfg.WorkerMaxDeliver != 9 || cfg.WorkerMaxAckPending != 12 {
 		t.Fatalf("worker delivery config = concurrency %d, prefetch %d, ack wait %s, max deliver %d, max ack pending %d", cfg.WorkerConcurrency, cfg.WorkerPrefetch, cfg.WorkerAckWait, cfg.WorkerMaxDeliver, cfg.WorkerMaxAckPending)
 	}
-	if cfg.WorkerEN16931Mandatory || cfg.WorkerJavaExecutable != "/test/java" || cfg.WorkerSaxonStartupTimeout != 4*time.Second {
-		t.Fatalf("worker EN 16931 runtime config = mandatory %t, java %q, startup timeout %s", cfg.WorkerEN16931Mandatory, cfg.WorkerJavaExecutable, cfg.WorkerSaxonStartupTimeout)
+	if cfg.WorkerJavaExecutable != "/test/java" || cfg.WorkerSaxonStartupTimeout != 4*time.Second {
+		t.Fatalf("worker EN 16931 runtime config = java %q, startup timeout %s", cfg.WorkerJavaExecutable, cfg.WorkerSaxonStartupTimeout)
 	}
 }
 

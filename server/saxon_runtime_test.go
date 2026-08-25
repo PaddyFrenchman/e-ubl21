@@ -85,8 +85,7 @@ func TestEnsureSaxonRuntimeRejectsBrokenDependencies(t *testing.T) {
 
 func TestMandatoryEN16931RuntimeFailsBeforeNATSConnection(t *testing.T) {
 	err := RunWorker(context.Background(), WorkerConfig{
-		EN16931Mandatory: true,
-		JavaExecutable:   filepath.Join(t.TempDir(), "missing-java"),
+		JavaExecutable: filepath.Join(t.TempDir(), "missing-java"),
 	})
 	if err == nil || !strings.Contains(err.Error(), "EN 16931 runtime: Java executable") {
 		t.Fatalf("RunWorker() error = %v", err)

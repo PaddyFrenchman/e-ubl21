@@ -184,7 +184,7 @@ Provide a production-grade XSLT processor for the official EN 16931 stylesheet.
   - Saxon classes load;
   - EN 16931 XSLT exists and is readable;
   - optional one-time smoke transform proves the packaged combination works.
-- Fail worker startup clearly if EN 16931 is configured as mandatory but its runtime cannot be initialized.
+- Fail worker startup clearly if the mandatory EN 16931 runtime cannot be initialized.
 - Ensure the transform does not resolve arbitrary network resources.
 
 ### Acceptance criteria
@@ -193,10 +193,9 @@ The production worker image can execute the pinned EN 16931 XSLT without network
 
 Implemented by `server/saxon_runtime.go`, the pinned metadata and restricted
 configuration in `validation-assets`, and the worker/container configuration.
-The mandatory worker CLI verifies Java, both JAR digests, configuration and
-XSLT digests, then executes a real SVRL smoke transform before connecting to
-NATS. Direct library callers may explicitly leave EN 16931 non-mandatory while
-embedding the worker during the staged rollout.
+The worker verifies Java, both JAR digests, configuration and XSLT digests,
+then executes a real SVRL smoke transform before connecting to NATS. EN 16931
+is a server invariant rather than an optional worker mode.
 
 ---
 
@@ -433,10 +432,10 @@ reader cannot keep the worker call blocked after validator cancellation.
 `xmllint` exit code 3 is classified as standards-invalid; missing validators,
 other process exits, timeouts, content-stream failures and EN/SVRL failures are
 operational errors. Stage results remain ordered and EN issues remain
-structured. Direct library callers may retain the documented staged-rollout
-XSD-only mode by leaving EN non-mandatory; the production CLI defaults it to
-mandatory and constructs the adapter only after `ensureSaxonRuntime()` verifies
-all pinned asset hashes.
+structured. The worker has no configuration that disables mandatory EN 16931;
+it constructs the adapter only after `ensureSaxonRuntime()` verifies all pinned
+asset hashes. A missing adapter is itself an operational pipeline failure for
+Invoice and CreditNote, never a successful XSD-only result.
 
 Focused tests prove stage ordering, XSD short-circuiting, billing versus
 non-billing scope, independent content reopening, reader closure, semantic and
@@ -446,6 +445,12 @@ runs the pinned runtime end to end, proving the official guide invoice produces
 ordered passing stages while an XSD-valid but semantically incomplete Invoice
 is no longer recorded as valid. Durable crash/retry/replay transition auditing
 remains TODO-EN-16931-008.
+
+The former `--worker-en16931-mandatory` rollout switch has been removed. The
+pipeline explicitly rejects a missing EN adapter for Invoice and CreditNote as
+an operational error; Order and other non-billing UBL roots remain valid after
+their required XSD-only pipeline. Command and pipeline regression tests freeze
+both the mandatory behavior and the overall-validation timeout wording.
 
 ---
 
