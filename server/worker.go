@@ -93,7 +93,7 @@ func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, erro
 }
 
 func RunWorker(ctx context.Context, cfg WorkerConfig) error {
-	if err := validateUploadContentLimits(cfg.UploadContentRetention, cfg.UploadContentMaxBytes); err != nil {
+	if err := ValidateUploadContentLimits(cfg.UploadContentRetention, cfg.UploadContentMaxBytes); err != nil {
 		return err
 	}
 	logger := cfg.Logger

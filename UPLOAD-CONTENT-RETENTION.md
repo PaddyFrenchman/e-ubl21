@@ -63,6 +63,20 @@ is reached and either increase capacity or reduce retention.
 The permanent per-upload result event introduced by TODO-009 is stored in a
 separate stream and is not counted in the raw-content Object Store quota.
 
+### Deleted-object metadata
+
+JetStream Object Store deletion removes an object's payload chunks but retains
+a delete-marker metadata record. Ordinary `List` calls exclude these deleted
+entries, which keeps the expiry scan proportional to active raw objects, but
+the tombstones remain part of the bucket's physical history and can accumulate
+in very high-volume, long-running installations.
+
+The hard Object Store byte cap still bounds payloads and tombstone metadata,
+and `e_ubl21_upload_content_storage_bytes` reports their combined physical
+usage. This release deliberately does not purge tombstones automatically. A
+future purge policy should use deleted-entry listing and an explicit grace
+period, and must be designed so it cannot affect active or pending uploads.
+
 ## Metrics
 
 The API `/metrics` endpoint exposes:

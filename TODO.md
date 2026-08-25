@@ -474,6 +474,11 @@ reclaimed payload bytes. Operational configuration, capacity behavior,
 multi-replica requirements, API semantics, metrics, and upgrade behavior are
 documented in `UPLOAD-CONTENT-RETENTION.md`.
 
+Object Store deletion tombstones remain subject to the same hard bucket cap.
+Their long-running storage impact and the need for a separately designed,
+graceful tombstone-purge policy are documented rather than hidden by the raw
+payload expiry guarantee.
+
 ### Acceptance criteria
 
 Raw XML storage is bounded by deployer policy without deleting unprocessed

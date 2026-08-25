@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/PaddyFrenchman/e-ubl21/server"
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -217,17 +218,8 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	return nil
 }
 
-const minimumUploadContentRetention = time.Minute
-const minimumUploadContentMaxBytes = 16 << 20
-
 func validateUploadContentConfig(cfg *Config) error {
-	if cfg.UploadContentRetention < 0 || (cfg.UploadContentRetention > 0 && cfg.UploadContentRetention < minimumUploadContentRetention) {
-		return fmt.Errorf("upload-content-retention must be 0 (disabled) or at least %s", minimumUploadContentRetention)
-	}
-	if cfg.UploadContentMaxBytes < 0 || (cfg.UploadContentMaxBytes > 0 && cfg.UploadContentMaxBytes < minimumUploadContentMaxBytes) {
-		return fmt.Errorf("upload-content-max-bytes must be 0 (unlimited) or at least %d", minimumUploadContentMaxBytes)
-	}
-	return nil
+	return server.ValidateUploadContentLimits(cfg.UploadContentRetention, cfg.UploadContentMaxBytes)
 }
 
 const minimumHTTPTimeout = time.Second

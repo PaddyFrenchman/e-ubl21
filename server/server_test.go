@@ -94,12 +94,27 @@ func TestApplicationCloseReleasesNATSConnection(t *testing.T) {
 	}
 }
 
-func TestRuntimeRejectsNegativeUploadContentLimitsBeforeConnecting(t *testing.T) {
-	if _, err := NewApplication(Config{UploadContentRetention: -time.Second}); err == nil {
-		t.Fatal("NewApplication accepted negative content retention")
+func TestRuntimeEnforcesUploadContentLimitsBeforeConnecting(t *testing.T) {
+	for _, retention := range []time.Duration{-time.Second, 5 * time.Second} {
+		if _, err := NewApplication(Config{UploadContentRetention: retention}); err == nil {
+			t.Fatalf("NewApplication accepted unsafe content retention %s", retention)
+		}
 	}
-	if err := RunWorker(context.Background(), WorkerConfig{UploadContentMaxBytes: -1}); err == nil {
-		t.Fatal("RunWorker accepted negative Object Store byte limit")
+	for _, maxBytes := range []int64{-1, 1 << 20} {
+		if err := RunWorker(context.Background(), WorkerConfig{UploadContentMaxBytes: maxBytes}); err == nil {
+			t.Fatalf("RunWorker accepted unsafe Object Store byte limit %d", maxBytes)
+		}
+	}
+	for _, limits := range []struct {
+		retention time.Duration
+		maxBytes  int64
+	}{
+		{},
+		{retention: time.Minute, maxBytes: 16 << 20},
+	} {
+		if err := ValidateUploadContentLimits(limits.retention, limits.maxBytes); err != nil {
+			t.Fatalf("valid limits retention=%s maxBytes=%d: %v", limits.retention, limits.maxBytes, err)
+		}
 	}
 }
 

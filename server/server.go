@@ -62,7 +62,7 @@ func (a *Application) Close() {
 }
 
 func NewApplication(cfg Config) (*Application, error) {
-	if err := validateUploadContentLimits(cfg.UploadContentRetention, cfg.UploadContentMaxBytes); err != nil {
+	if err := ValidateUploadContentLimits(cfg.UploadContentRetention, cfg.UploadContentMaxBytes); err != nil {
 		return nil, err
 	}
 	logger := cfg.Logger
@@ -150,12 +150,17 @@ func NewApplication(cfg Config) (*Application, error) {
 	return application, nil
 }
 
-func validateUploadContentLimits(retention time.Duration, maxBytes int64) error {
-	if retention < 0 {
-		return fmt.Errorf("upload content retention must be non-negative")
+const minimumUploadContentRetention = time.Minute
+const minimumUploadContentMaxBytes int64 = 16 << 20
+
+// ValidateUploadContentLimits applies the shared safety rules used by the CLI,
+// HTTP application, and worker runtime.
+func ValidateUploadContentLimits(retention time.Duration, maxBytes int64) error {
+	if retention < 0 || (retention > 0 && retention < minimumUploadContentRetention) {
+		return fmt.Errorf("upload content retention must be 0 (disabled) or at least %s", minimumUploadContentRetention)
 	}
-	if maxBytes < 0 {
-		return fmt.Errorf("upload content max bytes must be non-negative")
+	if maxBytes < 0 || (maxBytes > 0 && maxBytes < minimumUploadContentMaxBytes) {
+		return fmt.Errorf("upload content max bytes must be 0 (unlimited) or at least %d", minimumUploadContentMaxBytes)
 	}
 	return nil
 }
