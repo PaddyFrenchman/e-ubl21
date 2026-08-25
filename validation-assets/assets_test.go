@@ -77,6 +77,26 @@ func TestStageEN16931RejectsEmptyRoot(t *testing.T) {
 	}
 }
 
+func TestStageRuntimeAssetsIncludesRestrictedSaxonConfiguration(t *testing.T) {
+	root := t.TempDir()
+	staged, err := StageRuntimeAssets(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(staged) != 2 {
+		t.Fatalf("StageRuntimeAssets() staged %d files, want 2", len(staged))
+	}
+	configuration, err := os.ReadFile(filepath.Join(root, "saxon", "saxon-config.xml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{`allowedProtocols="file"`, `allowExternalFunctions="false"`, `disableXslEvaluate="true"`} {
+		if !bytes.Contains(configuration, []byte(required)) {
+			t.Errorf("Saxon configuration does not contain %s", required)
+		}
+	}
+}
+
 func TestRecordedEN16931ChecksumMatchesProfile(t *testing.T) {
 	profile := EN16931()
 	manifest, err := os.ReadFile(filepath.Join("en16931", profile.Version, "sha256.txt"))

@@ -153,7 +153,7 @@ capacity behavior, metrics, and upgrade operations.
 
 ## UBL XSD validation
 
-The authoritative UBL 2.1 XSD tree is embedded in the binary and extracted for `xmllint` use. The worker validates against the schema selected by document type. Schematron, EN 16931 and PEPPOL business-rule validation are not part of the server's current validation milestone.
+The authoritative UBL 2.1 XSD tree is embedded in the binary and extracted for `xmllint` use. The worker validates against the schema selected by document type. The production worker image also packages pinned Java 21, Saxon-HE 12.7, xmlresolver 6.0.17, and the EN 16931 1.3.16 stylesheet. Worker CLI startup requires that semantic runtime by default and performs a checksum-verified smoke transform before connecting to NATS. Saxon is restricted to local `file:` resources with external functions and dynamic evaluation disabled. Wiring its SVRL output into document processing is handled by the later EN 16931 roadmap steps; PEPPOL validation is not part of this milestone.
 
 ## Rate limiting and observability
 

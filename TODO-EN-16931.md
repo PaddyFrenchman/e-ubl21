@@ -168,7 +168,7 @@ the `Dockerfile`. The controlled upgrade procedure is documented in
 
 ---
 
-## TODO-EN-16931-003 — Package and validate the Saxon runtime
+## TODO-EN-16931-003 — Package and validate the Saxon runtime ✅ DONE
 
 ### Goal
 
@@ -190,6 +190,13 @@ Provide a production-grade XSLT processor for the official EN 16931 stylesheet.
 ### Acceptance criteria
 
 The production worker image can execute the pinned EN 16931 XSLT without network access and fails fast on a broken Saxon/XSLT installation.
+
+Implemented by `server/saxon_runtime.go`, the pinned metadata and restricted
+configuration in `validation-assets`, and the worker/container configuration.
+The mandatory worker CLI verifies Java, both JAR digests, configuration and
+XSLT digests, then executes a real SVRL smoke transform before connecting to
+NATS. Direct library callers may explicitly leave EN 16931 non-mandatory while
+embedding the worker during the staged rollout.
 
 ---
 

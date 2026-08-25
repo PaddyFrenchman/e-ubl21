@@ -12,10 +12,11 @@ import (
 
 func main() {
 	stageDir := flag.String("stage-dir", "", "optional directory beneath which to stage verified runtime assets")
+	saxonDir := flag.String("saxon-dir", "", "optional directory containing downloaded Saxon and xmlresolver JARs to verify")
 	flag.Parse()
 
 	profile := validationassets.EN16931()
-	staged := ""
+	var staged []string
 	if *stageDir == "" {
 		if err := validationassets.VerifyEN16931(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -23,7 +24,7 @@ func main() {
 		}
 	} else {
 		var err error
-		staged, err = validationassets.StageEN16931(*stageDir)
+		staged, err = validationassets.StageRuntimeAssets(*stageDir)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -36,7 +37,15 @@ func main() {
 		profile.XSLTSHA256,
 		profile.RuntimeXSLTPath,
 	)
-	if staged != "" {
-		fmt.Printf("staged=%s\n", staged)
+	for _, path := range staged {
+		fmt.Printf("staged=%s\n", path)
+	}
+	if *saxonDir != "" {
+		if err := validationassets.VerifySaxonJARs(*saxonDir); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		saxon := validationassets.Saxon()
+		fmt.Printf("verified saxon=%s xmlresolver=%s directory=%s\n", saxon.SaxonVersion, saxon.XMLResolverVersion, *saxonDir)
 	}
 }

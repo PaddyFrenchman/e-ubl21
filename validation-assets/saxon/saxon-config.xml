@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns="http://saxon.sf.net/ns/configuration" edition="HE">
+  <!-- The official stylesheet and source document are local files. No EN
+       validation transform may resolve HTTP, HTTPS, FTP, or JAR resources. -->
+  <global allowedProtocols="file"
+          allowExternalFunctions="false"/>
+  <xslt disableXslEvaluate="true"/>
+</configuration>

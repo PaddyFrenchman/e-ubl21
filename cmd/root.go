@@ -14,38 +14,45 @@ import (
 )
 
 type Config struct {
-	ConfigFile              string
-	Host                    string
-	Port                    int
-	OpenAPIPath             string
-	SwaggerPath             string
-	OAuthIssuer             string
-	OAuthAudience           string
-	OAuthHMACSecret         string
-	NATSURL                 string
-	NATSOptions             []nats.Option
-	QueueNamespace          queue.Namespace
-	RateLimitRPS            float64
-	RateLimitBurst          int
-	TLSCertFile             string
-	TLSKeyFile              string
-	HTTPReadHeaderTimeout   time.Duration
-	HTTPReadTimeout         time.Duration
-	HTTPWriteTimeout        time.Duration
-	HTTPIdleTimeout         time.Duration
-	HTTPShutdownTimeout     time.Duration
-	HTTPMaxHeaderBytes      int
-	UploadContentRetention  time.Duration
-	UploadContentMaxBytes   int64
-	WorkerConsumerName      string
-	WorkerSubjectFilter     string
-	WorkerMetricsAddr       string
-	WorkerValidationTimeout time.Duration
-	WorkerConcurrency       int
-	WorkerPrefetch          int
-	WorkerAckWait           time.Duration
-	WorkerMaxDeliver        int
-	WorkerMaxAckPending     int
+	ConfigFile                   string
+	Host                         string
+	Port                         int
+	OpenAPIPath                  string
+	SwaggerPath                  string
+	OAuthIssuer                  string
+	OAuthAudience                string
+	OAuthHMACSecret              string
+	NATSURL                      string
+	NATSOptions                  []nats.Option
+	QueueNamespace               queue.Namespace
+	RateLimitRPS                 float64
+	RateLimitBurst               int
+	TLSCertFile                  string
+	TLSKeyFile                   string
+	HTTPReadHeaderTimeout        time.Duration
+	HTTPReadTimeout              time.Duration
+	HTTPWriteTimeout             time.Duration
+	HTTPIdleTimeout              time.Duration
+	HTTPShutdownTimeout          time.Duration
+	HTTPMaxHeaderBytes           int
+	UploadContentRetention       time.Duration
+	UploadContentMaxBytes        int64
+	WorkerConsumerName           string
+	WorkerSubjectFilter          string
+	WorkerMetricsAddr            string
+	WorkerValidationTimeout      time.Duration
+	WorkerConcurrency            int
+	WorkerPrefetch               int
+	WorkerAckWait                time.Duration
+	WorkerMaxDeliver             int
+	WorkerMaxAckPending          int
+	WorkerEN16931Mandatory       bool
+	WorkerJavaExecutable         string
+	WorkerSaxonJARPath           string
+	WorkerXMLResolverJARPath     string
+	WorkerSaxonConfigurationPath string
+	WorkerEN16931XSLTPath        string
+	WorkerSaxonStartupTimeout    time.Duration
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -162,6 +169,9 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-ack-wait", 60*time.Second)
 	v.SetDefault("worker-max-deliver", 5)
 	v.SetDefault("worker-max-ack-pending", 0)
+	v.SetDefault("worker-en16931-mandatory", true)
+	v.SetDefault("worker-java-executable", "java")
+	v.SetDefault("worker-saxon-startup-timeout", 30*time.Second)
 	v.SetEnvPrefix("EUBL21")
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
@@ -216,6 +226,13 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerAckWait = v.GetDuration("worker-ack-wait")
 	cfg.WorkerMaxDeliver = v.GetInt("worker-max-deliver")
 	cfg.WorkerMaxAckPending = v.GetInt("worker-max-ack-pending")
+	cfg.WorkerEN16931Mandatory = v.GetBool("worker-en16931-mandatory")
+	cfg.WorkerJavaExecutable = v.GetString("worker-java-executable")
+	cfg.WorkerSaxonJARPath = v.GetString("worker-saxon-jar-path")
+	cfg.WorkerXMLResolverJARPath = v.GetString("worker-xmlresolver-jar-path")
+	cfg.WorkerSaxonConfigurationPath = v.GetString("worker-saxon-configuration-path")
+	cfg.WorkerEN16931XSLTPath = v.GetString("worker-en16931-xslt-path")
+	cfg.WorkerSaxonStartupTimeout = v.GetDuration("worker-saxon-startup-timeout")
 
 	return nil
 }

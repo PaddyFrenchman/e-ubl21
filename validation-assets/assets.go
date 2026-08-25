@@ -63,7 +63,7 @@ func EN16931() Profile {
 // Embed versioned stylesheets without selecting a version here. The profile
 // above is the only version selector and verification rejects any mismatch.
 //
-//go:embed en16931/*/*.xslt
+//go:embed en16931/*/*.xslt saxon/saxon-config.xml
 var files embed.FS
 
 // OpenEN16931XSLT opens the exact stylesheet represented by EN16931. The
@@ -109,4 +109,31 @@ func StageEN16931(root string) (string, error) {
 		return "", fmt.Errorf("stage %s stylesheet: %w", en16931.Name, err)
 	}
 	return destination, nil
+}
+
+// StageRuntimeAssets stages every source-controlled file needed by the
+// semantic runtime. Downloaded JARs are handled separately and are also
+// checksum-verified before entering the image.
+func StageRuntimeAssets(root string) ([]string, error) {
+	xslt, err := StageEN16931(root)
+	if err != nil {
+		return nil, err
+	}
+	configPath := "saxon/saxon-config.xml"
+	content, err := files.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("read Saxon configuration: %w", err)
+	}
+	actualConfigSHA256 := fmt.Sprintf("%x", sha256.Sum256(content))
+	if actualConfigSHA256 != saxon.ConfigurationSHA256 {
+		return nil, fmt.Errorf("verify Saxon configuration: SHA-256 mismatch: expected %s, got %s", saxon.ConfigurationSHA256, actualConfigSHA256)
+	}
+	destination := filepath.Join(root, filepath.FromSlash(configPath))
+	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
+		return nil, fmt.Errorf("create Saxon configuration directory: %w", err)
+	}
+	if err := os.WriteFile(destination, content, 0o644); err != nil {
+		return nil, fmt.Errorf("stage Saxon configuration: %w", err)
+	}
+	return []string{xslt, destination}, nil
 }

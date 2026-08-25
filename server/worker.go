@@ -20,17 +20,24 @@ import (
 )
 
 type WorkerConfig struct {
-	NATSURL           string
-	NATSOptions       []nats.Option
-	QueueNamespace    queue.Namespace
-	ConsumerName      string
-	SubjectFilter     string
-	MetricsAddr       string
-	ValidationTimeout time.Duration
-	Concurrency       int
-	Prefetch          int
-	AckWait           time.Duration
-	MaxDeliver        int
+	NATSURL                string
+	NATSOptions            []nats.Option
+	QueueNamespace         queue.Namespace
+	ConsumerName           string
+	SubjectFilter          string
+	MetricsAddr            string
+	ValidationTimeout      time.Duration
+	Concurrency            int
+	Prefetch               int
+	AckWait                time.Duration
+	MaxDeliver             int
+	EN16931Mandatory       bool
+	JavaExecutable         string
+	SaxonJARPath           string
+	XMLResolverJARPath     string
+	SaxonConfigurationPath string
+	EN16931XSLTPath        string
+	SaxonStartupTimeout    time.Duration
 	// MaxAckPending is the fleet-wide outstanding-message limit on the shared
 	// durable consumer. Zero derives Concurrency + Prefetch for one replica.
 	MaxAckPending          int
@@ -104,6 +111,11 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	settings, err := resolveWorkerRuntimeSettings(cfg)
 	if err != nil {
 		return err
+	}
+	if cfg.EN16931Mandatory {
+		if err := ensureSaxonRuntime(ctx, resolveSaxonRuntimeConfig(cfg)); err != nil {
+			return err
+		}
 	}
 
 	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)

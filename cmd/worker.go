@@ -9,11 +9,14 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/server"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
+	saxon := validationassets.Saxon()
+	en16931 := validationassets.EN16931()
 	workerCmd := &cobra.Command{
 		Use:   "worker",
 		Short: "Consume queued UBL documents from NATS JetStream and validate them",
@@ -32,6 +35,13 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	workerCmd.Flags().Duration("worker-ack-wait", 60*time.Second, "JetStream acknowledgement deadline; must exceed validation timeout")
 	workerCmd.Flags().Int("worker-max-deliver", 5, "Maximum application processing attempts before a durable dead-letter transition")
 	workerCmd.Flags().Int("worker-max-ack-pending", 0, "Fleet-wide outstanding limit on the shared durable consumer (0 uses this replica's concurrency + prefetch)")
+	workerCmd.Flags().Bool("worker-en16931-mandatory", true, "Require the pinned local EN 16931/Saxon runtime and fail startup when it is unavailable")
+	workerCmd.Flags().String("worker-java-executable", "java", "Java executable used for Saxon")
+	workerCmd.Flags().String("worker-saxon-jar-path", saxon.SaxonJARPath, "Path to the pinned Saxon-HE JAR")
+	workerCmd.Flags().String("worker-xmlresolver-jar-path", saxon.XMLResolverJARPath, "Path to the pinned xmlresolver JAR")
+	workerCmd.Flags().String("worker-saxon-configuration-path", saxon.ConfigurationPath, "Path to the no-network Saxon configuration")
+	workerCmd.Flags().String("worker-en16931-xslt-path", en16931.RuntimeXSLTPath, "Path to the pinned EN 16931 UBL XSLT")
+	workerCmd.Flags().Duration("worker-saxon-startup-timeout", 30*time.Second, "Maximum duration of the worker-startup Saxon smoke transform")
 
 	mustBindLocalFlag(v, workerCmd, "worker-consumer-name")
 	mustBindLocalFlag(v, workerCmd, "worker-subject-filter")
@@ -42,6 +52,13 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	mustBindLocalFlag(v, workerCmd, "worker-ack-wait")
 	mustBindLocalFlag(v, workerCmd, "worker-max-deliver")
 	mustBindLocalFlag(v, workerCmd, "worker-max-ack-pending")
+	mustBindLocalFlag(v, workerCmd, "worker-en16931-mandatory")
+	mustBindLocalFlag(v, workerCmd, "worker-java-executable")
+	mustBindLocalFlag(v, workerCmd, "worker-saxon-jar-path")
+	mustBindLocalFlag(v, workerCmd, "worker-xmlresolver-jar-path")
+	mustBindLocalFlag(v, workerCmd, "worker-saxon-configuration-path")
+	mustBindLocalFlag(v, workerCmd, "worker-en16931-xslt-path")
+	mustBindLocalFlag(v, workerCmd, "worker-saxon-startup-timeout")
 
 	return workerCmd
 }
@@ -69,6 +86,13 @@ func worker(ctx context.Context, cfg *Config) error {
 		AckWait:                cfg.WorkerAckWait,
 		MaxDeliver:             cfg.WorkerMaxDeliver,
 		MaxAckPending:          cfg.WorkerMaxAckPending,
+		EN16931Mandatory:       cfg.WorkerEN16931Mandatory,
+		JavaExecutable:         cfg.WorkerJavaExecutable,
+		SaxonJARPath:           cfg.WorkerSaxonJARPath,
+		XMLResolverJARPath:     cfg.WorkerXMLResolverJARPath,
+		SaxonConfigurationPath: cfg.WorkerSaxonConfigurationPath,
+		EN16931XSLTPath:        cfg.WorkerEN16931XSLTPath,
+		SaxonStartupTimeout:    cfg.WorkerSaxonStartupTimeout,
 		UploadContentRetention: cfg.UploadContentRetention,
 		UploadContentMaxBytes:  cfg.UploadContentMaxBytes,
 		Logger:                 slog.Default(),
