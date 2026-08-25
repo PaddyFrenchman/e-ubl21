@@ -33,4 +33,4 @@ All settings can be provided either as flags or environment variables prefixed w
 Raw XML defaults to 30 days of post-validation retention and a shared 10 GiB
 Object Store cap. Validation metadata remains available after content expiry.
 See [UPLOAD-CONTENT-RETENTION.md](UPLOAD-CONTENT-RETENTION.md) for deployment,
-metrics, and upgrade guidance.
+metrics, tombstone-maintenance scheduling, and upgrade guidance.

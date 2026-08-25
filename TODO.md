@@ -544,7 +544,7 @@ retrieval API remains available for explicit HTTP content responses.
 
 ---
 
-## TODO-013 — Add safe Object Store tombstone purge maintenance
+## TODO-013 — Add safe Object Store tombstone purge maintenance ✅ DONE
 
 Raw-content expiry in TODO-010 purges Object Store payload chunks but leaves
 JetStream deleted-object metadata. Those tombstones are small and remain
@@ -580,6 +580,13 @@ the CLI and scheduled unchanged through cron or a Kubernetes CronJob.
 An operator can preview and then reclaim eligible Object Store delete-marker
 metadata in bounded batches without touching active upload content. The same
 command is safe for periodic scheduled execution and repeated runs.
+
+`e-ubl21 maintenance purge-content-tombstones` now provides the single manual
+and scheduled implementation. It is namespace-scoped, age-gated, dry-runnable,
+batch-bounded, metadata-state guarded, overlap-safe, and emits a structured
+JSON report with a failing exit status for incomplete cleanup. Integration
+tests exercise the supported embedded NATS server, including live/pending
+protection, namespace isolation, repeated runs, and overlapping maintenance.
 
 ---
 

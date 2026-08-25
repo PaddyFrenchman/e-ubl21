@@ -73,9 +73,60 @@ in very high-volume, long-running installations.
 
 The hard Object Store byte cap still bounds payloads and tombstone metadata,
 and `e_ubl21_upload_content_storage_bytes` reports their combined physical
-usage. This release deliberately does not purge tombstones automatically. A
-future purge policy should use deleted-entry listing and an explicit grace
-period, and must be designed so it cannot affect active or pending uploads.
+usage. Tombstone cleanup is deliberately operator-scheduled rather than part
+of every API or worker process. Preview a bounded batch first:
+
+```bash
+e-ubl21 --nats-url nats://localhost:4222 \
+  --queue-namespace eubl21.prod \
+  maintenance purge-content-tombstones \
+  --grace-period 168h --max-items 100 --dry-run
+```
+
+Remove the `--dry-run` flag to apply the same selection. Output is one JSON
+object containing `scanned`, `eligible`, `purged`, and `failed` totals plus the
+namespace and effective controls. The command exits non-zero when listing
+fails or any eligible item cannot be completed.
+
+Eligibility is conservative: the delete marker must be older than the grace
+period and canonical upload metadata must prove completed expiry
+(`valid`/`invalid` plus `contentExpiredAt`) or terminal acceptance failure.
+Active content and pending, cleanup-in-progress, dead-lettered, replayable,
+missing, or unreadable records are never purged. Each marker is re-read before
+its metadata subject is removed, repeated runs are idempotent, and `max-items`
+bounds eligible work per invocation.
+
+Use the exact command unchanged from cron, for example:
+
+```cron
+17 3 * * * /usr/local/bin/e-ubl21 --nats-url nats://nats:4222 --queue-namespace eubl21.prod maintenance purge-content-tombstones --grace-period 168h --max-items 500
+```
+
+The same implementation can be scheduled in Kubernetes:
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: e-ubl21-content-tombstones
+spec:
+  schedule: "17 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: maintenance
+              image: e-ubl21:latest
+              args:
+                - --nats-url=nats://nats:4222
+                - --queue-namespace=eubl21.prod
+                - maintenance
+                - purge-content-tombstones
+                - --grace-period=168h
+                - --max-items=500
+```
 
 ## Metrics
 
@@ -102,4 +153,5 @@ byte cap but does not set a broker TTL. The immediate maintenance scan will,
 however, reclaim raw content for terminal records already older than the
 configured retention, so operators should review the value before rollout.
 Only due `valid`/`invalid` content is expired; acceptance and pending states
-remain protected.
+remain protected. Tombstone purge remains a separate explicit/scheduled
+command and is not started automatically during upgrade.
