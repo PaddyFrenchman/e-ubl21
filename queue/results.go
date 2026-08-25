@@ -45,6 +45,23 @@ type ValidationIssue struct {
 	Diagnostic string              `json:"diagnostic,omitempty"`
 }
 
+// UnmarshalJSON upgrades the brief pre-kind XSD issue format in place. The
+// layer makes xsd-report unambiguous. No equivalent inference is attempted for
+// EN 16931 because severity cannot distinguish failed-assert from
+// successful-report.
+func (issue *ValidationIssue) UnmarshalJSON(data []byte) error {
+	type wireIssue ValidationIssue
+	var decoded wireIssue
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	if decoded.Kind == "" && decoded.Layer == ValidationLayerUBL21XSD {
+		decoded.Kind = ValidationIssueXSDReport
+	}
+	*issue = ValidationIssue(decoded)
+	return nil
+}
+
 // ValidationStageResult records the outcome of one validation layer. Version
 // identifies the exact schema or semantic profile that produced the result.
 type ValidationStageResult struct {

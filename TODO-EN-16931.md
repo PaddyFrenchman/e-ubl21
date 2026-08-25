@@ -302,7 +302,10 @@ compliance classification never has to infer assertion kind from aggregate
 counts or severity. The parser normalizes mixed-content whitespace and fails
 closed on malformed XML, unexpected roots, oversized input, excess issues, or
 excess normalized diagnostic text. Errors return no partial semantic report so
-the validator adapter can classify them strictly as operational failures.
+the validator adapter can classify them strictly as operational failures. The
+shared model also upgrades the short-lived legacy XSD issue format that omitted
+`kind`, inferring `xsd-report` from `layer=ubl21-xsd`; it deliberately does not
+guess an EN 16931 issue kind from severity.
 
 ---
 

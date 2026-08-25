@@ -60,3 +60,48 @@ func TestLegacyValidationPayloadWithoutStagesRemainsCompatible(t *testing.T) {
 		t.Fatalf("legacy validation result = %+v", result)
 	}
 }
+
+func TestLegacyXSDIssueWithoutKindIsUpgradedOnDecode(t *testing.T) {
+	legacy := []byte(`{
+  "id":"0123456789abcdef0123456789abcdef",
+  "documentType":"Invoice",
+  "status":"invalid",
+  "validatedAt":"2026-08-25T12:00:00Z",
+  "validationStages":[{
+    "layer":"ubl21-xsd",
+    "version":"2.1",
+    "valid":false,
+    "validatedAt":"2026-08-25T12:00:00Z",
+    "issues":[{
+      "layer":"ubl21-xsd",
+      "severity":"error",
+      "message":"schema validation failed"
+    }]
+  }]
+}`)
+	var result queue.UploadRecord
+	if err := json.Unmarshal(legacy, &result); err != nil {
+		t.Fatal(err)
+	}
+	issue := result.ValidationStages[0].Issues[0]
+	if issue.Kind != queue.ValidationIssueXSDReport {
+		t.Fatalf("legacy XSD issue kind = %q, want %q", issue.Kind, queue.ValidationIssueXSDReport)
+	}
+	reencoded, err := json.Marshal(result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(reencoded, []byte(`"kind":"xsd-report"`)) || bytes.Contains(reencoded, []byte(`"kind":""`)) {
+		t.Fatalf("re-encoded legacy result does not satisfy the issue-kind contract: %s", reencoded)
+	}
+}
+
+func TestMissingEN16931IssueKindIsNotGuessedFromSeverity(t *testing.T) {
+	var issue queue.ValidationIssue
+	if err := json.Unmarshal([]byte(`{"layer":"en16931","severity":"error","message":"report"}`), &issue); err != nil {
+		t.Fatal(err)
+	}
+	if issue.Kind != "" {
+		t.Fatalf("missing EN 16931 issue kind was guessed as %q", issue.Kind)
+	}
+}
