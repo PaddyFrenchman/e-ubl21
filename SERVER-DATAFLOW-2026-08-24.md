@@ -808,9 +808,9 @@ stream, subject and KV bucket name; see section 4 above. Tracked as
 
 ---
 
-## 11.2 Pending-record / queue-publish consistency gap
+## 11.2 Upload acceptance consistency — resolved (TODO-009)
 
-### Current sequence
+### Former sequence
 
 ```text
 KV Put(pending)        succeeds
@@ -820,29 +820,13 @@ HTTP response           500
 
 A durable pending record now exists but no worker will ever receive the document.
 
-### Consequence
+### Resolution
 
-The system can create orphaned records permanently stuck at `pending`.
-
-### Recommendation
-
-Make acceptance state explicit. Options include:
-
-1. publish first, then create status record with recovery logic;
-2. introduce an `accepted`/`enqueue_failed` lifecycle and reconciliation worker;
-3. use a transactional outbox pattern when a durable database arrives;
-4. provide a compensating KV delete/update if publish fails.
-
-For the current JetStream-only architecture, the simplest improvement is likely:
-
-```text
-create record with state = accepting
-publish work
-if success -> state = pending
-if failure -> state = enqueue_failed
-```
-
-plus a reconciliation path.
+The API now writes durable intent before content and advances records through
+`accepting`, `enqueue_pending`, and `pending`. A background reconciler retries
+stale acceptance work using the upload ID as the deterministic NATS message ID.
+Missing content becomes terminal `acceptance_failed`; failed partial-content
+cleanup remains visible as `cleanup_pending` until reclamation succeeds.
 
 ---
 

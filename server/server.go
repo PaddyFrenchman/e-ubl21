@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go"
@@ -39,6 +40,8 @@ type Application struct {
 	Handler   http.Handler
 	queue     *queue.Client
 	closeOnce sync.Once
+	cancel    context.CancelFunc
+	workers   sync.WaitGroup
 }
 
 func (a *Application) Close() {
@@ -46,6 +49,10 @@ func (a *Application) Close() {
 		return
 	}
 	a.closeOnce.Do(func() {
+		if a.cancel != nil {
+			a.cancel()
+		}
+		a.workers.Wait()
 		if a.queue != nil {
 			a.queue.Close()
 		}
@@ -124,7 +131,46 @@ func NewApplication(cfg Config) (*Application, error) {
 	register("/api/v1/ubl/upload", "/api/v1/ubl/upload", false, uploads.handleUpload)
 	register("/api/v1/ubl/{id}", "/api/v1/ubl/{id}", false, uploads.handleGetUpload)
 
-	return &Application{Handler: limiter.middleware(mux), queue: q}, nil
+	reconcileCtx, cancelReconcile := context.WithCancel(context.Background())
+	application := &Application{Handler: limiter.middleware(mux), queue: q, cancel: cancelReconcile}
+	application.workers.Add(1)
+	go func() {
+		defer application.workers.Done()
+		runUploadReconciler(reconcileCtx, q, logger)
+	}()
+	return application, nil
+}
+
+const uploadReconcileInterval = 30 * time.Second
+const uploadReconcileMinAge = time.Minute
+
+func runUploadReconciler(ctx context.Context, q *queue.Client, logger *slog.Logger) {
+	reconcile := func() {
+		report, err := q.ReconcileUploads(ctx, uploadReconcileMinAge)
+		if err != nil && ctx.Err() == nil {
+			logger.Error("upload acceptance reconciliation failed", "error", err)
+			return
+		}
+		if report.Requeued > 0 || report.Failed > 0 || report.Errors > 0 {
+			uploadReconciliations.WithLabelValues("requeued").Add(float64(report.Requeued))
+			uploadReconciliations.WithLabelValues("acceptance_failed").Add(float64(report.Failed))
+			uploadReconciliations.WithLabelValues("error").Add(float64(report.Errors))
+			logger.Info("upload acceptance reconciliation completed",
+				"scanned", report.Scanned, "requeued", report.Requeued,
+				"failed", report.Failed, "errors", report.Errors)
+		}
+	}
+	reconcile()
+	ticker := time.NewTicker(uploadReconcileInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			reconcile()
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func normalizePath(path, def string, requireTrailingSlash bool) string {

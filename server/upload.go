@@ -2,9 +2,8 @@
 // POST /api/v1/ubl/upload performs only cheap, synchronous checks (that a
 // syntactically valid root element is present, and that its local name and
 // namespace identify a recognized UBL 2.1 document type), then stores the
-// raw document content (queue.PutUploadContent), creates a "pending"
-// status/metadata record (queue.PutUploadRecord), and queues a compact work
-// descriptor on its per-document-type NATS JetStream subject
+// durable acceptance intent (queue.PutUploadRecord), stores raw content
+// (queue.PutUploadContent), and queues a compact work descriptor
 // (queue.PublishDocument) for asynchronous XSD validation by the worker.
 // GET /api/v1/ubl/{id} returns status/metadata only by default; callers can
 // explicitly request the raw XML with ?includeContent=true.
@@ -12,6 +11,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -35,7 +35,16 @@ var errPayloadTooLarge = fmt.Errorf("request body exceeds the maximum allowed si
 
 type uploadHandlers struct {
 	catalog *documentCatalog
-	queue   *queue.Client
+	queue   uploadQueue
+}
+
+type uploadQueue interface {
+	PutUploadRecord(context.Context, queue.UploadRecord) error
+	GetUploadRecord(context.Context, string) (queue.UploadRecord, error)
+	PutUploadContent(context.Context, string, []byte) error
+	GetUploadContent(context.Context, string) ([]byte, error)
+	DeleteUploadContent(context.Context, string) error
+	PublishDocument(context.Context, string, string, time.Time) error
 }
 
 func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
@@ -81,38 +90,76 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	receivedAt := time.Now().UTC()
 
-	// Raw XML is durably stored before metadata and queue publication. The
-	// work stream therefore needs only the upload id/type/timestamp and the
-	// worker can safely dereference the immutable object after delivery.
-	if err := h.queue.PutUploadContent(r.Context(), id, body); err != nil {
-		recordUploadOutcome("internal_error")
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to persist upload content: " + err.Error()})
-		return
-	}
-
+	// Persist intent first so every later partial failure is observable and
+	// can be reconciled. No content is written if this first boundary fails.
 	record := queue.UploadRecord{
-		ID:           id,
-		DocumentType: rootElement,
-		Status:       queue.StatusPending,
-		ReceivedAt:   receivedAt.Format(time.RFC3339),
+		ID: id, DocumentType: rootElement, Status: queue.StatusAccepting,
+		ReceivedAt: receivedAt.Format(time.RFC3339),
 	}
 	if err := h.queue.PutUploadRecord(r.Context(), record); err != nil {
 		recordUploadOutcome("internal_error")
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to persist upload record: " + err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to persist upload intent: " + err.Error()})
 		return
 	}
 
-	if err := h.queue.PublishDocument(r.Context(), id, rootElement, receivedAt); err != nil {
+	if err := h.queue.PutUploadContent(r.Context(), id, body); err != nil {
+		deleteErr := h.queue.DeleteUploadContent(r.Context(), id)
+		record.Status = queue.StatusAcceptanceFailed
+		if deleteErr != nil {
+			record.Status = queue.StatusCleanupPending
+		}
+		record.Error = "failed to persist upload content: " + err.Error()
+		if deleteErr != nil {
+			record.Error += "; cleanup pending: " + deleteErr.Error()
+		}
+		_ = h.queue.PutUploadRecord(r.Context(), record)
 		recordUploadOutcome("internal_error")
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to queue upload for validation: " + err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": record.Error})
+		return
+	}
+
+	record.Status = queue.StatusEnqueuePending
+	// Persisting enqueue_pending before publish makes the intent explicit.
+	// If that write fails, the original accepting record plus durable content
+	// is still sufficient for reconciliation.
+	if err := h.queue.PutUploadRecord(r.Context(), record); err != nil {
+		record.Status = queue.StatusAccepting
+		record.Error = "awaiting acceptance reconciliation: " + err.Error()
+		recordUploadOutcome("recovering")
+		writeUploadAccepted(w, record)
+		return
+	}
+
+	// PublishDocument is idempotent by upload ID. A failure here leaves an
+	// enqueue_pending record for the reconciler to retry safely.
+	if err := h.queue.PublishDocument(r.Context(), id, rootElement, receivedAt); err != nil {
+		record.Error = "awaiting queue publication: " + err.Error()
+		_ = h.queue.PutUploadRecord(r.Context(), record)
+		recordUploadOutcome("recovering")
+		writeUploadAccepted(w, record)
+		return
+	}
+	record.Status = queue.StatusPending
+	record.Error = ""
+	if err := h.queue.PutUploadRecord(r.Context(), record); err != nil {
+		// The descriptor is already durable. The enqueue_pending record is
+		// intentionally retained and reconciliation will deduplicate publish.
+		record.Status = queue.StatusEnqueuePending
+		record.Error = "queued; awaiting status reconciliation: " + err.Error()
+		recordUploadOutcome("recovering")
+		writeUploadAccepted(w, record)
 		return
 	}
 
 	recordUploadOutcome("queued")
+	writeUploadAccepted(w, record)
+}
+
+func writeUploadAccepted(w http.ResponseWriter, record queue.UploadRecord) {
 	writeJSON(w, http.StatusAccepted, map[string]any{
-		"status":     string(queue.StatusPending),
-		"id":         id,
-		"document":   rootElement,
+		"status":     string(record.Status),
+		"id":         record.ID,
+		"document":   record.DocumentType,
 		"receivedAt": record.ReceivedAt,
 	})
 }

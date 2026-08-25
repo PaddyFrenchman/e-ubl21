@@ -147,6 +147,40 @@ func (c *Client) GetUploadContent(ctx context.Context, id string) ([]byte, error
 	return content, nil
 }
 
+// DeleteUploadContent removes a partially persisted upload object. Missing
+// objects are treated as already cleaned up.
+func (c *Client) DeleteUploadContent(ctx context.Context, id string) error {
+	if !ValidID(id) {
+		return fmt.Errorf("invalid upload id %q", id)
+	}
+	store, err := c.uploadContentStore(ctx)
+	if err != nil {
+		return err
+	}
+	if err := store.Delete(ctx, id); err != nil && !errors.Is(err, jetstream.ErrObjectNotFound) {
+		return fmt.Errorf("delete upload content %s: %w", id, err)
+	}
+	return nil
+}
+
+// HasUploadContent checks object metadata without materializing the XML.
+func (c *Client) HasUploadContent(ctx context.Context, id string) (bool, error) {
+	if !ValidID(id) {
+		return false, nil
+	}
+	store, err := c.uploadContentStore(ctx)
+	if err != nil {
+		return false, err
+	}
+	if _, err := store.GetInfo(ctx, id); err != nil {
+		if errors.Is(err, jetstream.ErrObjectNotFound) {
+			return false, nil
+		}
+		return false, fmt.Errorf("inspect upload content %s: %w", id, err)
+	}
+	return true, nil
+}
+
 func (c *Client) uploadsBucket(ctx context.Context) (jetstream.KeyValue, error) {
 	c.handlesMu.RLock()
 	cached := c.cachedUploadsKV

@@ -30,6 +30,10 @@ var (
 		Name: "e_ubl21_uploads_total",
 		Help: "Total UBL upload attempts handled by the API, labeled by outcome (queued, or the rejection reason).",
 	}, []string{"outcome"})
+	uploadReconciliations = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_upload_reconciliations_total",
+		Help: "Upload acceptance records handled by reconciliation, labeled by outcome.",
+	}, []string{"outcome"})
 
 	validationsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "e_ubl21_validations_total",

@@ -169,13 +169,13 @@ func buildOpenAPIDocument() map[string]any {
 					},
 					"responses": map[string]any{
 						"202": map[string]any{
-							"description": "The payload has a recognized UBL 2.1 root element and has been queued for asynchronous validation; status starts as pending and later becomes valid or invalid.",
+							"description": "The payload has a recognized UBL 2.1 root element and is durably accepted for asynchronous validation. Status is accepting or enqueue_pending during recovery, pending once queued, and later valid or invalid.",
 							"content": map[string]any{
 								"application/json": map[string]any{
 									"schema": map[string]any{
 										"type": "object",
 										"properties": map[string]any{
-											"status":     map[string]any{"type": "string", "enum": []string{"pending"}, "example": "pending"},
+											"status":     map[string]any{"type": "string", "enum": []string{"accepting", "enqueue_pending", "pending"}, "example": "pending"},
 											"id":         map[string]any{"type": "string", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
 											"document":   map[string]any{"type": "string", "example": "Invoice"},
 											"receivedAt": map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
@@ -229,7 +229,7 @@ func buildOpenAPIDocument() map[string]any {
 										"properties": map[string]any{
 											"id":          map[string]any{"type": "string", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
 											"document":    map[string]any{"type": "string", "example": "Invoice"},
-											"status":      map[string]any{"type": "string", "enum": []string{"pending", "valid", "invalid"}, "example": "valid"},
+											"status":      map[string]any{"type": "string", "enum": []string{"accepting", "cleanup_pending", "enqueue_pending", "pending", "valid", "invalid", "acceptance_failed"}, "example": "valid"},
 											"receivedAt":  map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
 											"validatedAt": map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document.", "example": "2026-08-20T12:00:01Z"},
 											"error":       map[string]any{"type": "string", "description": "Present only when status is invalid.", "example": "Invoice: element content does not follow the schema"},

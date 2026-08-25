@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 	jwt "github.com/golang-jwt/jwt/v5"
 )
@@ -85,6 +87,41 @@ func TestApplicationCloseReleasesNATSConnection(t *testing.T) {
 	if !connection.IsClosed() {
 		t.Fatal("application Close did not close its NATS connection")
 	}
+}
+
+func TestApplicationStartupReconcilesStaleUploadAcceptance(t *testing.T) {
+	cfg := testConfig(t, nil)
+	seed, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := seed.EnsureInfra(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	id, _ := queue.NewID()
+	receivedAt := time.Now().Add(-time.Hour).UTC().Format(time.RFC3339)
+	if err := seed.PutUploadRecord(context.Background(), queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusEnqueuePending, ReceivedAt: receivedAt}); err != nil {
+		t.Fatal(err)
+	}
+	if err := seed.PutUploadContent(context.Background(), id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+	seed.Close()
+
+	application, err := NewApplication(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(application.Close)
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		record, err := application.queue.GetUploadRecord(context.Background(), id)
+		if err == nil && record.Status == queue.StatusPending {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("application startup did not reconcile stale enqueue_pending upload")
 }
 
 func doRequest(handler http.Handler, method, path, token, body, contentType string) *httptest.ResponseRecorder {

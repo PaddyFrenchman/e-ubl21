@@ -106,7 +106,7 @@ func TestUploadHandlerRecordPublishAndReadFailures(t *testing.T) {
 	if err := q.JS.DeleteKeyValue(context.Background(), q.Namespace.UploadsBucketName()); err != nil {
 		t.Fatal(err)
 	}
-	if res := makeRequest(h); res.Code != http.StatusInternalServerError || !strings.Contains(res.Body.String(), "persist upload record") {
+	if res := makeRequest(h); res.Code != http.StatusInternalServerError || !strings.Contains(res.Body.String(), "persist upload intent") {
 		t.Fatalf("record failure = %d %s", res.Code, res.Body)
 	}
 
@@ -114,7 +114,7 @@ func TestUploadHandlerRecordPublishAndReadFailures(t *testing.T) {
 	if err := q.JS.DeleteStream(context.Background(), q.Namespace.DocumentsStreamName()); err != nil {
 		t.Fatal(err)
 	}
-	if res := makeRequest(h); res.Code != http.StatusInternalServerError || !strings.Contains(res.Body.String(), "queue upload") {
+	if res := makeRequest(h); res.Code != http.StatusAccepted || !strings.Contains(res.Body.String(), string(queue.StatusEnqueuePending)) {
 		t.Fatalf("publish failure = %d %s", res.Code, res.Body)
 	}
 

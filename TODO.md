@@ -373,7 +373,9 @@ Normal upload/status/worker paths do not repeatedly discover infrastructure hand
 
 ---
 
-## TODO-009 — Make upload acceptance recoverable across partial persistence failures
+## TODO-009 — Make upload acceptance recoverable across partial persistence failures ✅ DONE
+
+**Status:** Completed and verified on 2026-08-25.
 
 The upload path currently performs Object Store write → KV write → work-message
 publish without a transaction. A KV or publish failure can leave orphaned XML
@@ -386,10 +388,37 @@ acceptance states observable and recoverable.
 
 ### Requirements
 
-- Define explicit acceptance/enqueue lifecycle states.
-- Add idempotent reconciliation for partially completed uploads.
-- Remove or reclaim orphan content when acceptance cannot complete.
-- Add failure-injection tests for every persistence boundary.
+- [x] Define explicit acceptance/enqueue lifecycle states.
+- [x] Add idempotent reconciliation for partially completed uploads.
+- [x] Remove or reclaim orphan content when acceptance cannot complete.
+- [x] Add failure-injection tests for every persistence boundary.
+
+### Resolution
+
+Upload intent is now recorded before content is written. Acceptance progresses
+through `accepting` → `enqueue_pending` → `pending`; content failures become
+`acceptance_failed`, or `cleanup_pending` when partial Object Store cleanup
+must be retried. Once intent and content are durable, queue/status failures
+return HTTP 202 with an observable recovery state instead of losing the upload.
+
+Every API application runs an immediate and periodic reconciler. It waits for
+active uploads to age past a one-minute safety window, verifies content by
+Object Store metadata without loading XML, retries deterministic-ID work
+publication, advances recovered records to `pending`, and reclaims
+`cleanup_pending` content. Repeated reconciliation is safe and tested.
+Prometheus exposes reconciliation outcomes through
+`e_ubl21_upload_reconciliations_total`.
+
+Failure-injection tests cover intent persistence, content persistence,
+content cleanup, enqueue-state persistence, work publication, and final status
+persistence. Integration tests cover recovery, cleanup, idempotent repeated
+scans, automatic startup reconciliation, and terminal missing-content state.
+
+### Acceptance criteria
+
+Every upload with durable intent and content is eventually queued or remains
+in an explicit retryable state; content that cannot be accepted is reclaimed
+before the record becomes terminal.
 
 ---
 

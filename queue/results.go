@@ -12,6 +12,15 @@ import (
 type ValidationStatus string
 
 const (
+	// StatusAccepting records durable upload intent while immutable content is
+	// being persisted. A stale accepting record is reconciled or failed.
+	StatusAccepting ValidationStatus = "accepting"
+	// StatusEnqueuePending means metadata and content are durable but work
+	// publication has not yet been confirmed. Reconciliation retries it.
+	StatusEnqueuePending ValidationStatus = "enqueue_pending"
+	// StatusCleanupPending means a failed content write may have left partial
+	// Object Store state which reconciliation must reclaim.
+	StatusCleanupPending ValidationStatus = "cleanup_pending"
 	// StatusPending is the status a document is given the moment it is
 	// queued for processing, before the worker has picked it up.
 	StatusPending ValidationStatus = "pending"
@@ -22,6 +31,9 @@ const (
 	// UBL 2.1 XSD and it failed (see ValidationResult.Error /
 	// UploadRecord.Error for details).
 	StatusInvalid ValidationStatus = "invalid"
+	// StatusAcceptanceFailed is a terminal ingress failure for which no work
+	// will be queued. Any partially written content is reclaimed.
+	StatusAcceptanceFailed ValidationStatus = "acceptance_failed"
 )
 
 // ValidationResult is the payload published to Namespace.ResultsSubject

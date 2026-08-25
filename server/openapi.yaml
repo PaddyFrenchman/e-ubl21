@@ -152,8 +152,9 @@ paths:
           description: >-
             The payload has a syntactically valid root element that is a
             recognized UBL 2.1 document type. It has been queued for
-            asynchronous XSD validation; its status starts as pending and
-            later becomes valid or invalid.
+            asynchronous XSD validation. Its status is accepting or
+            enqueue_pending while a partial acceptance is being reconciled,
+            pending once queued, and later valid or invalid.
           content:
             application/json:
               schema:
@@ -161,7 +162,7 @@ paths:
                 properties:
                   status:
                     type: string
-                    enum: [pending]
+                    enum: [accepting, enqueue_pending, pending]
                     example: pending
                   id:
                     type: string
@@ -245,7 +246,7 @@ paths:
                     example: Invoice
                   status:
                     type: string
-                    enum: [pending, valid, invalid]
+                    enum: [accepting, cleanup_pending, enqueue_pending, pending, valid, invalid, acceptance_failed]
                     example: valid
                   receivedAt:
                     type: string
