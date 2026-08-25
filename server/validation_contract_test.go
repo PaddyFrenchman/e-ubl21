@@ -57,6 +57,36 @@ func TestOverallValidationStatusContract(t *testing.T) {
 	}
 }
 
+func TestTerminalValidationStagesComplete(t *testing.T) {
+	passedXSD := queue.ValidationStageResult{Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: true, ValidatedAt: "2026-08-25T12:00:00Z"}
+	failedXSD := queue.ValidationStageResult{Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: false, ValidatedAt: "2026-08-25T12:00:00Z"}
+	passedEN := queue.ValidationStageResult{Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: true, ValidatedAt: "2026-08-25T12:00:01Z"}
+	failedEN := queue.ValidationStageResult{Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: false, ValidatedAt: "2026-08-25T12:00:01Z"}
+	tests := []struct {
+		name   string
+		record queue.UploadRecord
+		want   bool
+	}{
+		{"complete Invoice valid", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusValid, ValidationStages: queue.ValidationStages{passedXSD, passedEN}}, true},
+		{"Invoice missing EN", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusValid, ValidationStages: queue.ValidationStages{passedXSD}}, false},
+		{"Invoice XSD invalid short circuit", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusInvalid, ValidationStages: queue.ValidationStages{failedXSD}}, true},
+		{"Invoice EN invalid", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusInvalid, ValidationStages: queue.ValidationStages{passedXSD, failedEN}}, true},
+		{"invalid despite passing stages", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusInvalid, ValidationStages: queue.ValidationStages{passedXSD, passedEN}}, false},
+		{"wrong stage order", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusValid, ValidationStages: queue.ValidationStages{passedEN, passedXSD}}, false},
+		{"missing stage metadata", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusValid, ValidationStages: queue.ValidationStages{{Layer: queue.ValidationLayerUBL21XSD, Valid: true}, passedEN}}, false},
+		{"stages after short circuit", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusInvalid, ValidationStages: queue.ValidationStages{failedXSD, passedEN}}, false},
+		{"Order XSD valid", queue.UploadRecord{DocumentType: "Order", Status: queue.StatusValid, ValidationStages: queue.ValidationStages{passedXSD}}, true},
+		{"legacy result without stages", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusValid}, false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := terminalValidationStagesComplete(test.record); got != test.want {
+				t.Fatalf("terminalValidationStagesComplete(%+v) = %t, want %t", test.record, got, test.want)
+			}
+		})
+	}
+}
+
 func TestEN16931SeverityPolicy(t *testing.T) {
 	tests := []struct {
 		severity string

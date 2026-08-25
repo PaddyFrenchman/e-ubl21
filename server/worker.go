@@ -360,13 +360,52 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		return
 	}
 	if versioned.Record.Status == queue.StatusValid || versioned.Record.Status == queue.StatusInvalid {
-		if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
-			w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("finish prior validation result: %w", err))
+		needsUpgrade := versioned.Record.ResultPending && !terminalValidationStagesComplete(versioned.Record)
+		if needsUpgrade {
+			published, inspectErr := w.queue.HasValidationResult(ctx, id)
+			if inspectErr != nil {
+				w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("inspect legacy validation result: %w", inspectErr))
+				return
+			}
+			if !published {
+				claimed := versioned.Record
+				claimed.Status = queue.StatusPending
+				claimed.Error = ""
+				claimed.ValidatedAt = ""
+				claimed.ValidationStages = nil
+				claimed.ContentExpiresAt = ""
+				claimed.ResultPending = false
+				claimed.LastError = ""
+				claimed.ProcessingAttempts = 0
+				claimed.ProcessingFailedAt = ""
+				revision, claimErr := w.queue.UpdateUploadRecord(ctx, claimed, versioned.Revision)
+				if claimErr != nil {
+					logger.Info("legacy validation upgrade claim raced another worker; will retry", "error", claimErr)
+					_ = msg.NakWithDelay(replayHandoffRetryDelay)
+					return
+				}
+				versioned = queue.VersionedUploadRecord{Record: claimed, Revision: revision}
+				logger.Info("claimed incomplete legacy terminal result for mandatory EN 16931 revalidation")
+			} else {
+				// The permanent first-result slot is already occupied. Preserve that
+				// historical pre-EN result and repair only the ambiguous pending marker.
+				if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
+					w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("finish prior legacy validation result: %w", err))
+					return
+				}
+				recordValidationOutcome("duplicate")
+				_ = msg.Ack()
+				return
+			}
+		} else {
+			if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
+				w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("finish prior validation result: %w", err))
+				return
+			}
+			recordValidationOutcome("duplicate")
+			_ = msg.Ack()
 			return
 		}
-		recordValidationOutcome("duplicate")
-		_ = msg.Ack()
-		return
 	}
 	if versioned.Record.Status == queue.StatusAcceptanceFailed || versioned.Record.Status == queue.StatusCleanupPending || versioned.Record.Status == queue.StatusProcessingFailed {
 		logger.Error("work descriptor references terminally unaccepted upload; terminating message", "status", versioned.Record.Status)
@@ -624,11 +663,21 @@ func (w *documentWorker) ensureValidationResultPublished(ctx context.Context, ve
 	if !record.ResultPending {
 		return nil
 	}
-	if err := w.queue.PublishResult(ctx, queue.ValidationResult{
-		ID: record.ID, DocumentType: record.DocumentType, Status: record.Status,
-		Error: record.Error, ValidatedAt: record.ValidatedAt, ValidationStages: record.ValidationStages,
-	}); err != nil {
-		return err
+	if !terminalValidationStagesComplete(record) {
+		published, err := w.queue.HasValidationResult(ctx, record.ID)
+		if err != nil {
+			return err
+		}
+		if !published {
+			return fmt.Errorf("refuse to publish incomplete validation stages for terminal %s record", record.Status)
+		}
+	} else {
+		if err := w.queue.PublishResult(ctx, queue.ValidationResult{
+			ID: record.ID, DocumentType: record.DocumentType, Status: record.Status,
+			Error: record.Error, ValidatedAt: record.ValidatedAt, ValidationStages: record.ValidationStages,
+		}); err != nil {
+			return err
+		}
 	}
 	record.ResultPending = false
 	if _, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision); err != nil {
@@ -642,7 +691,7 @@ func (w *documentWorker) ensureValidationResultPublished(ctx context.Context, ve
 }
 
 type workerCompletionReconcileReport struct {
-	Scanned, DeadLettersFinalized, ResultsPublished, Errors int
+	Scanned, DeadLettersFinalized, ResultsPublished, ValidationUpgradesQueued, Errors int
 }
 
 // reconcilePendingCompletions repairs durable worker states whose original
@@ -682,6 +731,29 @@ func (w *documentWorker) reconcilePendingCompletions(ctx context.Context) worker
 			}
 			continue
 		}
+		if (record.Status == queue.StatusValid || record.Status == queue.StatusInvalid) && record.ResultPending && !terminalValidationStagesComplete(record) {
+			published, inspectErr := w.queue.HasValidationResult(ctx, record.ID)
+			if inspectErr != nil {
+				report.Errors++
+				continue
+			}
+			if !published {
+				receivedAt, parseErr := time.Parse(time.RFC3339, record.ReceivedAt)
+				if parseErr != nil {
+					report.Errors++
+					continue
+				}
+				if publishErr := w.queue.PublishDocumentForValidationUpgrade(ctx, record.ID, record.DocumentType, receivedAt); publishErr != nil {
+					report.Errors++
+					continue
+				}
+				report.ValidationUpgradesQueued++
+				continue
+			}
+			// An earlier publication succeeded but its KV acknowledgement was
+			// ambiguous. Permanent result uniqueness means it is historical and
+			// cannot be replaced during a rolling upgrade.
+		}
 		if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
 			report.Errors++
 			continue
@@ -696,12 +768,14 @@ func (w *documentWorker) runCompletionReconciler(ctx context.Context, interval t
 		report := w.reconcilePendingCompletions(ctx)
 		workerCompletionReconciliations.WithLabelValues("dead_letter_finalized").Add(float64(report.DeadLettersFinalized))
 		workerCompletionReconciliations.WithLabelValues("result_published").Add(float64(report.ResultsPublished))
+		workerCompletionReconciliations.WithLabelValues("validation_upgrade_queued").Add(float64(report.ValidationUpgradesQueued))
 		workerCompletionReconciliations.WithLabelValues("error").Add(float64(report.Errors))
-		if ctx.Err() == nil && (report.DeadLettersFinalized > 0 || report.ResultsPublished > 0 || report.Errors > 0) {
+		if ctx.Err() == nil && (report.DeadLettersFinalized > 0 || report.ResultsPublished > 0 || report.ValidationUpgradesQueued > 0 || report.Errors > 0) {
 			w.logger.Info("worker completion reconciliation finished",
 				"scanned", report.Scanned,
 				"deadLettersFinalized", report.DeadLettersFinalized,
 				"resultsPublished", report.ResultsPublished,
+				"validationUpgradesQueued", report.ValidationUpgradesQueued,
 				"errors", report.Errors,
 			)
 		}

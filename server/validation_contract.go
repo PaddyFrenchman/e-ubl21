@@ -73,6 +73,29 @@ func overallValidationStatus(documentType string, outcomes map[validationLayer]v
 	return queue.StatusValid
 }
 
+// terminalValidationStagesComplete proves that a terminal record is supported
+// by the ordered stages required for its document type. An invalid result may
+// stop at its first failing stage; a valid result must contain every required
+// stage and every one must pass.
+func terminalValidationStagesComplete(record queue.UploadRecord) bool {
+	if record.Status != queue.StatusValid && record.Status != queue.StatusInvalid {
+		return false
+	}
+	required := requiredValidationLayers(record.DocumentType)
+	for index, layer := range required {
+		if index >= len(record.ValidationStages) ||
+			record.ValidationStages[index].Layer != layer ||
+			record.ValidationStages[index].Version == "" ||
+			record.ValidationStages[index].ValidatedAt == "" {
+			return false
+		}
+		if !record.ValidationStages[index].Valid {
+			return record.Status == queue.StatusInvalid && len(record.ValidationStages) == index+1
+		}
+	}
+	return record.Status == queue.StatusValid && len(record.ValidationStages) == len(required)
+}
+
 // en16931SeverityInvalid applies the initial SVRL severity policy. Fatal and
 // error assertions invalidate the EN 16931 stage. Warnings are retained but
 // do not invalidate it. Empty and unknown flags are retained by the future

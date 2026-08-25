@@ -62,6 +62,14 @@ func (c *Client) PublishDocumentWithID(ctx context.Context, id, documentType str
 	return c.publishDocument(ctx, id, documentType, receivedAt, messageID, true)
 }
 
+// PublishDocumentForValidationUpgrade publishes an ordinary (non-replay)
+// descriptor with a migration-specific stable idempotency key. It wakes old
+// terminal records for a mandatory validation-contract upgrade without
+// setting replay headers or entering the operator replay claim protocol.
+func (c *Client) PublishDocumentForValidationUpgrade(ctx context.Context, id, documentType string, receivedAt time.Time) error {
+	return c.publishDocument(ctx, id, documentType, receivedAt, id+":validation-contract-upgrade", false)
+}
+
 func (c *Client) publishDocument(ctx context.Context, id, documentType string, receivedAt time.Time, messageID string, replay bool) error {
 	if !ValidID(id) {
 		return fmt.Errorf("invalid upload id %q", id)

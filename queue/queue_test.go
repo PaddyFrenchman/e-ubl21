@@ -361,8 +361,14 @@ func TestPublishResult(t *testing.T) {
 			ValidatedAt: time.Now().UTC().Format(time.RFC3339), DurationMS: 4,
 		}},
 	}
+	if exists, err := client.HasValidationResult(ctx, id); err != nil || exists {
+		t.Fatalf("result exists before publication = %t, %v", exists, err)
+	}
 	if err := client.PublishResult(ctx, result); err != nil {
 		t.Fatalf("publish result: %v", err)
+	}
+	if exists, err := client.HasValidationResult(ctx, id); err != nil || !exists {
+		t.Fatalf("result exists after publication = %t, %v", exists, err)
 	}
 
 	stream, err := client.JS.Stream(ctx, client.Namespace.ResultsStreamName())

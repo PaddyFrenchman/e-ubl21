@@ -2,8 +2,8 @@
 
 This document freezes the target server contract for the initial EN 16931
 milestone. It defines policy and scope; the production worker pipeline now
-executes these stages, while durable crash/retry/replay integration continues
-through the remaining implementation steps in `TODO-EN-16931.md`.
+executes these stages and commits their terminal outcome through the durable
+worker state machine.
 
 ## Supported scope and mandatory order
 
@@ -30,6 +30,30 @@ must never be interpreted as success.
 Standards invalidity and operational failure are distinct. A business-rule
 failure is not retried as infrastructure failure, while infrastructure failure
 must never produce `valid` or a false standards-invalid result.
+
+## Durable completion and rolling upgrades
+
+The worker does not persist an XSD-only intermediate success. It commits a
+terminal `valid`/`invalid` record, its complete ordered stage results, and the
+pending-result marker in one KV compare-and-set operation. A crash while EN
+16931 is running therefore leaves the upload `pending`; redelivery reruns the
+pipeline. EN runtime and SVRL failures follow the existing operational retry
+and dead-letter path. The completion reconciler publishes only terminal records
+whose required stage evidence is complete.
+
+During an upgrade, a pre-EN terminal Invoice or CreditNote with
+`resultPending=true` is handled according to the permanent result subject:
+
+- If no result was ever accepted, reconciliation queues the document for the
+  complete current validation pipeline. It cannot publish the old partial
+  record as a new result.
+- If the permanent first-result slot is already occupied, that historical
+  result is immutable. Reconciliation clears only the ambiguous pending marker
+  and neither overwrites the event nor rewrites the historical terminal record.
+
+Older terminal records with no pending publication are likewise retained as
+historical results. This compatibility rule preserves the one-result-per-upload
+contract without allowing current workers to create a new XSD-only success.
 
 ## Initial SVRL severity policy
 

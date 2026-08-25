@@ -161,3 +161,24 @@ func (c *Client) PublishResult(ctx context.Context, result ValidationResult) err
 	}
 	return nil
 }
+
+// HasValidationResult reports whether the permanent first-result slot for an
+// upload is already occupied. Rolling-upgrade reconciliation uses this to
+// distinguish an unpublished legacy terminal record from an ambiguous publish
+// acknowledgement that must preserve the result already accepted by JetStream.
+func (c *Client) HasValidationResult(ctx context.Context, id string) (bool, error) {
+	if !ValidID(id) {
+		return false, fmt.Errorf("invalid validation result upload id %q", id)
+	}
+	stream, err := c.JS.Stream(ctx, c.Namespace.ResultsStreamName())
+	if err != nil {
+		return false, fmt.Errorf("open validation results stream: %w", err)
+	}
+	if _, err := stream.GetLastMsgForSubject(ctx, c.Namespace.ResultSubject(id)); err != nil {
+		if errors.Is(err, jetstream.ErrMsgNotFound) {
+			return false, nil
+		}
+		return false, fmt.Errorf("inspect validation result for %s: %w", id, err)
+	}
+	return true, nil
+}

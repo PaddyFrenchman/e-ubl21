@@ -454,7 +454,7 @@ both the mandatory behavior and the overall-validation timeout wording.
 
 ---
 
-## TODO-EN-16931-008 — Integrate EN 16931 into durable worker state transitions
+## TODO-EN-16931-008 — Integrate EN 16931 into durable worker state transitions ✅ DONE
 
 ### Goal
 
@@ -476,6 +476,21 @@ Make semantic validation participate correctly in retries, dead-letter handling,
 ### Acceptance criteria
 
 No crash/retry/replay path can produce `valid` for an Invoice/CreditNote whose EN 16931 stage was never successfully completed.
+
+Implemented by the atomic terminal transition in `server/worker.go` and the
+stage-evidence guard in `server/validation_contract.go`. XSD and EN 16931
+results remain in memory until the required pipeline has completed; semantic
+failures commit `invalid`, while runtime/SVRL failures use operational retries
+and `processing_failed`. Result publication and completion reconciliation
+refuse incomplete current results, while permanent result subjects preserve
+one-result-per-upload and replay remains guarded by the existing claim protocol.
+
+Rolling-upgrade reconciliation revalidates unpublished legacy terminal billing
+records before publishing them. If a legacy first result already occupies its
+permanent subject, it is preserved and only an ambiguous `ResultPending` marker
+is repaired. Regression tests cover crash-window visibility, semantic versus
+operational transitions, complete reconciler output, legacy records, permanent
+result uniqueness, and replayed terminal outcomes.
 
 ---
 

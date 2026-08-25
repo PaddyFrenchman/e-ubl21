@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -56,9 +57,13 @@ func runTestWorker(t *testing.T, cfg Config, overrides func(*WorkerConfig)) {
 // "pending" (i.e. the worker has processed it) or the timeout elapses, at
 // which point it fails the test.
 func waitForStatus(t *testing.T, handler http.Handler, token, id string) map[string]any {
+	return waitForStatusWithin(t, handler, token, id, 5*time.Second)
+}
+
+func waitForStatusWithin(t *testing.T, handler http.Handler, token, id string, timeout time.Duration) map[string]any {
 	t.Helper()
 
-	deadline := time.Now().Add(5 * time.Second)
+	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		res := doRequest(handler, http.MethodGet, "/api/v1/ubl/"+id, token, "", "")
 		if res.Code != http.StatusOK {
@@ -73,7 +78,7 @@ func waitForStatus(t *testing.T, handler http.Handler, token, id string) map[str
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
-	t.Fatalf("upload %s did not leave pending status within 5s", id)
+	t.Fatalf("upload %s did not leave pending status within %s", id, timeout)
 	return nil
 }
 
@@ -161,6 +166,9 @@ func TestWorkerDeadLettersExhaustedFailureAndSupportsReplay(t *testing.T) {
 	for {
 		record, getErr := q.GetUploadRecord(ctx, id)
 		if getErr == nil && record.Status == queue.StatusValid {
+			if !terminalValidationStagesComplete(record) {
+				t.Fatalf("replay persisted incomplete validation stages: %+v", record.ValidationStages)
+			}
 			break
 		}
 		if time.Now().After(deadline) {
@@ -354,6 +362,10 @@ func TestWorkerReconcilesPendingCompletionsWithoutWorkDescriptors(t *testing.T) 
 		ID: resultID, DocumentType: "Invoice", Status: queue.StatusValid,
 		ReceivedAt: now.Format(time.RFC3339), ValidatedAt: now.Add(time.Second).Format(time.RFC3339),
 		ResultPending: true,
+		ValidationStages: queue.ValidationStages{
+			{Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: true, ValidatedAt: now.Format(time.RFC3339)},
+			{Layer: queue.ValidationLayerEN16931, Version: "test", Valid: true, ValidatedAt: now.Add(time.Second).Format(time.RFC3339)},
+		},
 	}
 	if err := q.PutUploadRecord(ctx, result); err != nil {
 		t.Fatal(err)
@@ -374,6 +386,9 @@ func TestWorkerReconcilesPendingCompletionsWithoutWorkDescriptors(t *testing.T) 
 		storedDead, deadErr := q.GetUploadRecord(ctx, deadID)
 		storedResult, resultErr := q.GetUploadRecord(ctx, resultID)
 		if deadErr == nil && resultErr == nil && storedDead.Status == queue.StatusProcessingFailed && !storedResult.ResultPending {
+			if !terminalValidationStagesComplete(storedResult) {
+				t.Fatalf("completion reconciler accepted incomplete stages: %+v", storedResult.ValidationStages)
+			}
 			deadDepth, depthErr := q.DeadLetterDepth(ctx)
 			results, streamErr := q.JS.Stream(ctx, q.Namespace.ResultsStreamName())
 			if depthErr != nil || streamErr != nil {
@@ -382,6 +397,17 @@ func TestWorkerReconcilesPendingCompletionsWithoutWorkDescriptors(t *testing.T) 
 			resultInfo, infoErr := results.Info(ctx)
 			if infoErr != nil || deadDepth != 1 || resultInfo.State.Msgs != 1 {
 				t.Fatalf("completion stream counts: dead=%d results=%d err=%v", deadDepth, resultInfo.State.Msgs, infoErr)
+			}
+			published, resultErr := results.GetLastMsgForSubject(ctx, q.Namespace.ResultSubject(resultID))
+			if resultErr != nil {
+				t.Fatal(resultErr)
+			}
+			var event queue.ValidationResult
+			if err := json.Unmarshal(published.Data, &event); err != nil {
+				t.Fatal(err)
+			}
+			if len(event.ValidationStages) != 2 {
+				t.Fatalf("completion reconciler published partial stages: %+v", event.ValidationStages)
 			}
 			after, infoErr := documents.Info(ctx)
 			if infoErr != nil || after.State.Msgs != 0 {
@@ -392,6 +418,253 @@ func TestWorkerReconcilesPendingCompletionsWithoutWorkDescriptors(t *testing.T) 
 		time.Sleep(20 * time.Millisecond)
 	}
 	t.Fatal("worker did not reconcile durable pending completions without descriptors")
+}
+
+func TestWorkerRevalidatesUnpublishedLegacyValidInvoice(t *testing.T) {
+	cfg := testConfig(t, nil)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+	id, _ := queue.NewID()
+	now := time.Now().UTC().Truncate(time.Second)
+	legacy := queue.UploadRecord{
+		ID: id, DocumentType: "Invoice", Status: queue.StatusValid,
+		ReceivedAt: now.Format(time.RFC3339), ValidatedAt: now.Add(time.Second).Format(time.RFC3339),
+		ResultPending: true,
+	}
+	if err := q.PutUploadRecord(ctx, legacy); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PutUploadContent(ctx, id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+
+	runTestWorker(t, cfg, nil)
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		stored, getErr := q.GetUploadRecord(ctx, id)
+		if getErr == nil && stored.Status == queue.StatusValid && !stored.ResultPending && terminalValidationStagesComplete(stored) {
+			results, streamErr := q.JS.Stream(ctx, q.Namespace.ResultsStreamName())
+			if streamErr != nil {
+				t.Fatal(streamErr)
+			}
+			published, resultErr := results.GetLastMsgForSubject(ctx, q.Namespace.ResultSubject(id))
+			if resultErr != nil {
+				t.Fatal(resultErr)
+			}
+			var result queue.ValidationResult
+			if err := json.Unmarshal(published.Data, &result); err != nil {
+				t.Fatal(err)
+			}
+			if result.Status != queue.StatusValid || len(result.ValidationStages) != 2 {
+				t.Fatalf("migrated result = %+v", result)
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("legacy unpublished valid Invoice was not revalidated and published with complete stages")
+}
+
+func TestWorkerPreservesAlreadyPublishedLegacyFirstResult(t *testing.T) {
+	cfg := testConfig(t, nil)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+	id, _ := queue.NewID()
+	now := time.Now().UTC().Truncate(time.Second)
+	legacy := queue.UploadRecord{
+		ID: id, DocumentType: "Invoice", Status: queue.StatusValid,
+		ReceivedAt: now.Format(time.RFC3339), ValidatedAt: now.Add(time.Second).Format(time.RFC3339),
+		ResultPending: true,
+	}
+	if err := q.PutUploadRecord(ctx, legacy); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishResult(ctx, queue.ValidationResult{ID: id, DocumentType: "Invoice", Status: queue.StatusValid, ValidatedAt: legacy.ValidatedAt}); err != nil {
+		t.Fatal(err)
+	}
+	documents, err := q.JS.Stream(ctx, q.Namespace.DocumentsStreamName())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	runTestWorker(t, cfg, nil)
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		stored, getErr := q.GetUploadRecord(ctx, id)
+		if getErr == nil && !stored.ResultPending {
+			info, infoErr := documents.Info(ctx)
+			if infoErr != nil || info.State.Msgs != 0 {
+				t.Fatalf("historical result unexpectedly queued revalidation: messages=%d err=%v", info.State.Msgs, infoErr)
+			}
+			if len(stored.ValidationStages) != 0 || stored.Status != queue.StatusValid {
+				t.Fatalf("historical record was rewritten: %+v", stored)
+			}
+			results, streamErr := q.JS.Stream(ctx, q.Namespace.ResultsStreamName())
+			if streamErr != nil {
+				t.Fatal(streamErr)
+			}
+			resultInfo, resultInfoErr := results.Info(ctx)
+			published, resultErr := results.GetLastMsgForSubject(ctx, q.Namespace.ResultSubject(id))
+			if resultInfoErr != nil || resultErr != nil || resultInfo.State.Msgs != 1 {
+				t.Fatalf("historical first-result slot changed: messages=%d infoErr=%v resultErr=%v", resultInfo.State.Msgs, resultInfoErr, resultErr)
+			}
+			var event queue.ValidationResult
+			if err := json.Unmarshal(published.Data, &event); err != nil {
+				t.Fatal(err)
+			}
+			if len(event.ValidationStages) != 0 {
+				t.Fatalf("historical first result was replaced: %+v", event)
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("ambiguous legacy result marker was not reconciled")
+}
+
+func TestENSemanticAndOperationalOutcomesUseDistinctDurableTransitions(t *testing.T) {
+	t.Run("business rule failure is terminal invalid", func(t *testing.T) {
+		cfg := testConfig(t, nil)
+		q, id := seedQueuedInvoiceForWorker(t, cfg)
+		runTestWorker(t, cfg, func(worker *WorkerConfig) {
+			worker.en16931Validator = en16931ValidatorFunc(func(_ context.Context, xml io.Reader) (queue.ValidationStageResult, error) {
+				_, _ = io.Copy(io.Discard, xml)
+				return queue.ValidationStageResult{
+					Layer: queue.ValidationLayerEN16931, Version: "test", Valid: false,
+					ValidatedAt: time.Now().UTC().Format(time.RFC3339Nano),
+					Issues:      []queue.ValidationIssue{{Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931, Rule: "BR-01", Severity: "error", Message: "missing business data"}},
+				}, nil
+			})
+		})
+		stored := waitForQueueStatus(t, q, id, queue.StatusInvalid, 5*time.Second)
+		if stored.ProcessingAttempts != 0 || len(stored.ValidationStages) != 2 || !stored.ResultPending && !validationResultExists(t, q, id) {
+			t.Fatalf("semantic-invalid durable record = %+v", stored)
+		}
+		if depth, err := q.DeadLetterDepth(context.Background()); err != nil || depth != 0 {
+			t.Fatalf("semantic invalidity entered DLQ: depth=%d err=%v", depth, err)
+		}
+	})
+
+	t.Run("runtime failure exhausts to processing_failed", func(t *testing.T) {
+		cfg := testConfig(t, nil)
+		q, id := seedQueuedInvoiceForWorker(t, cfg)
+		runTestWorker(t, cfg, func(worker *WorkerConfig) {
+			worker.MaxDeliver = 1
+			worker.en16931Validator = en16931ValidatorFunc(func(_ context.Context, xml io.Reader) (queue.ValidationStageResult, error) {
+				_, _ = io.Copy(io.Discard, xml)
+				return queue.ValidationStageResult{}, errors.New("Saxon unavailable")
+			})
+		})
+		stored := waitForQueueStatus(t, q, id, queue.StatusProcessingFailed, 5*time.Second)
+		if stored.ProcessingAttempts != 1 || len(stored.ValidationStages) != 0 || validationResultExists(t, q, id) {
+			t.Fatalf("operational-failure durable record = %+v", stored)
+		}
+		if depth, err := q.DeadLetterDepth(context.Background()); err != nil || depth != 1 {
+			t.Fatalf("operational failure DLQ depth=%d err=%v", depth, err)
+		}
+	})
+}
+
+func TestWorkerDoesNotPersistPartialSuccessWhileENStageIsRunning(t *testing.T) {
+	cfg := testConfig(t, nil)
+	q, id := seedQueuedInvoiceForWorker(t, cfg)
+	started := make(chan struct{})
+	release := make(chan struct{})
+	t.Cleanup(func() {
+		select {
+		case <-release:
+		default:
+			close(release)
+		}
+	})
+	runTestWorker(t, cfg, func(worker *WorkerConfig) {
+		worker.en16931Validator = en16931ValidatorFunc(func(_ context.Context, xml io.Reader) (queue.ValidationStageResult, error) {
+			_, _ = io.Copy(io.Discard, xml)
+			close(started)
+			<-release
+			return queue.ValidationStageResult{Layer: queue.ValidationLayerEN16931, Version: "test", Valid: true, ValidatedAt: time.Now().UTC().Format(time.RFC3339Nano)}, nil
+		})
+	})
+	select {
+	case <-started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("EN stage did not start")
+	}
+	stored, err := q.GetUploadRecord(context.Background(), id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Status != queue.StatusPending || len(stored.ValidationStages) != 0 || stored.ResultPending || validationResultExists(t, q, id) {
+		t.Fatalf("partial success became durable before EN completed: %+v", stored)
+	}
+	close(release)
+	stored = waitForQueueStatus(t, q, id, queue.StatusValid, 5*time.Second)
+	if !terminalValidationStagesComplete(stored) {
+		t.Fatalf("completed durable stages = %+v", stored.ValidationStages)
+	}
+}
+
+func seedQueuedInvoiceForWorker(t *testing.T, cfg Config) (*queue.Client, string) {
+	t.Helper()
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+	id, _ := queue.NewID()
+	now := time.Now().UTC().Truncate(time.Second)
+	if err := q.PutUploadRecord(ctx, queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusPending, ReceivedAt: now.Format(time.RFC3339)}); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PutUploadContent(ctx, id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDocument(ctx, id, "Invoice", now); err != nil {
+		t.Fatal(err)
+	}
+	return q, id
+}
+
+func waitForQueueStatus(t *testing.T, q *queue.Client, id string, want queue.ValidationStatus, timeout time.Duration) queue.UploadRecord {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		record, err := q.GetUploadRecord(context.Background(), id)
+		if err == nil && record.Status == want {
+			return record
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	record, err := q.GetUploadRecord(context.Background(), id)
+	t.Fatalf("upload did not reach %q: record=%+v err=%v", want, record, err)
+	return queue.UploadRecord{}
+}
+
+func validationResultExists(t *testing.T, q *queue.Client, id string) bool {
+	t.Helper()
+	exists, err := q.HasValidationResult(context.Background(), id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return exists
 }
 
 func TestWorkerClaimsOneReplayAfterMessageIDDeduplicationWindow(t *testing.T) {
@@ -464,6 +737,9 @@ func TestWorkerClaimsOneReplayAfterMessageIDDeduplicationWindow(t *testing.T) {
 		if getErr == nil && infoErr == nil && stored.Status == queue.StatusValid && !stored.ResultPending && streamInfo.State.Msgs == 0 {
 			if stored.ReplayClaimedSeq == 0 || stored.ReplayMessageID != "" || stored.ReplayReady {
 				t.Fatalf("replay claim was not retained: %+v", stored)
+			}
+			if !terminalValidationStagesComplete(stored) {
+				t.Fatalf("duplicate replay persisted incomplete validation stages: %+v", stored.ValidationStages)
 			}
 			return
 		}
@@ -715,7 +991,7 @@ func TestMandatoryWorkerRunsOrderedEN16931Pipeline(t *testing.T) {
 	if err := json.Unmarshal(res.Body.Bytes(), &accepted); err != nil {
 		t.Fatal(err)
 	}
-	stored := waitForStatus(t, handler, token, accepted["id"].(string))
+	stored := waitForStatusWithin(t, handler, token, accepted["id"].(string), 15*time.Second)
 	assertHTTPValidationPipeline(t, stored, queue.StatusValid, true)
 
 	// This fixture passes UBL XSD but omits mandatory EN 16931 business data.
@@ -728,7 +1004,7 @@ func TestMandatoryWorkerRunsOrderedEN16931Pipeline(t *testing.T) {
 	if err := json.Unmarshal(res.Body.Bytes(), &accepted); err != nil {
 		t.Fatal(err)
 	}
-	stored = waitForStatus(t, handler, token, accepted["id"].(string))
+	stored = waitForStatusWithin(t, handler, token, accepted["id"].(string), 15*time.Second)
 	assertHTTPValidationPipeline(t, stored, queue.StatusInvalid, false)
 }
 
