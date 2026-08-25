@@ -1,7 +1,7 @@
 # TODO
 
 **Project:** e-ubl21 / UBL-21 e-invoice validation  
-**Updated:** 2026-08-24
+**Updated:** 2026-08-25
 
 ## Numbering convention
 
@@ -513,6 +513,45 @@ Object Store and xmllint both support streaming.
 Pipe immutable upload content directly from Object Store into xmllint stdin,
 preserving timeout, diagnostic, and retry behavior while eliminating the full
 worker-side XML buffer.
+
+---
+
+## TODO-013 — Add safe Object Store tombstone purge maintenance
+
+Raw-content expiry in TODO-010 purges Object Store payload chunks but leaves
+JetStream deleted-object metadata. Those tombstones are small and remain
+bounded by the Object Store byte cap, but can consume meaningful capacity in a
+high-volume, long-running deployment.
+
+### Goal
+
+Provide one safe maintenance implementation that can be invoked manually from
+the CLI and scheduled unchanged through cron or a Kubernetes CronJob.
+
+### Requirements
+
+- Add a command such as `e-ubl21 maintenance purge-content-tombstones`.
+- Respect the configured queue namespace and operate only on that namespace's
+  raw-upload Object Store.
+- Enumerate deleted Object Store entries and purge only tombstones older than a
+  configurable grace period.
+- Provide a non-destructive `--dry-run` mode.
+- Bound each run with `--max-items` or an equivalent batch-size control.
+- Never purge active objects or metadata belonging to pending/unprocessed
+  uploads.
+- Make repeated runs idempotent and safe when another maintenance run overlaps.
+- Emit structured scanned/eligible/purged/failed totals and return a non-zero
+  exit status when cleanup is incomplete.
+- Add integration tests against the repository's supported NATS version,
+  including proof that live/pending content is unaffected.
+- Document manual operation and scheduling the same command through cron or a
+  Kubernetes CronJob; do not create a second cleanup implementation.
+
+### Acceptance criteria
+
+An operator can preview and then reclaim eligible Object Store delete-marker
+metadata in bounded batches without touching active upload content. The same
+command is safe for periodic scheduled execution and repeated runs.
 
 ---
 
