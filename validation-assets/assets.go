@@ -7,6 +7,9 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"os"
+	"path"
+	"path/filepath"
 )
 
 // Profile identifies one pinned semantic-validation ruleset. Treat profile
@@ -26,15 +29,28 @@ type Profile struct {
 // en16931 is the single source of truth for the packaged core EN 16931 UBL
 // ruleset. The release tag and digest deliberately do not follow a moving
 // upstream branch.
-var en16931 = Profile{
-	Name:             "en16931",
-	Version:          "1.3.16",
-	XSLTName:         "EN16931-UBL-validation.xslt",
-	EmbeddedXSLTPath: "en16931/1.3.16/EN16931-UBL-validation.xslt",
-	RuntimeXSLTPath:  "/opt/e-ubl21/validation-assets/en16931/1.3.16/EN16931-UBL-validation.xslt",
-	SourceRepository: "ConnectingEurope/eInvoicing-EN16931",
-	SourceRelease:    "validation-1.3.16",
-	XSLTSHA256:       "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd",
+var en16931 = newEN16931Profile(
+	"1.3.16",
+	"39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd",
+)
+
+func newEN16931Profile(version, checksum string) Profile {
+	const (
+		name       = "en16931"
+		xsltName   = "EN16931-UBL-validation.xslt"
+		runtimeDir = "/opt/e-ubl21/validation-assets"
+	)
+	embeddedPath := path.Join(name, version, xsltName)
+	return Profile{
+		Name:             name,
+		Version:          version,
+		XSLTName:         xsltName,
+		EmbeddedXSLTPath: embeddedPath,
+		RuntimeXSLTPath:  path.Join(runtimeDir, embeddedPath),
+		SourceRepository: "ConnectingEurope/eInvoicing-EN16931",
+		SourceRelease:    "validation-" + version,
+		XSLTSHA256:       checksum,
+	}
 }
 
 // EN16931 returns the immutable release metadata for the packaged core EN
@@ -44,7 +60,10 @@ func EN16931() Profile {
 	return en16931
 }
 
-//go:embed en16931/1.3.16/EN16931-UBL-validation.xslt
+// Embed versioned stylesheets without selecting a version here. The profile
+// above is the only version selector and verification rejects any mismatch.
+//
+//go:embed en16931/*/*.xslt
 var files embed.FS
 
 // OpenEN16931XSLT opens the exact stylesheet represented by EN16931. The
@@ -66,4 +85,28 @@ func VerifyEN16931() error {
 		return fmt.Errorf("verify %s profile %s stylesheet: SHA-256 mismatch: expected %s, got %s", en16931.Name, en16931.Version, en16931.XSLTSHA256, actual)
 	}
 	return nil
+}
+
+// StageEN16931 verifies and writes only the selected stylesheet beneath root,
+// preserving its profile-relative path. Container builds use a fixed staging
+// root, so their COPY instruction never declares an EN 16931 version.
+func StageEN16931(root string) (string, error) {
+	if root == "" {
+		return "", fmt.Errorf("stage %s profile: destination root is empty", en16931.Name)
+	}
+	if err := VerifyEN16931(); err != nil {
+		return "", err
+	}
+	content, err := files.ReadFile(en16931.EmbeddedXSLTPath)
+	if err != nil {
+		return "", fmt.Errorf("read staged %s stylesheet: %w", en16931.Name, err)
+	}
+	destination := filepath.Join(root, filepath.FromSlash(en16931.EmbeddedXSLTPath))
+	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
+		return "", fmt.Errorf("create %s asset directory: %w", en16931.Name, err)
+	}
+	if err := os.WriteFile(destination, content, 0o644); err != nil {
+		return "", fmt.Errorf("stage %s stylesheet: %w", en16931.Name, err)
+	}
+	return destination, nil
 }

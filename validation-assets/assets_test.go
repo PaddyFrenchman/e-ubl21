@@ -1,6 +1,7 @@
 package validationassets
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -44,6 +45,35 @@ func TestVerifyEN16931RejectsChecksumMismatch(t *testing.T) {
 	err := VerifyEN16931()
 	if err == nil || !strings.Contains(err.Error(), "SHA-256 mismatch") {
 		t.Fatalf("VerifyEN16931() error = %v, want SHA-256 mismatch", err)
+	}
+}
+
+func TestStageEN16931UsesSelectedProfilePath(t *testing.T) {
+	root := t.TempDir()
+	got, err := StageEN16931(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(root, filepath.FromSlash(EN16931().EmbeddedXSLTPath))
+	if got != want {
+		t.Fatalf("StageEN16931() path = %q, want %q", got, want)
+	}
+	staged, err := os.ReadFile(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	embedded, err := files.ReadFile(EN16931().EmbeddedXSLTPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(staged, embedded) {
+		t.Fatal("staged stylesheet differs from verified embedded stylesheet")
+	}
+}
+
+func TestStageEN16931RejectsEmptyRoot(t *testing.T) {
+	if _, err := StageEN16931(""); err == nil {
+		t.Fatal("StageEN16931() accepted an empty destination root")
 	}
 }
 

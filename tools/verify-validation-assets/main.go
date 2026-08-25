@@ -3,6 +3,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -10,10 +11,23 @@ import (
 )
 
 func main() {
+	stageDir := flag.String("stage-dir", "", "optional directory beneath which to stage verified runtime assets")
+	flag.Parse()
+
 	profile := validationassets.EN16931()
-	if err := validationassets.VerifyEN16931(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	staged := ""
+	if *stageDir == "" {
+		if err := validationassets.VerifyEN16931(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	} else {
+		var err error
+		staged, err = validationassets.StageEN16931(*stageDir)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
 	fmt.Printf("verified profile=%s version=%s release=%s sha256=%s xslt=%s\n",
 		profile.Name,
@@ -22,4 +36,7 @@ func main() {
 		profile.XSLTSHA256,
 		profile.RuntimeXSLTPath,
 	)
+	if staged != "" {
+		fmt.Printf("staged=%s\n", staged)
+	}
 }
