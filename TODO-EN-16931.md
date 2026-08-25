@@ -267,7 +267,7 @@ model without raw XML or raw SVRL.
 
 ---
 
-## TODO-EN-16931-005 — Implement and test the SVRL parser
+## TODO-EN-16931-005 — Implement and test the SVRL parser ✅ DONE
 
 ### Goal
 
@@ -294,6 +294,13 @@ Convert official Schematron Validation Report Language output into the stable Go
 ### Acceptance criteria
 
 Given deterministic SVRL, the parser produces deterministic typed validation issues and never confuses parser/runtime errors with standards non-compliance.
+
+Implemented by the dedicated `svrl` package. It retains source order and
+official rule/severity/location/test/message/diagnostic fields, normalizes
+mixed-content whitespace, and fails closed on malformed XML, unexpected roots,
+oversized input, excess issues, or excess normalized diagnostic text. Errors
+return no partial semantic report so the validator adapter can classify them
+strictly as operational failures.
 
 ---
 
