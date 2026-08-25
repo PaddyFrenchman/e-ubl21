@@ -211,6 +211,9 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	if record.ValidatedAt != "" {
 		response["validatedAt"] = record.ValidatedAt
 	}
+	if len(record.ValidationStages) > 0 {
+		response["validationStages"] = record.ValidationStages
+	}
 	if record.Error != "" {
 		response["error"] = record.Error
 	}

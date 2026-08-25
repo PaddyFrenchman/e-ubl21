@@ -13,6 +13,51 @@ import (
 // ValidationStatus describes the lifecycle state of an uploaded document.
 type ValidationStatus string
 
+// ValidationLayer is a stable identifier for one independently reportable
+// standards-validation stage.
+type ValidationLayer string
+
+const (
+	ValidationLayerUBL21XSD ValidationLayer = "ubl21-xsd"
+	ValidationLayerEN16931  ValidationLayer = "en16931"
+)
+
+// ValidationIssue is one bounded, structured standards diagnostic. Raw XML
+// and raw validator output must never be stored in this model.
+type ValidationIssue struct {
+	Layer      ValidationLayer `json:"layer"`
+	Rule       string          `json:"rule,omitempty"`
+	Severity   string          `json:"severity"`
+	Location   string          `json:"location,omitempty"`
+	Test       string          `json:"test,omitempty"`
+	Message    string          `json:"message"`
+	Diagnostic string          `json:"diagnostic,omitempty"`
+}
+
+// ValidationStageResult records the outcome of one validation layer. Version
+// identifies the exact schema or semantic profile that produced the result.
+type ValidationStageResult struct {
+	Layer       ValidationLayer   `json:"layer"`
+	Version     string            `json:"version,omitempty"`
+	Valid       bool              `json:"valid"`
+	Issues      []ValidationIssue `json:"issues,omitempty"`
+	ValidatedAt string            `json:"validatedAt"`
+	DurationMS  int64             `json:"durationMs,omitempty"`
+}
+
+// ValidationStages is the ordered set of completed validation layers.
+type ValidationStages []ValidationStageResult
+
+// Find returns the completed result for layer, if present.
+func (stages ValidationStages) Find(layer ValidationLayer) (ValidationStageResult, bool) {
+	for _, stage := range stages {
+		if stage.Layer == layer {
+			return stage, true
+		}
+	}
+	return ValidationStageResult{}, false
+}
+
 const (
 	// StatusAccepting records durable upload intent while immutable content is
 	// being persisted. A stale accepting record is reconciled or failed.
@@ -26,12 +71,11 @@ const (
 	// StatusPending is the status a document is given the moment it is
 	// queued for processing, before the worker has picked it up.
 	StatusPending ValidationStatus = "pending"
-	// StatusValid means the worker validated the document against its UBL
-	// 2.1 XSD successfully.
+	// StatusValid means every standards-validation stage required for the
+	// document type completed successfully.
 	StatusValid ValidationStatus = "valid"
-	// StatusInvalid means the worker validated the document against its
-	// UBL 2.1 XSD and it failed (see ValidationResult.Error /
-	// UploadRecord.Error for details).
+	// StatusInvalid means a required standards-validation stage completed and
+	// found the document non-compliant (see ValidationStages for details).
 	StatusInvalid ValidationStatus = "invalid"
 	// StatusAcceptanceFailed is a terminal ingress failure for which no work
 	// will be queued. Any partially written content is reclaimed.
@@ -49,11 +93,12 @@ const (
 // ValidationResult is the payload published to Namespace.ResultsSubject
 // once a document has been processed by the worker.
 type ValidationResult struct {
-	ID           string           `json:"id"`
-	DocumentType string           `json:"documentType"`
-	Status       ValidationStatus `json:"status"`
-	Error        string           `json:"error,omitempty"`
-	ValidatedAt  string           `json:"validatedAt"`
+	ID               string           `json:"id"`
+	DocumentType     string           `json:"documentType"`
+	Status           ValidationStatus `json:"status"`
+	Error            string           `json:"error,omitempty"`
+	ValidatedAt      string           `json:"validatedAt"`
+	ValidationStages ValidationStages `json:"validationStages,omitempty"`
 }
 
 // JSErrCode 10077 is the server's stable "maximum messages per subject

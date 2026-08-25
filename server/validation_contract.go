@@ -9,11 +9,11 @@ import (
 // validationLayer identifies one standards-validation layer in the mandatory
 // server pipeline. These values are stable contract identifiers intended for
 // reuse by the layered result model introduced later in the EN 16931 roadmap.
-type validationLayer string
+type validationLayer = queue.ValidationLayer
 
 const (
-	validationLayerUBL21XSD validationLayer = "ubl21-xsd"
-	validationLayerEN16931  validationLayer = "en16931"
+	validationLayerUBL21XSD validationLayer = queue.ValidationLayerUBL21XSD
+	validationLayerEN16931  validationLayer = queue.ValidationLayerEN16931
 )
 
 // validationStageOutcome distinguishes standards non-compliance from an

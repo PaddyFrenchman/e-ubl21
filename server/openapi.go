@@ -48,6 +48,46 @@ func commonErrorResponses() map[string]any {
 	}
 }
 
+func validationIssueSchema() map[string]any {
+	return map[string]any{
+		"description": "A structured standards-validation diagnostic; never raw XML or raw validator output.",
+		"type":        "object",
+		"example": map[string]any{
+			"layer": "en16931", "rule": "BR-CO-10", "severity": "error",
+			"location": "/ubl:Invoice/cac:LegalMonetaryTotal", "test": "xs:decimal(cbc:LineExtensionAmount) = 100",
+			"message": "Sum of invoice line net amounts must equal the invoice total.", "diagnostic": "BT-106 does not reconcile.",
+		},
+		"properties": map[string]any{
+			"layer":      map[string]any{"type": "string", "enum": []string{"ubl21-xsd", "en16931"}, "example": "en16931"},
+			"rule":       map[string]any{"type": "string", "example": "BR-CO-10"},
+			"severity":   map[string]any{"type": "string", "example": "error"},
+			"location":   map[string]any{"type": "string", "example": "/ubl:Invoice/cac:LegalMonetaryTotal"},
+			"test":       map[string]any{"type": "string", "example": "xs:decimal(cbc:LineExtensionAmount) = 100"},
+			"message":    map[string]any{"type": "string", "example": "Sum of invoice line net amounts must equal the invoice total."},
+			"diagnostic": map[string]any{"type": "string", "example": "BT-106 does not reconcile."},
+		},
+		"required":             []string{"layer", "severity", "message"},
+		"additionalProperties": false,
+	}
+}
+
+func validationStageResultSchema() map[string]any {
+	return map[string]any{
+		"description": "Outcome of one completed validation layer.",
+		"type":        "object",
+		"properties": map[string]any{
+			"layer":       map[string]any{"type": "string", "enum": []string{"ubl21-xsd", "en16931"}},
+			"version":     map[string]any{"type": "string", "example": "1.3.16"},
+			"valid":       map[string]any{"type": "boolean"},
+			"issues":      map[string]any{"type": "array", "items": map[string]any{"$ref": "#/components/schemas/ValidationIssue"}},
+			"validatedAt": map[string]any{"type": "string", "format": "date-time"},
+			"durationMs":  map[string]any{"type": "integer", "format": "int64", "minimum": 0},
+		},
+		"required":             []string{"layer", "valid", "validatedAt"},
+		"additionalProperties": false,
+	}
+}
+
 var cachedOpenAPIDocument = buildOpenAPIDocument()
 var cachedOpenAPIJSON = mustMarshalOpenAPI(cachedOpenAPIDocument)
 
@@ -227,11 +267,16 @@ func buildOpenAPIDocument() map[string]any {
 									"schema": map[string]any{
 										"type": "object",
 										"properties": map[string]any{
-											"id":                 map[string]any{"type": "string", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
-											"document":           map[string]any{"type": "string", "example": "Invoice"},
-											"status":             map[string]any{"type": "string", "enum": []string{"accepting", "cleanup_pending", "enqueue_pending", "pending", "valid", "invalid", "acceptance_failed", "dead_letter_pending", "processing_failed"}, "example": "valid"},
-											"receivedAt":         map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
-											"validatedAt":        map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document.", "example": "2026-08-20T12:00:01Z"},
+											"id":          map[string]any{"type": "string", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
+											"document":    map[string]any{"type": "string", "example": "Invoice"},
+											"status":      map[string]any{"type": "string", "enum": []string{"accepting", "cleanup_pending", "enqueue_pending", "pending", "valid", "invalid", "acceptance_failed", "dead_letter_pending", "processing_failed"}, "example": "valid"},
+											"receivedAt":  map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
+											"validatedAt": map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document.", "example": "2026-08-20T12:00:01Z"},
+											"validationStages": map[string]any{
+												"type": "array", "description": "Independently reportable validation-layer outcomes, in execution order.",
+												"items":   map[string]any{"$ref": "#/components/schemas/ValidationStageResult"},
+												"example": []map[string]any{{"layer": "ubl21-xsd", "version": "2.1", "valid": true, "validatedAt": "2026-08-20T12:00:01Z", "durationMs": 14}},
+											},
 											"contentAvailable":   map[string]any{"type": "boolean", "description": "Whether lifecycle metadata indicates that raw XML is retained and eligible for retrieval; this does not perform an Object Store read.", "example": true},
 											"contentExpiresAt":   map[string]any{"type": "string", "format": "date-time", "description": "Scheduled raw-content expiry time, present after validation when retention is enabled.", "example": "2026-09-19T12:00:01Z"},
 											"contentExpiredAt":   map[string]any{"type": "string", "format": "date-time", "description": "Time raw content became unavailable under the retention policy. Physical deletion is retried independently; validation metadata remains available.", "example": "2026-09-19T12:00:30Z"},
@@ -255,6 +300,8 @@ func buildOpenAPIDocument() map[string]any {
 		},
 		"components": map[string]any{
 			"schemas": map[string]any{
+				"ValidationIssue":       validationIssueSchema(),
+				"ValidationStageResult": validationStageResultSchema(),
 				"ErrorResponse": map[string]any{
 					"description": "Standard error payload returned when a request is rejected.",
 					"type":        "object",

@@ -200,7 +200,7 @@ embedding the worker during the staged rollout.
 
 ---
 
-## TODO-EN-16931-004 — Introduce a layered validation result model
+## TODO-EN-16931-004 — Introduce a layered validation result model ✅ DONE
 
 ### Goal
 
@@ -256,6 +256,14 @@ Did EN 16931 pass?
 Which EN 16931 rules failed?
 Which profile version produced the result?
 ```
+
+Implemented by the stable public models in `queue/results.go`. Both
+`UploadRecord` and `ValidationResult` retain ordered `validationStages`; each
+stage carries its layer, validator/profile version, validity, timing and
+structured issues. The current worker now persists and publishes the UBL 2.1
+XSD stage, while the EN 16931 parser/adapter steps will populate the semantic
+stage. The status endpoint and both OpenAPI representations expose the same
+model without raw XML or raw SVRL.
 
 ---
 

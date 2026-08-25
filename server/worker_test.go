@@ -604,6 +604,7 @@ func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {
 	if stored["contentExpiresAt"] == "" || stored["contentExpiresAt"] == nil {
 		t.Fatal("missing contentExpiresAt on a processed document")
 	}
+	assertHTTPXSDStage(t, stored, true)
 
 	// Bypass message-ID deduplication to model a descriptor replay after the
 	// broker duplicate window. A terminal record must suppress revalidation
@@ -696,6 +697,26 @@ func TestWorkerFlagsSchemaInvalidDocument(t *testing.T) {
 	errMsg, _ := stored["error"].(string)
 	if errMsg == "" {
 		t.Fatal("expected a non-empty error message for an invalid document")
+	}
+	assertHTTPXSDStage(t, stored, false)
+}
+
+func assertHTTPXSDStage(t *testing.T, stored map[string]any, valid bool) {
+	t.Helper()
+	stages, ok := stored["validationStages"].([]any)
+	if !ok || len(stages) != 1 {
+		t.Fatalf("validationStages = %#v, want one XSD stage", stored["validationStages"])
+	}
+	stage, ok := stages[0].(map[string]any)
+	if !ok || stage["layer"] != string(queue.ValidationLayerUBL21XSD) || stage["version"] != "2.1" || stage["valid"] != valid {
+		t.Fatalf("XSD stage = %#v, want valid=%t", stages[0], valid)
+	}
+	issues, hasIssues := stage["issues"].([]any)
+	if valid && hasIssues {
+		t.Fatalf("valid XSD stage unexpectedly has issues: %#v", issues)
+	}
+	if !valid && (!hasIssues || len(issues) == 0) {
+		t.Fatalf("invalid XSD stage has no issues: %#v", stage)
 	}
 }
 

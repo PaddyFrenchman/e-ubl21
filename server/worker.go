@@ -432,6 +432,7 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		return
 	}
 
+	validationStarted := time.Now()
 	validationErr := validateReaderAgainstSchema(validationCtx, schemaPath, content, w.validationTimeout)
 	streamErr := content.Error()
 	closeErr := content.Close()
@@ -462,11 +463,27 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		status = queue.StatusInvalid
 		errMsg = validationErr.Error()
 	}
+	validatedAtText := validatedAt.UTC().Format(time.RFC3339)
+	xsdStage := queue.ValidationStageResult{
+		Layer:       queue.ValidationLayerUBL21XSD,
+		Version:     "2.1",
+		Valid:       validationErr == nil,
+		ValidatedAt: validatedAtText,
+		DurationMS:  time.Since(validationStarted).Milliseconds(),
+	}
+	if validationErr != nil {
+		xsdStage.Issues = []queue.ValidationIssue{{
+			Layer:    queue.ValidationLayerUBL21XSD,
+			Severity: "error",
+			Message:  errMsg,
+		}}
+	}
 
 	record := versioned.Record
 	record.Status = status
 	record.Error = errMsg
-	record.ValidatedAt = validatedAt.UTC().Format(time.RFC3339)
+	record.ValidatedAt = validatedAtText
+	record.ValidationStages = queue.ValidationStages{xsdStage}
 	if w.contentRetention > 0 {
 		record.ContentExpiresAt = validatedAt.Add(w.contentRetention).UTC().Format(time.RFC3339)
 	}
@@ -487,7 +504,8 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 			record = latest.Record
 			record.Status = status
 			record.Error = errMsg
-			record.ValidatedAt = validatedAt.UTC().Format(time.RFC3339)
+			record.ValidatedAt = validatedAtText
+			record.ValidationStages = queue.ValidationStages{xsdStage}
 			if w.contentRetention > 0 {
 				record.ContentExpiresAt = validatedAt.Add(w.contentRetention).UTC().Format(time.RFC3339)
 			}
@@ -635,7 +653,7 @@ func (w *documentWorker) ensureValidationResultPublished(ctx context.Context, ve
 	}
 	if err := w.queue.PublishResult(ctx, queue.ValidationResult{
 		ID: record.ID, DocumentType: record.DocumentType, Status: record.Status,
-		Error: record.Error, ValidatedAt: record.ValidatedAt,
+		Error: record.Error, ValidatedAt: record.ValidatedAt, ValidationStages: record.ValidationStages,
 	}); err != nil {
 		return err
 	}

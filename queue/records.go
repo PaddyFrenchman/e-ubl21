@@ -32,6 +32,7 @@ type UploadRecord struct {
 	Error              string           `json:"error,omitempty"`
 	ReceivedAt         string           `json:"receivedAt"`
 	ValidatedAt        string           `json:"validatedAt,omitempty"`
+	ValidationStages   ValidationStages `json:"validationStages,omitempty"`
 	ContentExpiresAt   string           `json:"contentExpiresAt,omitempty"`
 	ContentExpiredAt   string           `json:"contentExpiredAt,omitempty"`
 	ResultPending      bool             `json:"resultPending,omitempty"`

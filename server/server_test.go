@@ -488,7 +488,7 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 	mediaType := content["application/json"].(map[string]any)
 	schema := mediaType["schema"].(map[string]any)
 	properties := schema["properties"].(map[string]any)
-	for _, field := range []string{"contentAvailable", "contentExpiresAt", "contentExpiredAt"} {
+	for _, field := range []string{"contentAvailable", "contentExpiresAt", "contentExpiredAt", "validationStages"} {
 		if _, ok := properties[field]; !ok {
 			t.Fatalf("retrieval schema missing %s", field)
 		}

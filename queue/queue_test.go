@@ -3,6 +3,7 @@ package queue_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"testing"
 	"time"
@@ -355,6 +356,10 @@ func TestPublishResult(t *testing.T) {
 		DocumentType: "Invoice",
 		Status:       queue.StatusValid,
 		ValidatedAt:  time.Now().UTC().Format(time.RFC3339),
+		ValidationStages: queue.ValidationStages{{
+			Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: true,
+			ValidatedAt: time.Now().UTC().Format(time.RFC3339), DurationMS: 4,
+		}},
 	}
 	if err := client.PublishResult(ctx, result); err != nil {
 		t.Fatalf("publish result: %v", err)
@@ -416,6 +421,14 @@ func TestPublishResult(t *testing.T) {
 		}
 		if got := msg.Headers().Get(queue.HeaderUploadID); got != id {
 			t.Fatalf("upload id header = %q, want %q", got, id)
+		}
+		var published queue.ValidationResult
+		if err := json.Unmarshal(msg.Data(), &published); err != nil {
+			t.Fatalf("decode published result: %v", err)
+		}
+		stage, ok := published.ValidationStages.Find(queue.ValidationLayerUBL21XSD)
+		if !ok || !stage.Valid || stage.Version != "2.1" {
+			t.Fatalf("published XSD stage = %+v, present %t", stage, ok)
 		}
 		msg.Ack()
 	}

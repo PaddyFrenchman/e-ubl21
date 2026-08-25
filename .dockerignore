@@ -6,6 +6,9 @@
 .venv/
 data/
 devsetup/
+!devsetup/
+devsetup/*
+!devsetup/download_saxon_he.sh
 docs/
 ideas/
 createsamples/samples/
