@@ -88,7 +88,7 @@ var (
 	})
 	workerTerminalFailures = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "e_ubl21_worker_terminal_failures_total",
-		Help: "Total documents moved to processing_failed after exhausting delivery attempts.",
+		Help: "Total documents moved to processing_failed after exhausting application processing attempts.",
 	})
 	workerDeadLetterDepth = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "e_ubl21_worker_dead_letter_depth",

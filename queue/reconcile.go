@@ -39,6 +39,12 @@ func (c *Client) ReconcileUploads(ctx context.Context, minAge time.Duration) (Re
 		}
 		record := versioned.Record
 		revision := versioned.Revision
+		// Operator replay owns records carrying a stable replay key. Publishing
+		// them with the acceptance path's original message ID would defeat replay
+		// idempotence and could race DLQ cleanup.
+		if record.ReplayMessageID != "" {
+			continue
+		}
 		if record.Status != StatusAccepting && record.Status != StatusEnqueuePending && record.Status != StatusCleanupPending {
 			continue
 		}

@@ -128,7 +128,10 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		consumerName = defaultWorkerConsumerName
 	}
 	localCapacity := settings.concurrency + settings.prefetch
-	consumer, err := q.DocumentsConsumerWithConfig(ctx, consumerName, cfg.SubjectFilter, settings.ackWait, settings.maxDeliver, settings.maxAckPending)
+	// Broker delivery is deliberately unlimited. maxDeliver is an application
+	// attempt threshold; once reached, redeliveries retry only the durable
+	// dead-letter transition until both KV and DLQ state are confirmed.
+	consumer, err := q.DocumentsConsumerWithConfig(ctx, consumerName, cfg.SubjectFilter, settings.ackWait, -1, settings.maxAckPending)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil
@@ -184,6 +187,8 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		"concurrency", settings.concurrency,
 		"prefetch", settings.prefetch,
 		"ackWait", settings.ackWait,
+		"applicationMaxAttempts", settings.maxDeliver,
+		"brokerMaxDeliver", "unlimited",
 		"maxAckPending", settings.maxAckPending,
 	)
 
@@ -241,6 +246,7 @@ type documentWorker struct {
 }
 
 const nakRetryDelay = 10 * time.Second
+const replayHandoffRetryDelay = 100 * time.Millisecond
 
 func (w *documentWorker) process(msg jetstream.Msg) {
 	workerValidationsInFlight.Inc()
@@ -316,13 +322,21 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 	versioned, err := w.queue.GetUploadRecordVersion(ctx, id)
 	if err != nil {
 		recordValidationOutcome("internal_error")
-		w.retryOrDeadLetter(ctx, msg, item, nil, fmt.Errorf("load upload status: %w", err))
+		w.retryOperationalFailure(ctx, msg, item, nil, fmt.Errorf("load upload status: %w", err))
+		return
+	}
+	if versioned.Record.Status == queue.StatusDeadLetterPending {
+		w.finalizeDeadLetter(ctx, msg, versioned)
+		return
+	}
+	if versioned.Record.ReplayMessageID != "" && (versioned.Record.Status == queue.StatusEnqueuePending || versioned.Record.Status == queue.StatusPending) {
+		logger.Info("replay handoff is not complete; deferring descriptor")
+		_ = msg.NakWithDelay(replayHandoffRetryDelay)
 		return
 	}
 	if versioned.Record.Status == queue.StatusValid || versioned.Record.Status == queue.StatusInvalid {
 		if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
-			logger.Error("failed to finish prior validation result; will retry", "error", err)
-			_ = msg.NakWithDelay(nakRetryDelay)
+			w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("finish prior validation result: %w", err))
 			return
 		}
 		recordValidationOutcome("duplicate")
@@ -335,7 +349,7 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		return
 	}
 	if versioned.Record.Status != queue.StatusPending && versioned.Record.Status != queue.StatusEnqueuePending {
-		w.retryOrDeadLetter(ctx, msg, item, &versioned, fmt.Errorf("upload is not queueable: status %s", versioned.Record.Status))
+		w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("upload is not queueable: status %s", versioned.Record.Status))
 		return
 	}
 
@@ -344,7 +358,7 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		// The API stores content before publishing the descriptor. Failure to
 		// retrieve it is therefore an operational/storage failure worth retrying.
 		recordValidationOutcome("content_unavailable")
-		w.retryOrDeadLetter(ctx, msg, item, &versioned, fmt.Errorf("load upload content: %w", err))
+		w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("load upload content: %w", err))
 		return
 	}
 
@@ -353,12 +367,12 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 
 	if validationErr != nil && errors.Is(validationErr, errXMLLintUnavailable) {
 		recordValidationOutcome("validator_unavailable")
-		w.retryOrDeadLetter(ctx, msg, item, &versioned, validationErr)
+		w.retryOperationalFailure(ctx, msg, item, &versioned, validationErr)
 		return
 	}
 	if validationErr != nil && errors.Is(validationErr, errValidationTimeout) {
 		recordValidationOutcome("validation_timeout")
-		w.retryOrDeadLetter(ctx, msg, item, &versioned, validationErr)
+		w.retryOperationalFailure(ctx, msg, item, &versioned, validationErr)
 		return
 	}
 
@@ -381,11 +395,13 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 	if err != nil {
 		latest, getErr := w.queue.GetUploadRecordVersion(ctx, id)
 		if getErr == nil && (latest.Record.Status == queue.StatusValid || latest.Record.Status == queue.StatusInvalid) {
-			if publishErr := w.ensureValidationResultPublished(ctx, latest); publishErr == nil {
-				recordValidationOutcome("duplicate")
-				_ = msg.Ack()
+			if publishErr := w.ensureValidationResultPublished(ctx, latest); publishErr != nil {
+				w.retryOperationalFailure(ctx, msg, item, &latest, fmt.Errorf("finish concurrent validation result: %w", publishErr))
 				return
 			}
+			recordValidationOutcome("duplicate")
+			_ = msg.Ack()
+			return
 		}
 		if getErr == nil && (latest.Record.Status == queue.StatusPending || latest.Record.Status == queue.StatusEnqueuePending) {
 			record = latest.Record
@@ -401,17 +417,24 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 				goto publishResult
 			}
 		}
-		logger.Error("failed to update upload status; will retry", "error", err)
 		recordValidationOutcome("internal_error")
-		_ = msg.NakWithDelay(nakRetryDelay)
+		if getErr == nil {
+			w.retryOperationalFailure(ctx, msg, item, &latest, fmt.Errorf("update upload validation status: %w", err))
+		} else {
+			w.retryOperationalFailure(ctx, msg, item, nil, fmt.Errorf("update upload validation status: %w (reload: %v)", err, getErr))
+		}
 		return
 	}
 
 publishResult:
 	if err := w.ensureValidationResultPublished(ctx, queue.VersionedUploadRecord{Record: record, Revision: revision}); err != nil {
-		logger.Error("failed to publish validation result; will retry", "error", err)
 		recordValidationOutcome("internal_error")
-		_ = msg.NakWithDelay(nakRetryDelay)
+		latest, getErr := w.queue.GetUploadRecordVersion(ctx, id)
+		if getErr == nil {
+			w.retryOperationalFailure(ctx, msg, item, &latest, fmt.Errorf("publish validation result: %w", err))
+		} else {
+			w.retryOperationalFailure(ctx, msg, item, nil, fmt.Errorf("publish validation result: %w (reload: %v)", err, getErr))
+		}
 		return
 	}
 
@@ -424,50 +447,88 @@ publishResult:
 	logger.Info("processed document", "status", status, "duration_ms", time.Since(start).Milliseconds())
 }
 
-func (w *documentWorker) retryOrDeadLetter(ctx context.Context, msg jetstream.Msg, item queue.DocumentWorkItem, versioned *queue.VersionedUploadRecord, processingErr error) {
-	attempts := uint64(1)
-	if metadata, err := msg.Metadata(); err == nil {
-		attempts = metadata.NumDelivered
-	}
-	logger := w.logger.With("id", item.ID, "documentType", item.DocumentType, "attempt", attempts)
-	if attempts < w.maxDeliver {
-		if versioned != nil {
-			record := versioned.Record
-			record.LastError = processingErr.Error()
-			record.ProcessingAttempts = attempts
-			if revision, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision); err == nil {
-				versioned.Record, versioned.Revision = record, revision
-			}
+func (w *documentWorker) retryOperationalFailure(ctx context.Context, msg jetstream.Msg, item queue.DocumentWorkItem, versioned *queue.VersionedUploadRecord, processingErr error) {
+	logger := w.logger.With("id", item.ID, "documentType", item.DocumentType)
+	if versioned == nil {
+		metadata, metadataErr := msg.Metadata()
+		if metadataErr != nil || metadata.NumDelivered < w.maxDeliver || !errors.Is(processingErr, queue.ErrRecordNotFound) {
+			logger.Error("document processing failed before canonical metadata was available; will retry", "error", processingErr)
+			_ = msg.NakWithDelay(nakRetryDelay)
+			return
 		}
-		logger.Error("document processing failed; will retry", "error", processingErr)
+		failedAt := time.Now().UTC().Format(time.RFC3339)
+		record := queue.UploadRecord{ID: item.ID, DocumentType: item.DocumentType, Status: queue.StatusDeadLetterPending, Error: processingErr.Error(), LastError: processingErr.Error(), ReceivedAt: item.ReceivedAt, ProcessingAttempts: metadata.NumDelivered, ProcessingFailedAt: failedAt}
+		revision, err := w.queue.CreateUploadRecord(ctx, record)
+		if err != nil {
+			logger.Error("failed to create canonical dead-letter transition; will retry", "error", err)
+			_ = msg.NakWithDelay(nakRetryDelay)
+			return
+		}
+		w.finalizeDeadLetter(ctx, msg, queue.VersionedUploadRecord{Record: record, Revision: revision})
+		return
+	}
+
+	if versioned.Record.Status == queue.StatusDeadLetterPending {
+		w.finalizeDeadLetter(ctx, msg, *versioned)
+		return
+	}
+	attempts := versioned.Record.ProcessingAttempts + 1
+	logger = logger.With("attempt", attempts)
+	if (versioned.Record.Status == queue.StatusValid || versioned.Record.Status == queue.StatusInvalid) && versioned.Record.ResultPending {
+		record := versioned.Record
+		record.LastError = processingErr.Error()
+		record.ProcessingAttempts = attempts
+		if _, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision); err != nil {
+			logger.Error("failed to record result-publication retry; will retry", "error", err)
+		} else {
+			logger.Error("validation result is pending publication; will retry", "error", processingErr)
+		}
 		_ = msg.NakWithDelay(nakRetryDelay)
 		return
 	}
 
-	failedAt := time.Now().UTC()
-	dead := queue.DeadLetter{ID: item.ID, DocumentType: item.DocumentType, ReceivedAt: item.ReceivedAt, LastError: processingErr.Error(), Attempts: attempts, FailedAt: failedAt.Format(time.RFC3339)}
-	if err := w.queue.PublishDeadLetter(ctx, dead); err != nil {
-		logger.Error("failed to publish exhausted document to dead-letter stream", "error", err)
+	record := versioned.Record
+	record.LastError = processingErr.Error()
+	record.ProcessingAttempts = attempts
+	if attempts < w.maxDeliver {
+		if _, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision); err != nil {
+			logger.Error("failed to record processing attempt; will retry", "error", err)
+		} else {
+			logger.Error("document processing failed; will retry", "error", processingErr)
+		}
 		_ = msg.NakWithDelay(nakRetryDelay)
 		return
 	}
-	if versioned != nil {
-		record := versioned.Record
-		record.Status = queue.StatusProcessingFailed
-		record.Error = processingErr.Error()
-		record.LastError = processingErr.Error()
-		record.ProcessingAttempts = attempts
-		record.ProcessingFailedAt = failedAt.Format(time.RFC3339)
-		_, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision)
-		if err != nil {
-			logger.Error("failed to record terminal processing failure", "error", err)
-			_ = msg.NakWithDelay(nakRetryDelay)
-			return
-		}
+	record.Status = queue.StatusDeadLetterPending
+	record.Error = processingErr.Error()
+	record.ProcessingFailedAt = time.Now().UTC().Format(time.RFC3339)
+	revision, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision)
+	if err != nil {
+		logger.Error("failed to persist dead-letter transition; will retry", "error", err)
+		_ = msg.NakWithDelay(nakRetryDelay)
+		return
+	}
+	w.finalizeDeadLetter(ctx, msg, queue.VersionedUploadRecord{Record: record, Revision: revision})
+}
+
+func (w *documentWorker) finalizeDeadLetter(ctx context.Context, msg jetstream.Msg, versioned queue.VersionedUploadRecord) {
+	record := versioned.Record
+	logger := w.logger.With("id", record.ID, "documentType", record.DocumentType, "attempt", record.ProcessingAttempts)
+	dead := queue.DeadLetter{ID: record.ID, DocumentType: record.DocumentType, ReceivedAt: record.ReceivedAt, LastError: record.LastError, Attempts: record.ProcessingAttempts, FailedAt: record.ProcessingFailedAt}
+	if err := w.queue.PublishDeadLetter(ctx, dead); err != nil {
+		logger.Error("failed to publish pending dead letter; will retry", "error", err)
+		_ = msg.NakWithDelay(nakRetryDelay)
+		return
+	}
+	record.Status = queue.StatusProcessingFailed
+	if _, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision); err != nil {
+		logger.Error("failed to finish canonical dead-letter transition; will retry", "error", err)
+		_ = msg.NakWithDelay(nakRetryDelay)
+		return
 	}
 	workerTerminalFailures.Inc()
 	recordValidationOutcome(string(queue.StatusProcessingFailed))
-	logger.Error("document exhausted processing attempts; moved to dead-letter stream", "error", processingErr)
+	logger.Error("document exhausted processing attempts; moved to dead-letter stream", "error", record.LastError)
 	_ = msg.Term()
 }
 

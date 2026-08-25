@@ -486,7 +486,14 @@ Transient processing failures are retried:
 - upload-record update failure;
 - result publication failure.
 
-The worker issues a delayed NAK of approximately 10 seconds. The consumer configuration allows up to five deliveries and uses explicit acknowledgement. `AckWait`, `MaxDeliver`, concurrency and prefetch are configurable; startup rejects an AckWait that does not exceed the validation timeout.
+The worker issues a delayed NAK of approximately 10 seconds. JetStream delivery
+is unlimited; `worker-max-deliver` is instead the default five-attempt
+application threshold. At exhaustion the worker commits
+`dead_letter_pending` and keeps redelivering only the durable terminalization
+path until both the DLQ entry and `processing_failed` KV transition succeed.
+`AckWait`, the application attempt threshold, concurrency and prefetch are
+configurable; startup rejects an AckWait that does not exceed the validation
+timeout.
 
 An impossible unsupported document type is terminated instead of retried.
 
@@ -870,44 +877,21 @@ ACK input
 
 If the KV update succeeds but result publication fails, the message is redelivered.
 
-On the retry:
-
-- validation runs again;
-- KV is updated again;
-- result publication is attempted again.
-
-This is safe enough for the current KV state but introduces **at-least-once result publication semantics**.
-
-### Recommendation
-
-Treat result events as explicitly idempotent:
-
-- set `Nats-Msg-Id` on validation-result events too, preferably derived from upload ID + validation-stage/version;
-- document downstream consumers as idempotent;
-- later consider an event/outbox model.
+On retry, the terminal `valid`/`invalid` record and `ResultPending` marker avoid
+revalidation. Publication is retried with a stable message ID, the per-upload
+result subject permanently admits at most one message, and the marker is
+cleared only after publication succeeds.
 
 ---
 
-## 11.4 No explicit dead-letter flow — tracked by TODO-011
+## 11.4 Terminal processing failure and dead-letter flow ✅ RESOLVED
 
-The consumer has `MaxDeliver: 5`, but the application does not expose a deliberate terminal processing-failure workflow.
-
-### Missing concepts
-
-```text
-processing_failed
-dead_lettered
-last_error
-attempt_count
-```
-
-### Risk
-
-After repeated infrastructure failures a document may stop being delivered while its KV record remains `pending`.
-
-### Recommendation
-
-Introduce an explicit DLQ/advisory handler or retry-exhaustion reconciliation process and a terminal failure state visible through the API.
+TODO-011 adds `dead_letter_pending` and `processing_failed`, last-error and
+application-attempt metadata, a namespace-scoped durable DLQ, terminal/depth
+metrics, and `e-ubl21 dead-letter retry UPLOAD_ID`. Unlimited broker delivery
+prevents `MaxDeliver` from stranding an incomplete terminal transition. Replay
+stores a generation-stable message ID in KV and defers worker processing until
+publication, canonical status, and old-DLQ cleanup have all completed.
 
 ---
 

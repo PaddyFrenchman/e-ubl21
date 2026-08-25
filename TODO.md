@@ -500,15 +500,22 @@ publish to an explicit dead-letter flow.
 - Add DLQ depth and terminal-failure metrics.
 - Support safe operator retry/replay.
 
-The worker now records the final operational error, delivery-attempt count and
-failure timestamp as `processing_failed` before terminating exhausted work. A
-namespace-scoped, one-record-per-upload dead-letter stream retains the durable
+The worker treats `worker-max-deliver` as an application attempt threshold and
+uses unlimited broker delivery, so JetStream cannot stop redelivery before
+terminal state is durable. Exhaustion first commits `dead_letter_pending`, then
+retries only idempotent DLQ publication and the final `processing_failed` CAS
+until both succeed. Missing canonical metadata is reconstructed at exhaustion;
+valid/invalid records with `ResultPending` keep retrying result publication
+without being reclassified.
+
+A namespace-scoped, one-record-per-upload dead-letter stream retains the
 operator record, while Prometheus exposes terminal-failure count and current
-DLQ depth. `e-ubl21 dead-letter retry UPLOAD_ID` uses an `enqueue_pending`
-handoff, publishes with a fresh idempotency key, and removes the dead letter
-only after requeue succeeds. Raw content remains available while dead-lettered;
-the permanent validation-result slot is reserved for a later replay's actual
-schema-validation outcome.
+DLQ depth. `e-ubl21 dead-letter retry UPLOAD_ID` stores a stable replay
+generation/message ID in KV. Ambiguous publication, final-status, and DLQ-purge
+failures can therefore be retried without publishing another descriptor. The
+worker defers replay work until the publish/status/purge handoff is complete.
+Raw content remains available while dead-lettered; the permanent validation
+result slot is reserved for a replay's actual schema-validation outcome.
 
 ---
 

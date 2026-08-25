@@ -155,7 +155,7 @@ paths:
             asynchronous XSD validation. Its status is accepting or
             enqueue_pending while a partial acceptance is being reconciled,
             pending once queued, and later valid, invalid, or processing_failed
-            after exhausted operational retries.
+            after a recoverable dead_letter_pending transition.
           content:
             application/json:
               schema:
@@ -247,7 +247,7 @@ paths:
                     example: Invoice
                   status:
                     type: string
-                    enum: [accepting, cleanup_pending, enqueue_pending, pending, valid, invalid, acceptance_failed, processing_failed]
+                    enum: [accepting, cleanup_pending, enqueue_pending, pending, valid, invalid, acceptance_failed, dead_letter_pending, processing_failed]
                     example: valid
                   receivedAt:
                     type: string

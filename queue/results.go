@@ -36,6 +36,10 @@ const (
 	// StatusAcceptanceFailed is a terminal ingress failure for which no work
 	// will be queued. Any partially written content is reclaimed.
 	StatusAcceptanceFailed ValidationStatus = "acceptance_failed"
+	// StatusDeadLetterPending is a recoverable worker transition: application
+	// attempts are exhausted, but DLQ publication and the canonical terminal
+	// status have not both been confirmed yet.
+	StatusDeadLetterPending ValidationStatus = "dead_letter_pending"
 	// StatusProcessingFailed is a terminal operational failure after the
 	// worker exhausted its configured delivery attempts. Operators may replay
 	// it from the dead-letter stream.

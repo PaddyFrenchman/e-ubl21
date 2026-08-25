@@ -18,7 +18,7 @@ func TestRootCommandBuildsAndPrintsHelp(t *testing.T) {
 	if err := root.Execute(); err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) {
+	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) || !bytes.Contains(stdout.Bytes(), []byte("dead-letter")) {
 		t.Fatalf("help missing subcommands: %s", stdout.String())
 	}
 }

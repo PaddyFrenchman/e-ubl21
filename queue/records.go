@@ -37,6 +37,8 @@ type UploadRecord struct {
 	LastError          string           `json:"lastError,omitempty"`
 	ProcessingAttempts uint64           `json:"processingAttempts,omitempty"`
 	ProcessingFailedAt string           `json:"processingFailedAt,omitempty"`
+	ReplayGeneration   uint64           `json:"replayGeneration,omitempty"`
+	ReplayMessageID    string           `json:"replayMessageId,omitempty"`
 }
 
 // VersionedUploadRecord pairs a record with its JetStream KV revision for

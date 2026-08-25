@@ -30,7 +30,7 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	workerCmd.Flags().Int("worker-concurrency", 1, "Maximum documents validated concurrently per worker process")
 	workerCmd.Flags().Int("worker-prefetch", 1, "Maximum pulled documents buffered locally while validations are busy")
 	workerCmd.Flags().Duration("worker-ack-wait", 60*time.Second, "JetStream acknowledgement deadline; must exceed validation timeout")
-	workerCmd.Flags().Int("worker-max-deliver", 5, "Maximum JetStream delivery attempts for an operationally failing document")
+	workerCmd.Flags().Int("worker-max-deliver", 5, "Maximum application processing attempts before a durable dead-letter transition")
 	workerCmd.Flags().Int("worker-max-ack-pending", 0, "Fleet-wide outstanding limit on the shared durable consumer (0 uses this replica's concurrency + prefetch)")
 
 	mustBindLocalFlag(v, workerCmd, "worker-consumer-name")

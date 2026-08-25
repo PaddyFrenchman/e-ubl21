@@ -53,6 +53,15 @@ func (c *Client) PublishDocument(ctx context.Context, id, documentType string, r
 	return c.publishDocument(ctx, id, documentType, receivedAt, id)
 }
 
+// PublishDocumentWithID publishes a descriptor with an explicit stable
+// idempotency key. It is used by recoverable operator replay.
+func (c *Client) PublishDocumentWithID(ctx context.Context, id, documentType string, receivedAt time.Time, messageID string) error {
+	if messageID == "" {
+		return fmt.Errorf("document message id is required")
+	}
+	return c.publishDocument(ctx, id, documentType, receivedAt, messageID)
+}
+
 func (c *Client) publishDocument(ctx context.Context, id, documentType string, receivedAt time.Time, messageID string) error {
 	if !ValidID(id) {
 		return fmt.Errorf("invalid upload id %q", id)

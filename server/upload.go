@@ -257,7 +257,7 @@ func uploadContentAvailable(record queue.UploadRecord) bool {
 		return false
 	}
 	switch record.Status {
-	case queue.StatusEnqueuePending, queue.StatusPending, queue.StatusValid, queue.StatusInvalid, queue.StatusProcessingFailed:
+	case queue.StatusEnqueuePending, queue.StatusPending, queue.StatusValid, queue.StatusInvalid, queue.StatusDeadLetterPending, queue.StatusProcessingFailed:
 		return true
 	default:
 		return false

@@ -5,7 +5,6 @@
 package server
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
@@ -21,7 +20,7 @@ func workerMetricsMux(q *queue.Client) http.Handler {
 	mux := http.NewServeMux()
 	metrics := promhttp.Handler()
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		if depth, err := q.DeadLetterDepth(context.Background()); err == nil {
+		if depth, err := q.DeadLetterDepth(r.Context()); err == nil {
 			workerDeadLetterDepth.Set(float64(depth))
 		}
 		metrics.ServeHTTP(w, r)

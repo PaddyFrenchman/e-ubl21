@@ -161,9 +161,162 @@ func TestWorkerDeadLettersExhaustedFailureAndSupportsReplay(t *testing.T) {
 	}
 }
 
+func TestWorkerCreatesCanonicalFailureWhenRecordIsMissingAtExhaustion(t *testing.T) {
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, func(worker *WorkerConfig) { worker.MaxDeliver = 1 })
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+	consumerDeadline := time.Now().Add(3 * time.Second)
+	for {
+		if _, consumerErr := q.JS.Consumer(ctx, q.Namespace.DocumentsStreamName(), defaultWorkerConsumerName); consumerErr == nil {
+			break
+		}
+		if time.Now().After(consumerDeadline) {
+			t.Fatal("worker consumer was not ready")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	id, _ := queue.NewID()
+	if err := q.PublishDocument(ctx, id, "Invoice", time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		record, getErr := q.GetUploadRecord(ctx, id)
+		if getErr == nil && record.Status == queue.StatusProcessingFailed {
+			if record.ProcessingAttempts != 1 || record.LastError == "" {
+				t.Fatalf("created terminal record=%+v", record)
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("missing canonical record was not repaired: record=%+v err=%v", record, getErr)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if depth, err := q.DeadLetterDepth(ctx); err != nil || depth != 1 {
+		t.Fatalf("dead-letter depth=%d err=%v", depth, err)
+	}
+}
+
+func TestWorkerRetriesDurableTerminalizationAfterDLQFailure(t *testing.T) {
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, func(worker *WorkerConfig) { worker.MaxDeliver = 1 })
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+	consumerDeadline := time.Now().Add(3 * time.Second)
+	for {
+		if _, consumerErr := q.JS.Consumer(ctx, q.Namespace.DocumentsStreamName(), defaultWorkerConsumerName); consumerErr == nil {
+			break
+		}
+		if time.Now().After(consumerDeadline) {
+			t.Fatal("worker consumer was not ready")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	id, _ := queue.NewID()
+	receivedAt := time.Now().UTC()
+	if err := q.PutUploadRecord(ctx, queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusPending, ReceivedAt: receivedAt.Format(time.RFC3339)}); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.JS.DeleteStream(ctx, q.Namespace.DeadLettersStreamName()); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDocument(ctx, id, "Invoice", receivedAt); err != nil {
+		t.Fatal(err)
+	}
+	waitDeadline := time.Now().Add(3 * time.Second)
+	for {
+		record, getErr := q.GetUploadRecord(ctx, id)
+		if getErr == nil && record.Status == queue.StatusDeadLetterPending {
+			break
+		}
+		if time.Now().After(waitDeadline) {
+			t.Fatalf("DLQ failure was not made recoverable: record=%+v err=%v", record, getErr)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	// Leave the DLQ absent long enough for the first terminalization publish to
+	// fail; the canonical transition must remain recoverable rather than being
+	// terminated at the application attempt threshold.
+	time.Sleep(750 * time.Millisecond)
+	pending, err := q.GetUploadRecord(ctx, id)
+	if err != nil || pending.Status != queue.StatusDeadLetterPending {
+		t.Fatalf("terminalization did not remain pending after DLQ failure: record=%+v err=%v", pending, err)
+	}
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDocumentWithID(ctx, id, "Invoice", receivedAt, id+":terminalization-retry"); err != nil {
+		t.Fatal(err)
+	}
+	waitDeadline = time.Now().Add(3 * time.Second)
+	for {
+		record, getErr := q.GetUploadRecord(ctx, id)
+		if getErr == nil && record.Status == queue.StatusProcessingFailed {
+			break
+		}
+		if time.Now().After(waitDeadline) {
+			t.Fatalf("terminalization did not resume: record=%+v err=%v", record, getErr)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+func TestWorkerResumesAfterDeadLetterPublishedButTerminalCASNotCommitted(t *testing.T) {
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, func(worker *WorkerConfig) { worker.MaxDeliver = 1 })
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+	id, _ := queue.NewID()
+	receivedAt := time.Now().UTC().Truncate(time.Second)
+	record := queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusDeadLetterPending, Error: "storage failed", LastError: "storage failed", ReceivedAt: receivedAt.Format(time.RFC3339), ProcessingAttempts: 1, ProcessingFailedAt: receivedAt.Add(time.Second).Format(time.RFC3339)}
+	if err := q.PutUploadRecord(ctx, record); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDeadLetter(ctx, queue.DeadLetter{ID: id, DocumentType: "Invoice", ReceivedAt: record.ReceivedAt, LastError: record.LastError, Attempts: 1, FailedAt: record.ProcessingFailedAt}); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDocument(ctx, id, "Invoice", receivedAt); err != nil {
+		t.Fatal(err)
+	}
+	waitDeadline := time.Now().Add(3 * time.Second)
+	for {
+		stored, getErr := q.GetUploadRecord(ctx, id)
+		if getErr == nil && stored.Status == queue.StatusProcessingFailed {
+			return
+		}
+		if time.Now().After(waitDeadline) {
+			t.Fatalf("pending terminal CAS was not resumed: record=%+v err=%v", stored, getErr)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
 func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
 	cfg := testConfig(t, nil)
-	runTestWorker(t, cfg, nil)
+	runTestWorker(t, cfg, func(worker *WorkerConfig) { worker.MaxDeliver = 1 })
 	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
 	if err != nil {
 		t.Fatal(err)
@@ -194,7 +347,22 @@ func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
 			}
 			// Give the failed publication path time to NAK the original work
 			// descriptor before restoring the stream.
-			time.Sleep(50 * time.Millisecond)
+			attemptDeadline := time.Now().Add(time.Second)
+			for record.ProcessingAttempts == 0 && time.Now().Before(attemptDeadline) {
+				time.Sleep(20 * time.Millisecond)
+				record, err = q.GetUploadRecord(context.Background(), id)
+			}
+			if err != nil || record.ProcessingAttempts == 0 {
+				t.Fatalf("result publication failure did not record an application attempt: record=%+v err=%v", record, err)
+			}
+			consumer, consumerErr := q.JS.Consumer(context.Background(), q.Namespace.DocumentsStreamName(), defaultWorkerConsumerName)
+			if consumerErr != nil {
+				t.Fatal(consumerErr)
+			}
+			consumerInfo, infoErr := consumer.Info(context.Background())
+			if infoErr != nil || consumerInfo.Config.MaxDeliver != -1 {
+				t.Fatalf("broker MaxDeliver=%d err=%v, want unlimited (-1)", consumerInfo.Config.MaxDeliver, infoErr)
+			}
 			if err := q.EnsureInfraWithConfig(context.Background(), queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
 				t.Fatal(err)
 			}

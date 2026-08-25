@@ -157,7 +157,7 @@ The authoritative UBL 2.1 XSD tree is embedded in the binary and extracted for `
 
 ## Rate limiting and observability
 
-The API applies a per-client-IP token-bucket limiter and structured request logging. Prometheus metrics cover HTTP activity, upload outcomes, worker validation outcomes/duration, terminal processing failures, and dead-letter depth. The worker moves operational failures that exhaust `worker-max-deliver` to a namespace-scoped dead-letter stream and records `processing_failed` with its last error, attempt count, and failure time. Operators can safely replay retained content with `e-ubl21 dead-letter retry UPLOAD_ID`. The worker also exposes internal `/metrics` and `/healthz` endpoints on its configured metrics address.
+The API applies a per-client-IP token-bucket limiter and structured request logging. Prometheus metrics cover HTTP activity, upload outcomes, worker validation outcomes/duration, terminal processing failures, and dead-letter depth. `worker-max-deliver` is an application attempt threshold; broker delivery remains unlimited so `dead_letter_pending` can retry until both the namespace-scoped DLQ entry and canonical `processing_failed` record are durable. Valid/invalid records separately retry pending result publication. Operators can safely replay retained content with `e-ubl21 dead-letter retry UPLOAD_ID`; a KV-persisted replay generation makes retries idempotent across ambiguous publication and cleanup failures. The worker also exposes internal `/metrics` and `/healthz` endpoints on its configured metrics address.
 
 ## Current known follow-up work
 

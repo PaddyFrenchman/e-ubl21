@@ -67,27 +67,44 @@ func (c *Client) ReplayProcessingFailure(ctx context.Context, id string) error {
 		return err
 	}
 	record := versioned.Record
-	if record.Status != StatusProcessingFailed && record.Status != StatusEnqueuePending {
-		return fmt.Errorf("upload %s is %s, not processing_failed", id, record.Status)
-	}
-	if ok, err := c.HasUploadContent(ctx, id); err != nil {
-		return err
-	} else if !ok {
-		return fmt.Errorf("upload %s has no raw content to replay", id)
-	}
 	if record.Status == StatusProcessingFailed {
+		if ok, contentErr := c.HasUploadContent(ctx, id); contentErr != nil {
+			return contentErr
+		} else if !ok {
+			return fmt.Errorf("upload %s has no raw content to replay", id)
+		}
 		record.Status = StatusEnqueuePending
 		record.Error = ""
 		record.ResultPending = false
-		if revision, err := c.UpdateUploadRecord(ctx, record, versioned.Revision); err != nil {
-			return err
-		} else {
-			versioned.Revision = revision
+		record.ReplayGeneration++
+		record.ReplayMessageID = fmt.Sprintf("%s:replay:%d", id, record.ReplayGeneration)
+		revision, updateErr := c.UpdateUploadRecord(ctx, record, versioned.Revision)
+		if updateErr != nil {
+			return updateErr
 		}
+		versioned.Revision = revision
+	} else if record.ReplayMessageID == "" || (record.Status != StatusEnqueuePending && record.Status != StatusPending && record.Status != StatusValid && record.Status != StatusInvalid) {
+		return fmt.Errorf("upload %s is %s and has no replay in progress", id, record.Status)
 	}
 	receivedAt, err := time.Parse(time.RFC3339, record.ReceivedAt)
 	if err != nil {
 		return fmt.Errorf("parse receivedAt for %s: %w", id, err)
+	}
+	if record.Status == StatusEnqueuePending {
+		if err := c.PublishDocumentWithID(ctx, id, record.DocumentType, receivedAt, record.ReplayMessageID); err != nil {
+			return err
+		}
+		record.Status = StatusPending
+		revision, updateErr := c.UpdateUploadRecord(ctx, record, versioned.Revision)
+		if updateErr != nil {
+			latest, getErr := c.GetUploadRecordVersion(ctx, id)
+			if getErr != nil || latest.Record.ReplayMessageID != record.ReplayMessageID || (latest.Record.Status != StatusPending && latest.Record.Status != StatusValid && latest.Record.Status != StatusInvalid) {
+				return updateErr
+			}
+			versioned, record = latest, latest.Record
+		} else {
+			versioned.Revision = revision
+		}
 	}
 	stream, err := c.JS.Stream(ctx, c.Namespace.DeadLettersStreamName())
 	if err != nil {
@@ -96,17 +113,25 @@ func (c *Client) ReplayProcessingFailure(ctx context.Context, id string) error {
 	if err := stream.Purge(ctx, jetstream.WithPurgeSubject(c.Namespace.DeadLetterSubject(id))); err != nil {
 		return err
 	}
-	if err := c.publishDocument(ctx, id, record.DocumentType, receivedAt, fmt.Sprintf("%s:replay:%d", id, time.Now().UnixNano())); err != nil {
-		// Restore operator visibility when requeue fails after the pending
-		// transition. Replaying enqueue_pending is safe and idempotent.
-		_ = c.PublishDeadLetter(ctx, DeadLetter{ID: id, DocumentType: record.DocumentType, ReceivedAt: record.ReceivedAt, LastError: record.LastError, Attempts: record.ProcessingAttempts, FailedAt: record.ProcessingFailedAt})
-		return err
-	}
-	record.Status = StatusPending
-	if _, err := c.UpdateUploadRecord(ctx, record, versioned.Revision); err != nil {
-		latest, getErr := c.GetUploadRecord(ctx, id)
-		if getErr != nil || (latest.Status != StatusValid && latest.Status != StatusInvalid) {
-			return err
+	// Clear the replay marker last. Workers defer descriptors carrying this
+	// marker, so an ambiguous publish, status update, or purge cannot race the
+	// old DLQ generation or validate the same content concurrently.
+	for i := 0; i < 3; i++ {
+		latest, getErr := c.GetUploadRecordVersion(ctx, id)
+		if getErr != nil {
+			return getErr
+		}
+		if latest.Record.ReplayMessageID == "" {
+			return nil
+		}
+		if latest.Record.ReplayMessageID != record.ReplayMessageID {
+			return fmt.Errorf("upload %s replay generation changed concurrently", id)
+		}
+		latest.Record.ReplayMessageID = ""
+		if _, updateErr := c.UpdateUploadRecord(ctx, latest.Record, latest.Revision); updateErr == nil {
+			return nil
+		} else if i == 2 {
+			return updateErr
 		}
 	}
 	return nil
