@@ -163,9 +163,10 @@ func (c *Client) PublishResult(ctx context.Context, result ValidationResult) err
 }
 
 // HasValidationResult reports whether the permanent first-result slot for an
-// upload is already occupied. Rolling-upgrade reconciliation uses this to
-// distinguish an unpublished legacy terminal record from an ambiguous publish
-// acknowledgement that must preserve the result already accepted by JetStream.
+// upload is already occupied. Post-deployment-barrier reconciliation uses this
+// to distinguish an unpublished legacy terminal record from an ambiguous
+// publish acknowledgement that must preserve the result already accepted by
+// JetStream. It is not an atomic mixed-version migration claim.
 func (c *Client) HasValidationResult(ctx context.Context, id string) (bool, error) {
 	if !ValidID(id) {
 		return false, fmt.Errorf("invalid validation result upload id %q", id)

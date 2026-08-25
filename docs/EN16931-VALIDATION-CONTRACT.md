@@ -31,7 +31,7 @@ Standards invalidity and operational failure are distinct. A business-rule
 failure is not retried as infrastructure failure, while infrastructure failure
 must never produce `valid` or a false standards-invalid result.
 
-## Durable completion and rolling upgrades
+## Durable completion and deployment upgrades
 
 The worker does not persist an XSD-only intermediate success. It commits a
 terminal `valid`/`invalid` record, its complete ordered stage results, and the
@@ -41,7 +41,7 @@ pipeline. EN runtime and SVRL failures follow the existing operational retry
 and dead-letter path. The completion reconciler publishes only terminal records
 whose required stage evidence is complete.
 
-During an upgrade, a pre-EN terminal Invoice or CreditNote with
+After the deployment barrier below, a pre-EN terminal Invoice or CreditNote with
 `resultPending=true` is handled according to the permanent result subject:
 
 - If no result was ever accepted, reconciliation queues the document for the
@@ -54,6 +54,32 @@ During an upgrade, a pre-EN terminal Invoice or CreditNote with
 Older terminal records with no pending publication are likewise retained as
 historical results. This compatibility rule preserves the one-result-per-upload
 contract without allowing current workers to create a new XSD-only success.
+
+### Required first-deployment barrier
+
+The first deployment that makes EN 16931 mandatory **must not run concurrently
+with an older XSD-only worker in the same queue namespace**. The result-stream
+existence check and the KV migration claim are separate broker operations. An
+old worker that loaded a legacy record before the claim could otherwise publish
+its XSD-only result afterward and win the immutable first-result subject.
+
+Deploy this contract change as a stop-and-drain upgrade:
+
+1. Stop dispatching work to the old worker generation and stop/drain every old
+   worker that shares the queue namespace.
+2. Wait until every old worker process has exited. Starting a new worker while
+   an old process is still draining is unsupported.
+3. Start only the new worker generation. Its completion reconciler can now
+   revalidate unpublished legacy terminal billing records safely.
+4. Verify the `validation_upgrade_queued` and reconciliation error metrics
+   before declaring the migration complete.
+
+Upload publishers may continue placing descriptors in JetStream while workers
+are stopped; processing resumes after the new workers start. If a deployment
+cannot provide this generation barrier, it must use a new isolated queue
+namespace instead of attempting an in-place mixed-version rollout. Ordinary
+rolling replacement is safe again only after all active workers implement this
+contract.
 
 ## Initial SVRL severity policy
 

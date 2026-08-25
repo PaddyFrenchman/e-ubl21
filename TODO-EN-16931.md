@@ -471,7 +471,7 @@ Make semantic validation participate correctly in retries, dead-letter handling,
 - Preserve TODO-009 permanent one-result-per-upload behavior.
 - Preserve TODO-011 replay execution uniqueness.
 - Ensure the completion reconciler republishes the complete layered result, not a partial result.
-- Decide and test how old records created before this feature are interpreted during rolling upgrades.
+- Decide and test how old records created before this feature are interpreted during a controlled deployment upgrade.
 
 ### Acceptance criteria
 
@@ -485,12 +485,17 @@ and `processing_failed`. Result publication and completion reconciliation
 refuse incomplete current results, while permanent result subjects preserve
 one-result-per-upload and replay remains guarded by the existing claim protocol.
 
-Rolling-upgrade reconciliation revalidates unpublished legacy terminal billing
+Post-barrier reconciliation revalidates unpublished legacy terminal billing
 records before publishing them. If a legacy first result already occupies its
 permanent subject, it is preserved and only an ambiguous `ResultPending` marker
-is repaired. Regression tests cover crash-window visibility, semantic versus
-operational transitions, complete reconciler output, legacy records, permanent
-result uniqueness, and replayed terminal outcomes.
+is repaired. Mixed XSD-only and EN-aware workers in one queue namespace are
+explicitly unsupported for this contract migration: the deployment must stop,
+drain, and fully terminate the old generation before starting the new one. The
+mandatory procedure and the non-atomic race it prevents are documented in
+`docs/EN16931-VALIDATION-CONTRACT.md`. Regression tests cover crash-window
+visibility, semantic versus operational transitions, complete reconciler
+output, post-barrier legacy records, permanent result uniqueness, and replayed
+terminal outcomes.
 
 ---
 

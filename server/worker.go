@@ -752,7 +752,7 @@ func (w *documentWorker) reconcilePendingCompletions(ctx context.Context) worker
 			}
 			// An earlier publication succeeded but its KV acknowledgement was
 			// ambiguous. Permanent result uniqueness means it is historical and
-			// cannot be replaced during a rolling upgrade.
+			// cannot be replaced after the required worker-generation barrier.
 		}
 		if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
 			report.Errors++

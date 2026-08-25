@@ -420,7 +420,7 @@ func TestWorkerReconcilesPendingCompletionsWithoutWorkDescriptors(t *testing.T) 
 	t.Fatal("worker did not reconcile durable pending completions without descriptors")
 }
 
-func TestWorkerRevalidatesUnpublishedLegacyValidInvoice(t *testing.T) {
+func TestWorkerRevalidatesUnpublishedLegacyValidInvoiceAfterDeploymentBarrier(t *testing.T) {
 	cfg := testConfig(t, nil)
 	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
 	if err != nil {
