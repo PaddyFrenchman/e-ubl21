@@ -371,7 +371,7 @@ TODO-EN-16931-008.
 
 ---
 
-## TODO-EN-16931-007 — Build the multi-stage validation orchestrator
+## TODO-EN-16931-007 — Build the multi-stage validation orchestrator ✅ DONE
 
 ### Goal
 
@@ -419,6 +419,33 @@ releases its external stdin-copy goroutine after a hard-timeout return.
 ### Acceptance criteria
 
 The worker has one clearly testable validation pipeline with deterministic stage ordering and no duplicate full-document heap buffer.
+
+Implemented by `server/validation_pipeline.go` and composed once during worker
+startup. The pipeline always runs UBL 2.1 XSD first, stops immediately on XSD
+non-compliance, and runs the verified EN 16931 adapter next only for Invoice
+and CreditNote. Non-billing UBL types remain XSD-only. Each stage independently
+reopens the immutable Object Store object and closes its reader on every return
+path, so no complete-document byte slice or tee buffer is retained in heap.
+
+One overall deadline bounds the ordered pipeline. Both subprocess adapters use
+explicit stdin pipes and nonzero `Cmd.WaitDelay`, so a blocked Object Store
+reader cannot keep the worker call blocked after validator cancellation.
+`xmllint` exit code 3 is classified as standards-invalid; missing validators,
+other process exits, timeouts, content-stream failures and EN/SVRL failures are
+operational errors. Stage results remain ordered and EN issues remain
+structured. Direct library callers may retain the documented staged-rollout
+XSD-only mode by leaving EN non-mandatory; the production CLI defaults it to
+mandatory and constructs the adapter only after `ensureSaxonRuntime()` verifies
+all pinned asset hashes.
+
+Focused tests prove stage ordering, XSD short-circuiting, billing versus
+non-billing scope, independent content reopening, reader closure, semantic and
+operational classification, structured EN failures, and hard timeout behavior
+with a deliberately blocked input reader. A mandatory-worker integration test
+runs the pinned runtime end to end, proving the official guide invoice produces
+ordered passing stages while an XSD-valid but semantically incomplete Invoice
+is no longer recorded as valid. Durable crash/retry/replay transition auditing
+remains TODO-EN-16931-008.
 
 ---
 

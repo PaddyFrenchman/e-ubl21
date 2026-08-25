@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -669,6 +671,73 @@ func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {
 	}
 	if after.State.Msgs != before.State.Msgs {
 		t.Fatalf("late duplicate published another result: before=%d after=%d", before.State.Msgs, after.State.Msgs)
+	}
+}
+
+func TestMandatoryWorkerRunsOrderedEN16931Pipeline(t *testing.T) {
+	runtime, ok := localSaxonRuntimeConfig(t)
+	if !ok {
+		return
+	}
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, func(worker *WorkerConfig) {
+		worker.EN16931Mandatory = true
+		worker.JavaExecutable = runtime.javaExecutable
+		worker.SaxonJARPath = runtime.saxonJARPath
+		worker.XMLResolverJARPath = runtime.xmlResolverJARPath
+		worker.SaxonConfigurationPath = runtime.configurationPath
+		worker.EN16931XSLTPath = runtime.xsltPath
+		worker.SaxonStartupTimeout = 10 * time.Second
+	})
+	handler := newApplicationHandler(t, cfg)
+	token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
+
+	officialPath := filepath.Join("..", "createsamples", "en16931", "testdata", "official", "guide-example1.xml")
+	official, err := os.ReadFile(officialPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, string(official), "application/xml")
+	if res.Code != http.StatusAccepted {
+		t.Fatalf("official upload = %d; body=%s", res.Code, res.Body.String())
+	}
+	var accepted map[string]any
+	if err := json.Unmarshal(res.Body.Bytes(), &accepted); err != nil {
+		t.Fatal(err)
+	}
+	stored := waitForStatus(t, handler, token, accepted["id"].(string))
+	assertHTTPValidationPipeline(t, stored, queue.StatusValid, true)
+
+	// This fixture passes UBL XSD but omits mandatory EN 16931 business data.
+	// It proves the worker no longer records valid immediately after XSD.
+	res = doRequest(handler, http.MethodPost, "/api/v1/ubl/upload", token, validInvoiceXML, "application/xml")
+	if res.Code != http.StatusAccepted {
+		t.Fatalf("semantic-invalid upload = %d; body=%s", res.Code, res.Body.String())
+	}
+	accepted = nil
+	if err := json.Unmarshal(res.Body.Bytes(), &accepted); err != nil {
+		t.Fatal(err)
+	}
+	stored = waitForStatus(t, handler, token, accepted["id"].(string))
+	assertHTTPValidationPipeline(t, stored, queue.StatusInvalid, false)
+}
+
+func assertHTTPValidationPipeline(t *testing.T, stored map[string]any, status queue.ValidationStatus, enValid bool) {
+	t.Helper()
+	if stored["status"] != string(status) {
+		t.Fatalf("status = %v, want %q; record=%v", stored["status"], status, stored)
+	}
+	stages, ok := stored["validationStages"].([]any)
+	if !ok || len(stages) != 2 {
+		t.Fatalf("validationStages = %#v, want ordered XSD and EN stages", stored["validationStages"])
+	}
+	xsd, xsdOK := stages[0].(map[string]any)
+	en, enOK := stages[1].(map[string]any)
+	if !xsdOK || xsd["layer"] != string(queue.ValidationLayerUBL21XSD) || xsd["valid"] != true {
+		t.Fatalf("XSD stage = %#v", stages[0])
+	}
+	if !enOK || en["layer"] != string(queue.ValidationLayerEN16931) || en["version"] != "1.3.16" || en["valid"] != enValid {
+		t.Fatalf("EN stage = %#v, want valid=%t", stages[1], enValid)
 	}
 }
 

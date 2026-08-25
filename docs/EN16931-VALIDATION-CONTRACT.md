@@ -1,9 +1,9 @@
 # EN 16931 server validation contract
 
 This document freezes the target server contract for the initial EN 16931
-milestone. It defines policy and scope; the current runtime remains UBL 2.1
-XSD-only until the later implementation steps in `TODO-EN-16931.md` are
-completed and deployed.
+milestone. It defines policy and scope; the production worker pipeline now
+executes these stages, while durable crash/retry/replay integration continues
+through the remaining implementation steps in `TODO-EN-16931.md`.
 
 ## Supported scope and mandatory order
 

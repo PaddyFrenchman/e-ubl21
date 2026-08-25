@@ -75,6 +75,7 @@ var (
 // (400) with errors.Is.
 var errXMLLintUnavailable = errors.New("xmllint (libxml2) is required for UBL 2.1 schema validation; install it and restart the server")
 var errValidationTimeout = errors.New("schema validation timed out")
+var errSchemaStandardsInvalid = errors.New("schema validation failed")
 
 // loadDocumentCatalog indexes embedded maindoc metadata in memory. This is
 // the only catalog the API loads, so API startup performs no XSD extraction.
@@ -213,6 +214,7 @@ func ensureXMLLint() error {
 }
 
 const maxValidationDiagnosticBytes = 8 << 10
+const defaultValidationProcessWaitDelay = time.Second
 
 // validateAgainstSchema streams body to xmllint over stdin. CommandContext
 // enforces a hard per-document deadline, while --nonet prevents schemas from
@@ -233,11 +235,35 @@ func validateReaderAgainstSchema(ctx context.Context, schemaPath string, body io
 	defer cancel()
 
 	cmd := exec.CommandContext(validationCtx, xmllintPath, "--nonet", "--noout", "--schema", schemaPath, "-")
-	cmd.Stdin = body
 	diagnostics := &boundedDiagnosticBuffer{}
 	cmd.Stdout = diagnostics
 	cmd.Stderr = diagnostics
-	err := cmd.Run()
+	cmd.WaitDelay = defaultValidationProcessWaitDelay
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return fmt.Errorf("create schema validator stdin: %w", err)
+	}
+	if err := cmd.Start(); err != nil {
+		stdin.Close()
+		if errors.Is(validationCtx.Err(), context.DeadlineExceeded) {
+			return fmt.Errorf("%w after %s", errValidationTimeout, timeout)
+		}
+		if errors.Is(validationCtx.Err(), context.Canceled) {
+			return fmt.Errorf("schema validation canceled: %w", validationCtx.Err())
+		}
+		return fmt.Errorf("start schema validation: %w", err)
+	}
+	stdinCopyDone := make(chan error, 1)
+	go func() {
+		_, copyErr := io.Copy(stdin, body)
+		closeErr := stdin.Close()
+		if copyErr == nil {
+			copyErr = closeErr
+		}
+		stdinCopyDone <- copyErr
+	}()
+	err = cmd.Wait()
+	stdin.Close()
 	if errors.Is(validationCtx.Err(), context.DeadlineExceeded) {
 		return fmt.Errorf("%w after %s", errValidationTimeout, timeout)
 	}
@@ -245,7 +271,19 @@ func validateReaderAgainstSchema(ctx context.Context, schemaPath string, body io
 		return fmt.Errorf("schema validation canceled: %w", validationCtx.Err())
 	}
 	if err != nil {
-		return fmt.Errorf("schema validation failed: %s", diagnostics.String())
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == 3 {
+			return fmt.Errorf("%w: %s", errSchemaStandardsInvalid, diagnostics.String())
+		}
+		return fmt.Errorf("schema validator execution failed: %w: %s", err, diagnostics.String())
+	}
+	select {
+	case copyErr := <-stdinCopyDone:
+		if copyErr != nil {
+			return fmt.Errorf("stream XML to schema validator: %w", copyErr)
+		}
+	case <-time.After(defaultValidationProcessWaitDelay):
+		return fmt.Errorf("schema validation input reader did not finish after validator exited within %s", defaultValidationProcessWaitDelay)
 	}
 	return nil
 }

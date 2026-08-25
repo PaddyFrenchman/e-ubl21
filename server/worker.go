@@ -112,10 +112,13 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	if err != nil {
 		return err
 	}
+	var en16931Validator EN16931Validator
 	if cfg.EN16931Mandatory {
-		if err := ensureSaxonRuntime(ctx, resolveSaxonRuntimeConfig(cfg)); err != nil {
+		saxonRuntime := resolveSaxonRuntimeConfig(cfg)
+		if err := ensureSaxonRuntime(ctx, saxonRuntime); err != nil {
 			return err
 		}
+		en16931Validator = newSaxonEN16931Validator(saxonRuntime, settings.validationTimeout)
 	}
 
 	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
@@ -167,7 +170,8 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		}()
 	}
 
-	worker := &documentWorker{queue: q, catalog: catalog, logger: logger, validationTimeout: settings.validationTimeout, progressInterval: settings.ackWait / 2, contentRetention: cfg.UploadContentRetention, maxDeliver: uint64(settings.maxDeliver)}
+	validationPipeline := newDocumentValidationPipeline(q, en16931Validator, settings.validationTimeout)
+	worker := &documentWorker{queue: q, catalog: catalog, validator: validationPipeline, logger: logger, progressInterval: settings.ackWait / 2, contentRetention: cfg.UploadContentRetention, maxDeliver: uint64(settings.maxDeliver)}
 	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
 	if err != nil {
 		if ctx.Err() != nil {
@@ -260,13 +264,13 @@ func nonEmpty(value, fallback string) string {
 }
 
 type documentWorker struct {
-	queue             *queue.Client
-	catalog           *validationCatalog
-	logger            *slog.Logger
-	validationTimeout time.Duration
-	progressInterval  time.Duration
-	contentRetention  time.Duration
-	maxDeliver        uint64
+	queue            *queue.Client
+	catalog          *validationCatalog
+	validator        *documentValidationPipeline
+	logger           *slog.Logger
+	progressInterval time.Duration
+	contentRetention time.Duration
+	maxDeliver       uint64
 }
 
 const nakRetryDelay = 10 * time.Second
@@ -421,70 +425,36 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		}
 	}
 
-	validationCtx, cancelValidation := context.WithTimeout(ctx, w.validationTimeout)
-	defer cancelValidation()
-	content, err := w.queue.OpenUploadContent(validationCtx, id)
-	if err != nil {
-		// The API stores content before publishing the descriptor. Failure to
-		// retrieve it is therefore an operational/storage failure worth retrying.
-		recordValidationOutcome("content_unavailable")
-		w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("load upload content: %w", err))
-		return
-	}
-
-	validationStarted := time.Now()
-	validationErr := validateReaderAgainstSchema(validationCtx, schemaPath, content, w.validationTimeout)
-	streamErr := content.Error()
-	closeErr := content.Close()
-	validatedAt := time.Now()
-	if streamErr == nil {
-		streamErr = closeErr
-	}
-	if streamErr != nil && !errors.Is(validationErr, errValidationTimeout) && !errors.Is(validationErr, context.Canceled) {
-		recordValidationOutcome("content_unavailable")
-		w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("stream upload content: %w", streamErr))
-		return
-	}
-
-	if validationErr != nil && errors.Is(validationErr, errXMLLintUnavailable) {
-		recordValidationOutcome("validator_unavailable")
-		w.retryOperationalFailure(ctx, msg, item, &versioned, validationErr)
-		return
-	}
-	if validationErr != nil && errors.Is(validationErr, errValidationTimeout) {
-		recordValidationOutcome("validation_timeout")
-		w.retryOperationalFailure(ctx, msg, item, &versioned, validationErr)
-		return
-	}
-
-	status := queue.StatusValid
-	errMsg := ""
+	validationResult, validationErr := w.validator.Validate(ctx, id, documentType, schemaPath)
 	if validationErr != nil {
-		status = queue.StatusInvalid
-		errMsg = validationErr.Error()
+		if errors.Is(validationErr, errValidationContentStream) {
+			recordValidationOutcome("content_unavailable")
+		} else if errors.Is(validationErr, errXMLLintUnavailable) {
+			recordValidationOutcome("validator_unavailable")
+		} else if errors.Is(validationErr, errValidationTimeout) || errors.Is(validationErr, context.DeadlineExceeded) {
+			recordValidationOutcome("validation_timeout")
+		} else {
+			recordValidationOutcome("internal_error")
+		}
+		w.retryOperationalFailure(ctx, msg, item, &versioned, validationErr)
+		return
 	}
+
+	status := validationResult.Status
+	errMsg := validationResult.Error
+	validatedAt := validationResult.ValidatedAt
 	validatedAtText := validatedAt.UTC().Format(time.RFC3339)
-	xsdStage := queue.ValidationStageResult{
-		Layer:       queue.ValidationLayerUBL21XSD,
-		Version:     "2.1",
-		Valid:       validationErr == nil,
-		ValidatedAt: validatedAtText,
-		DurationMS:  time.Since(validationStarted).Milliseconds(),
-	}
-	if validationErr != nil {
-		xsdStage.Issues = []queue.ValidationIssue{{
-			Kind:     queue.ValidationIssueXSDReport,
-			Layer:    queue.ValidationLayerUBL21XSD,
-			Severity: "error",
-			Message:  errMsg,
-		}}
+	if status != queue.StatusValid && status != queue.StatusInvalid {
+		recordValidationOutcome("internal_error")
+		w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("validation pipeline returned non-terminal status %q", status))
+		return
 	}
 
 	record := versioned.Record
 	record.Status = status
 	record.Error = errMsg
 	record.ValidatedAt = validatedAtText
-	record.ValidationStages = queue.ValidationStages{xsdStage}
+	record.ValidationStages = validationResult.Stages
 	if w.contentRetention > 0 {
 		record.ContentExpiresAt = validatedAt.Add(w.contentRetention).UTC().Format(time.RFC3339)
 	}
@@ -506,7 +476,7 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 			record.Status = status
 			record.Error = errMsg
 			record.ValidatedAt = validatedAtText
-			record.ValidationStages = queue.ValidationStages{xsdStage}
+			record.ValidationStages = validationResult.Stages
 			if w.contentRetention > 0 {
 				record.ContentExpiresAt = validatedAt.Add(w.contentRetention).UTC().Format(time.RFC3339)
 			}

@@ -69,6 +69,40 @@ func TestValidateAgainstSchemaHonorsTimeout(t *testing.T) {
 	}
 }
 
+func TestValidateReaderAgainstSchemaTimeoutIsHardForBlockedInput(t *testing.T) {
+	catalog, err := loadValidationCatalog()
+	if err != nil {
+		t.Fatal(err)
+	}
+	schemaPath, _ := catalog.schemaPathFor("Invoice")
+	release := make(chan struct{})
+	reader := &blockingValidationReader{started: make(chan struct{}), release: release}
+	done := make(chan error, 1)
+	startedAt := time.Now()
+	go func() {
+		done <- validateReaderAgainstSchema(context.Background(), schemaPath, reader, 20*time.Millisecond)
+	}()
+	select {
+	case <-reader.started:
+	case <-time.After(time.Second):
+		close(release)
+		t.Fatal("schema validator never started reading XML input")
+	}
+	select {
+	case err := <-done:
+		close(release)
+		if !errors.Is(err, errValidationTimeout) {
+			t.Fatalf("validation error = %v, want timeout", err)
+		}
+		if elapsed := time.Since(startedAt); elapsed > 1500*time.Millisecond {
+			t.Fatalf("hard timeout returned after %s", elapsed)
+		}
+	case <-time.After(2 * time.Second):
+		close(release)
+		t.Fatal("schema validation remained blocked after timeout and WaitDelay")
+	}
+}
+
 func TestValidateAgainstSchemaHonorsParentCancellation(t *testing.T) {
 	catalog, err := loadValidationCatalog()
 	if err != nil {
