@@ -169,7 +169,7 @@ func buildOpenAPIDocument() map[string]any {
 					},
 					"responses": map[string]any{
 						"202": map[string]any{
-							"description": "The payload has a recognized UBL 2.1 root element and is durably accepted for asynchronous validation. Status is accepting or enqueue_pending during recovery, pending once queued, and later valid or invalid.",
+							"description": "The payload has a recognized UBL 2.1 root element and is durably accepted for asynchronous validation. Status is accepting or enqueue_pending during recovery, pending once queued, and later valid, invalid, or processing_failed after exhausted operational retries.",
 							"content": map[string]any{
 								"application/json": map[string]any{
 									"schema": map[string]any{
@@ -227,16 +227,19 @@ func buildOpenAPIDocument() map[string]any {
 									"schema": map[string]any{
 										"type": "object",
 										"properties": map[string]any{
-											"id":               map[string]any{"type": "string", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
-											"document":         map[string]any{"type": "string", "example": "Invoice"},
-											"status":           map[string]any{"type": "string", "enum": []string{"accepting", "cleanup_pending", "enqueue_pending", "pending", "valid", "invalid", "acceptance_failed"}, "example": "valid"},
-											"receivedAt":       map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
-											"validatedAt":      map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document.", "example": "2026-08-20T12:00:01Z"},
-											"contentAvailable": map[string]any{"type": "boolean", "description": "Whether lifecycle metadata indicates that raw XML is retained and eligible for retrieval; this does not perform an Object Store read.", "example": true},
-											"contentExpiresAt": map[string]any{"type": "string", "format": "date-time", "description": "Scheduled raw-content expiry time, present after validation when retention is enabled.", "example": "2026-09-19T12:00:01Z"},
-											"contentExpiredAt": map[string]any{"type": "string", "format": "date-time", "description": "Time raw content became unavailable under the retention policy. Physical deletion is retried independently; validation metadata remains available.", "example": "2026-09-19T12:00:30Z"},
-											"error":            map[string]any{"type": "string", "description": "Present only when status is invalid.", "example": "Invoice: element content does not follow the schema"},
-											"content":          map[string]any{"type": "string", "description": "Original raw XML. Present only when includeContent=true.", "example": `<?xml version="1.0" encoding="UTF-8"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">...</Invoice>`},
+											"id":                 map[string]any{"type": "string", "example": "3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c"},
+											"document":           map[string]any{"type": "string", "example": "Invoice"},
+											"status":             map[string]any{"type": "string", "enum": []string{"accepting", "cleanup_pending", "enqueue_pending", "pending", "valid", "invalid", "acceptance_failed", "processing_failed"}, "example": "valid"},
+											"receivedAt":         map[string]any{"type": "string", "format": "date-time", "example": "2026-08-20T12:00:00Z"},
+											"validatedAt":        map[string]any{"type": "string", "format": "date-time", "description": "Present once the worker has processed the document.", "example": "2026-08-20T12:00:01Z"},
+											"contentAvailable":   map[string]any{"type": "boolean", "description": "Whether lifecycle metadata indicates that raw XML is retained and eligible for retrieval; this does not perform an Object Store read.", "example": true},
+											"contentExpiresAt":   map[string]any{"type": "string", "format": "date-time", "description": "Scheduled raw-content expiry time, present after validation when retention is enabled.", "example": "2026-09-19T12:00:01Z"},
+											"contentExpiredAt":   map[string]any{"type": "string", "format": "date-time", "description": "Time raw content became unavailable under the retention policy. Physical deletion is retried independently; validation metadata remains available.", "example": "2026-09-19T12:00:30Z"},
+											"error":              map[string]any{"type": "string", "description": "Validation error, or terminal processing error when status is processing_failed.", "example": "Invoice: element content does not follow the schema"},
+											"lastError":          map[string]any{"type": "string", "description": "Most recent operational processing error."},
+											"processingAttempts": map[string]any{"type": "integer", "format": "int64", "description": "JetStream delivery attempts observed for the most recent operational failure."},
+											"processingFailedAt": map[string]any{"type": "string", "format": "date-time", "description": "Time delivery attempts were exhausted and the upload entered processing_failed."},
+											"content":            map[string]any{"type": "string", "description": "Original raw XML. Present only when includeContent=true.", "example": `<?xml version="1.0" encoding="UTF-8"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">...</Invoice>`},
 										},
 										"required": []string{"id", "document", "status", "receivedAt", "contentAvailable"},
 									},

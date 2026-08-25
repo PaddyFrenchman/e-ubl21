@@ -99,6 +99,68 @@ func TestWorkerTerminatesPoisonMessagesAndRetriesMissingContent(t *testing.T) {
 	time.Sleep(150 * time.Millisecond)
 }
 
+func TestWorkerDeadLettersExhaustedFailureAndSupportsReplay(t *testing.T) {
+	cfg := testConfig(t, nil)
+	runTestWorker(t, cfg, func(worker *WorkerConfig) { worker.MaxDeliver = 1 })
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := queue.NewID()
+	receivedAt := time.Now().UTC()
+	if err := q.PutUploadRecord(ctx, queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusPending, ReceivedAt: receivedAt.Format(time.RFC3339)}); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDocument(ctx, id, "Invoice", receivedAt); err != nil {
+		t.Fatal(err)
+	}
+
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		record, getErr := q.GetUploadRecord(ctx, id)
+		if getErr == nil && record.Status == queue.StatusProcessingFailed {
+			if record.ProcessingAttempts != 1 || record.LastError == "" || record.ProcessingFailedAt == "" {
+				t.Fatalf("incomplete terminal failure metadata: %+v", record)
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("upload was not terminally failed: record=%+v err=%v", record, getErr)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if depth, err := q.DeadLetterDepth(ctx); err != nil || depth != 1 {
+		t.Fatalf("dead-letter depth=%d err=%v, want 1", depth, err)
+	}
+	if err := q.PutUploadContent(ctx, id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.ReplayProcessingFailure(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+
+	deadline = time.Now().Add(3 * time.Second)
+	for {
+		record, getErr := q.GetUploadRecord(ctx, id)
+		if getErr == nil && record.Status == queue.StatusValid {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("replayed upload was not validated: record=%+v err=%v", record, getErr)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if depth, err := q.DeadLetterDepth(ctx); err != nil || depth != 0 {
+		t.Fatalf("dead-letter depth after replay=%d err=%v, want 0", depth, err)
+	}
+}
+
 func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
 	cfg := testConfig(t, nil)
 	runTestWorker(t, cfg, nil)

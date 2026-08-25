@@ -27,6 +27,8 @@ const (
 	legacyUploadContentBucketName = "UBL_UPLOAD_CONTENT"
 	legacyDocumentSubjectPrefix   = "ubl.documents."
 	legacyResultsSubject          = "ubl.validation.results"
+	legacyDeadLettersSubject      = "ubl.validation.dead_letters"
+	defaultDeadLettersStreamName  = "UBL_VALIDATION_DEAD_LETTERS"
 )
 
 // DefaultNamespace is the queue namespace used when EUBL21_QUEUE_NAMESPACE
@@ -174,6 +176,27 @@ func (n Namespace) ResultSubject(uploadID string) string {
 // ResultsSubject base.
 func (n Namespace) ResultsFilterSubject() string {
 	return n.ResultsSubject() + ".*"
+}
+
+func (n Namespace) DeadLetterSubject(uploadID string) string {
+	if n == DefaultNamespace {
+		return legacyDeadLettersSubject + "." + uploadID
+	}
+	return string(n) + ".validation.dead_letters." + uploadID
+}
+
+func (n Namespace) DeadLettersFilterSubject() string {
+	if n == DefaultNamespace {
+		return legacyDeadLettersSubject + ".*"
+	}
+	return string(n) + ".validation.dead_letters.*"
+}
+
+func (n Namespace) DeadLettersStreamName() string {
+	if n == DefaultNamespace {
+		return defaultDeadLettersStreamName
+	}
+	return n.resourcePrefix() + "_VALIDATION_DEAD_LETTERS"
 }
 
 // DocumentsStreamName is the JetStream stream, within this namespace,

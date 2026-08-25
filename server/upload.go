@@ -214,6 +214,15 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	if record.Error != "" {
 		response["error"] = record.Error
 	}
+	if record.LastError != "" {
+		response["lastError"] = record.LastError
+	}
+	if record.ProcessingAttempts > 0 {
+		response["processingAttempts"] = record.ProcessingAttempts
+	}
+	if record.ProcessingFailedAt != "" {
+		response["processingFailedAt"] = record.ProcessingFailedAt
+	}
 	if record.ContentExpiresAt != "" {
 		response["contentExpiresAt"] = record.ContentExpiresAt
 	}
@@ -248,7 +257,7 @@ func uploadContentAvailable(record queue.UploadRecord) bool {
 		return false
 	}
 	switch record.Status {
-	case queue.StatusEnqueuePending, queue.StatusPending, queue.StatusValid, queue.StatusInvalid:
+	case queue.StatusEnqueuePending, queue.StatusPending, queue.StatusValid, queue.StatusInvalid, queue.StatusProcessingFailed:
 		return true
 	default:
 		return false

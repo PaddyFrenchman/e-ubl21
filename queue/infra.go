@@ -52,6 +52,20 @@ func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) err
 		return fmt.Errorf("ensure %s stream: %w", documentsStreamName, err)
 	}
 
+	deadLettersStreamName := c.Namespace.DeadLettersStreamName()
+	if _, err := c.JS.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
+		Name:                 deadLettersStreamName,
+		Description:          "Terminal UBL processing failures retained for operator inspection and replay.",
+		Subjects:             []string{c.Namespace.DeadLettersFilterSubject()},
+		Retention:            jetstream.LimitsPolicy,
+		Storage:              jetstream.FileStorage,
+		Discard:              jetstream.DiscardNew,
+		DiscardNewPerSubject: true,
+		MaxMsgsPerSubject:    1,
+	}); err != nil {
+		return fmt.Errorf("ensure %s stream: %w", deadLettersStreamName, err)
+	}
+
 	resultsStreamName := c.Namespace.ResultsStreamName()
 	if _, err := c.JS.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
 		Name:                 resultsStreamName,

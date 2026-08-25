@@ -487,7 +487,7 @@ expiry.
 
 ---
 
-## TODO-011 — Add terminal processing failure and dead-letter handling
+## TODO-011 — Add terminal processing failure and dead-letter handling ✅ DONE
 
 The worker stops receiving a message after `MaxDeliver`, but repeated
 operational failures do not currently update the record to a terminal state or
@@ -499,6 +499,16 @@ publish to an explicit dead-letter flow.
 - Capture messages that exhaust delivery attempts.
 - Add DLQ depth and terminal-failure metrics.
 - Support safe operator retry/replay.
+
+The worker now records the final operational error, delivery-attempt count and
+failure timestamp as `processing_failed` before terminating exhausted work. A
+namespace-scoped, one-record-per-upload dead-letter stream retains the durable
+operator record, while Prometheus exposes terminal-failure count and current
+DLQ depth. `e-ubl21 dead-letter retry UPLOAD_ID` uses an `enqueue_pending`
+handoff, publishes with a fresh idempotency key, and removes the dead letter
+only after requeue succeeds. Raw content remains available while dead-lettered;
+the permanent validation-result slot is reserved for a later replay's actual
+schema-validation outcome.
 
 ---
 

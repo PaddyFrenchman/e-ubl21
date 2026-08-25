@@ -36,6 +36,10 @@ const (
 	// StatusAcceptanceFailed is a terminal ingress failure for which no work
 	// will be queued. Any partially written content is reclaimed.
 	StatusAcceptanceFailed ValidationStatus = "acceptance_failed"
+	// StatusProcessingFailed is a terminal operational failure after the
+	// worker exhausted its configured delivery attempts. Operators may replay
+	// it from the dead-letter stream.
+	StatusProcessingFailed ValidationStatus = "processing_failed"
 )
 
 // ValidationResult is the payload published to Namespace.ResultsSubject

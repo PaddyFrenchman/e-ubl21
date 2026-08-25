@@ -117,6 +117,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 
 	rootCmd.AddCommand(newServeCmd(cfg))
 	rootCmd.AddCommand(newWorkerCmd(v, cfg))
+	rootCmd.AddCommand(newDeadLetterCmd(cfg))
 	return rootCmd
 }
 

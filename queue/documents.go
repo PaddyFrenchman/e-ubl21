@@ -50,6 +50,10 @@ func DecodeDocumentWorkItem(data []byte) (DocumentWorkItem, error) {
 // (Nats-Msg-Id), so an accidental double-publish of the same accepted upload
 // is not queued twice for processing.
 func (c *Client) PublishDocument(ctx context.Context, id, documentType string, receivedAt time.Time) error {
+	return c.publishDocument(ctx, id, documentType, receivedAt, id)
+}
+
+func (c *Client) publishDocument(ctx context.Context, id, documentType string, receivedAt time.Time, messageID string) error {
 	if !ValidID(id) {
 		return fmt.Errorf("invalid upload id %q", id)
 	}
@@ -72,7 +76,7 @@ func (c *Client) PublishDocument(ctx context.Context, id, documentType string, r
 	msg.Header.Set(HeaderUploadID, id)
 	msg.Header.Set(HeaderDocumentType, documentType)
 	msg.Header.Set(HeaderReceivedAt, item.ReceivedAt)
-	msg.Header.Set(nats.MsgIdHdr, id)
+	msg.Header.Set(nats.MsgIdHdr, messageID)
 
 	if _, err := c.JS.PublishMsg(ctx, msg); err != nil {
 		return fmt.Errorf("publish document work item %s to %s: %w", id, msg.Subject, err)

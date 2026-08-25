@@ -86,6 +86,14 @@ var (
 		Name: "e_ubl21_worker_redeliveries_total",
 		Help: "Total documents observed with a JetStream delivery count greater than one.",
 	})
+	workerTerminalFailures = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "e_ubl21_worker_terminal_failures_total",
+		Help: "Total documents moved to processing_failed after exhausting delivery attempts.",
+	})
+	workerDeadLetterDepth = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_worker_dead_letter_depth",
+		Help: "Current number of terminal failures retained in the dead-letter stream.",
+	})
 )
 
 // recordUploadOutcome increments the upload counter for outcome, e.g.

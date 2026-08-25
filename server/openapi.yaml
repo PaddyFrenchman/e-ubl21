@@ -154,7 +154,8 @@ paths:
             recognized UBL 2.1 document type. It has been queued for
             asynchronous XSD validation. Its status is accepting or
             enqueue_pending while a partial acceptance is being reconciled,
-            pending once queued, and later valid or invalid.
+            pending once queued, and later valid, invalid, or processing_failed
+            after exhausted operational retries.
           content:
             application/json:
               schema:
@@ -246,7 +247,7 @@ paths:
                     example: Invoice
                   status:
                     type: string
-                    enum: [accepting, cleanup_pending, enqueue_pending, pending, valid, invalid, acceptance_failed]
+                    enum: [accepting, cleanup_pending, enqueue_pending, pending, valid, invalid, acceptance_failed, processing_failed]
                     example: valid
                   receivedAt:
                     type: string
@@ -279,8 +280,19 @@ paths:
                     example: '2026-09-19T12:00:30Z'
                   error:
                     type: string
-                    description: Present only when status is invalid.
+                    description: Validation error, or terminal processing error when status is processing_failed.
                     example: 'Invoice: element content does not follow the schema'
+                  lastError:
+                    type: string
+                    description: Most recent operational processing error.
+                  processingAttempts:
+                    type: integer
+                    format: int64
+                    description: JetStream delivery attempts observed for the most recent operational failure.
+                  processingFailedAt:
+                    type: string
+                    format: date-time
+                    description: Time delivery attempts were exhausted and the upload entered processing_failed.
                   content:
                     type: string
                     description: The original raw XML payload. Present only when includeContent=true.

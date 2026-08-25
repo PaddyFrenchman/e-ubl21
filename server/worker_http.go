@@ -5,6 +5,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
@@ -18,7 +19,13 @@ import (
 // to be reachable only from an internal monitoring network.
 func workerMetricsMux(q *queue.Client) http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
+	metrics := promhttp.Handler()
+	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		if depth, err := q.DeadLetterDepth(context.Background()); err == nil {
+			workerDeadLetterDepth.Set(float64(depth))
+		}
+		metrics.ServeHTTP(w, r)
+	})
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		if q.NC.Status() != nats.CONNECTED {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{
