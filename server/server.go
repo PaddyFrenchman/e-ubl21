@@ -21,17 +21,19 @@ import (
 )
 
 type Config struct {
-	OpenAPIPath     string
-	SwaggerPath     string
-	OAuthIssuer     string
-	OAuthAudience   string
-	OAuthHMACSecret string
-	NATSURL         string
-	NATSOptions     []nats.Option
-	QueueNamespace  queue.Namespace
-	RateLimitRPS    float64
-	RateLimitBurst  int
-	Logger          *slog.Logger
+	OpenAPIPath            string
+	SwaggerPath            string
+	OAuthIssuer            string
+	OAuthAudience          string
+	OAuthHMACSecret        string
+	NATSURL                string
+	NATSOptions            []nats.Option
+	QueueNamespace         queue.Namespace
+	RateLimitRPS           float64
+	RateLimitBurst         int
+	UploadContentRetention time.Duration
+	UploadContentMaxBytes  int64
+	Logger                 *slog.Logger
 }
 
 // Application owns the API handler and its reusable runtime dependencies.
@@ -60,6 +62,9 @@ func (a *Application) Close() {
 }
 
 func NewApplication(cfg Config) (*Application, error) {
+	if err := validateUploadContentLimits(cfg.UploadContentRetention, cfg.UploadContentMaxBytes); err != nil {
+		return nil, err
+	}
 	logger := cfg.Logger
 	if logger == nil {
 		logger = slog.Default()
@@ -76,7 +81,7 @@ func NewApplication(cfg Config) (*Application, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect to NATS: %w", err)
 	}
-	if err := q.EnsureInfra(context.Background()); err != nil {
+	if err := q.EnsureInfraWithConfig(context.Background(), queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
 		q.Close()
 		return nil, fmt.Errorf("ensure JetStream infrastructure: %w", err)
 	}
@@ -133,18 +138,32 @@ func NewApplication(cfg Config) (*Application, error) {
 
 	reconcileCtx, cancelReconcile := context.WithCancel(context.Background())
 	application := &Application{Handler: limiter.middleware(mux), queue: q, cancel: cancelReconcile}
+	uploadContentStorageLimitBytes.Set(float64(cfg.UploadContentMaxBytes))
+	for _, outcome := range []string{"scheduled", "unscheduled", "expired", "reclaimed", "already_missing", "error"} {
+		uploadContentExpirations.WithLabelValues(outcome)
+	}
 	application.workers.Add(1)
 	go func() {
 		defer application.workers.Done()
-		runUploadReconciler(reconcileCtx, q, logger)
+		runUploadMaintenance(reconcileCtx, q, cfg.UploadContentRetention, logger)
 	}()
 	return application, nil
+}
+
+func validateUploadContentLimits(retention time.Duration, maxBytes int64) error {
+	if retention < 0 {
+		return fmt.Errorf("upload content retention must be non-negative")
+	}
+	if maxBytes < 0 {
+		return fmt.Errorf("upload content max bytes must be non-negative")
+	}
+	return nil
 }
 
 const uploadReconcileInterval = 30 * time.Second
 const uploadReconcileMinAge = time.Minute
 
-func runUploadReconciler(ctx context.Context, q *queue.Client, logger *slog.Logger) {
+func runUploadMaintenance(ctx context.Context, q *queue.Client, contentRetention time.Duration, logger *slog.Logger) {
 	reconcile := func() {
 		report, err := q.ReconcileUploads(ctx, uploadReconcileMinAge)
 		if err != nil && ctx.Err() == nil {
@@ -158,6 +177,34 @@ func runUploadReconciler(ctx context.Context, q *queue.Client, logger *slog.Logg
 			logger.Info("upload acceptance reconciliation completed",
 				"scanned", report.Scanned, "requeued", report.Requeued,
 				"failed", report.Failed, "errors", report.Errors)
+		}
+		expiry, expiryErr := q.ExpireUploadContent(ctx, contentRetention, time.Now())
+		if expiryErr != nil && ctx.Err() == nil {
+			logger.Error("upload content expiry scan failed", "error", expiryErr)
+			uploadContentExpirations.WithLabelValues("error").Inc()
+		} else if expiryErr == nil {
+			uploadContentExpirations.WithLabelValues("scheduled").Add(float64(expiry.Scheduled))
+			uploadContentExpirations.WithLabelValues("unscheduled").Add(float64(expiry.Unscheduled))
+			uploadContentExpirations.WithLabelValues("expired").Add(float64(expiry.Expired))
+			uploadContentExpirations.WithLabelValues("reclaimed").Add(float64(expiry.Reclaimed))
+			uploadContentExpirations.WithLabelValues("already_missing").Add(float64(expiry.AlreadyMissing))
+			uploadContentExpirations.WithLabelValues("error").Add(float64(expiry.Errors))
+			uploadContentExpiredBytes.Add(float64(expiry.ExpiredBytes))
+			if expiry.Scheduled > 0 || expiry.Unscheduled > 0 || expiry.Expired > 0 || expiry.Reclaimed > 0 || expiry.Errors > 0 {
+				logger.Info("upload content expiry scan completed",
+					"scanned", expiry.Scanned, "scheduled", expiry.Scheduled,
+					"unscheduled", expiry.Unscheduled, "expired", expiry.Expired,
+					"reclaimed", expiry.Reclaimed,
+					"alreadyMissing", expiry.AlreadyMissing,
+					"expiredBytes", expiry.ExpiredBytes, "errors", expiry.Errors)
+			}
+		}
+		if size, sizeErr := q.UploadContentStorageSize(ctx); sizeErr != nil {
+			if ctx.Err() == nil {
+				logger.Error("read upload content storage usage", "error", sizeErr)
+			}
+		} else {
+			uploadContentStorageBytes.Set(float64(size))
 		}
 	}
 	reconcile()

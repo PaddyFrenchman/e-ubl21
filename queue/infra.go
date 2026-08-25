@@ -20,10 +20,26 @@ const documentsStreamMaxAge = 7 * 24 * time.Hour
 // type, status, error message and timestamps).
 const uploadMetadataMaxValueSize = 64 << 10
 
+// InfraConfig controls deployer-owned JetStream storage limits. A zero
+// UploadContentMaxBytes leaves the Object Store unlimited; raw-content expiry
+// is coordinated by the application after validation rather than by the
+// Object Store TTL, so queued documents cannot disappear before processing.
+type InfraConfig struct {
+	UploadContentMaxBytes int64
+}
+
 // EnsureInfra idempotently creates the streams, metadata KV bucket and raw
 // XML Object Store the queue package depends on. Both the HTTP API and the
 // validation worker call this on startup, since either may start first.
 func (c *Client) EnsureInfra(ctx context.Context) error {
+	return c.EnsureInfraWithConfig(ctx, InfraConfig{})
+}
+
+// EnsureInfraWithConfig is EnsureInfra with explicit storage limits.
+func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) error {
+	if cfg.UploadContentMaxBytes < 0 {
+		return fmt.Errorf("upload content max bytes must be non-negative")
+	}
 	documentsStreamName := c.Namespace.DocumentsStreamName()
 	if _, err := c.JS.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
 		Name:        documentsStreamName,
@@ -66,6 +82,7 @@ func (c *Client) EnsureInfra(ctx context.Context) error {
 		Bucket:      uploadContentBucketName,
 		Description: "Immutable raw XML content of every UBL upload, keyed by upload id and chunked by JetStream Object Store.",
 		Storage:     jetstream.FileStorage,
+		MaxBytes:    cfg.UploadContentMaxBytes,
 	})
 	if err != nil {
 		return fmt.Errorf("ensure %s Object Store: %w", uploadContentBucketName, err)

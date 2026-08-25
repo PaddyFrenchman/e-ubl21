@@ -80,6 +80,46 @@ func TestUploadHandlerStorageFailuresAndContentResponse(t *testing.T) {
 		t.Fatalf("content response = %d %s", res.Code, res.Body)
 	}
 
+	expiredID, _ := queue.NewID()
+	expiredAt := time.Now().UTC().Format(time.RFC3339)
+	if err := q.PutUploadRecord(context.Background(), queue.UploadRecord{
+		ID: expiredID, DocumentType: "Invoice", Status: queue.StatusValid,
+		ReceivedAt: expiredAt, ValidatedAt: expiredAt,
+		ContentExpiresAt: expiredAt, ContentExpiredAt: expiredAt,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	req = httptest.NewRequest(http.MethodGet, "/upload", nil)
+	req.SetPathValue("id", expiredID)
+	res = httptest.NewRecorder()
+	h.handleGetUpload(res, req)
+	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), `"contentAvailable":false`) || !strings.Contains(res.Body.String(), `"contentExpiredAt"`) {
+		t.Fatalf("expired metadata response = %d %s", res.Code, res.Body)
+	}
+	req = httptest.NewRequest(http.MethodGet, "/upload?includeContent=true", nil)
+	req.SetPathValue("id", expiredID)
+	res = httptest.NewRecorder()
+	h.handleGetUpload(res, req)
+	if res.Code != http.StatusGone || !strings.Contains(res.Body.String(), "upload content has expired") {
+		t.Fatalf("expired content response = %d %s", res.Code, res.Body)
+	}
+
+	deadlinePassedID, _ := queue.NewID()
+	if err := q.PutUploadRecord(context.Background(), queue.UploadRecord{
+		ID: deadlinePassedID, DocumentType: "Invoice", Status: queue.StatusValid,
+		ReceivedAt: expiredAt, ValidatedAt: expiredAt,
+		ContentExpiresAt: time.Now().Add(-time.Minute).UTC().Format(time.RFC3339),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	req = httptest.NewRequest(http.MethodGet, "/upload?includeContent=true", nil)
+	req.SetPathValue("id", deadlinePassedID)
+	res = httptest.NewRecorder()
+	h.handleGetUpload(res, req)
+	if res.Code != http.StatusGone {
+		t.Fatalf("due content missing before sweep response = %d %s", res.Code, res.Body)
+	}
+
 	missingID, _ := queue.NewID()
 	if err := q.PutUploadRecord(context.Background(), queue.UploadRecord{ID: missingID}); err != nil {
 		t.Fatal(err)

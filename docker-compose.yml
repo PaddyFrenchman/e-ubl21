@@ -58,6 +58,11 @@ services:
       EUBL21_HTTP_IDLE_TIMEOUT: "2m"
       EUBL21_HTTP_SHUTDOWN_TIMEOUT: "15s"
       EUBL21_HTTP_MAX_HEADER_BYTES: "65536"
+      # Raw XML is retained for 30 days after validation. Metadata and the
+      # small permanent result-uniqueness event remain available afterward.
+      # These values must match the worker service below.
+      EUBL21_UPLOAD_CONTENT_RETENTION: "${EUBL21_UPLOAD_CONTENT_RETENTION:-720h}"
+      EUBL21_UPLOAD_CONTENT_MAX_BYTES: "${EUBL21_UPLOAD_CONTENT_MAX_BYTES:-10737418240}"
     ports:
       - "8080:8080"
 
@@ -102,6 +107,10 @@ services:
       # This compose file runs one worker. For N replicas sharing this durable,
       # set this to at least replicas * (concurrency + prefetch).
       EUBL21_WORKER_MAX_ACK_PENDING: "0"
+      # Must match the API so workers stamp the same expiry policy and neither
+      # process races to reconfigure the shared Object Store byte limit.
+      EUBL21_UPLOAD_CONTENT_RETENTION: "${EUBL21_UPLOAD_CONTENT_RETENTION:-720h}"
+      EUBL21_UPLOAD_CONTENT_MAX_BYTES: "${EUBL21_UPLOAD_CONTENT_MAX_BYTES:-10737418240}"
     ports:
       - "9091:9091"
 

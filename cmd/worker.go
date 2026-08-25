@@ -57,18 +57,20 @@ func worker(ctx context.Context, cfg *Config) error {
 	defer stop()
 
 	return server.RunWorker(ctx, server.WorkerConfig{
-		NATSURL:           cfg.NATSURL,
-		NATSOptions:       cfg.NATSOptions,
-		QueueNamespace:    cfg.QueueNamespace,
-		ConsumerName:      cfg.WorkerConsumerName,
-		SubjectFilter:     cfg.WorkerSubjectFilter,
-		MetricsAddr:       cfg.WorkerMetricsAddr,
-		ValidationTimeout: cfg.WorkerValidationTimeout,
-		Concurrency:       cfg.WorkerConcurrency,
-		Prefetch:          cfg.WorkerPrefetch,
-		AckWait:           cfg.WorkerAckWait,
-		MaxDeliver:        cfg.WorkerMaxDeliver,
-		MaxAckPending:     cfg.WorkerMaxAckPending,
-		Logger:            slog.Default(),
+		NATSURL:                cfg.NATSURL,
+		NATSOptions:            cfg.NATSOptions,
+		QueueNamespace:         cfg.QueueNamespace,
+		ConsumerName:           cfg.WorkerConsumerName,
+		SubjectFilter:          cfg.WorkerSubjectFilter,
+		MetricsAddr:            cfg.WorkerMetricsAddr,
+		ValidationTimeout:      cfg.WorkerValidationTimeout,
+		Concurrency:            cfg.WorkerConcurrency,
+		Prefetch:               cfg.WorkerPrefetch,
+		AckWait:                cfg.WorkerAckWait,
+		MaxDeliver:             cfg.WorkerMaxDeliver,
+		MaxAckPending:          cfg.WorkerMaxAckPending,
+		UploadContentRetention: cfg.UploadContentRetention,
+		UploadContentMaxBytes:  cfg.UploadContentMaxBytes,
+		Logger:                 slog.Default(),
 	})
 }

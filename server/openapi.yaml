@@ -211,9 +211,9 @@ paths:
         - UBL
       summary: Retrieve upload status and metadata
       description: >-
-        Returns the upload's current status and metadata without loading the
-        raw XML by default. Set includeContent=true only when the original
-        XML payload is required.
+        Returns retained upload status and metadata without loading raw XML by
+        default. Raw content expires independently after validation; set
+        includeContent=true only while contentAvailable is true.
       parameters:
         - name: id
           in: path
@@ -225,8 +225,8 @@ paths:
           in: query
           required: false
           description: >-
-            When true, include the original raw XML payload in the response.
-            Defaults to false so normal status polling remains small.
+            When true, include the original raw XML payload. Returns 410 after
+            raw content expires; retained validation metadata remains available.
           schema:
             type: boolean
             default: false
@@ -257,6 +257,26 @@ paths:
                     format: date-time
                     description: Present once the worker has processed the document.
                     example: '2026-08-20T12:00:01Z'
+                  contentAvailable:
+                    type: boolean
+                    description: >-
+                      Whether lifecycle metadata indicates that raw XML is
+                      retained and eligible for retrieval; this does not
+                      perform an Object Store read.
+                    example: true
+                  contentExpiresAt:
+                    type: string
+                    format: date-time
+                    description: Scheduled raw-content expiry time, present after validation when retention is enabled.
+                    example: '2026-09-19T12:00:01Z'
+                  contentExpiredAt:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Time raw content became unavailable under the retention
+                      policy. Physical deletion is retried independently;
+                      validation metadata remains available.
+                    example: '2026-09-19T12:00:30Z'
                   error:
                     type: string
                     description: Present only when status is invalid.
@@ -265,13 +285,15 @@ paths:
                     type: string
                     description: The original raw XML payload. Present only when includeContent=true.
                     example: '<?xml version="1.0" encoding="UTF-8"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">...</Invoice>'
-                required: [id, document, status, receivedAt]
+                required: [id, document, status, receivedAt, contentAvailable]
               example:
                 id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
                 document: Invoice
                 status: valid
                 receivedAt: '2026-08-20T12:00:00Z'
                 validatedAt: '2026-08-20T12:00:01Z'
+                contentAvailable: true
+                contentExpiresAt: '2026-09-19T12:00:01Z'
         '400':
           description: Invalid includeContent query parameter.
           content:
@@ -288,6 +310,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: The upload metadata exists, but its raw XML content has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: upload content has expired
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
         '429':

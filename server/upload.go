@@ -202,10 +202,11 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	}
 
 	response := map[string]any{
-		"id":         record.ID,
-		"document":   record.DocumentType,
-		"status":     string(record.Status),
-		"receivedAt": record.ReceivedAt,
+		"id":               record.ID,
+		"document":         record.DocumentType,
+		"status":           string(record.Status),
+		"receivedAt":       record.ReceivedAt,
+		"contentAvailable": uploadContentAvailable(record),
 	}
 	if record.ValidatedAt != "" {
 		response["validatedAt"] = record.ValidatedAt
@@ -213,12 +214,26 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	if record.Error != "" {
 		response["error"] = record.Error
 	}
+	if record.ContentExpiresAt != "" {
+		response["contentExpiresAt"] = record.ContentExpiresAt
+	}
+	if record.ContentExpiredAt != "" {
+		response["contentExpiredAt"] = record.ContentExpiredAt
+	}
 
 	// Polling is deliberately metadata-only unless the caller explicitly
 	// opts in. This keeps repeated status checks small even for 10 MiB XML.
 	if includeContent {
+		if record.ContentExpiredAt != "" {
+			writeJSON(w, http.StatusGone, map[string]string{"error": "upload content has expired"})
+			return
+		}
 		content, err := h.queue.GetUploadContent(r.Context(), id)
 		if err != nil {
+			if errors.Is(err, queue.ErrRecordNotFound) && contentExpiryDeadlinePassed(record, time.Now()) {
+				writeJSON(w, http.StatusGone, map[string]string{"error": "upload content has expired"})
+				return
+			}
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load upload content: " + err.Error()})
 			return
 		}
@@ -226,6 +241,26 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, response)
+}
+
+func uploadContentAvailable(record queue.UploadRecord) bool {
+	if record.ContentExpiredAt != "" {
+		return false
+	}
+	switch record.Status {
+	case queue.StatusEnqueuePending, queue.StatusPending, queue.StatusValid, queue.StatusInvalid:
+		return true
+	default:
+		return false
+	}
+}
+
+func contentExpiryDeadlinePassed(record queue.UploadRecord, now time.Time) bool {
+	if record.ContentExpiresAt == "" {
+		return false
+	}
+	deadline, err := time.Parse(time.RFC3339, record.ContentExpiresAt)
+	return err == nil && !now.Before(deadline)
 }
 
 func readUploadBody(w http.ResponseWriter, r *http.Request) ([]byte, error) {

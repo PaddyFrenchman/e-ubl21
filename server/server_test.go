@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -47,15 +48,17 @@ func testConfig(t *testing.T, overrides func(*Config)) Config {
 	t.Helper()
 	natsServer := queuetest.StartServer(t)
 	cfg := Config{
-		OpenAPIPath:     "/spec",
-		SwaggerPath:     "/docs/",
-		OAuthIssuer:     "https://issuer.example.com",
-		OAuthAudience:   "e-ubl21",
-		OAuthHMACSecret: testSecret,
-		RateLimitRPS:    1000,
-		RateLimitBurst:  1000,
-		NATSURL:         natsServer.URL,
-		NATSOptions:     natsServer.Options,
+		OpenAPIPath:            "/spec",
+		SwaggerPath:            "/docs/",
+		OAuthIssuer:            "https://issuer.example.com",
+		OAuthAudience:          "e-ubl21",
+		OAuthHMACSecret:        testSecret,
+		RateLimitRPS:           1000,
+		RateLimitBurst:         1000,
+		UploadContentRetention: 24 * time.Hour,
+		UploadContentMaxBytes:  64 << 20,
+		NATSURL:                natsServer.URL,
+		NATSOptions:            natsServer.Options,
 	}
 	if overrides != nil {
 		overrides(&cfg)
@@ -88,6 +91,15 @@ func TestApplicationCloseReleasesNATSConnection(t *testing.T) {
 	application.Close()
 	if !connection.IsClosed() {
 		t.Fatal("application Close did not close its NATS connection")
+	}
+}
+
+func TestRuntimeRejectsNegativeUploadContentLimitsBeforeConnecting(t *testing.T) {
+	if _, err := NewApplication(Config{UploadContentRetention: -time.Second}); err == nil {
+		t.Fatal("NewApplication accepted negative content retention")
+	}
+	if err := RunWorker(context.Background(), WorkerConfig{UploadContentMaxBytes: -1}); err == nil {
+		t.Fatal("RunWorker accepted negative Object Store byte limit")
 	}
 }
 
@@ -124,6 +136,59 @@ func TestApplicationStartupReconcilesStaleUploadAcceptance(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	t.Fatal("application startup did not reconcile stale enqueue_pending upload")
+}
+
+func TestApplicationStartupExpiresTerminalUploadContent(t *testing.T) {
+	cfg := testConfig(t, func(cfg *Config) { cfg.UploadContentRetention = time.Hour })
+	seed, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := seed.EnsureInfraWithConfig(context.Background(), queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+	id, _ := queue.NewID()
+	validatedAt := time.Now().Add(-2 * time.Hour).UTC().Format(time.RFC3339)
+	if err := seed.PutUploadRecord(context.Background(), queue.UploadRecord{
+		ID: id, DocumentType: "Invoice", Status: queue.StatusValid,
+		ReceivedAt: validatedAt, ValidatedAt: validatedAt,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := seed.PutUploadContent(context.Background(), id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+	seed.Close()
+
+	application, err := NewApplication(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(application.Close)
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		record, getErr := application.queue.GetUploadRecord(context.Background(), id)
+		if getErr == nil && record.Status == queue.StatusValid && record.ContentExpiredAt != "" {
+			if _, contentErr := application.queue.GetUploadContent(context.Background(), id); !errors.Is(contentErr, queue.ErrRecordNotFound) {
+				t.Fatalf("expired content error = %v", contentErr)
+			}
+			token := signedJWT(t, cfg.OAuthIssuer, cfg.OAuthAudience, testSecret, time.Hour)
+			metrics := doRequest(application.Handler, http.MethodGet, "/metrics", token, "", "")
+			for _, name := range []string{
+				"e_ubl21_upload_content_expirations_total",
+				"e_ubl21_upload_content_expired_bytes_total",
+				"e_ubl21_upload_content_storage_bytes",
+				"e_ubl21_upload_content_storage_limit_bytes",
+			} {
+				if !strings.Contains(metrics.Body.String(), name) {
+					t.Fatalf("metrics output missing %s", name)
+				}
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("application startup did not expire terminal raw content")
 }
 
 func doRequest(handler http.Handler, method, path, token, body, contentType string) *httptest.ResponseRecorder {
@@ -183,6 +248,9 @@ func TestNewHandlerQueuesUploadAndPersistsPendingRecord(t *testing.T) {
 	}
 	if _, hasValidatedAt := stored["validatedAt"]; hasValidatedAt {
 		t.Fatal("validatedAt should not be set before the worker has processed the document")
+	}
+	if stored["contentAvailable"] != true {
+		t.Fatalf("pending upload contentAvailable = %v, want true", stored["contentAvailable"])
 	}
 
 	// Explicit content retrieval preserves the original API capability
@@ -395,6 +463,20 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 	}
 	if !foundIncludeContent {
 		t.Fatal("retrieval operation missing includeContent query parameter")
+	}
+	responses := get["responses"].(map[string]any)
+	if _, ok := responses["410"]; !ok {
+		t.Fatal("retrieval operation missing expired-content 410 response")
+	}
+	okResponse := responses["200"].(map[string]any)
+	content := okResponse["content"].(map[string]any)
+	mediaType := content["application/json"].(map[string]any)
+	schema := mediaType["schema"].(map[string]any)
+	properties := schema["properties"].(map[string]any)
+	for _, field := range []string{"contentAvailable", "contentExpiresAt", "contentExpiredAt"} {
+		if _, ok := properties[field]; !ok {
+			t.Fatalf("retrieval schema missing %s", field)
+		}
 	}
 	components := spec["components"].(map[string]any)
 	securitySchemes := components["securitySchemes"].(map[string]any)

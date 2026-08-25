@@ -50,7 +50,9 @@ All physical names are derived from `queue.Namespace`. With the legacy/default n
   `ubl.validation.results.<upload-id>` subjects; consumers filter on
   `ubl.validation.results.*`.
 - `UBL_UPLOADS`: KV bucket containing small mutable `UploadRecord` metadata.
-- `UBL_UPLOAD_CONTENT`: JetStream Object Store containing immutable raw XML objects, keyed by upload id.
+- `UBL_UPLOAD_CONTENT`: size-capped JetStream Object Store containing immutable
+  raw XML objects keyed by upload id. Terminal content is reclaimed after the
+  configured post-validation retention period.
 
 With a configured namespace such as `eubl21.prod`, the subject/resource names are correspondingly namespaced and isolated.
 
@@ -140,6 +142,14 @@ GET /api/v1/ubl/{id}?includeContent=true
 ```
 
 The response then additionally includes `content`. Invalid boolean values for `includeContent` return `400 Bad Request`.
+
+Validation metadata outlives raw XML. Terminal records carry
+`contentExpiresAt`; after the API maintenance loop deletes the object they also
+carry `contentExpiredAt`, and metadata-only responses report
+`contentAvailable: false`. Explicit raw-content retrieval then returns
+`410 Gone`. Pending work is excluded from expiry so backlog age cannot remove
+an input before validation. See `UPLOAD-CONTENT-RETENTION.md` for configuration,
+capacity behavior, metrics, and upgrade operations.
 
 ## UBL XSD validation
 

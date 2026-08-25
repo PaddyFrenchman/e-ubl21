@@ -66,6 +66,9 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	if cfg.QueueNamespace != queue.DefaultNamespace {
 		t.Fatalf("queue namespace = %q, want DefaultNamespace", cfg.QueueNamespace)
 	}
+	if cfg.UploadContentRetention != 30*24*time.Hour || cfg.UploadContentMaxBytes != 10<<30 {
+		t.Fatalf("default upload content limits = retention %s, max bytes %d", cfg.UploadContentRetention, cfg.UploadContentMaxBytes)
+	}
 }
 
 func TestLoadConfigReadsQueueNamespaceFromEnvironment(t *testing.T) {
@@ -130,6 +133,40 @@ func TestLoadConfigReadsHTTPResourceLimits(t *testing.T) {
 	}
 	if cfg.HTTPReadHeaderTimeout != 2*time.Second || cfg.HTTPReadTimeout != 45*time.Second || cfg.HTTPWriteTimeout != 30*time.Second || cfg.HTTPIdleTimeout != 90*time.Second || cfg.HTTPShutdownTimeout != 7*time.Second || cfg.HTTPMaxHeaderBytes != 32768 {
 		t.Fatalf("HTTP limits = %+v", cfg)
+	}
+}
+
+func TestLoadConfigReadsUploadContentLimits(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	t.Setenv("EUBL21_UPLOAD_CONTENT_RETENTION", "168h")
+	t.Setenv("EUBL21_UPLOAD_CONTENT_MAX_BYTES", "536870912")
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.UploadContentRetention != 7*24*time.Hour || cfg.UploadContentMaxBytes != 512<<20 {
+		t.Fatalf("upload content limits = retention %s, max bytes %d", cfg.UploadContentRetention, cfg.UploadContentMaxBytes)
+	}
+}
+
+func TestLoadConfigRejectsUnsafeUploadContentLimits(t *testing.T) {
+	for _, tc := range []struct {
+		key, value string
+	}{
+		{"EUBL21_UPLOAD_CONTENT_RETENTION", "30s"},
+		{"EUBL21_UPLOAD_CONTENT_RETENTION", "-1s"},
+		{"EUBL21_UPLOAD_CONTENT_MAX_BYTES", "1048576"},
+		{"EUBL21_UPLOAD_CONTENT_MAX_BYTES", "-1"},
+	} {
+		t.Run(tc.key+"="+tc.value, func(t *testing.T) {
+			v := viper.New()
+			configureViper(v)
+			t.Setenv(tc.key, tc.value)
+			if err := loadConfig(v, &Config{}); err == nil {
+				t.Fatal("unsafe upload-content configuration was accepted")
+			}
+		})
 	}
 }
 

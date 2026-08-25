@@ -30,6 +30,9 @@ func TestDocumentWorkItemAndClientValidationErrors(t *testing.T) {
 
 	client := newTestClient(t)
 	ctx := context.Background()
+	if err := client.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: -1}); err == nil {
+		t.Error("negative upload content byte limit accepted")
+	}
 	if err := client.PublishDocument(ctx, "bad", "Invoice", time.Now()); err == nil {
 		t.Error("invalid publish ID accepted")
 	}

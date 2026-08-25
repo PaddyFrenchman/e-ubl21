@@ -212,10 +212,18 @@ NATS/JetStream cluster without colliding.
 | Work stream | `UBL_DOCUMENTS` | Incoming UBL documents awaiting XSD validation | JetStream `WorkQueuePolicy`, file storage, 7-day `MaxAge` |
 | Per-type work subject | `ubl.documents.<Type>` | Routes work by UBL root document type, e.g. `ubl.documents.Invoice` | Belongs to `UBL_DOCUMENTS` |
 | Upload-state KV | `UBL_UPLOADS` | Canonical current upload record keyed by upload ID | JetStream KV, file storage; no explicit record TTL currently configured |
+| Raw-content Object Store | `UBL_UPLOAD_CONTENT` | Immutable XML keyed by upload ID | File storage, configurable hard byte cap; application expiry after terminal validation |
 | Result stream | `UBL_VALIDATION_RESULTS_BY_UPLOAD` | Validation outcome events and durable uniqueness index | `LimitsPolicy`, file storage, unlimited age, one message per subject, `DiscardNewPerSubject` |
 | Result subject | `ubl.validation.results.<upload-id>` | Permanently unique result-event subject per upload | Consumers filter `ubl.validation.results.*` |
 
 Both API and worker invoke `EnsureInfra()` at startup, so either service may start first.
+
+Raw content is not assigned a broker `MaxAge`: Object Store TTL starts at
+upload time and could delete work before validation during a deep backlog.
+Instead, workers stamp `contentExpiresAt` on terminal records and the API's
+CAS-safe maintenance loop marks due content unavailable with
+`contentExpiredAt`, then deletes the object with retry. Deployment and alerting
+details are in `UPLOAD-CONTENT-RETENTION.md`.
 
 ### Work-message metadata
 
@@ -1066,24 +1074,26 @@ before acceptance. See `TODO-005` in `TODO.md`.
 
 ---
 
-## 11.13 Queue/KV storage growth policy
+## 11.13 Queue/KV storage growth policy — partially resolved
 
 `UBL_DOCUMENTS` has a `MaxAge` limit. Result events deliberately do not: one
 small result per upload is retained as the permanent publication-idempotence
 index.
 
-`UBL_UPLOADS` does not currently define an explicit record TTL.
+Raw XML is now bounded by a configurable Object Store byte cap and reclaimed
+after configurable post-validation retention. `UBL_UPLOADS` does not currently
+define an explicit record TTL.
 
-Raw XML objects, metadata records, and the one-result-per-upload uniqueness
-index can therefore grow indefinitely.
+Metadata records and the one-result-per-upload uniqueness index can therefore
+still grow indefinitely; raw XML cannot exceed the configured storage cap.
 
 ### Recommendation
 
-Define retention as a product-level policy:
+The remaining product-level policy is:
 
 ```text
 validation-status retention
-raw XML retention
+raw XML retention (implemented by TODO-010)
 result-event retention
 audit retention
 ```

@@ -93,6 +93,14 @@ func TestNewHTTPServerAppliesResourceLimits(t *testing.T) {
 	}
 }
 
+func TestServerConfigCarriesUploadContentLimits(t *testing.T) {
+	cfg := &Config{UploadContentRetention: 7 * 24 * time.Hour, UploadContentMaxBytes: 512 << 20}
+	got := serverConfig(cfg)
+	if got.UploadContentRetention != cfg.UploadContentRetention || got.UploadContentMaxBytes != cfg.UploadContentMaxBytes {
+		t.Fatalf("server upload-content limits = retention %s, max bytes %d", got.UploadContentRetention, got.UploadContentMaxBytes)
+	}
+}
+
 func TestRunHTTPServerGracefullyDrainsInFlightRequest(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

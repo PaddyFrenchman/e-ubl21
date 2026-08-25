@@ -34,6 +34,8 @@ type Config struct {
 	HTTPIdleTimeout         time.Duration
 	HTTPShutdownTimeout     time.Duration
 	HTTPMaxHeaderBytes      int
+	UploadContentRetention  time.Duration
+	UploadContentMaxBytes   int64
 	WorkerConsumerName      string
 	WorkerSubjectFilter     string
 	WorkerMetricsAddr       string
@@ -86,6 +88,8 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().Duration("http-idle-timeout", 2*time.Minute, "Maximum keep-alive idle time")
 	rootCmd.PersistentFlags().Duration("http-shutdown-timeout", 15*time.Second, "Maximum graceful-shutdown drain time")
 	rootCmd.PersistentFlags().Int("http-max-header-bytes", 64<<10, "Maximum total size of HTTP request headers")
+	rootCmd.PersistentFlags().Duration("upload-content-retention", 30*24*time.Hour, "How long raw XML remains available after validation; 0 disables expiry")
+	rootCmd.PersistentFlags().Int64("upload-content-max-bytes", 10<<30, "Maximum bytes allocated to the shared raw XML Object Store; 0 is unlimited")
 
 	mustBindFlag(v, rootCmd, "config")
 	mustBindFlag(v, rootCmd, "host")
@@ -107,6 +111,8 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	mustBindFlag(v, rootCmd, "http-idle-timeout")
 	mustBindFlag(v, rootCmd, "http-shutdown-timeout")
 	mustBindFlag(v, rootCmd, "http-max-header-bytes")
+	mustBindFlag(v, rootCmd, "upload-content-retention")
+	mustBindFlag(v, rootCmd, "upload-content-max-bytes")
 
 	rootCmd.AddCommand(newServeCmd(cfg))
 	rootCmd.AddCommand(newWorkerCmd(v, cfg))
@@ -142,6 +148,8 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("http-idle-timeout", 2*time.Minute)
 	v.SetDefault("http-shutdown-timeout", 15*time.Second)
 	v.SetDefault("http-max-header-bytes", 64<<10)
+	v.SetDefault("upload-content-retention", 30*24*time.Hour)
+	v.SetDefault("upload-content-max-bytes", int64(10<<30))
 	v.SetDefault("worker-consumer-name", "ubl-validator")
 	v.SetDefault("worker-subject-filter", "")
 	v.SetDefault("worker-metrics-addr", ":9091")
@@ -191,6 +199,11 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	if err := validateHTTPConfig(cfg); err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
+	cfg.UploadContentRetention = v.GetDuration("upload-content-retention")
+	cfg.UploadContentMaxBytes = v.GetInt64("upload-content-max-bytes")
+	if err := validateUploadContentConfig(cfg); err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
 	cfg.WorkerConsumerName = v.GetString("worker-consumer-name")
 	cfg.WorkerSubjectFilter = v.GetString("worker-subject-filter")
 	cfg.WorkerMetricsAddr = v.GetString("worker-metrics-addr")
@@ -201,6 +214,19 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerMaxDeliver = v.GetInt("worker-max-deliver")
 	cfg.WorkerMaxAckPending = v.GetInt("worker-max-ack-pending")
 
+	return nil
+}
+
+const minimumUploadContentRetention = time.Minute
+const minimumUploadContentMaxBytes = 16 << 20
+
+func validateUploadContentConfig(cfg *Config) error {
+	if cfg.UploadContentRetention < 0 || (cfg.UploadContentRetention > 0 && cfg.UploadContentRetention < minimumUploadContentRetention) {
+		return fmt.Errorf("upload-content-retention must be 0 (disabled) or at least %s", minimumUploadContentRetention)
+	}
+	if cfg.UploadContentMaxBytes < 0 || (cfg.UploadContentMaxBytes > 0 && cfg.UploadContentMaxBytes < minimumUploadContentMaxBytes) {
+		return fmt.Errorf("upload-content-max-bytes must be 0 (unlimited) or at least %d", minimumUploadContentMaxBytes)
+	}
 	return nil
 }
 

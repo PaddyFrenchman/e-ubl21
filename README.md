@@ -27,3 +27,10 @@ All settings can be provided either as flags or environment variables prefixed w
 - `--http-idle-timeout` / `EUBL21_HTTP_IDLE_TIMEOUT`
 - `--http-shutdown-timeout` / `EUBL21_HTTP_SHUTDOWN_TIMEOUT`
 - `--http-max-header-bytes` / `EUBL21_HTTP_MAX_HEADER_BYTES`
+- `--upload-content-retention` / `EUBL21_UPLOAD_CONTENT_RETENTION`
+- `--upload-content-max-bytes` / `EUBL21_UPLOAD_CONTENT_MAX_BYTES`
+
+Raw XML defaults to 30 days of post-validation retention and a shared 10 GiB
+Object Store cap. Validation metadata remains available after content expiry.
+See [UPLOAD-CONTENT-RETENTION.md](UPLOAD-CONTENT-RETENTION.md) for deployment,
+metrics, and upgrade guidance.

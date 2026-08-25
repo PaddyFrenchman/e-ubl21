@@ -16,7 +16,10 @@ import (
 func runTestWorker(t *testing.T, cfg Config, overrides func(*WorkerConfig)) {
 	t.Helper()
 
-	workerCfg := WorkerConfig{NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace}
+	workerCfg := WorkerConfig{
+		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace,
+		UploadContentRetention: cfg.UploadContentRetention, UploadContentMaxBytes: cfg.UploadContentMaxBytes,
+	}
 	if overrides != nil {
 		overrides(&workerCfg)
 	}
@@ -70,7 +73,7 @@ func TestWorkerTerminatesPoisonMessagesAndRetriesMissingContent(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(q.Close)
-	if err := q.EnsureInfra(context.Background()); err != nil {
+	if err := q.EnsureInfraWithConfig(context.Background(), queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -104,7 +107,7 @@ func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(q.Close)
-	if err := q.EnsureInfra(context.Background()); err != nil {
+	if err := q.EnsureInfraWithConfig(context.Background(), queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
 		t.Fatal(err)
 	}
 	id, _ := queue.NewID()
@@ -130,7 +133,7 @@ func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
 			// Give the failed publication path time to NAK the original work
 			// descriptor before restoring the stream.
 			time.Sleep(50 * time.Millisecond)
-			if err := q.EnsureInfra(context.Background()); err != nil {
+			if err := q.EnsureInfraWithConfig(context.Background(), queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
 				t.Fatal(err)
 			}
 			receivedAt := time.Now().UTC().Format(time.RFC3339)
@@ -221,6 +224,9 @@ func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {
 	}
 	if stored["validatedAt"] == "" || stored["validatedAt"] == nil {
 		t.Fatal("missing validatedAt on a processed document")
+	}
+	if stored["contentExpiresAt"] == "" || stored["contentExpiresAt"] == nil {
+		t.Fatal("missing contentExpiresAt on a processed document")
 	}
 
 	// Bypass message-ID deduplication to model a descriptor replay after the

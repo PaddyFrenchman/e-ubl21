@@ -33,8 +33,10 @@ type WorkerConfig struct {
 	MaxDeliver        int
 	// MaxAckPending is the fleet-wide outstanding-message limit on the shared
 	// durable consumer. Zero derives Concurrency + Prefetch for one replica.
-	MaxAckPending int
-	Logger        *slog.Logger
+	MaxAckPending          int
+	UploadContentRetention time.Duration
+	UploadContentMaxBytes  int64
+	Logger                 *slog.Logger
 }
 
 const defaultWorkerConsumerName = "ubl-validator"
@@ -91,6 +93,9 @@ func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, erro
 }
 
 func RunWorker(ctx context.Context, cfg WorkerConfig) error {
+	if err := validateUploadContentLimits(cfg.UploadContentRetention, cfg.UploadContentMaxBytes); err != nil {
+		return err
+	}
 	logger := cfg.Logger
 	if logger == nil {
 		logger = slog.Default()
@@ -106,7 +111,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	}
 	defer q.Close()
 
-	if err := q.EnsureInfra(ctx); err != nil {
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
 		if ctx.Err() != nil {
 			return nil
 		}
@@ -146,7 +151,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		}()
 	}
 
-	worker := &documentWorker{queue: q, catalog: catalog, logger: logger, validationTimeout: settings.validationTimeout, progressInterval: settings.ackWait / 2}
+	worker := &documentWorker{queue: q, catalog: catalog, logger: logger, validationTimeout: settings.validationTimeout, progressInterval: settings.ackWait / 2, contentRetention: cfg.UploadContentRetention}
 	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
 	if err != nil {
 		if ctx.Err() != nil {
@@ -231,6 +236,7 @@ type documentWorker struct {
 	logger            *slog.Logger
 	validationTimeout time.Duration
 	progressInterval  time.Duration
+	contentRetention  time.Duration
 }
 
 const nakRetryDelay = 10 * time.Second
@@ -371,6 +377,9 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 	record.Status = status
 	record.Error = errMsg
 	record.ValidatedAt = validatedAt.UTC().Format(time.RFC3339)
+	if w.contentRetention > 0 {
+		record.ContentExpiresAt = validatedAt.Add(w.contentRetention).UTC().Format(time.RFC3339)
+	}
 	record.ResultPending = true
 	revision, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision)
 	if err != nil {
@@ -387,6 +396,9 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 			record.Status = status
 			record.Error = errMsg
 			record.ValidatedAt = validatedAt.UTC().Format(time.RFC3339)
+			if w.contentRetention > 0 {
+				record.ContentExpiresAt = validatedAt.Add(w.contentRetention).UTC().Format(time.RFC3339)
+			}
 			record.ResultPending = true
 			revision, err = w.queue.UpdateUploadRecord(ctx, record, latest.Revision)
 			if err == nil {

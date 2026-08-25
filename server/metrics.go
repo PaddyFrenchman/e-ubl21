@@ -34,6 +34,22 @@ var (
 		Name: "e_ubl21_upload_reconciliations_total",
 		Help: "Upload acceptance records handled by reconciliation, labeled by outcome.",
 	}, []string{"outcome"})
+	uploadContentExpirations = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_upload_content_expirations_total",
+		Help: "Raw upload-content records handled by retention sweeping, labeled by outcome.",
+	}, []string{"outcome"})
+	uploadContentExpiredBytes = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "e_ubl21_upload_content_expired_bytes_total",
+		Help: "Raw XML payload bytes reclaimed by retention sweeping, excluding Object Store metadata.",
+	})
+	uploadContentStorageBytes = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_upload_content_storage_bytes",
+		Help: "Current physical size of the raw XML Object Store, including JetStream object metadata.",
+	})
+	uploadContentStorageLimitBytes = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "e_ubl21_upload_content_storage_limit_bytes",
+		Help: "Configured raw XML Object Store byte limit; zero means unlimited.",
+	})
 
 	validationsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "e_ubl21_validations_total",

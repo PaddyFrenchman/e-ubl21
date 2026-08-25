@@ -439,16 +439,46 @@ before the record becomes terminal.
 
 ---
 
-## TODO-010 — Add raw upload-content retention and storage limits
+## TODO-010 — Add raw upload-content retention and storage limits ✅ DONE
 
-JetStream Object Store content currently has no application retention policy
-and can grow indefinitely.
+**Status:** Completed and verified on 2026-08-25.
+
+JetStream Object Store content previously had no application retention policy
+and could grow indefinitely.
 
 ### Requirements
 
-- Define configurable raw-content retention.
-- Enforce or reconcile expiry across Object Store and metadata.
-- Expose storage/expiry metrics and operational documentation.
+- [x] Define configurable raw-content retention.
+- [x] Enforce or reconcile expiry across Object Store and metadata.
+- [x] Expose storage/expiry metrics and operational documentation.
+
+### Resolution
+
+Raw XML now has a configurable post-validation retention period (30 days by
+default) and the shared Object Store has a configurable hard byte limit (10
+GiB by default). Both settings are available through CLI, Viper/config files,
+and `EUBL21_UPLOAD_CONTENT_*` environment variables, and Docker Compose gives
+the API and worker identical explicit values.
+
+Workers persist `contentExpiresAt` with the terminal validation record. For due
+`valid`/`invalid` content, the API maintenance loop CAS-persists
+`contentExpiredAt` before deletion, then retries any interrupted Object Store
+cleanup; queued documents are never aged out before they can be processed.
+Existing terminal records are enrolled from `validatedAt`.
+Metadata remains available, ordinary status responses expose content
+availability/expiry, and explicit content retrieval returns `410 Gone` after
+reclamation.
+
+Prometheus reports current/maximum Object Store bytes, expiry outcomes, and
+reclaimed payload bytes. Operational configuration, capacity behavior,
+multi-replica requirements, API semantics, metrics, and upgrade behavior are
+documented in `UPLOAD-CONTENT-RETENTION.md`.
+
+### Acceptance criteria
+
+Raw XML storage is bounded by deployer policy without deleting unprocessed
+work, while lightweight validation metadata remains queryable after content
+expiry.
 
 ---
 

@@ -122,16 +122,18 @@ func runHTTPServer(ctx context.Context, httpServer *http.Server, shutdownTimeout
 
 func serverConfig(cfg *Config) server.Config {
 	return server.Config{
-		OpenAPIPath:     cfg.OpenAPIPath,
-		SwaggerPath:     cfg.SwaggerPath,
-		OAuthIssuer:     cfg.OAuthIssuer,
-		OAuthAudience:   cfg.OAuthAudience,
-		OAuthHMACSecret: cfg.OAuthHMACSecret,
-		NATSURL:         cfg.NATSURL,
-		NATSOptions:     cfg.NATSOptions,
-		QueueNamespace:  cfg.QueueNamespace,
-		RateLimitRPS:    cfg.RateLimitRPS,
-		RateLimitBurst:  cfg.RateLimitBurst,
-		Logger:          slog.Default(),
+		OpenAPIPath:            cfg.OpenAPIPath,
+		SwaggerPath:            cfg.SwaggerPath,
+		OAuthIssuer:            cfg.OAuthIssuer,
+		OAuthAudience:          cfg.OAuthAudience,
+		OAuthHMACSecret:        cfg.OAuthHMACSecret,
+		NATSURL:                cfg.NATSURL,
+		NATSOptions:            cfg.NATSOptions,
+		QueueNamespace:         cfg.QueueNamespace,
+		RateLimitRPS:           cfg.RateLimitRPS,
+		RateLimitBurst:         cfg.RateLimitBurst,
+		UploadContentRetention: cfg.UploadContentRetention,
+		UploadContentMaxBytes:  cfg.UploadContentMaxBytes,
+		Logger:                 slog.Default(),
 	}
 }

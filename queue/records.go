@@ -25,13 +25,15 @@ import (
 // PutUploadContent/GetUploadContent), so status updates never have to read
 // or rewrite the potentially large document body.
 type UploadRecord struct {
-	ID            string           `json:"id"`
-	DocumentType  string           `json:"documentType"`
-	Status        ValidationStatus `json:"status"`
-	Error         string           `json:"error,omitempty"`
-	ReceivedAt    string           `json:"receivedAt"`
-	ValidatedAt   string           `json:"validatedAt,omitempty"`
-	ResultPending bool             `json:"resultPending,omitempty"`
+	ID               string           `json:"id"`
+	DocumentType     string           `json:"documentType"`
+	Status           ValidationStatus `json:"status"`
+	Error            string           `json:"error,omitempty"`
+	ReceivedAt       string           `json:"receivedAt"`
+	ValidatedAt      string           `json:"validatedAt,omitempty"`
+	ContentExpiresAt string           `json:"contentExpiresAt,omitempty"`
+	ContentExpiredAt string           `json:"contentExpiredAt,omitempty"`
+	ResultPending    bool             `json:"resultPending,omitempty"`
 }
 
 // VersionedUploadRecord pairs a record with its JetStream KV revision for
