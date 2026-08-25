@@ -46,7 +46,9 @@ Protected routes require an HS256 bearer JWT. The configured HMAC secret verifie
 All physical names are derived from `queue.Namespace`. With the legacy/default namespace the resources are:
 
 - `UBL_DOCUMENTS`: WorkQueuePolicy stream receiving `ubl.documents.<Type>` subjects.
-- `UBL_VALIDATION_RESULTS`: result stream receiving `ubl.validation.results`.
+- `UBL_VALIDATION_RESULTS_BY_UPLOAD`: result stream receiving permanently unique
+  `ubl.validation.results.<upload-id>` subjects; consumers filter on
+  `ubl.validation.results.*`.
 - `UBL_UPLOADS`: KV bucket containing small mutable `UploadRecord` metadata.
 - `UBL_UPLOAD_CONTENT`: JetStream Object Store containing immutable raw XML objects, keyed by upload id.
 
@@ -93,10 +95,21 @@ The worker consumes a durable pull consumer on the documents stream. For each me
 4. retrieves the raw XML object by upload id;
 5. runs `xmllint` XSD validation;
 6. updates the metadata KV record to `valid` or `invalid`;
-7. publishes a `ValidationResult`;
+7. inserts a `ValidationResult` on its unique per-upload result subject;
 8. acknowledges the work message only after state/result writes succeed.
 
 Malformed/inconsistent work descriptors are terminal. Operational failures such as unavailable content, validator unavailability, or result/state write failures use the existing delayed NAK/retry path.
+
+The result stream uses `DiscardNew`, `DiscardNewPerSubject`, and a
+one-message-per-subject limit. Results have no `MaxAge`: retaining the first
+small result for each upload is the durable uniqueness index that makes a
+retry safe even after the ordinary `Nats-Msg-Id` window expires. Downstream
+consumers must use `queue.Namespace.ResultsFilterSubject()`.
+When upgrading an existing deployment, downstream consumers must move from the
+old `UBL_VALIDATION_RESULTS` stream/exact base subject to
+`UBL_VALIDATION_RESULTS_BY_UPLOAD` and that wildcard filter. `EnsureInfra`
+creates the versioned stream while leaving the legacy stream, its messages, and
+consumer-owned configuration untouched.
 
 ## Status retrieval
 

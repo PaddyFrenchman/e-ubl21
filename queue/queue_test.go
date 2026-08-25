@@ -321,18 +321,54 @@ func TestPublishResult(t *testing.T) {
 	defer cancel()
 
 	id, _ := queue.NewID()
-	if err := client.PublishResult(ctx, queue.ValidationResult{
+	result := queue.ValidationResult{
 		ID:           id,
 		DocumentType: "Invoice",
 		Status:       queue.StatusValid,
 		ValidatedAt:  time.Now().UTC().Format(time.RFC3339),
-	}); err != nil {
+	}
+	if err := client.PublishResult(ctx, result); err != nil {
 		t.Fatalf("publish result: %v", err)
+	}
+
+	stream, err := client.JS.Stream(ctx, client.Namespace.ResultsStreamName())
+	if err != nil {
+		t.Fatalf("get results stream: %v", err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		t.Fatalf("get results stream info: %v", err)
+	}
+	if info.Config.Discard != jetstream.DiscardNew || !info.Config.DiscardNewPerSubject || info.Config.MaxMsgsPerSubject != 1 || info.Config.MaxAge != 0 {
+		t.Fatalf("results stream is not permanently idempotent: %+v", info.Config)
+	}
+	if len(info.Config.Subjects) != 1 || info.Config.Subjects[0] != client.Namespace.ResultsFilterSubject() {
+		t.Fatalf("results stream subjects = %v, want [%s]", info.Config.Subjects, client.Namespace.ResultsFilterSubject())
+	}
+
+	// Shrink the ordinary Nats-Msg-Id window, wait until it has elapsed, then
+	// retry through PublishResult. Per-subject insert semantics must still make
+	// the retry successful without storing a second event.
+	cfg := info.Config
+	cfg.Duplicates = 100 * time.Millisecond
+	if _, err := client.JS.UpdateStream(ctx, cfg); err != nil {
+		t.Fatalf("shrink result deduplication window: %v", err)
+	}
+	time.Sleep(200 * time.Millisecond)
+	if err := client.PublishResult(ctx, result); err != nil {
+		t.Fatalf("publish result after message-ID window: %v", err)
+	}
+	info, err = stream.Info(ctx)
+	if err != nil {
+		t.Fatalf("get results stream info after retry: %v", err)
+	}
+	if info.State.Msgs != 1 {
+		t.Fatalf("result retry stored %d messages, want 1", info.State.Msgs)
 	}
 
 	consumer, err := client.JS.CreateOrUpdateConsumer(ctx, client.Namespace.ResultsStreamName(), jetstream.ConsumerConfig{
 		Durable:       "results-test",
-		FilterSubject: client.Namespace.ResultsSubject(),
+		FilterSubject: client.Namespace.ResultsFilterSubject(),
 		AckPolicy:     jetstream.AckExplicitPolicy,
 	})
 	if err != nil {
@@ -346,6 +382,9 @@ func TestPublishResult(t *testing.T) {
 	var count int
 	for msg := range batch.Messages() {
 		count++
+		if got := msg.Subject(); got != client.Namespace.ResultSubject(id) {
+			t.Fatalf("result subject = %q, want %q", got, client.Namespace.ResultSubject(id))
+		}
 		if got := msg.Headers().Get(queue.HeaderUploadID); got != id {
 			t.Fatalf("upload id header = %q, want %q", got, id)
 		}
@@ -353,6 +392,65 @@ func TestPublishResult(t *testing.T) {
 	}
 	if count != 1 {
 		t.Fatalf("received %d messages, want 1", count)
+	}
+}
+
+func TestEnsureInfraPreservesLegacyResultsWhileCreatingIdempotentStream(t *testing.T) {
+	server := queuetest.StartServer(t)
+	client, err := queue.ConnectWithOptions(server.URL, queue.DefaultNamespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.Close)
+	ctx := context.Background()
+	const legacyStreamName = "UBL_VALIDATION_RESULTS"
+	if _, err := client.JS.CreateStream(ctx, jetstream.StreamConfig{
+		Name:      legacyStreamName,
+		Subjects:  []string{client.Namespace.ResultsSubject()},
+		Retention: jetstream.LimitsPolicy,
+		Storage:   jetstream.FileStorage,
+		MaxAge:    7 * 24 * time.Hour,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.JS.Publish(ctx, client.Namespace.ResultsSubject(), []byte(`{"id":"legacy-one"}`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.JS.Publish(ctx, client.Namespace.ResultsSubject(), []byte(`{"id":"legacy-two"}`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.JS.CreateConsumer(ctx, legacyStreamName, jetstream.ConsumerConfig{
+		Durable:       "legacy-results-consumer",
+		FilterSubject: client.Namespace.ResultsSubject(),
+		AckPolicy:     jetstream.AckExplicitPolicy,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := client.EnsureInfra(ctx); err != nil {
+		t.Fatalf("migrate legacy result stream: %v", err)
+	}
+	stream, err := client.JS.Stream(ctx, client.Namespace.ResultsStreamName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(info.Config.Subjects) != 1 || info.Config.Subjects[0] != client.Namespace.ResultsFilterSubject() || !info.Config.DiscardNewPerSubject {
+		t.Fatalf("legacy result stream was not migrated: %+v", info.Config)
+	}
+	legacy, err := client.JS.Stream(ctx, legacyStreamName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacyInfo, err := legacy.Info(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if legacyInfo.State.Msgs != 2 || len(legacyInfo.Config.Subjects) != 1 || legacyInfo.Config.Subjects[0] != client.Namespace.ResultsSubject() {
+		t.Fatalf("migration changed the legacy stream: %+v", legacyInfo)
 	}
 }
 

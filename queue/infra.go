@@ -14,10 +14,6 @@ import (
 // running to consume a document type's queue for an extended period.
 const documentsStreamMaxAge = 7 * 24 * time.Hour
 
-// resultsStreamMaxAge bounds how long published validation results are
-// retained for downstream consumers to pick up.
-const resultsStreamMaxAge = 7 * 24 * time.Hour
-
 // uploadMetadataMaxValueSize caps a single upload metadata KV entry's
 // size. The raw XML content is stored separately in an Object Store, so a
 // metadata record only ever holds a handful of small fields (id, document
@@ -42,12 +38,14 @@ func (c *Client) EnsureInfra(ctx context.Context) error {
 
 	resultsStreamName := c.Namespace.ResultsStreamName()
 	if _, err := c.JS.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
-		Name:        resultsStreamName,
-		Description: "UBL 2.1 document validation results, published once per processed document.",
-		Subjects:    []string{c.Namespace.ResultsSubject()},
-		Retention:   jetstream.LimitsPolicy,
-		Storage:     jetstream.FileStorage,
-		MaxAge:      resultsStreamMaxAge,
+		Name:                 resultsStreamName,
+		Description:          "UBL 2.1 validation results, durably unique by upload ID.",
+		Subjects:             []string{c.Namespace.ResultsFilterSubject()},
+		Retention:            jetstream.LimitsPolicy,
+		Storage:              jetstream.FileStorage,
+		Discard:              jetstream.DiscardNew,
+		DiscardNewPerSubject: true,
+		MaxMsgsPerSubject:    1,
 	}); err != nil {
 		return fmt.Errorf("ensure %s stream: %w", resultsStreamName, err)
 	}

@@ -50,7 +50,7 @@ Phase D — production hardening and polish
 
 ### Resolution
 
-Queue topology is derived from `queue.Namespace`, configured by `--queue-namespace` / `EUBL21_QUEUE_NAMESPACE`. The empty namespace preserves legacy names. Non-empty namespaces are restricted to dot-separated lowercase alphanumeric segments, preventing different namespace strings from collapsing to the same JetStream resource names.
+Queue topology is derived from `queue.Namespace`, configured by `--queue-namespace` / `EUBL21_QUEUE_NAMESPACE`. The empty namespace preserves legacy resources; later versioned resources are added without mutating them. Non-empty namespaces are restricted to dot-separated lowercase alphanumeric segments, preventing different namespace strings from collapsing to the same JetStream resource names.
 
 ### Requirements
 
@@ -60,7 +60,7 @@ Queue topology is derived from `queue.Namespace`, configured by `--queue-namespa
 - [x] `EnsureInfra()` uses derived names.
 - [x] Document subject generation/parsing uses the configured namespace.
 - [x] Worker filters are validated against the namespace.
-- [x] Legacy defaults are preserved.
+- [x] Legacy resources are preserved rather than renamed or destructively migrated.
 - [x] Docker Compose has an explicit development namespace.
 - [x] Architecture docs updated.
 - [x] Integration tests prove namespace isolation.
@@ -417,6 +417,12 @@ versioned record before validation: terminal records acknowledge late
 duplicate descriptors without reprocessing, including descriptors replayed
 after JetStream's time-bounded duplicate window. A durable `resultPending`
 marker makes result publication retryable without repeating validation.
+Results themselves use a unique `<results-base>.<upload-id>` subject in a
+`DiscardNewPerSubject` stream limited to one message per subject. The first
+small result is retained without `MaxAge`, so a crash between result
+publication and clearing `resultPending` cannot create another result after
+the ordinary JetStream message-ID window expires. Result consumers filter the
+per-upload subject space through `Namespace.ResultsFilterSubject()`.
 
 Failure-injection tests cover intent persistence, content persistence,
 content cleanup, enqueue-state persistence, work publication, and final status

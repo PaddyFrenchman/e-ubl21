@@ -64,8 +64,9 @@ services:
   # The validation worker: consumes queued documents from the
   # <EUBL21_QUEUE_NAMESPACE>.documents.> subjects, validates each against
   # its UBL 2.1 XSD (server/schema_catalog.go), records the outcome in the
-  # shared JetStream KV upload store, and publishes a result to the single
-  # output stream (<EUBL21_QUEUE_NAMESPACE>.validation.results). See
+  # shared JetStream KV upload store, and publishes a result to the output
+  # stream on a permanently idempotent per-upload subject
+  # (<EUBL21_QUEUE_NAMESPACE>.validation.results.<upload-id>). See
   # server/worker.go.
   #
   # This service can be scaled horizontally (`docker compose up --scale

@@ -235,6 +235,18 @@ func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	publicationDeadline := time.Now().Add(3 * time.Second)
+	for {
+		record, getErr := q.GetUploadRecord(context.Background(), id)
+		info, infoErr := results.Info(context.Background())
+		if getErr == nil && infoErr == nil && !record.ResultPending && info.State.Msgs == 1 {
+			break
+		}
+		if time.Now().After(publicationDeadline) {
+			t.Fatalf("initial result publication did not finish: record=%+v getErr=%v infoErr=%v", record, getErr, infoErr)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	before, err := results.Info(context.Background())
 	if err != nil {
 		t.Fatal(err)

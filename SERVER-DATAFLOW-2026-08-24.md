@@ -167,7 +167,7 @@ flowchart LR
     W[e-ubl21 Worker\nworker]
     XSD[Embedded OASIS\nUBL 2.1 XSDs]
     XMLLINT[xmllint / libxml2]
-    RESULTS[(JetStream Stream\nUBL_VALIDATION_RESULTS)]
+    RESULTS[(JetStream Stream\nUBL_VALIDATION_RESULTS_BY_UPLOAD)]
     EXT[Future downstream\nconsumers]
 
     C -->|POST /api/v1/ubl/upload| API
@@ -177,7 +177,7 @@ flowchart LR
     XSD --> W
     W --> XMLLINT
     W -->|valid / invalid| KV
-    W -->|ubl.validation.results| RESULTS
+    W -->|ubl.validation.results.upload-id| RESULTS
     RESULTS --> EXT
     C -->|GET /api/v1/ubl/id| API
     API -->|read status/content| KV
@@ -202,7 +202,7 @@ The queue layer is not merely planned; it is already implemented.
 Every stream, subject and KV bucket name below is derived from a
 configurable queue namespace (`--queue-namespace` / `EUBL21_QUEUE_NAMESPACE`,
 see `queue.Namespace`). Leaving it unset (`DefaultNamespace`, `""`)
-reproduces the exact names below; setting it (e.g. `eubl21.prod`) derives
+preserves legacy resources and uses the default names below; setting it (e.g. `eubl21.prod`) derives
 namespaced equivalents instead (e.g. `EUBL21_PROD_DOCUMENTS`,
 `eubl21.prod.documents.<Type>`), so multiple deployments can share one
 NATS/JetStream cluster without colliding.
@@ -212,8 +212,8 @@ NATS/JetStream cluster without colliding.
 | Work stream | `UBL_DOCUMENTS` | Incoming UBL documents awaiting XSD validation | JetStream `WorkQueuePolicy`, file storage, 7-day `MaxAge` |
 | Per-type work subject | `ubl.documents.<Type>` | Routes work by UBL root document type, e.g. `ubl.documents.Invoice` | Belongs to `UBL_DOCUMENTS` |
 | Upload-state KV | `UBL_UPLOADS` | Canonical current upload record keyed by upload ID | JetStream KV, file storage; no explicit record TTL currently configured |
-| Result stream | `UBL_VALIDATION_RESULTS` | Validation outcome events for downstream systems | `LimitsPolicy`, file storage, 7-day `MaxAge` |
-| Result subject | `ubl.validation.results` | Single result-event subject for all document types | Belongs to result stream |
+| Result stream | `UBL_VALIDATION_RESULTS_BY_UPLOAD` | Validation outcome events and durable uniqueness index | `LimitsPolicy`, file storage, unlimited age, one message per subject, `DiscardNewPerSubject` |
+| Result subject | `ubl.validation.results.<upload-id>` | Permanently unique result-event subject per upload | Consumers filter `ubl.validation.results.*` |
 
 Both API and worker invoke `EnsureInfra()` at startup, so either service may start first.
 
@@ -362,20 +362,20 @@ Names shown with the default (unset) namespace:
 
 ```text
 UBL_DOCUMENTS
-UBL_VALIDATION_RESULTS
+UBL_VALIDATION_RESULTS_BY_UPLOAD
 UBL_UPLOADS
 ubl.documents.
-ubl.validation.results
+ubl.validation.results.<upload-id>
 ```
 
 Setting `EUBL21_QUEUE_NAMESPACE=eubl21.prod` derives instead:
 
 ```text
 EUBL21_PROD_DOCUMENTS
-EUBL21_PROD_VALIDATION_RESULTS
+EUBL21_PROD_VALIDATION_RESULTS_BY_UPLOAD
 EUBL21_PROD_UPLOADS
 eubl21.prod.documents.
-eubl21.prod.validation.results
+eubl21.prod.validation.results.<upload-id>
 ```
 
 A worker's subject filter is validated against its configured namespace
@@ -430,7 +430,7 @@ sequenceDiagram
     participant Catalog as Extracted Validation Catalog
     participant xmllint
     participant KV as UBL_UPLOADS
-    participant Results as UBL_VALIDATION_RESULTS
+    participant Results as UBL_VALIDATION_RESULTS_BY_UPLOAD
 
     JS->>Worker: queued XML + headers
     Worker->>Worker: read upload id and type
@@ -499,11 +499,22 @@ After validation, the worker publishes JSON roughly equivalent to:
 
 or includes `error` for invalid documents.
 
-All results share:
+Each upload has one unique result subject:
 
 ```text
-ubl.validation.results
+ubl.validation.results.<upload-id>
 ```
+
+Consumers subscribe with `ubl.validation.results.*`. JetStream retains the
+first result on each subject without an age limit and rejects later inserts on
+that subject. This makes result publication idempotent beyond the ordinary
+time-scoped `Nats-Msg-Id` window.
+
+On upgrade, externally managed consumers must move from the former
+`UBL_VALIDATION_RESULTS` stream and exact `ubl.validation.results` filter to
+`UBL_VALIDATION_RESULTS_BY_UPLOAD` and `ubl.validation.results.*`.
+`EnsureInfra()` creates the new stream and deliberately leaves the legacy
+stream, retained messages, and downstream-owned consumers untouched.
 
 There is currently **no result consumer in this repository**. The stream is an integration seam for future systems such as:
 
@@ -1057,11 +1068,14 @@ before acceptance. See `TODO-005` in `TODO.md`.
 
 ## 11.13 Queue/KV storage growth policy
 
-`UBL_DOCUMENTS` and result messages have `MaxAge` limits.
+`UBL_DOCUMENTS` has a `MaxAge` limit. Result events deliberately do not: one
+small result per upload is retained as the permanent publication-idempotence
+index.
 
 `UBL_UPLOADS` does not currently define an explicit record TTL.
 
-Because each record includes the complete original XML payload, storage can grow indefinitely.
+Raw XML objects, metadata records, and the one-result-per-upload uniqueness
+index can therefore grow indefinitely.
 
 ### Recommendation
 

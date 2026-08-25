@@ -13,7 +13,7 @@ func TestDefaultNamespacePreservesLegacyNames(t *testing.T) {
 	if got, want := ns.DocumentsStreamName(), "UBL_DOCUMENTS"; got != want {
 		t.Errorf("DocumentsStreamName() = %q, want %q", got, want)
 	}
-	if got, want := ns.ResultsStreamName(), "UBL_VALIDATION_RESULTS"; got != want {
+	if got, want := ns.ResultsStreamName(), "UBL_VALIDATION_RESULTS_BY_UPLOAD"; got != want {
 		t.Errorf("ResultsStreamName() = %q, want %q", got, want)
 	}
 	if got, want := ns.UploadsBucketName(), "UBL_UPLOADS"; got != want {
@@ -27,6 +27,12 @@ func TestDefaultNamespacePreservesLegacyNames(t *testing.T) {
 	}
 	if got, want := ns.ResultsSubject(), "ubl.validation.results"; got != want {
 		t.Errorf("ResultsSubject() = %q, want %q", got, want)
+	}
+	if got, want := ns.ResultSubject("00000000000000000000000000000000"), "ubl.validation.results.00000000000000000000000000000000"; got != want {
+		t.Errorf("ResultSubject() = %q, want %q", got, want)
+	}
+	if got, want := ns.ResultsFilterSubject(), "ubl.validation.results.*"; got != want {
+		t.Errorf("ResultsFilterSubject() = %q, want %q", got, want)
 	}
 
 	// NewNamespace("") must be indistinguishable from the zero value.
@@ -52,10 +58,13 @@ func TestNamespaceDerivesNamesFromExample(t *testing.T) {
 	if got, want := ns.ResultsSubject(), "eubl21.prod.validation.results"; got != want {
 		t.Errorf("ResultsSubject() = %q, want %q", got, want)
 	}
+	if got, want := ns.ResultsFilterSubject(), "eubl21.prod.validation.results.*"; got != want {
+		t.Errorf("ResultsFilterSubject() = %q, want %q", got, want)
+	}
 	if got, want := ns.DocumentsStreamName(), "EUBL21_PROD_DOCUMENTS"; got != want {
 		t.Errorf("DocumentsStreamName() = %q, want %q", got, want)
 	}
-	if got, want := ns.ResultsStreamName(), "EUBL21_PROD_VALIDATION_RESULTS"; got != want {
+	if got, want := ns.ResultsStreamName(), "EUBL21_PROD_VALIDATION_RESULTS_BY_UPLOAD"; got != want {
 		t.Errorf("ResultsStreamName() = %q, want %q", got, want)
 	}
 	if got, want := ns.UploadsBucketName(), "EUBL21_PROD_UPLOADS"; got != want {
@@ -179,7 +188,7 @@ func TestNamespaceMatchesTODO001CheckExamples(t *testing.T) {
 	}
 
 	// The check doc's worked example: eubl21.prod derives the subjects
-	// eubl21.prod.documents.Invoice / eubl21.prod.validation.results and
+	// eubl21.prod.documents.Invoice / eubl21.prod.validation.results.<upload-id> and
 	// the NATS resource prefix EUBL21_PROD.
 	ns := queue.MustNamespace("eubl21.prod")
 	if got, want := ns.DocumentSubject("Invoice"), "eubl21.prod.documents.Invoice"; got != want {

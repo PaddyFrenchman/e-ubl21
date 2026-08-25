@@ -15,16 +15,14 @@ const (
 	HeaderReceivedAt   = "Ubl-Received-At"
 )
 
-// legacyDocumentsStreamName, legacyResultsStreamName, legacyUploadsBucketName,
-// legacyUploadContentBucketName, legacyDocumentSubjectPrefix and
-// legacyResultsSubject are the fixed stream/subject/bucket names e-ubl21
-// used before the queue namespace setting existed. DefaultNamespace ("")
-// reproduces these exactly, so deployments that do not set
-// EUBL21_QUEUE_NAMESPACE keep working against their existing JetStream
-// state without any migration.
+// The legacy constants are the fixed stream/subject/bucket names e-ubl21 used
+// before the queue namespace setting existed. DefaultNamespace ("") preserves
+// them except for the versioned result stream: permanent per-upload result
+// idempotence requires a new stream so upgrading cannot compact or rewrite the
+// old single-subject UBL_VALIDATION_RESULTS stream.
 const (
 	legacyDocumentsStreamName     = "UBL_DOCUMENTS"
-	legacyResultsStreamName       = "UBL_VALIDATION_RESULTS"
+	defaultResultsStreamName      = "UBL_VALIDATION_RESULTS_BY_UPLOAD"
 	legacyUploadsBucketName       = "UBL_UPLOADS"
 	legacyUploadContentBucketName = "UBL_UPLOAD_CONTENT"
 	legacyDocumentSubjectPrefix   = "ubl.documents."
@@ -32,8 +30,9 @@ const (
 )
 
 // DefaultNamespace is the queue namespace used when EUBL21_QUEUE_NAMESPACE
-// is not set, preserving e-ubl21's original, pre-namespace stream, subject
-// and KV bucket names.
+// is not set. It preserves original resources and subjects; explicitly
+// versioned resources such as the per-upload result stream use a new name so
+// upgrades do not mutate legacy data.
 const DefaultNamespace = Namespace("")
 
 // Namespace scopes every JetStream stream, subject and KV bucket e-ubl21
@@ -48,9 +47,9 @@ const DefaultNamespace = Namespace("")
 //	ns.DocumentSubject("Invoice") // "eubl21.prod.documents.Invoice"
 //	ns.DocumentsStreamName()      // "EUBL21_PROD_DOCUMENTS"
 //
-// The zero value (DefaultNamespace) reproduces e-ubl21's original hard-coded
-// names, so existing single-tenant deployments are unaffected by leaving
-// EUBL21_QUEUE_NAMESPACE unset.
+// The zero value (DefaultNamespace) retains e-ubl21's original hard-coded
+// namespace. Existing resources remain untouched when a versioned replacement
+// is required for a new storage contract.
 type Namespace string
 
 // namespacePattern restricts a non-default Namespace's raw value to one or
@@ -152,14 +151,29 @@ func (n Namespace) HasDocumentSubject(subject string) bool {
 	return strings.HasPrefix(subject, n.documentSubjectPrefix())
 }
 
-// ResultsSubject is the single subject, within this namespace, validation
-// results are published to, regardless of document type (the type is
-// carried in the payload).
+// ResultsSubject is the stable base of this namespace's validation-result
+// subject space. New results are published to ResultSubject(uploadID), not
+// directly to this base subject.
 func (n Namespace) ResultsSubject() string {
 	if n == DefaultNamespace {
 		return legacyResultsSubject
 	}
 	return string(n) + ".validation.results"
+}
+
+// ResultSubject returns the unique subject used to publish one upload's
+// validation result. The per-upload token lets JetStream enforce a permanent
+// one-message-per-upload constraint independently of its time-scoped message
+// ID duplicate window.
+func (n Namespace) ResultSubject(uploadID string) string {
+	return n.ResultsSubject() + "." + uploadID
+}
+
+// ResultsFilterSubject matches every per-upload validation-result subject in
+// this namespace. Downstream consumers should use this filter rather than the
+// ResultsSubject base.
+func (n Namespace) ResultsFilterSubject() string {
+	return n.ResultsSubject() + ".*"
 }
 
 // DocumentsStreamName is the JetStream stream, within this namespace,
@@ -175,12 +189,12 @@ func (n Namespace) DocumentsStreamName() string {
 }
 
 // ResultsStreamName is the single output stream, within this namespace,
-// validation results are published to (see ResultsSubject).
+// validation results are published to (see ResultSubject).
 func (n Namespace) ResultsStreamName() string {
 	if n == DefaultNamespace {
-		return legacyResultsStreamName
+		return defaultResultsStreamName
 	}
-	return n.resourcePrefix() + "_VALIDATION_RESULTS"
+	return n.resourcePrefix() + "_VALIDATION_RESULTS_BY_UPLOAD"
 }
 
 // UploadsBucketName is the JetStream KV bucket, within this namespace,

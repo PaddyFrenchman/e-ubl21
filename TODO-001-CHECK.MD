@@ -36,7 +36,7 @@ eubl21.prod
     │
     ├─ subjects
     │    eubl21.prod.documents.Invoice
-    │    eubl21.prod.validation.results
+    │    eubl21.prod.validation.results.<upload-id>
     │
     └─ NATS resource prefix
          EUBL21_PROD

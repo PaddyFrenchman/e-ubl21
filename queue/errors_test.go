@@ -45,6 +45,9 @@ func TestDocumentWorkItemAndClientValidationErrors(t *testing.T) {
 	if err := client.PutUploadContent(ctx, "bad", nil); err == nil {
 		t.Error("invalid content ID accepted")
 	}
+	if err := client.PublishResult(ctx, queue.ValidationResult{ID: "bad"}); err == nil {
+		t.Error("invalid result ID accepted")
+	}
 
 	client.Close()
 	if err := client.EnsureInfra(ctx); err == nil {
