@@ -100,7 +100,7 @@ The implementation must obey the following rules throughout all steps below.
 
 # Implementation steps
 
-## TODO-EN-16931-001 — Freeze the validation contract and supported document scope
+## TODO-EN-16931-001 — Freeze the validation contract and supported document scope ✅ DONE
 
 ### Goal
 
@@ -130,6 +130,11 @@ other UBL types    = UBL 2.1 XSD only
 ### Acceptance criteria
 
 The server contract unambiguously distinguishes structural validity, EN 16931 semantic validity, and operational processing failure.
+
+Implemented by `server/validation_contract.go`, its executable policy tests,
+and `docs/EN16931-VALIDATION-CONTRACT.md`. Unknown/empty SVRL severities use
+the conservative initial policy: retain the original value and invalidate the
+EN 16931 stage rather than risk a false compliant result.
 
 ---
 
