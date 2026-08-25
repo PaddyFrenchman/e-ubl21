@@ -309,7 +309,7 @@ guess an EN 16931 issue kind from severity.
 
 ---
 
-## TODO-EN-16931-006 — Implement the EN 16931 validator adapter
+## TODO-EN-16931-006 — Implement the EN 16931 validator adapter ✅ DONE
 
 ### Goal
 
@@ -344,6 +344,26 @@ If Saxon command-line constraints make direct stdin-to-SVRL streaming awkward, a
 ### Acceptance criteria
 
 One isolated validator component can classify known compliant and non-compliant UBL invoices using the official XSLT and returns structured issues rather than shell text.
+
+Implemented by `server/en16931_validator.go`. The adapter streams each XML
+document to the pinned Saxon transform over stdin, enforces a configurable
+hard process timeout, caps SVRL at the parser's production input bound, and
+captures stderr in the separate bounded diagnostic buffer. It uses the
+restricted no-network Saxon configuration and verifies that every local
+runtime path is readable before execution. Successful SVRL is returned as a
+versioned `en16931` stage; only fatal/error (or conservatively unknown)
+`failed-assert` issues invalidate it. Warnings and all `successful-report`
+issues remain structured diagnostics without inherently invalidating the
+stage. Process, timeout, asset, output-limit, and SVRL-parser failures return
+no partial semantic result and remain operational errors.
+
+The isolated suite covers secure command construction, streamed input,
+semantic classification, issue-kind handling, bounded stdout/stderr, malformed
+SVRL, process failure, timeout, and missing runtime assets. A pinned-runtime
+test executes the official 1.3.16 XSLT against the vendored compliant guide
+invoice and a non-compliant UBL Invoice. Worker pipeline composition remains
+deliberately assigned to TODO-EN-16931-007 and durable state integration to
+TODO-EN-16931-008.
 
 ---
 
