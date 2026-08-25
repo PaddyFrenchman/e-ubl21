@@ -16,13 +16,18 @@ import (
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 )
 
-const defaultEN16931ValidationTimeout = 30 * time.Second
+const (
+	defaultEN16931ValidationTimeout = 30 * time.Second
+	defaultEN16931ProcessWaitDelay  = time.Second
+)
 
 var errEN16931SVRLOutputLimit = errors.New("EN 16931 SVRL output limit exceeded")
 
 // EN16931Validator executes the pinned semantic ruleset for one UBL document.
 // A non-compliant document is returned as a successful result with Valid=false;
 // errors are reserved for failures to complete or interpret the validation.
+// The caller retains ownership of xml and must close it after Validate returns
+// when the concrete reader implements io.Closer.
 type EN16931Validator interface {
 	Validate(ctx context.Context, xml io.Reader) (queue.ValidationStageResult, error)
 }
@@ -30,21 +35,26 @@ type EN16931Validator interface {
 // saxonEN16931Validator is intentionally independent of the worker pipeline.
 // TODO-EN-16931-007 composes it after the UBL XSD stage.
 type saxonEN16931Validator struct {
-	runtime saxonRuntimeConfig
-	timeout time.Duration
-	limits  svrl.Limits
-	now     func() time.Time
+	runtime   saxonRuntimeConfig
+	timeout   time.Duration
+	waitDelay time.Duration
+	limits    svrl.Limits
+	now       func() time.Time
 }
 
+// newSaxonEN16931Validator expects runtime to have passed ensureSaxonRuntime
+// during worker startup. That check pins the hashes of all four runtime assets;
+// per-validation checks below only defend against assets becoming unreadable.
 func newSaxonEN16931Validator(runtime saxonRuntimeConfig, timeout time.Duration) *saxonEN16931Validator {
 	if timeout <= 0 {
 		timeout = defaultEN16931ValidationTimeout
 	}
 	return &saxonEN16931Validator{
-		runtime: runtime,
-		timeout: timeout,
-		limits:  svrl.DefaultLimits(),
-		now:     time.Now,
+		runtime:   runtime,
+		timeout:   timeout,
+		waitDelay: defaultEN16931ProcessWaitDelay,
+		limits:    svrl.DefaultLimits(),
+		now:       time.Now,
 	}
 }
 
@@ -83,6 +93,10 @@ func (validator *saxonEN16931Validator) Validate(ctx context.Context, xmlInput i
 	startedAt := validator.now()
 	validationCtx, cancel := context.WithTimeout(ctx, validator.timeout)
 	defer cancel()
+	waitDelay := validator.waitDelay
+	if waitDelay <= 0 {
+		waitDelay = defaultEN16931ProcessWaitDelay
+	}
 
 	classpath := validator.runtime.saxonJARPath + string(os.PathListSeparator) + validator.runtime.xmlResolverJARPath
 	cmd := exec.CommandContext(validationCtx, javaPath,
@@ -93,13 +107,38 @@ func (validator *saxonEN16931Validator) Validate(ctx context.Context, xmlInput i
 		"-s:-",
 		"-xsl:"+validator.runtime.xsltPath,
 	)
-	cmd.Stdin = xmlInput
 	output := &boundedCommandOutput{limit: int(validator.limits.MaxInputBytes)}
 	diagnostics := &boundedDiagnosticBuffer{}
 	cmd.Stdout = output
 	cmd.Stderr = diagnostics
+	cmd.WaitDelay = waitDelay
 
-	commandErr := cmd.Run()
+	// Do not assign an arbitrary io.Reader directly to Cmd.Stdin. os/exec would
+	// then own a copy goroutine and Wait could remain blocked forever inside the
+	// reader even after CommandContext killed Saxon. An explicit pipe keeps that
+	// goroutine outside Cmd.Wait, so the configured timeout bounds Validate even
+	// if the source reader never returns. Closing a caller-owned reader remains
+	// the caller's responsibility.
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: create Saxon stdin: %w", err)
+	}
+	if err := cmd.Start(); err != nil {
+		stdin.Close()
+		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: start Saxon transform: %w", err)
+	}
+	stdinCopyDone := make(chan error, 1)
+	go func() {
+		_, copyErr := io.Copy(stdin, xmlInput)
+		closeErr := stdin.Close()
+		if copyErr == nil {
+			copyErr = closeErr
+		}
+		stdinCopyDone <- copyErr
+	}()
+
+	commandErr := cmd.Wait()
+	stdin.Close()
 	if output.exceeded {
 		return queue.ValidationStageResult{}, fmt.Errorf("%w: maximum is %d bytes", errEN16931SVRLOutputLimit, validator.limits.MaxInputBytes)
 	}
@@ -111,6 +150,15 @@ func (validator *saxonEN16931Validator) Validate(ctx context.Context, xmlInput i
 	}
 	if commandErr != nil {
 		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 Saxon transform failed: %w: %s", commandErr, diagnostics.String())
+	}
+	var stdinCopyErr error
+	select {
+	case stdinCopyErr = <-stdinCopyDone:
+	case <-time.After(waitDelay):
+		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: XML input reader did not finish after Saxon exited within %s", waitDelay)
+	}
+	if stdinCopyErr != nil {
+		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: stream XML to Saxon: %w", stdinCopyErr)
 	}
 
 	report, err := svrl.ParseWithLimits(bytes.NewReader(output.data), validator.limits)

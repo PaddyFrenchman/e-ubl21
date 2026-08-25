@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -145,6 +146,43 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 		}
 	})
 
+	t.Run("timeout is hard when XML reader blocks", func(t *testing.T) {
+		cfg := fakeSaxonRuntime(t, `cat >/dev/null; printf '%s' '`+emptySVRL+`'`)
+		validator := newSaxonEN16931Validator(cfg, 20*time.Millisecond)
+		validator.waitDelay = 25 * time.Millisecond
+		release := make(chan struct{})
+		reader := &blockingValidationReader{started: make(chan struct{}), release: release}
+		type outcome struct {
+			result queue.ValidationStageResult
+			err    error
+		}
+		done := make(chan outcome, 1)
+		startedAt := time.Now()
+		go func() {
+			result, err := validator.Validate(context.Background(), reader)
+			done <- outcome{result: result, err: err}
+		}()
+		select {
+		case <-reader.started:
+		case <-time.After(time.Second):
+			close(release)
+			t.Fatal("validator never started reading XML input")
+		}
+		select {
+		case got := <-done:
+			close(release)
+			if got.err == nil || !strings.Contains(got.err.Error(), "timed out") || !reflect.DeepEqual(got.result, queue.ValidationStageResult{}) {
+				t.Fatalf("result/error = %+v / %v", got.result, got.err)
+			}
+			if elapsed := time.Since(startedAt); elapsed > 500*time.Millisecond {
+				t.Fatalf("hard timeout returned after %s, want no more than timeout plus WaitDelay", elapsed)
+			}
+		case <-time.After(time.Second):
+			close(release)
+			t.Fatal("Validate remained blocked after timeout and WaitDelay")
+		}
+	})
+
 	t.Run("missing Java", func(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `exit 0`)
 		cfg.javaExecutable = filepath.Join(t.TempDir(), "missing-java")
@@ -173,6 +211,17 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 			t.Fatalf("result/error = %+v / %v", result, err)
 		}
 	})
+}
+
+type blockingValidationReader struct {
+	started chan struct{}
+	release <-chan struct{}
+}
+
+func (reader *blockingValidationReader) Read([]byte) (int, error) {
+	close(reader.started)
+	<-reader.release
+	return 0, io.EOF
 }
 
 func TestPinnedEN16931ValidatorClassifiesOfficialAndNonCompliantInvoices(t *testing.T) {

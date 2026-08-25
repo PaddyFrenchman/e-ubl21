@@ -346,9 +346,12 @@ If Saxon command-line constraints make direct stdin-to-SVRL streaming awkward, a
 One isolated validator component can classify known compliant and non-compliant UBL invoices using the official XSLT and returns structured issues rather than shell text.
 
 Implemented by `server/en16931_validator.go`. The adapter streams each XML
-document to the pinned Saxon transform over stdin, enforces a configurable
-hard process timeout, caps SVRL at the parser's production input bound, and
-captures stderr in the separate bounded diagnostic buffer. It uses the
+document to the pinned Saxon transform over an explicit stdin pipe, enforces a
+configurable hard process timeout, and sets a nonzero `Cmd.WaitDelay` for
+command-owned I/O. Managing input copying outside `os/exec` prevents a source
+reader blocked in `Read` from keeping `Cmd.Wait` and `Validate` alive after
+Saxon is killed. The adapter caps SVRL at the parser's production input bound
+and captures stderr in the separate bounded diagnostic buffer. It uses the
 restricted no-network Saxon configuration and verifies that every local
 runtime path is readable before execution. Successful SVRL is returned as a
 versioned `en16931` stage; only fatal/error (or conservatively unknown)
@@ -359,10 +362,11 @@ no partial semantic result and remain operational errors.
 
 The isolated suite covers secure command construction, streamed input,
 semantic classification, issue-kind handling, bounded stdout/stderr, malformed
-SVRL, process failure, timeout, and missing runtime assets. A pinned-runtime
-test executes the official 1.3.16 XSLT against the vendored compliant guide
-invoice and a non-compliant UBL Invoice. Worker pipeline composition remains
-deliberately assigned to TODO-EN-16931-007 and durable state integration to
+SVRL, process failure, timeout (including a source reader deliberately blocked
+inside `Read`), and missing runtime assets. A pinned-runtime test executes the
+official 1.3.16 XSLT against the vendored compliant guide invoice and a
+non-compliant UBL Invoice. Worker pipeline composition remains deliberately
+assigned to TODO-EN-16931-007 and durable state integration to
 TODO-EN-16931-008.
 
 ---
@@ -394,12 +398,23 @@ validate(documentType, content)
 
 The orchestrator should own stage ordering and policy rather than scattering EN 16931 conditionals through `worker.handle()`.
 
+Construct the EN 16931 adapter only after the mandatory worker-startup
+`ensureSaxonRuntime()` check succeeds. That preserves the invariant that the
+Saxon JAR, xmlresolver JAR, restricted configuration and XSLT were all verified
+against their pinned checksums before a result can claim the selected EN 16931
+profile version. Per-document readability checks are not a replacement for
+that startup integrity gate.
+
 Important resource issue: the same immutable XML must feed two validators when XSD passes. Since the current Object Store stream is consumed by the XSD validator, choose one safe strategy and document it:
 
 1. reopen the immutable Object Store object for the EN 16931 stage after XSD passes; or
 2. introduce a bounded tee/spool abstraction if benchmarks prove reopening undesirable.
 
 Prefer reopening the Object Store object first because it preserves bounded memory and keeps the implementation simple.
+Whichever strategy is used, close every Object Store reader after its stage
+returns, including timeout/error paths. The adapter deliberately does not take
+ownership of the supplied `io.Reader`; closing a cancellation-capable source
+releases its external stdin-copy goroutine after a hard-timeout return.
 
 ### Acceptance criteria
 
