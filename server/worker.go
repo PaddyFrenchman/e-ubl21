@@ -473,6 +473,7 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 	}
 	if validationErr != nil {
 		xsdStage.Issues = []queue.ValidationIssue{{
+			Kind:     queue.ValidationIssueXSDReport,
 			Layer:    queue.ValidationLayerUBL21XSD,
 			Severity: "error",
 			Message:  errMsg,

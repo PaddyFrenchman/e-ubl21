@@ -296,11 +296,13 @@ Convert official Schematron Validation Report Language output into the stable Go
 Given deterministic SVRL, the parser produces deterministic typed validation issues and never confuses parser/runtime errors with standards non-compliance.
 
 Implemented by the dedicated `svrl` package. It retains source order and
-official rule/severity/location/test/message/diagnostic fields, normalizes
-mixed-content whitespace, and fails closed on malformed XML, unexpected roots,
-oversized input, excess issues, or excess normalized diagnostic text. Errors
-return no partial semantic report so the validator adapter can classify them
-strictly as operational failures.
+official rule/severity/location/test/message/diagnostic fields. Every issue
+also retains its origin as `failed-assert` or `successful-report`, so later
+compliance classification never has to infer assertion kind from aggregate
+counts or severity. The parser normalizes mixed-content whitespace and fails
+closed on malformed XML, unexpected roots, oversized input, excess issues, or
+excess normalized diagnostic text. Errors return no partial semantic report so
+the validator adapter can classify them strictly as operational failures.
 
 ---
 

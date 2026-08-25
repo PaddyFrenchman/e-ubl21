@@ -362,6 +362,7 @@ components:
       description: A structured standards-validation diagnostic; never raw XML or raw validator output.
       type: object
       example:
+        kind: failed-assert
         layer: en16931
         rule: BR-CO-10
         severity: error
@@ -370,6 +371,10 @@ components:
         message: Sum of invoice line net amounts must equal the invoice total.
         diagnostic: BT-106 does not reconcile.
       properties:
+        kind:
+          type: string
+          enum: [xsd-report, failed-assert, successful-report]
+          example: failed-assert
         layer:
           type: string
           enum: [ubl21-xsd, en16931]
@@ -392,7 +397,7 @@ components:
         diagnostic:
           type: string
           example: BT-106 does not reconcile.
-      required: [layer, severity, message]
+      required: [kind, layer, severity, message]
       additionalProperties: false
     ValidationStageResult:
       description: Outcome of one completed validation layer.

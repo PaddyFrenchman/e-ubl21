@@ -38,6 +38,7 @@ func TestParseFatalFailurePreservesOfficialFields(t *testing.T) {
 		t.Fatalf("report counts = %+v", report)
 	}
 	want := queue.ValidationIssue{
+		Kind:  queue.ValidationIssueFailedAssert,
 		Layer: queue.ValidationLayerEN16931, Rule: "BR-CO-10", Severity: "fatal",
 		Location: "/ubl:Invoice/cac:LegalMonetaryTotal", Test: "sum(cac:InvoiceLine) = cbc:LineExtensionAmount",
 		Message: "Sum of invoice line net amounts must equal the total.", Diagnostic: "BT-106: Line total mismatch.",
@@ -60,21 +61,23 @@ func TestParseWarningSuccessfulReportAndRoleFallback(t *testing.T) {
 		t.Fatalf("report = %+v", report)
 	}
 	issue := report.Issues[0]
-	if issue.Rule != "UBL-SR-53" || issue.Severity != "warning" || issue.Message != "Optional note was supplied." {
+	if issue.Kind != queue.ValidationIssueSuccessfulReport || issue.Rule != "UBL-SR-53" || issue.Severity != "warning" || issue.Message != "Optional note was supplied." {
 		t.Fatalf("successful report issue = %+v", issue)
 	}
 }
 
 func TestParseMultipleIssuesRetainsDocumentOrderAndRuleFamilies(t *testing.T) {
 	document := prefix + `
-<svrl:failed-assert id="BR-DEC-01" flag="error"><svrl:text> First </svrl:text></svrl:failed-assert>
-<svrl:successful-report id="BR-S-08" flag="warning"><svrl:text> Second </svrl:text></svrl:successful-report>
-<svrl:failed-assert id="UBL-CR-660" flag="ERROR"><svrl:text> Third </svrl:text></svrl:failed-assert>` + suffix
+<svrl:failed-assert id="BR-DEC-01" flag="warning"><svrl:text> First </svrl:text></svrl:failed-assert>
+<svrl:successful-report id="BR-S-08" flag="error"><svrl:text> Second </svrl:text></svrl:successful-report>
+<svrl:failed-assert id="UBL-CR-660" flag="fatal"><svrl:text> Third </svrl:text></svrl:failed-assert>` + suffix
 	report, err := svrl.Parse(strings.NewReader(document))
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantRules := []string{"BR-DEC-01", "BR-S-08", "UBL-CR-660"}
+	wantKinds := []queue.ValidationIssueKind{queue.ValidationIssueFailedAssert, queue.ValidationIssueSuccessfulReport, queue.ValidationIssueFailedAssert}
+	wantSeverities := []string{"warning", "error", "fatal"}
 	if report.FailedAssertions != 2 || report.SuccessfulReports != 1 || len(report.Issues) != len(wantRules) {
 		t.Fatalf("report = %+v", report)
 	}
@@ -82,9 +85,12 @@ func TestParseMultipleIssuesRetainsDocumentOrderAndRuleFamilies(t *testing.T) {
 		if report.Issues[index].Rule != want {
 			t.Fatalf("issue %d rule = %q, want %q", index, report.Issues[index].Rule, want)
 		}
-	}
-	if report.Issues[2].Severity != "ERROR" {
-		t.Fatalf("unknown/case-preserved severity = %q", report.Issues[2].Severity)
+		if report.Issues[index].Kind != wantKinds[index] {
+			t.Fatalf("issue %d kind = %q, want %q", index, report.Issues[index].Kind, wantKinds[index])
+		}
+		if report.Issues[index].Severity != wantSeverities[index] {
+			t.Fatalf("issue %d severity = %q, want %q", index, report.Issues[index].Severity, wantSeverities[index])
+		}
 	}
 }
 

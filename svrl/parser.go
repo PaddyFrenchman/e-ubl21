@@ -132,6 +132,7 @@ func ParseWithLimits(reader io.Reader, limits Limits) (Report, error) {
 }
 
 type assertion struct {
+	Kind        queue.ValidationIssueKind
 	ID          string
 	Flag        string
 	Role        string
@@ -148,6 +149,7 @@ type diagnostic struct {
 
 func decodeAssertion(decoder *xml.Decoder, start xml.StartElement) (assertion, error) {
 	result := assertion{
+		Kind:     issueKind(start.Name.Local),
 		ID:       attribute(start, "id"),
 		Flag:     attribute(start, "flag"),
 		Role:     attribute(start, "role"),
@@ -225,6 +227,7 @@ func (assertion assertion) issue() queue.ValidationIssue {
 		}
 	}
 	return queue.ValidationIssue{
+		Kind:       assertion.Kind,
 		Layer:      queue.ValidationLayerEN16931,
 		Rule:       normalizeWhitespace(assertion.ID),
 		Severity:   severity,
@@ -233,6 +236,13 @@ func (assertion assertion) issue() queue.ValidationIssue {
 		Message:    normalizeWhitespace(assertion.Text),
 		Diagnostic: strings.Join(diagnostics, "; "),
 	}
+}
+
+func issueKind(element string) queue.ValidationIssueKind {
+	if element == "successful-report" {
+		return queue.ValidationIssueSuccessfulReport
+	}
+	return queue.ValidationIssueFailedAssert
 }
 
 func attribute(start xml.StartElement, name string) string {

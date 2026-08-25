@@ -53,11 +53,12 @@ func validationIssueSchema() map[string]any {
 		"description": "A structured standards-validation diagnostic; never raw XML or raw validator output.",
 		"type":        "object",
 		"example": map[string]any{
-			"layer": "en16931", "rule": "BR-CO-10", "severity": "error",
+			"kind": "failed-assert", "layer": "en16931", "rule": "BR-CO-10", "severity": "error",
 			"location": "/ubl:Invoice/cac:LegalMonetaryTotal", "test": "xs:decimal(cbc:LineExtensionAmount) = 100",
 			"message": "Sum of invoice line net amounts must equal the invoice total.", "diagnostic": "BT-106 does not reconcile.",
 		},
 		"properties": map[string]any{
+			"kind":       map[string]any{"type": "string", "enum": []string{"xsd-report", "failed-assert", "successful-report"}, "example": "failed-assert"},
 			"layer":      map[string]any{"type": "string", "enum": []string{"ubl21-xsd", "en16931"}, "example": "en16931"},
 			"rule":       map[string]any{"type": "string", "example": "BR-CO-10"},
 			"severity":   map[string]any{"type": "string", "example": "error"},
@@ -66,7 +67,7 @@ func validationIssueSchema() map[string]any {
 			"message":    map[string]any{"type": "string", "example": "Sum of invoice line net amounts must equal the invoice total."},
 			"diagnostic": map[string]any{"type": "string", "example": "BT-106 does not reconcile."},
 		},
-		"required":             []string{"layer", "severity", "message"},
+		"required":             []string{"kind", "layer", "severity", "message"},
 		"additionalProperties": false,
 	}
 }

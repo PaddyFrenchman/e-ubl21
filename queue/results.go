@@ -17,21 +17,32 @@ type ValidationStatus string
 // standards-validation stage.
 type ValidationLayer string
 
+// ValidationIssueKind identifies the standards mechanism that emitted an
+// issue. Kind is independent of severity: in particular, an SVRL
+// successful-report is not a failed assertion even if it carries an unusual
+// severity value.
+type ValidationIssueKind string
+
 const (
 	ValidationLayerUBL21XSD ValidationLayer = "ubl21-xsd"
 	ValidationLayerEN16931  ValidationLayer = "en16931"
+
+	ValidationIssueXSDReport        ValidationIssueKind = "xsd-report"
+	ValidationIssueFailedAssert     ValidationIssueKind = "failed-assert"
+	ValidationIssueSuccessfulReport ValidationIssueKind = "successful-report"
 )
 
 // ValidationIssue is one bounded, structured standards diagnostic. Raw XML
 // and raw validator output must never be stored in this model.
 type ValidationIssue struct {
-	Layer      ValidationLayer `json:"layer"`
-	Rule       string          `json:"rule,omitempty"`
-	Severity   string          `json:"severity"`
-	Location   string          `json:"location,omitempty"`
-	Test       string          `json:"test,omitempty"`
-	Message    string          `json:"message"`
-	Diagnostic string          `json:"diagnostic,omitempty"`
+	Kind       ValidationIssueKind `json:"kind"`
+	Layer      ValidationLayer     `json:"layer"`
+	Rule       string              `json:"rule,omitempty"`
+	Severity   string              `json:"severity"`
+	Location   string              `json:"location,omitempty"`
+	Test       string              `json:"test,omitempty"`
+	Message    string              `json:"message"`
+	Diagnostic string              `json:"diagnostic,omitempty"`
 }
 
 // ValidationStageResult records the outcome of one validation layer. Version

@@ -16,6 +16,7 @@ func TestLayeredValidationModelRoundTripsAllSemanticFields(t *testing.T) {
 			Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: false,
 			ValidatedAt: "2026-08-25T12:00:01Z", DurationMS: 31,
 			Issues: []queue.ValidationIssue{{
+				Kind:  queue.ValidationIssueFailedAssert,
 				Layer: queue.ValidationLayerEN16931, Rule: "BR-CO-10", Severity: "error",
 				Location: "/ubl:Invoice/cac:LegalMonetaryTotal", Test: "sum(cac:InvoiceLine) = cbc:LineExtensionAmount",
 				Message: "Invoice line net amounts do not reconcile.", Diagnostic: "BT-106 mismatch.",
