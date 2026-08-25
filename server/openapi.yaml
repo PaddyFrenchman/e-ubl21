@@ -285,14 +285,17 @@ paths:
                   lastError:
                     type: string
                     description: Most recent operational processing error.
+                    example: 'load upload content: object not found'
                   processingAttempts:
                     type: integer
                     format: int64
                     description: JetStream delivery attempts observed for the most recent operational failure.
+                    example: 5
                   processingFailedAt:
                     type: string
                     format: date-time
                     description: Time delivery attempts were exhausted and the upload entered processing_failed.
+                    example: '2026-08-20T12:05:00Z'
                   content:
                     type: string
                     description: The original raw XML payload. Present only when includeContent=true.
