@@ -506,20 +506,26 @@ terminal state is durable. Exhaustion first commits `dead_letter_pending`, then
 retries only idempotent DLQ publication and the final `processing_failed` CAS
 until both succeed. Missing canonical metadata is reconstructed at exhaustion;
 valid/invalid records with `ResultPending` keep retrying result publication
-without being reclassified.
+without being reclassified. A worker-side reconciliation scan independently
+repairs `dead_letter_pending` and terminal `ResultPending` records, so the
+documents stream's seven-day `MaxAge` cannot strand either durable handoff.
 
 A namespace-scoped, one-record-per-upload dead-letter stream retains the
 operator record, while Prometheus exposes terminal-failure count and current
 DLQ depth. `e-ubl21 dead-letter retry UPLOAD_ID` stores a stable replay
 generation/message ID in KV. Ambiguous publication, final-status, and DLQ-purge
-failures can therefore be retried without publishing another descriptor. The
-worker defers replay work until the publish/status/purge handoff is complete.
-Raw content remains available while dead-lettered; the permanent validation
-result slot is reserved for a replay's actual schema-validation outcome.
+failures can therefore be retried safely. The worker defers replay work until
+the publish/status/purge handoff is complete, then one descriptor CAS-claims
+its JetStream stream sequence in KV. Only that sequence's redeliveries may
+validate; descriptors duplicated after the broker message-ID window are
+acknowledged before content fetch, permanently bounding replay execution to
+one validation attempt stream per generation. Raw content remains available
+while dead-lettered; the permanent validation result slot is reserved for a
+replay's actual schema-validation outcome.
 
 ---
 
-## TODO-012 — Stream Object Store content directly into validation
+## TODO-012 — Stream Object Store content directly into validation ✅ DONE
 
 The worker currently materializes the complete Object Store object as a
 `[]byte` before passing it to xmllint. The 10 MiB ingress cap bounds this, but
@@ -530,6 +536,11 @@ Object Store and xmllint both support streaming.
 Pipe immutable upload content directly from Object Store into xmllint stdin,
 preserving timeout, diagnostic, and retry behavior while eliminating the full
 worker-side XML buffer.
+
+The queue now exposes an Object Store-backed reader and the worker connects it
+directly to xmllint stdin. Deferred chunk/read failures are checked after the
+validator exits and remain retryable operational failures. The existing byte
+retrieval API remains available for explicit HTTP content responses.
 
 ---
 

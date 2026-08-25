@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"time"
 
@@ -39,6 +40,8 @@ type UploadRecord struct {
 	ProcessingFailedAt string           `json:"processingFailedAt,omitempty"`
 	ReplayGeneration   uint64           `json:"replayGeneration,omitempty"`
 	ReplayMessageID    string           `json:"replayMessageId,omitempty"`
+	ReplayReady        bool             `json:"replayReady,omitempty"`
+	ReplayClaimedSeq   uint64           `json:"replayClaimedSequence,omitempty"`
 }
 
 // VersionedUploadRecord pairs a record with its JetStream KV revision for
@@ -66,6 +69,14 @@ func NewID() (string, error) {
 // ErrRecordNotFound is returned by GetUploadRecord or GetUploadContent when
 // id does not exist (or is not well-formed).
 var ErrRecordNotFound = errors.New("upload record not found")
+
+// UploadContentReader streams an Object Store object and reports errors that
+// can arrive after OpenUploadContent has returned (for example, a missing or
+// corrupt chunk). Callers must close it and check Error after consuming it.
+type UploadContentReader interface {
+	io.ReadCloser
+	Error() error
+}
 
 // PutUploadRecord creates or overwrites the metadata record for record.ID.
 // It never reads or writes raw XML content.
@@ -158,6 +169,24 @@ func (c *Client) GetUploadRecordVersion(ctx context.Context, id string) (Version
 	return VersionedUploadRecord{Record: record, Revision: entry.Revision()}, nil
 }
 
+// UploadRecordKeys returns the current metadata keys for maintenance scans.
+// Callers must load each record by version so concurrent state transitions
+// remain protected by compare-and-swap.
+func (c *Client) UploadRecordKeys(ctx context.Context) ([]string, error) {
+	kv, err := c.uploadsBucket(ctx)
+	if err != nil {
+		return nil, err
+	}
+	keys, err := kv.Keys(ctx)
+	if err != nil {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("list upload records: %w", err)
+	}
+	return keys, nil
+}
+
 // UpdateUploadStatus loads the metadata record for id, applies the given
 // validation outcome, and writes it back. The raw XML object is never read
 // or rewritten.
@@ -194,6 +223,25 @@ func (c *Client) PutUploadContent(ctx context.Context, id string, content []byte
 // GetUploadContent retrieves the raw XML object previously stored for id,
 // or ErrRecordNotFound if none exists.
 func (c *Client) GetUploadContent(ctx context.Context, id string) ([]byte, error) {
+	content, err := c.OpenUploadContent(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	defer content.Close()
+	body, readErr := io.ReadAll(content)
+	if readErr == nil {
+		readErr = content.Error()
+	}
+	if readErr != nil {
+		return nil, fmt.Errorf("get upload content %s: %w", id, readErr)
+	}
+	return body, nil
+}
+
+// OpenUploadContent opens the immutable raw XML object for streaming without
+// materializing it in memory. Errors encountered while receiving chunks are
+// exposed by the returned reader's Error method.
+func (c *Client) OpenUploadContent(ctx context.Context, id string) (UploadContentReader, error) {
 	if !ValidID(id) {
 		return nil, ErrRecordNotFound
 	}
@@ -201,7 +249,7 @@ func (c *Client) GetUploadContent(ctx context.Context, id string) ([]byte, error
 	if err != nil {
 		return nil, err
 	}
-	content, err := store.GetBytes(ctx, id)
+	content, err := store.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, jetstream.ErrObjectNotFound) {
 			return nil, ErrRecordNotFound

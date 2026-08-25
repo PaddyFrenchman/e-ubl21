@@ -12,6 +12,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -217,6 +218,11 @@ const maxValidationDiagnosticBytes = 8 << 10
 // enforces a hard per-document deadline, while --nonet prevents schemas from
 // fetching network resources during validation.
 func validateAgainstSchema(ctx context.Context, schemaPath string, body []byte, timeout time.Duration) error {
+	return validateReaderAgainstSchema(ctx, schemaPath, bytes.NewReader(body), timeout)
+}
+
+// validateReaderAgainstSchema connects body directly to xmllint's stdin.
+func validateReaderAgainstSchema(ctx context.Context, schemaPath string, body io.Reader, timeout time.Duration) error {
 	if err := ensureXMLLint(); err != nil {
 		return err
 	}
@@ -227,7 +233,7 @@ func validateAgainstSchema(ctx context.Context, schemaPath string, body []byte, 
 	defer cancel()
 
 	cmd := exec.CommandContext(validationCtx, xmllintPath, "--nonet", "--noout", "--schema", schemaPath, "-")
-	cmd.Stdin = bytes.NewReader(body)
+	cmd.Stdin = body
 	diagnostics := &boundedDiagnosticBuffer{}
 	cmd.Stdout = diagnostics
 	cmd.Stderr = diagnostics

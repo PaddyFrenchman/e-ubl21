@@ -880,7 +880,10 @@ If the KV update succeeds but result publication fails, the message is redeliver
 On retry, the terminal `valid`/`invalid` record and `ResultPending` marker avoid
 revalidation. Publication is retried with a stable message ID, the per-upload
 result subject permanently admits at most one message, and the marker is
-cleared only after publication succeeds.
+cleared only after publication succeeds. A worker-side reconciliation scan
+also republishes terminal records whose `ResultPending` marker remains set, so
+recovery does not depend on the original work descriptor surviving its
+seven-day stream retention.
 
 ---
 
@@ -889,9 +892,15 @@ cleared only after publication succeeds.
 TODO-011 adds `dead_letter_pending` and `processing_failed`, last-error and
 application-attempt metadata, a namespace-scoped durable DLQ, terminal/depth
 metrics, and `e-ubl21 dead-letter retry UPLOAD_ID`. Unlimited broker delivery
-prevents `MaxDeliver` from stranding an incomplete terminal transition. Replay
-stores a generation-stable message ID in KV and defers worker processing until
-publication, canonical status, and old-DLQ cleanup have all completed.
+prevents `MaxDeliver` from stopping retries early, while a periodic worker KV
+scan independently finishes `dead_letter_pending` transitions if the original
+descriptor reaches the documents stream's seven-day `MaxAge`. Replay stores a
+generation-stable message ID in KV and defers worker processing until
+publication, canonical status, and old-DLQ cleanup have all completed. The
+first ready replay descriptor then CAS-claims its JetStream stream sequence in
+KV. Only that sequence can execute or be redelivered; a second publication
+stored after the time-scoped message-ID deduplication window is acknowledged
+before raw content is fetched or validation begins.
 
 ---
 

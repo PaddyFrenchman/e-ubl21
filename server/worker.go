@@ -45,6 +45,7 @@ const defaultWorkerConcurrency = 1
 const defaultWorkerPrefetch = 1
 const defaultWorkerAckWait = 60 * time.Second
 const defaultWorkerMaxDeliver = 5
+const workerCompletionReconcileInterval = 30 * time.Second
 
 type workerRuntimeSettings struct {
 	validationTimeout time.Duration
@@ -163,6 +164,17 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		return fmt.Errorf("start pulling documents: %w", err)
 	}
 	defer messages.Stop()
+	reconcileCtx, cancelReconcile := context.WithCancel(ctx)
+	var reconciler sync.WaitGroup
+	reconciler.Add(1)
+	go func() {
+		defer reconciler.Done()
+		worker.runCompletionReconciler(reconcileCtx, workerCompletionReconcileInterval)
+	}()
+	defer func() {
+		cancelReconcile()
+		reconciler.Wait()
+	}()
 	jobs := make(chan jetstream.Msg, settings.prefetch)
 	workerJobsChannelCapacity.Set(float64(settings.prefetch))
 	workerNATSIteratorCapacity.Set(float64(localCapacity))
@@ -329,11 +341,6 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		w.finalizeDeadLetter(ctx, msg, versioned)
 		return
 	}
-	if versioned.Record.ReplayMessageID != "" && (versioned.Record.Status == queue.StatusEnqueuePending || versioned.Record.Status == queue.StatusPending) {
-		logger.Info("replay handoff is not complete; deferring descriptor")
-		_ = msg.NakWithDelay(replayHandoffRetryDelay)
-		return
-	}
 	if versioned.Record.Status == queue.StatusValid || versioned.Record.Status == queue.StatusInvalid {
 		if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
 			w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("finish prior validation result: %w", err))
@@ -353,7 +360,58 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		return
 	}
 
-	content, err := w.queue.GetUploadContent(ctx, id)
+	replayID := msg.Headers().Get(queue.HeaderReplayMessageID)
+	if replayID == "" && versioned.Record.ReplayMessageID != "" {
+		logger.Info("replay handoff is not complete; deferring descriptor")
+		_ = msg.NakWithDelay(replayHandoffRetryDelay)
+		return
+	}
+	if replayID != "" {
+		metadata, metadataErr := msg.Metadata()
+		if metadataErr != nil {
+			logger.Error("cannot identify replay descriptor sequence; will retry", "error", metadataErr)
+			_ = msg.NakWithDelay(replayHandoffRetryDelay)
+			return
+		}
+		sequence := metadata.Sequence.Stream
+		if versioned.Record.ReplayClaimedSeq != 0 {
+			if versioned.Record.ReplayClaimedSeq != sequence {
+				logger.Info("discarding duplicate replay descriptor",
+					"claimedSequence", versioned.Record.ReplayClaimedSeq,
+					"duplicateSequence", sequence,
+				)
+				recordValidationOutcome("duplicate")
+				_ = msg.Ack()
+				return
+			}
+		} else {
+			if versioned.Record.ReplayMessageID != replayID {
+				logger.Error("replay descriptor does not match canonical replay generation; terminating message", "replayMessageID", replayID)
+				_ = msg.Term()
+				return
+			}
+			if !versioned.Record.ReplayReady {
+				logger.Info("replay handoff is not complete; deferring descriptor")
+				_ = msg.NakWithDelay(replayHandoffRetryDelay)
+				return
+			}
+			claimed := versioned.Record
+			claimed.ReplayMessageID = ""
+			claimed.ReplayReady = false
+			claimed.ReplayClaimedSeq = sequence
+			revision, claimErr := w.queue.UpdateUploadRecord(ctx, claimed, versioned.Revision)
+			if claimErr != nil {
+				logger.Info("replay descriptor claim raced another worker; will retry", "error", claimErr)
+				_ = msg.NakWithDelay(replayHandoffRetryDelay)
+				return
+			}
+			versioned = queue.VersionedUploadRecord{Record: claimed, Revision: revision}
+		}
+	}
+
+	validationCtx, cancelValidation := context.WithTimeout(ctx, w.validationTimeout)
+	defer cancelValidation()
+	content, err := w.queue.OpenUploadContent(validationCtx, id)
 	if err != nil {
 		// The API stores content before publishing the descriptor. Failure to
 		// retrieve it is therefore an operational/storage failure worth retrying.
@@ -362,8 +420,18 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		return
 	}
 
-	validationErr := validateAgainstSchema(ctx, schemaPath, content, w.validationTimeout)
+	validationErr := validateReaderAgainstSchema(validationCtx, schemaPath, content, w.validationTimeout)
+	streamErr := content.Error()
+	closeErr := content.Close()
 	validatedAt := time.Now()
+	if streamErr == nil {
+		streamErr = closeErr
+	}
+	if streamErr != nil && !errors.Is(validationErr, errValidationTimeout) && !errors.Is(validationErr, context.Canceled) {
+		recordValidationOutcome("content_unavailable")
+		w.retryOperationalFailure(ctx, msg, item, &versioned, fmt.Errorf("stream upload content: %w", streamErr))
+		return
+	}
 
 	if validationErr != nil && errors.Is(validationErr, errXMLLintUnavailable) {
 		recordValidationOutcome("validator_unavailable")
@@ -514,22 +582,38 @@ func (w *documentWorker) retryOperationalFailure(ctx context.Context, msg jetstr
 func (w *documentWorker) finalizeDeadLetter(ctx context.Context, msg jetstream.Msg, versioned queue.VersionedUploadRecord) {
 	record := versioned.Record
 	logger := w.logger.With("id", record.ID, "documentType", record.DocumentType, "attempt", record.ProcessingAttempts)
-	dead := queue.DeadLetter{ID: record.ID, DocumentType: record.DocumentType, ReceivedAt: record.ReceivedAt, LastError: record.LastError, Attempts: record.ProcessingAttempts, FailedAt: record.ProcessingFailedAt}
-	if err := w.queue.PublishDeadLetter(ctx, dead); err != nil {
-		logger.Error("failed to publish pending dead letter; will retry", "error", err)
+	transitioned, err := w.finalizeDeadLetterRecord(ctx, versioned)
+	if err != nil {
+		logger.Error("failed to finish pending dead letter; will retry", "error", err)
 		_ = msg.NakWithDelay(nakRetryDelay)
 		return
+	}
+	if transitioned {
+		workerTerminalFailures.Inc()
+		recordValidationOutcome(string(queue.StatusProcessingFailed))
+		logger.Error("document exhausted processing attempts; moved to dead-letter stream", "error", record.LastError)
+	}
+	_ = msg.Term()
+}
+
+// finalizeDeadLetterRecord completes the durable dead-letter handoff without
+// relying on a documents-stream message. The boolean reports whether this
+// caller won the terminal CAS transition.
+func (w *documentWorker) finalizeDeadLetterRecord(ctx context.Context, versioned queue.VersionedUploadRecord) (bool, error) {
+	record := versioned.Record
+	dead := queue.DeadLetter{ID: record.ID, DocumentType: record.DocumentType, ReceivedAt: record.ReceivedAt, LastError: record.LastError, Attempts: record.ProcessingAttempts, FailedAt: record.ProcessingFailedAt}
+	if err := w.queue.PublishDeadLetter(ctx, dead); err != nil {
+		return false, err
 	}
 	record.Status = queue.StatusProcessingFailed
 	if _, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision); err != nil {
-		logger.Error("failed to finish canonical dead-letter transition; will retry", "error", err)
-		_ = msg.NakWithDelay(nakRetryDelay)
-		return
+		latest, getErr := w.queue.GetUploadRecordVersion(ctx, record.ID)
+		if getErr == nil && latest.Record.Status == queue.StatusProcessingFailed {
+			return false, nil
+		}
+		return false, err
 	}
-	workerTerminalFailures.Inc()
-	recordValidationOutcome(string(queue.StatusProcessingFailed))
-	logger.Error("document exhausted processing attempts; moved to dead-letter stream", "error", record.LastError)
-	_ = msg.Term()
+	return true, nil
 }
 
 func (w *documentWorker) ensureValidationResultPublished(ctx context.Context, versioned queue.VersionedUploadRecord) error {
@@ -552,4 +636,82 @@ func (w *documentWorker) ensureValidationResultPublished(ctx context.Context, ve
 		return err
 	}
 	return nil
+}
+
+type workerCompletionReconcileReport struct {
+	Scanned, DeadLettersFinalized, ResultsPublished, Errors int
+}
+
+// reconcilePendingCompletions repairs durable worker states whose original
+// work descriptor may have expired. Records are handled serially, and every
+// mutation remains guarded by the revision loaded during this scan.
+func (w *documentWorker) reconcilePendingCompletions(ctx context.Context) workerCompletionReconcileReport {
+	var report workerCompletionReconcileReport
+	keys, err := w.queue.UploadRecordKeys(ctx)
+	if err != nil {
+		report.Errors++
+		return report
+	}
+	for _, id := range keys {
+		if ctx.Err() != nil {
+			break
+		}
+		versioned, err := w.queue.GetUploadRecordVersion(ctx, id)
+		if err != nil {
+			report.Errors++
+			continue
+		}
+		record := versioned.Record
+		if record.Status != queue.StatusDeadLetterPending && !((record.Status == queue.StatusValid || record.Status == queue.StatusInvalid) && record.ResultPending) {
+			continue
+		}
+		report.Scanned++
+		if record.Status == queue.StatusDeadLetterPending {
+			transitioned, finalizeErr := w.finalizeDeadLetterRecord(ctx, versioned)
+			if finalizeErr != nil {
+				report.Errors++
+				continue
+			}
+			if transitioned {
+				report.DeadLettersFinalized++
+				workerTerminalFailures.Inc()
+				recordValidationOutcome(string(queue.StatusProcessingFailed))
+			}
+			continue
+		}
+		if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
+			report.Errors++
+			continue
+		}
+		report.ResultsPublished++
+	}
+	return report
+}
+
+func (w *documentWorker) runCompletionReconciler(ctx context.Context, interval time.Duration) {
+	reconcile := func() {
+		report := w.reconcilePendingCompletions(ctx)
+		workerCompletionReconciliations.WithLabelValues("dead_letter_finalized").Add(float64(report.DeadLettersFinalized))
+		workerCompletionReconciliations.WithLabelValues("result_published").Add(float64(report.ResultsPublished))
+		workerCompletionReconciliations.WithLabelValues("error").Add(float64(report.Errors))
+		if ctx.Err() == nil && (report.DeadLettersFinalized > 0 || report.ResultsPublished > 0 || report.Errors > 0) {
+			w.logger.Info("worker completion reconciliation finished",
+				"scanned", report.Scanned,
+				"deadLettersFinalized", report.DeadLettersFinalized,
+				"resultsPublished", report.ResultsPublished,
+				"errors", report.Errors,
+			)
+		}
+	}
+	reconcile()
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			reconcile()
+		case <-ctx.Done():
+			return
+		}
+	}
 }

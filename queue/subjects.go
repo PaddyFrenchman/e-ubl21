@@ -13,6 +13,9 @@ const (
 	HeaderUploadID     = "Ubl-Upload-Id"
 	HeaderDocumentType = "Ubl-Document-Type"
 	HeaderReceivedAt   = "Ubl-Received-At"
+	// HeaderReplayMessageID identifies descriptors created by operator replay.
+	// Unlike Nats-Msg-Id it is retained for the worker's durable claim check.
+	HeaderReplayMessageID = "Ubl-Replay-Message-Id"
 )
 
 // The legacy constants are the fixed stream/subject/bucket names e-ubl21 used

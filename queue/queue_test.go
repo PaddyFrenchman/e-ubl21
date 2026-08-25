@@ -3,6 +3,7 @@ package queue_test
 import (
 	"bytes"
 	"context"
+	"io"
 	"testing"
 	"time"
 
@@ -294,6 +295,34 @@ func TestUploadContentObjectStoreHandlesLargeXML(t *testing.T) {
 	}
 	if !bytes.Equal(got, body) {
 		t.Fatalf("large content mismatch: got %d bytes, want %d", len(got), len(body))
+	}
+}
+
+func TestOpenUploadContentStreamsLargeXML(t *testing.T) {
+	t.Parallel()
+	client := newTestClient(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	id, _ := queue.NewID()
+	body := bytes.Repeat([]byte("streamed-content-"), 1<<17)
+	if err := client.PutUploadContent(ctx, id, body); err != nil {
+		t.Fatalf("put content: %v", err)
+	}
+	content, err := client.OpenUploadContent(ctx, id)
+	if err != nil {
+		t.Fatalf("open content: %v", err)
+	}
+	defer content.Close()
+	var got bytes.Buffer
+	if _, err := io.CopyBuffer(&got, content, make([]byte, 4096)); err != nil {
+		t.Fatalf("stream content: %v", err)
+	}
+	if err := content.Error(); err != nil {
+		t.Fatalf("stream result: %v", err)
+	}
+	if !bytes.Equal(got.Bytes(), body) {
+		t.Fatalf("streamed content mismatch: got %d bytes, want %d", got.Len(), len(body))
 	}
 }
 

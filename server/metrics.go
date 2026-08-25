@@ -90,6 +90,10 @@ var (
 		Name: "e_ubl21_worker_terminal_failures_total",
 		Help: "Total documents moved to processing_failed after exhausting application processing attempts.",
 	})
+	workerCompletionReconciliations = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_worker_completion_reconciliations_total",
+		Help: "Pending worker completion records handled without a work descriptor, labeled by outcome.",
+	}, []string{"outcome"})
 	workerDeadLetterDepth = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "e_ubl21_worker_dead_letter_depth",
 		Help: "Current number of terminal failures retained in the dead-letter stream.",

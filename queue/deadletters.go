@@ -78,12 +78,17 @@ func (c *Client) ReplayProcessingFailure(ctx context.Context, id string) error {
 		record.ResultPending = false
 		record.ReplayGeneration++
 		record.ReplayMessageID = fmt.Sprintf("%s:replay:%d", id, record.ReplayGeneration)
+		record.ReplayReady = false
+		record.ReplayClaimedSeq = 0
 		revision, updateErr := c.UpdateUploadRecord(ctx, record, versioned.Revision)
 		if updateErr != nil {
 			return updateErr
 		}
 		versioned.Revision = revision
 	} else if record.ReplayMessageID == "" || (record.Status != StatusEnqueuePending && record.Status != StatusPending && record.Status != StatusValid && record.Status != StatusInvalid) {
+		if record.Status == StatusPending && record.ReplayClaimedSeq != 0 {
+			return nil
+		}
 		return fmt.Errorf("upload %s is %s and has no replay in progress", id, record.Status)
 	}
 	receivedAt, err := time.Parse(time.RFC3339, record.ReceivedAt)
@@ -113,21 +118,22 @@ func (c *Client) ReplayProcessingFailure(ctx context.Context, id string) error {
 	if err := stream.Purge(ctx, jetstream.WithPurgeSubject(c.Namespace.DeadLetterSubject(id))); err != nil {
 		return err
 	}
-	// Clear the replay marker last. Workers defer descriptors carrying this
-	// marker, so an ambiguous publish, status update, or purge cannot race the
-	// old DLQ generation or validate the same content concurrently.
+	// Mark the replay ready last. Workers defer descriptors until this handoff
+	// completes, then one descriptor permanently claims its stream sequence by
+	// CAS. Keeping ReplayMessageID until that claim closes the duplicate-window
+	// gap without making operator publication and KV mutation atomic.
 	for i := 0; i < 3; i++ {
 		latest, getErr := c.GetUploadRecordVersion(ctx, id)
 		if getErr != nil {
 			return getErr
 		}
-		if latest.Record.ReplayMessageID == "" {
+		if latest.Record.ReplayMessageID == "" && latest.Record.ReplayClaimedSeq != 0 {
 			return nil
 		}
 		if latest.Record.ReplayMessageID != record.ReplayMessageID {
 			return fmt.Errorf("upload %s replay generation changed concurrently", id)
 		}
-		latest.Record.ReplayMessageID = ""
+		latest.Record.ReplayReady = true
 		if _, updateErr := c.UpdateUploadRecord(ctx, latest.Record, latest.Revision); updateErr == nil {
 			return nil
 		} else if i == 2 {

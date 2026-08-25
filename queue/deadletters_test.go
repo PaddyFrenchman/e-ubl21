@@ -57,7 +57,7 @@ func TestReplayRecoversAfterDLQPurgeFailureWithoutDuplicateWork(t *testing.T) {
 		t.Fatalf("work after retry=%d err=%v, want one stable publication", after.State.Msgs, err)
 	}
 	completed, err := client.GetUploadRecord(ctx, id)
-	if err != nil || completed.Status != queue.StatusPending || completed.ReplayMessageID != "" {
+	if err != nil || completed.Status != queue.StatusPending || completed.ReplayMessageID == "" || !completed.ReplayReady || completed.ReplayClaimedSeq != 0 {
 		t.Fatalf("completed replay=%+v err=%v", completed, err)
 	}
 }

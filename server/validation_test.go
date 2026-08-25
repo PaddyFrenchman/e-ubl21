@@ -3,11 +3,24 @@ package server
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
 	"strings"
 	"testing"
 	"time"
 )
+
+type boundedReadSizeReader struct {
+	reader  io.Reader
+	maxRead int
+}
+
+func (r *boundedReadSizeReader) Read(p []byte) (int, error) {
+	if len(p) > r.maxRead {
+		p = p[:r.maxRead]
+	}
+	return r.reader.Read(p)
+}
 
 func TestValidateAgainstSchemaUsesStdinWithoutPayloadTempFile(t *testing.T) {
 	catalog, err := loadValidationCatalog()
@@ -29,6 +42,18 @@ func TestValidateAgainstSchemaUsesStdinWithoutPayloadTempFile(t *testing.T) {
 	}
 	if len(entries) != 0 {
 		t.Fatalf("validation wrote per-document temp files: %v", entries)
+	}
+}
+
+func TestValidateReaderAgainstSchemaStreamsInput(t *testing.T) {
+	catalog, err := loadValidationCatalog()
+	if err != nil {
+		t.Fatal(err)
+	}
+	schemaPath, _ := catalog.schemaPathFor("Invoice")
+	reader := &boundedReadSizeReader{reader: strings.NewReader(validInvoiceXML), maxRead: 7}
+	if err := validateReaderAgainstSchema(context.Background(), schemaPath, reader, 5*time.Second); err != nil {
+		t.Fatal(err)
 	}
 }
 

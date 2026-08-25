@@ -314,6 +314,152 @@ func TestWorkerResumesAfterDeadLetterPublishedButTerminalCASNotCommitted(t *test
 	}
 }
 
+func TestWorkerReconcilesPendingCompletionsWithoutWorkDescriptors(t *testing.T) {
+	cfg := testConfig(t, nil)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+
+	now := time.Now().UTC().Truncate(time.Second)
+	deadID, _ := queue.NewID()
+	dead := queue.UploadRecord{
+		ID: deadID, DocumentType: "Invoice", Status: queue.StatusDeadLetterPending,
+		ReceivedAt: now.Format(time.RFC3339), LastError: "storage unavailable",
+		Error: "storage unavailable", ProcessingAttempts: 5,
+		ProcessingFailedAt: now.Add(time.Second).Format(time.RFC3339),
+	}
+	if err := q.PutUploadRecord(ctx, dead); err != nil {
+		t.Fatal(err)
+	}
+	resultID, _ := queue.NewID()
+	result := queue.UploadRecord{
+		ID: resultID, DocumentType: "Invoice", Status: queue.StatusValid,
+		ReceivedAt: now.Format(time.RFC3339), ValidatedAt: now.Add(time.Second).Format(time.RFC3339),
+		ResultPending: true,
+	}
+	if err := q.PutUploadRecord(ctx, result); err != nil {
+		t.Fatal(err)
+	}
+
+	documents, err := q.JS.Stream(ctx, q.Namespace.DocumentsStreamName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, err := documents.Info(ctx)
+	if err != nil || before.State.Msgs != 0 {
+		t.Fatalf("documents before reconciliation = %d, err=%v; want no wake-up descriptors", before.State.Msgs, err)
+	}
+
+	runTestWorker(t, cfg, nil)
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		storedDead, deadErr := q.GetUploadRecord(ctx, deadID)
+		storedResult, resultErr := q.GetUploadRecord(ctx, resultID)
+		if deadErr == nil && resultErr == nil && storedDead.Status == queue.StatusProcessingFailed && !storedResult.ResultPending {
+			deadDepth, depthErr := q.DeadLetterDepth(ctx)
+			results, streamErr := q.JS.Stream(ctx, q.Namespace.ResultsStreamName())
+			if depthErr != nil || streamErr != nil {
+				t.Fatalf("inspect completion streams: dead=%v result=%v", depthErr, streamErr)
+			}
+			resultInfo, infoErr := results.Info(ctx)
+			if infoErr != nil || deadDepth != 1 || resultInfo.State.Msgs != 1 {
+				t.Fatalf("completion stream counts: dead=%d results=%d err=%v", deadDepth, resultInfo.State.Msgs, infoErr)
+			}
+			after, infoErr := documents.Info(ctx)
+			if infoErr != nil || after.State.Msgs != 0 {
+				t.Fatalf("documents after reconciliation = %d, err=%v; reconciler must not require descriptors", after.State.Msgs, infoErr)
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("worker did not reconcile durable pending completions without descriptors")
+}
+
+func TestWorkerClaimsOneReplayAfterMessageIDDeduplicationWindow(t *testing.T) {
+	cfg := testConfig(t, nil)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+
+	documents, err := q.JS.Stream(ctx, q.Namespace.DocumentsStreamName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	streamConfig, err := documents.Info(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	shortWindow := streamConfig.Config
+	shortWindow.Duplicates = 100 * time.Millisecond
+	if _, err := q.JS.UpdateStream(ctx, shortWindow); err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := queue.NewID()
+	now := time.Now().UTC().Truncate(time.Second)
+	replayID := id + ":replay:9"
+	record := queue.UploadRecord{
+		ID: id, DocumentType: "Invoice", Status: queue.StatusEnqueuePending,
+		ReceivedAt: now.Format(time.RFC3339), LastError: "temporary storage failure",
+		ProcessingAttempts: 5, ProcessingFailedAt: now.Add(time.Second).Format(time.RFC3339),
+		ReplayGeneration: 9, ReplayMessageID: replayID,
+	}
+	if err := q.PutUploadRecord(ctx, record); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PutUploadContent(ctx, id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PublishDeadLetter(ctx, queue.DeadLetter{ID: id, DocumentType: "Invoice", ReceivedAt: record.ReceivedAt, LastError: record.LastError, Attempts: 5, FailedAt: record.ProcessingFailedAt}); err != nil {
+		t.Fatal(err)
+	}
+
+	// The first publication was stored but its acknowledgement was lost. Wait
+	// beyond the broker duplicate window before retrying the operator command.
+	if err := q.PublishDocumentWithID(ctx, id, "Invoice", now, replayID); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(200 * time.Millisecond)
+	if err := q.ReplayProcessingFailure(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	before, err := documents.Info(ctx)
+	if err != nil || before.State.Msgs != 2 {
+		t.Fatalf("descriptors after deduplication window = %d, err=%v; want 2 to exercise durable worker claim", before.State.Msgs, err)
+	}
+
+	runTestWorker(t, cfg, func(worker *WorkerConfig) {
+		worker.Concurrency = 2
+		worker.Prefetch = 1
+	})
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		stored, getErr := q.GetUploadRecord(ctx, id)
+		streamInfo, infoErr := documents.Info(ctx)
+		if getErr == nil && infoErr == nil && stored.Status == queue.StatusValid && !stored.ResultPending && streamInfo.State.Msgs == 0 {
+			if stored.ReplayClaimedSeq == 0 || stored.ReplayMessageID != "" || stored.ReplayReady {
+				t.Fatalf("replay claim was not retained: %+v", stored)
+			}
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("worker did not collapse late duplicate replay descriptors to one durable claim")
+}
+
 func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
 	cfg := testConfig(t, nil)
 	runTestWorker(t, cfg, func(worker *WorkerConfig) { worker.MaxDeliver = 1 })
