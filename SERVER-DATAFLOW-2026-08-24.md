@@ -827,6 +827,11 @@ The API now writes durable intent before content and advances records through
 stale acceptance work using the upload ID as the deterministic NATS message ID.
 Missing content becomes terminal `acceptance_failed`; failed partial-content
 cleanup remains visible as `cleanup_pending` until reclamation succeeds.
+Every runtime state transition is revision-checked with JetStream KV
+compare-and-swap, so a stale reconciler cannot regress `valid`/`invalid` back
+to `pending`. Workers
+inspect terminal state before validation and suppress late duplicate work even
+after the broker's time-scoped message-ID deduplication window.
 
 ---
 

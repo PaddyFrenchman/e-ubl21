@@ -306,6 +306,34 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		return
 	}
 
+	versioned, err := w.queue.GetUploadRecordVersion(ctx, id)
+	if err != nil {
+		logger.Error("failed to load upload status; will retry", "error", err)
+		recordValidationOutcome("internal_error")
+		_ = msg.NakWithDelay(nakRetryDelay)
+		return
+	}
+	if versioned.Record.Status == queue.StatusValid || versioned.Record.Status == queue.StatusInvalid {
+		if err := w.ensureValidationResultPublished(ctx, versioned); err != nil {
+			logger.Error("failed to finish prior validation result; will retry", "error", err)
+			_ = msg.NakWithDelay(nakRetryDelay)
+			return
+		}
+		recordValidationOutcome("duplicate")
+		_ = msg.Ack()
+		return
+	}
+	if versioned.Record.Status == queue.StatusAcceptanceFailed || versioned.Record.Status == queue.StatusCleanupPending {
+		logger.Error("work descriptor references terminally unaccepted upload; terminating message", "status", versioned.Record.Status)
+		_ = msg.Term()
+		return
+	}
+	if versioned.Record.Status != queue.StatusPending && versioned.Record.Status != queue.StatusEnqueuePending {
+		logger.Error("work descriptor arrived before upload became queueable; will retry", "status", versioned.Record.Status)
+		_ = msg.NakWithDelay(nakRetryDelay)
+		return
+	}
+
 	content, err := w.queue.GetUploadContent(ctx, id)
 	if err != nil {
 		// The API stores content before publishing the descriptor. Failure to
@@ -339,20 +367,40 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		errMsg = validationErr.Error()
 	}
 
-	if err := w.queue.UpdateUploadStatus(ctx, id, status, errMsg, validatedAt); err != nil {
+	record := versioned.Record
+	record.Status = status
+	record.Error = errMsg
+	record.ValidatedAt = validatedAt.UTC().Format(time.RFC3339)
+	record.ResultPending = true
+	revision, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision)
+	if err != nil {
+		latest, getErr := w.queue.GetUploadRecordVersion(ctx, id)
+		if getErr == nil && (latest.Record.Status == queue.StatusValid || latest.Record.Status == queue.StatusInvalid) {
+			if publishErr := w.ensureValidationResultPublished(ctx, latest); publishErr == nil {
+				recordValidationOutcome("duplicate")
+				_ = msg.Ack()
+				return
+			}
+		}
+		if getErr == nil && (latest.Record.Status == queue.StatusPending || latest.Record.Status == queue.StatusEnqueuePending) {
+			record = latest.Record
+			record.Status = status
+			record.Error = errMsg
+			record.ValidatedAt = validatedAt.UTC().Format(time.RFC3339)
+			record.ResultPending = true
+			revision, err = w.queue.UpdateUploadRecord(ctx, record, latest.Revision)
+			if err == nil {
+				goto publishResult
+			}
+		}
 		logger.Error("failed to update upload status; will retry", "error", err)
 		recordValidationOutcome("internal_error")
 		_ = msg.NakWithDelay(nakRetryDelay)
 		return
 	}
 
-	if err := w.queue.PublishResult(ctx, queue.ValidationResult{
-		ID:           id,
-		DocumentType: documentType,
-		Status:       status,
-		Error:        errMsg,
-		ValidatedAt:  validatedAt.UTC().Format(time.RFC3339),
-	}); err != nil {
+publishResult:
+	if err := w.ensureValidationResultPublished(ctx, queue.VersionedUploadRecord{Record: record, Revision: revision}); err != nil {
 		logger.Error("failed to publish validation result; will retry", "error", err)
 		recordValidationOutcome("internal_error")
 		_ = msg.NakWithDelay(nakRetryDelay)
@@ -366,4 +414,26 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		return
 	}
 	logger.Info("processed document", "status", status, "duration_ms", time.Since(start).Milliseconds())
+}
+
+func (w *documentWorker) ensureValidationResultPublished(ctx context.Context, versioned queue.VersionedUploadRecord) error {
+	record := versioned.Record
+	if !record.ResultPending {
+		return nil
+	}
+	if err := w.queue.PublishResult(ctx, queue.ValidationResult{
+		ID: record.ID, DocumentType: record.DocumentType, Status: record.Status,
+		Error: record.Error, ValidatedAt: record.ValidatedAt,
+	}); err != nil {
+		return err
+	}
+	record.ResultPending = false
+	if _, err := w.queue.UpdateUploadRecord(ctx, record, versioned.Revision); err != nil {
+		latest, getErr := w.queue.GetUploadRecordVersion(ctx, record.ID)
+		if getErr == nil && !latest.Record.ResultPending && latest.Record.Status == record.Status {
+			return nil
+		}
+		return err
+	}
+	return nil
 }

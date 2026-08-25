@@ -124,7 +124,47 @@ func TestWorkerRetriesWhenResultStreamIsUnavailable(t *testing.T) {
 	for time.Now().Before(deadline) {
 		record, err := q.GetUploadRecord(context.Background(), id)
 		if err == nil && record.Status == queue.StatusValid {
-			return
+			if !record.ResultPending {
+				t.Fatal("terminal status did not retain a pending-result marker")
+			}
+			// Give the failed publication path time to NAK the original work
+			// descriptor before restoring the stream.
+			time.Sleep(50 * time.Millisecond)
+			if err := q.EnsureInfra(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			receivedAt := time.Now().UTC().Format(time.RFC3339)
+			payload, _ := json.Marshal(queue.DocumentWorkItem{ID: id, DocumentType: "Invoice", ReceivedAt: receivedAt})
+			msg := nats.NewMsg(q.Namespace.DocumentSubject("Invoice"))
+			msg.Data = payload
+			msg.Header.Set(queue.HeaderUploadID, id)
+			msg.Header.Set(queue.HeaderDocumentType, "Invoice")
+			msg.Header.Set(queue.HeaderReceivedAt, receivedAt)
+			msg.Header.Set(nats.MsgIdHdr, id+":result-retry")
+			if _, err := q.JS.PublishMsg(context.Background(), msg); err != nil {
+				t.Fatal(err)
+			}
+
+			retryDeadline := time.Now().Add(3 * time.Second)
+			for time.Now().Before(retryDeadline) {
+				retried, getErr := q.GetUploadRecord(context.Background(), id)
+				if getErr == nil && !retried.ResultPending {
+					results, streamErr := q.JS.Stream(context.Background(), q.Namespace.ResultsStreamName())
+					if streamErr != nil {
+						t.Fatal(streamErr)
+					}
+					info, infoErr := results.Info(context.Background())
+					if infoErr != nil {
+						t.Fatal(infoErr)
+					}
+					if info.State.Msgs != 1 {
+						t.Fatalf("result retry published %d messages, want 1", info.State.Msgs)
+					}
+					return
+				}
+				time.Sleep(20 * time.Millisecond)
+			}
+			t.Fatal("worker did not clear the pending-result marker after retry")
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
@@ -181,6 +221,59 @@ func TestWorkerValidatesQueuedDocumentAsValid(t *testing.T) {
 	}
 	if stored["validatedAt"] == "" || stored["validatedAt"] == nil {
 		t.Fatal("missing validatedAt on a processed document")
+	}
+
+	// Bypass message-ID deduplication to model a descriptor replay after the
+	// broker duplicate window. A terminal record must suppress revalidation
+	// and duplicate result publication permanently.
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer q.Close()
+	results, err := q.JS.Stream(context.Background(), q.Namespace.ResultsStreamName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, err := results.Info(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	receivedAt := time.Now().UTC().Format(time.RFC3339)
+	workPayload, _ := json.Marshal(queue.DocumentWorkItem{ID: id, DocumentType: "Invoice", ReceivedAt: receivedAt})
+	msg := nats.NewMsg(q.Namespace.DocumentSubject("Invoice"))
+	msg.Data = workPayload
+	msg.Header.Set(queue.HeaderUploadID, id)
+	msg.Header.Set(queue.HeaderDocumentType, "Invoice")
+	msg.Header.Set(queue.HeaderReceivedAt, receivedAt)
+	msg.Header.Set(nats.MsgIdHdr, id+":forced-late-duplicate")
+	if _, err := q.JS.PublishMsg(context.Background(), msg); err != nil {
+		t.Fatal(err)
+	}
+	documents, err := q.JS.Stream(context.Background(), q.Namespace.DocumentsStreamName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		info, err := documents.Info(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.State.Msgs == 0 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("late duplicate descriptor was not acknowledged")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	after, err := results.Info(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if after.State.Msgs != before.State.Msgs {
+		t.Fatalf("late duplicate published another result: before=%d after=%d", before.State.Msgs, after.State.Msgs)
 	}
 }
 

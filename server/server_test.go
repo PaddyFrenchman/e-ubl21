@@ -52,6 +52,8 @@ func testConfig(t *testing.T, overrides func(*Config)) Config {
 		OAuthIssuer:     "https://issuer.example.com",
 		OAuthAudience:   "e-ubl21",
 		OAuthHMACSecret: testSecret,
+		RateLimitRPS:    1000,
+		RateLimitBurst:  1000,
 		NATSURL:         natsServer.URL,
 		NATSOptions:     natsServer.Options,
 	}

@@ -57,6 +57,7 @@ func (c *Client) PublishResult(ctx context.Context, result ValidationResult) err
 	msg.Data = payload
 	msg.Header.Set(HeaderUploadID, result.ID)
 	msg.Header.Set(HeaderDocumentType, result.DocumentType)
+	msg.Header.Set(nats.MsgIdHdr, result.ID+":validation-result")
 
 	if _, err := c.JS.PublishMsg(ctx, msg); err != nil {
 		return fmt.Errorf("publish validation result for %s: %w", result.ID, err)

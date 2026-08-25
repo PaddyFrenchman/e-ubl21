@@ -25,12 +25,20 @@ import (
 // PutUploadContent/GetUploadContent), so status updates never have to read
 // or rewrite the potentially large document body.
 type UploadRecord struct {
-	ID           string           `json:"id"`
-	DocumentType string           `json:"documentType"`
-	Status       ValidationStatus `json:"status"`
-	Error        string           `json:"error,omitempty"`
-	ReceivedAt   string           `json:"receivedAt"`
-	ValidatedAt  string           `json:"validatedAt,omitempty"`
+	ID            string           `json:"id"`
+	DocumentType  string           `json:"documentType"`
+	Status        ValidationStatus `json:"status"`
+	Error         string           `json:"error,omitempty"`
+	ReceivedAt    string           `json:"receivedAt"`
+	ValidatedAt   string           `json:"validatedAt,omitempty"`
+	ResultPending bool             `json:"resultPending,omitempty"`
+}
+
+// VersionedUploadRecord pairs a record with its JetStream KV revision for
+// compare-and-swap state transitions.
+type VersionedUploadRecord struct {
+	Record   UploadRecord
+	Revision uint64
 }
 
 // ValidID reports whether id has the shape produced by NewID: a 32-character
@@ -72,42 +80,91 @@ func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error
 	return nil
 }
 
-// GetUploadRecord retrieves the metadata record for id, or ErrRecordNotFound
-// if none exists. It does not fetch the upload's raw XML content.
-func (c *Client) GetUploadRecord(ctx context.Context, id string) (UploadRecord, error) {
-	if !ValidID(id) {
-		return UploadRecord{}, ErrRecordNotFound
+// CreateUploadRecord creates durable intent only if the key does not exist.
+func (c *Client) CreateUploadRecord(ctx context.Context, record UploadRecord) (uint64, error) {
+	if !ValidID(record.ID) {
+		return 0, fmt.Errorf("invalid upload id %q", record.ID)
 	}
 	kv, err := c.uploadsBucket(ctx)
 	if err != nil {
-		return UploadRecord{}, err
+		return 0, err
+	}
+	encoded, err := json.Marshal(record)
+	if err != nil {
+		return 0, fmt.Errorf("marshal upload record %s: %w", record.ID, err)
+	}
+	revision, err := kv.Create(ctx, record.ID, encoded)
+	if err != nil {
+		return 0, fmt.Errorf("create upload record %s: %w", record.ID, err)
+	}
+	return revision, nil
+}
+
+// UpdateUploadRecord performs a CAS update at expectedRevision.
+func (c *Client) UpdateUploadRecord(ctx context.Context, record UploadRecord, expectedRevision uint64) (uint64, error) {
+	if !ValidID(record.ID) {
+		return 0, fmt.Errorf("invalid upload id %q", record.ID)
+	}
+	kv, err := c.uploadsBucket(ctx)
+	if err != nil {
+		return 0, err
+	}
+	encoded, err := json.Marshal(record)
+	if err != nil {
+		return 0, fmt.Errorf("marshal upload record %s: %w", record.ID, err)
+	}
+	revision, err := kv.Update(ctx, record.ID, encoded, expectedRevision)
+	if err != nil {
+		return 0, fmt.Errorf("update upload record %s at revision %d: %w", record.ID, expectedRevision, err)
+	}
+	return revision, nil
+}
+
+// GetUploadRecord retrieves the metadata record for id, or ErrRecordNotFound
+// if none exists. It does not fetch the upload's raw XML content.
+func (c *Client) GetUploadRecord(ctx context.Context, id string) (UploadRecord, error) {
+	versioned, err := c.GetUploadRecordVersion(ctx, id)
+	return versioned.Record, err
+}
+
+// GetUploadRecordVersion retrieves a record and the revision required for a
+// subsequent monotonic compare-and-swap transition.
+func (c *Client) GetUploadRecordVersion(ctx context.Context, id string) (VersionedUploadRecord, error) {
+	if !ValidID(id) {
+		return VersionedUploadRecord{}, ErrRecordNotFound
+	}
+	kv, err := c.uploadsBucket(ctx)
+	if err != nil {
+		return VersionedUploadRecord{}, err
 	}
 	entry, err := kv.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, jetstream.ErrKeyNotFound) {
-			return UploadRecord{}, ErrRecordNotFound
+			return VersionedUploadRecord{}, ErrRecordNotFound
 		}
-		return UploadRecord{}, fmt.Errorf("get upload record %s: %w", id, err)
+		return VersionedUploadRecord{}, fmt.Errorf("get upload record %s: %w", id, err)
 	}
 	var record UploadRecord
 	if err := json.Unmarshal(entry.Value(), &record); err != nil {
-		return UploadRecord{}, fmt.Errorf("decode upload record %s: %w", id, err)
+		return VersionedUploadRecord{}, fmt.Errorf("decode upload record %s: %w", id, err)
 	}
-	return record, nil
+	return VersionedUploadRecord{Record: record, Revision: entry.Revision()}, nil
 }
 
 // UpdateUploadStatus loads the metadata record for id, applies the given
 // validation outcome, and writes it back. The raw XML object is never read
 // or rewritten.
 func (c *Client) UpdateUploadStatus(ctx context.Context, id string, status ValidationStatus, validationErr string, validatedAt time.Time) error {
-	record, err := c.GetUploadRecord(ctx, id)
+	versioned, err := c.GetUploadRecordVersion(ctx, id)
 	if err != nil {
 		return err
 	}
+	record := versioned.Record
 	record.Status = status
 	record.Error = validationErr
 	record.ValidatedAt = validatedAt.UTC().Format(time.RFC3339)
-	return c.PutUploadRecord(ctx, record)
+	_, err = c.UpdateUploadRecord(ctx, record, versioned.Revision)
+	return err
 }
 
 // PutUploadContent stores content as the immutable raw XML object for upload

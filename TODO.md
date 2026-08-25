@@ -409,10 +409,21 @@ publication, advances recovered records to `pending`, and reclaims
 Prometheus exposes reconciliation outcomes through
 `e_ubl21_upload_reconciliations_total`.
 
+All acceptance and reconciliation transitions use JetStream KV revisions and
+compare-and-swap updates. A stale reconciler therefore cannot overwrite a
+worker's `valid`/`invalid` result with `pending`. Publication failures retain
+their latest diagnostic in the record. Worker processing also reads the
+versioned record before validation: terminal records acknowledge late
+duplicate descriptors without reprocessing, including descriptors replayed
+after JetStream's time-bounded duplicate window. A durable `resultPending`
+marker makes result publication retryable without repeating validation.
+
 Failure-injection tests cover intent persistence, content persistence,
 content cleanup, enqueue-state persistence, work publication, and final status
 persistence. Integration tests cover recovery, cleanup, idempotent repeated
 scans, automatic startup reconciliation, and terminal missing-content state.
+Additional tests force stale CAS transitions, ambiguous publish acknowledgement,
+and a late duplicate descriptor with a distinct message ID.
 
 ### Acceptance criteria
 

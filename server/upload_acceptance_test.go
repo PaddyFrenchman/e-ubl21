@@ -22,18 +22,35 @@ type failingUploadQueue struct {
 	putContentCalls    int
 	deleteContentCalls int
 	publishCalls       int
+	revision           uint64
 }
 
-func (f *failingUploadQueue) PutUploadRecord(_ context.Context, record queue.UploadRecord) error {
+func (f *failingUploadQueue) CreateUploadRecord(_ context.Context, record queue.UploadRecord) (uint64, error) {
 	f.putRecordCalls++
 	if f.failPutRecordCalls[f.putRecordCalls] {
-		return errors.New("injected record failure")
+		return 0, errors.New("injected record failure")
 	}
 	f.record = record
-	return nil
+	f.revision++
+	return f.revision, nil
+}
+func (f *failingUploadQueue) UpdateUploadRecord(_ context.Context, record queue.UploadRecord, expected uint64) (uint64, error) {
+	f.putRecordCalls++
+	if f.failPutRecordCalls[f.putRecordCalls] {
+		return 0, errors.New("injected record failure")
+	}
+	if expected != f.revision {
+		return 0, errors.New("injected revision mismatch")
+	}
+	f.record = record
+	f.revision++
+	return f.revision, nil
 }
 func (f *failingUploadQueue) GetUploadRecord(context.Context, string) (queue.UploadRecord, error) {
 	return f.record, nil
+}
+func (f *failingUploadQueue) GetUploadRecordVersion(context.Context, string) (queue.VersionedUploadRecord, error) {
+	return queue.VersionedUploadRecord{Record: f.record, Revision: f.revision}, nil
 }
 func (f *failingUploadQueue) PutUploadContent(context.Context, string, []byte) error {
 	f.putContentCalls++

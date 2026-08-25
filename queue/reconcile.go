@@ -32,11 +32,13 @@ func (c *Client) ReconcileUploads(ctx context.Context, minAge time.Duration) (Re
 	}
 	now := time.Now()
 	for _, id := range keys {
-		record, err := c.GetUploadRecord(ctx, id)
+		versioned, err := c.GetUploadRecordVersion(ctx, id)
 		if err != nil {
 			report.Errors++
 			continue
 		}
+		record := versioned.Record
+		revision := versioned.Revision
 		if record.Status != StatusAccepting && record.Status != StatusEnqueuePending && record.Status != StatusCleanupPending {
 			continue
 		}
@@ -52,7 +54,7 @@ func (c *Client) ReconcileUploads(ctx context.Context, minAge time.Duration) (Re
 			}
 			record.Status = StatusAcceptanceFailed
 			record.Error = "upload content persistence failed; partial content reclaimed"
-			if err := c.PutUploadRecord(ctx, record); err != nil {
+			if _, err := c.UpdateUploadRecord(ctx, record, revision); err != nil {
 				report.Errors++
 			} else {
 				report.Failed++
@@ -64,7 +66,7 @@ func (c *Client) ReconcileUploads(ctx context.Context, minAge time.Duration) (Re
 			if err == nil {
 				record.Status = StatusAcceptanceFailed
 				record.Error = "upload content was not durably persisted"
-				if putErr := c.PutUploadRecord(ctx, record); putErr != nil {
+				if _, putErr := c.UpdateUploadRecord(ctx, record, revision); putErr != nil {
 					report.Errors++
 				} else {
 					report.Failed++
@@ -75,19 +77,30 @@ func (c *Client) ReconcileUploads(ctx context.Context, minAge time.Duration) (Re
 			continue
 		}
 		record.Status = StatusEnqueuePending
-		record.Error = ""
-		if err := c.PutUploadRecord(ctx, record); err != nil {
-			report.Errors++
-			continue
+		if versioned.Record.Status == StatusAccepting {
+			record.Error = ""
+			revision, err = c.UpdateUploadRecord(ctx, record, revision)
+			if err != nil {
+				report.Errors++
+				continue
+			}
 		}
 		if err := c.PublishDocument(ctx, record.ID, record.DocumentType, receivedAt); err != nil {
+			record.Error = "awaiting queue publication: " + err.Error()
+			_, _ = c.UpdateUploadRecord(ctx, record, revision)
 			report.Errors++
 			continue
 		}
 		record.Status = StatusPending
-		if err := c.PutUploadRecord(ctx, record); err != nil {
-			report.Errors++
-			continue
+		record.Error = ""
+		if _, err := c.UpdateUploadRecord(ctx, record, revision); err != nil {
+			// A worker may have already advanced this revision to a terminal
+			// validation status. CAS prevents reconciliation from regressing it.
+			latest, getErr := c.GetUploadRecord(ctx, id)
+			if getErr != nil || (latest.Status != StatusPending && latest.Status != StatusValid && latest.Status != StatusInvalid) {
+				report.Errors++
+				continue
+			}
 		}
 		report.Requeued++
 	}
