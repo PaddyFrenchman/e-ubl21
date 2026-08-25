@@ -138,7 +138,7 @@ EN 16931 stage rather than risk a false compliant result.
 
 ---
 
-## TODO-EN-16931-002 — Formalize and verify pinned EN 16931 runtime assets
+## TODO-EN-16931-002 — Formalize and verify pinned EN 16931 runtime assets ✅ DONE
 
 ### Goal
 
@@ -160,6 +160,11 @@ Make the official EN 16931 rules a reproducible, immutable runtime dependency.
 ### Acceptance criteria
 
 A build can prove which EN 16931 rule version it contains, and two builds using the same source revision use the same validation artefact.
+
+Implemented by `validation-assets/assets.go`, the offline
+`tools/verify-validation-assets` command, and the pre-packaging verification in
+the `Dockerfile`. The controlled upgrade procedure is documented in
+`docs/EN16931-ASSET-UPGRADE.md`.
 
 ---
 

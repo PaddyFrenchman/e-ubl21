@@ -14,6 +14,11 @@ RUN go mod download
 
 COPY . .
 
+# Refuse to package a validation ruleset whose bytes do not match the pinned
+# release metadata. This verification is entirely offline and runs before the
+# application binary or runtime image is produced.
+RUN go run ./tools/verify-validation-assets
+
 # CGO is disabled: none of e-ubl21's dependencies require it, and a static
 # binary lets the runtime stage be a plain Alpine image plus xmllint, with
 # no libc/toolchain compatibility concerns.
@@ -30,6 +35,7 @@ RUN apk add --no-cache libxml2-utils ca-certificates && \
     addgroup -S eubl21 && adduser -S -G eubl21 eubl21
 
 COPY --from=build /out/e-ubl21 /usr/local/bin/e-ubl21
+COPY --from=build /src/validation-assets/en16931/1.3.16/EN16931-UBL-validation.xslt /opt/e-ubl21/validation-assets/en16931/1.3.16/EN16931-UBL-validation.xslt
 
 USER eubl21
 WORKDIR /home/eubl21
