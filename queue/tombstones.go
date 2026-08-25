@@ -3,8 +3,10 @@ package queue
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -78,11 +80,17 @@ func (c *Client) PurgeUploadContentTombstones(ctx context.Context, gracePeriod t
 			continue
 		}
 
-		// Re-read immediately before touching the backing metadata subject. A
-		// recreated live object must never be removed based on stale list data.
-		latest, infoErr := store.GetInfo(ctx, object.Name, jetstream.GetObjectInfoShowDeleted())
-		if infoErr != nil {
-			if errors.Is(infoErr, jetstream.ErrObjectNotFound) {
+		if stream == nil {
+			stream, err = c.JS.Stream(ctx, uploadContentObjectStreamName(c.Namespace.UploadContentBucketName()))
+			if err != nil {
+				report.Failed++
+				break
+			}
+		}
+		metadataSubject := uploadContentMetadataSubject(c.Namespace.UploadContentBucketName(), object.Name)
+		latestMessage, messageErr := stream.GetLastMsgForSubject(ctx, metadataSubject)
+		if messageErr != nil {
+			if errors.Is(messageErr, jetstream.ErrMsgNotFound) {
 				// An overlapping run already completed this item.
 				report.Purged++
 			} else {
@@ -93,21 +101,15 @@ func (c *Client) PurgeUploadContentTombstones(ctx context.Context, gracePeriod t
 			}
 			continue
 		}
-		if !latest.Deleted || !latest.ModTime.Equal(object.ModTime) {
+		var latest jetstream.ObjectInfo
+		if decodeErr := json.Unmarshal(latestMessage.Data, &latest); decodeErr != nil || !latest.Deleted || latest.Name != object.Name || latest.Bucket != c.Namespace.UploadContentBucketName() || !latestMessage.Time.Equal(object.ModTime) {
 			report.Failed++
 			if report.Eligible >= maxItems {
 				break
 			}
 			continue
 		}
-		if stream == nil {
-			stream, err = c.JS.Stream(ctx, uploadContentObjectStreamName(c.Namespace.UploadContentBucketName()))
-			if err != nil {
-				report.Failed++
-				break
-			}
-		}
-		if err := stream.Purge(ctx, jetstream.WithPurgeSubject(uploadContentMetadataSubject(c.Namespace.UploadContentBucketName(), object.Name))); err != nil {
+		if err := purgeUploadContentMetadataThrough(ctx, stream, metadataSubject, latestMessage.Sequence); err != nil {
 			report.Failed++
 		} else {
 			report.Purged++
@@ -117,6 +119,20 @@ func (c *Client) PurgeUploadContentTombstones(ctx context.Context, gracePeriod t
 		}
 	}
 	return report, nil
+}
+
+// purgeUploadContentMetadataThrough removes only metadata at or before the
+// observed tombstone. JetStream enforces the sequence boundary atomically
+// with the subject filter, so a live replacement published after observation
+// survives even if it races this purge request.
+func purgeUploadContentMetadataThrough(ctx context.Context, stream jetstream.Stream, metadataSubject string, tombstoneSequence uint64) error {
+	if tombstoneSequence == math.MaxUint64 {
+		return fmt.Errorf("cannot bound tombstone purge after maximum stream sequence")
+	}
+	return stream.Purge(ctx,
+		jetstream.WithPurgeSubject(metadataSubject),
+		jetstream.WithPurgeSequence(tombstoneSequence+1),
+	)
 }
 
 func uploadContentTombstonePurgeable(record UploadRecord) bool {

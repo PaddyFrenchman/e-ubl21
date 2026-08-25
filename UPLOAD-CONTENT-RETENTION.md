@@ -93,8 +93,17 @@ period and canonical upload metadata must prove completed expiry
 (`valid`/`invalid` plus `contentExpiredAt`) or terminal acceptance failure.
 Active content and pending, cleanup-in-progress, dead-lettered, replayable,
 missing, or unreadable records are never purged. Each marker is re-read before
-its metadata subject is removed, repeated runs are idempotent, and `max-items`
-bounds eligible work per invocation.
+its metadata subject is removed. The purge combines that subject with a broker
+sequence boundary, so metadata for an object recreated after the read survives
+the purge atomically. Repeated runs are idempotent, and `max-items` bounds
+eligible work per invocation.
+
+`--max-items` does not bound inventory enumeration: nats.go's Object Store
+`List` API materializes the current live/deleted inventory before selection.
+The configured Object Store byte cap provides an ultimate bound, but very
+large installations should account for full-inventory scan cost when choosing
+the schedule. Replacing `List` with lower-level paged/consumer iteration is a
+future scalability improvement, not a separate cleanup implementation.
 
 Use the exact command unchanged from cron, for example:
 

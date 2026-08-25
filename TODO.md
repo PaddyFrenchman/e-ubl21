@@ -586,7 +586,11 @@ and scheduled implementation. It is namespace-scoped, age-gated, dry-runnable,
 batch-bounded, metadata-state guarded, overlap-safe, and emits a structured
 JSON report with a failing exit status for incomplete cleanup. Integration
 tests exercise the supported embedded NATS server, including live/pending
-protection, namespace isolation, repeated runs, and overlapping maintenance.
+protection, namespace isolation, repeated runs, overlapping maintenance, and
+broker sequence-bounded protection for an object recreated between tombstone
+observation and purge. `max-items` bounds eligible work; Object Store `List`
+still materializes the full inventory and is documented as a future scan-cost
+scalability improvement.
 
 ---
 
