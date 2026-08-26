@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "en16931.invoice.br-co-15",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "en16931/negative/br-co-15.xml",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:0123456789abcdef"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {"stage": "ubl21-xsd", "outcome": "passed"},
+        {"stage": "en16931", "outcome": "standards-invalid", "ruleIds": ["BR-CO-15"]}
+      ],
+      "tags": ["invoice", "monetary-total", "negative"]
+    },
+    {
+      "id": "ubl21.invoice.official-example",
+      "documentType": "Invoice",
+      "profile": "ubl21",
+      "file": "ubl21/positive/official-example.xml",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OASIS",
+        "sourceUrl": "https://docs.oasis-open.org/ubl/os-UBL-2.1/",
+        "sourceVersion": "UBL-2.1",
+        "sourceSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "license": "See the pinned upstream distribution notice."
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {"stage": "ubl21-xsd", "outcome": "passed"}
+      ],
+      "tags": ["invoice", "official", "positive"]
+    }
+  ]
+}

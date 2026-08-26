@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "en16931.invoice.br-co-15",
+  "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "profile": "ubl21-en16931",
+  "expectedFinal": "invalid",
+  "actualFinal": "invalid",
+  "expectedStages": [
+    {"stage": "ubl21-xsd", "outcome": "passed"},
+    {"stage": "en16931", "outcome": "standards-invalid", "ruleIds": ["BR-CO-15"]}
+  ],
+  "actualStages": [
+    {"stage": "ubl21-xsd", "outcome": "passed"},
+    {"stage": "en16931", "outcome": "standards-invalid", "ruleIds": ["BR-CO-15"]}
+  ],
+  "result": "pass"
+}
