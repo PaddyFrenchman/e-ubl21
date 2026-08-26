@@ -68,6 +68,6 @@ func printUsage() {
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  go run ./createsamples inventory --xsd XSD")
-	fmt.Println("  go run ./createsamples generate --xsd XSD --output createsamples/samples --count 10")
+	fmt.Println("  go run ./createsamples generate --profile ubl21 --set positive --xsd XSD --output createsamples/samples")
 	fmt.Println("  go run ./createsamples validate --xsd XSD --samples createsamples/samples")
 }

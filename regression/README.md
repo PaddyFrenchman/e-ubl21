@@ -22,6 +22,27 @@ Changing the meaning of an existing field requires a new schema version.
 Additive changes must still be reviewed because version 1 rejects unknown
 properties.
 
+## Deterministic UBL 2.1 positive corpus
+
+The structural generator produces one manifest-driven, XSD-valid positive
+fixture for every one of the 65 UBL 2.1 main document schemas:
+
+```bash
+go run ./createsamples generate \
+  --profile ubl21 \
+  --set positive \
+  --xsd XSD \
+  --output createsamples/samples
+```
+
+Generation resolves the current full Git commit for immutable provenance,
+generates the complete corpus twice and rejects any byte difference, computes
+each fixture's SHA-256, validates the canonical manifest, and independently
+validates every XML document with `xmllint` before replacing the output tree.
+The canonical manifest is written as `<output>/manifest.json`. Use
+`--generator-version git:<40-or-64-lowercase-hex-commit>` when generation
+runs outside a Git checkout.
+
 ## Stable names
 
 Fixture IDs are lowercase dotted identifiers. They identify the semantic test

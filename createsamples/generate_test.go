@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/PaddyFrenchman/e-ubl21/regression"
 )
 
 func TestShippedSchemaInventoryIndexAndGeneration(t *testing.T) {
@@ -55,6 +57,12 @@ func TestCommandsAndInventoryErrors(t *testing.T) {
 	}
 	if err := runGenerate([]string{"--xsd", filepath.Join(t.TempDir(), "missing")}); err == nil {
 		t.Fatal("generate accepted a missing XSD tree")
+	}
+	if err := runGenerate([]string{"--profile", "en16931"}); err == nil {
+		t.Fatal("generate accepted an unsupported profile")
+	}
+	if err := runGenerate([]string{"--set", "negative"}); err == nil {
+		t.Fatal("generate accepted an unsupported fixture set")
 	}
 	emptyTree := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(emptyTree, "maindoc"), 0o755); err != nil {
@@ -121,6 +129,13 @@ func TestInventoryGenerateAndValidateCommands(t *testing.T) {
 	out := filepath.Join(dir, "samples")
 	if err := run([]string{"generate", "--xsd", dir, "--output", out, "--count", "2"}); err != nil {
 		t.Fatal(err)
+	}
+	manifest, err := os.ReadFile(filepath.Join(out, "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifest); err != nil {
+		t.Fatalf("generated manifest rejected: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(out, "Demo", "Demo-sample-02.xml"), []byte(`<Wrong/>`), 0o644); err != nil {
 		t.Fatal(err)

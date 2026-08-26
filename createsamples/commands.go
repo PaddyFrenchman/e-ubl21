@@ -48,12 +48,24 @@ func runGenerate(args []string) error {
 	flags := flag.NewFlagSet("generate", flag.ContinueOnError)
 	xsdDir := flags.String("xsd", filepath.Join("XSD"), "path to the UBL XSD tree")
 	output := flags.String("output", filepath.Join("createsamples", "samples"), "output directory for generated samples")
+	profile := flags.String("profile", "ubl21", "validation profile to generate (currently ubl21)")
+	set := flags.String("set", "positive", "fixture set to generate (currently positive)")
+	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: current HEAD)")
 	count := flags.Int("count", 1, "number of sample files to generate per main document schema")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
 	if *count <= 0 {
 		return errors.New("count must be greater than zero")
+	}
+	if *profile != "ubl21" {
+		return fmt.Errorf("unsupported generation profile %q; issue #33 supports ubl21", *profile)
+	}
+	if *set != "positive" {
+		return fmt.Errorf("unsupported generation set %q; issue #33 supports positive", *set)
+	}
+	if err := validateCorpusOutputDirectory(*output); err != nil {
+		return err
 	}
 
 	report, err := discoverInventory(*xsdDir)
@@ -63,42 +75,36 @@ func runGenerate(args []string) error {
 	if len(report.MainFiles) == 0 {
 		return errors.New("no main document XSD files discovered")
 	}
-	if err := os.RemoveAll(*output); err != nil {
-		return fmt.Errorf("clear existing output %s: %w", *output, err)
-	}
-	if err := os.MkdirAll(*output, 0o755); err != nil {
-		return fmt.Errorf("create output dir %s: %w", *output, err)
-	}
-
 	index, err := buildSchemaIndex(*xsdDir)
 	if err != nil {
 		return err
 	}
-
-	generated := 0
-	for _, schema := range report.MainFiles {
-		root := schema.RootElement
-		if root == "" {
-			root = strings.TrimSuffix(filepath.Base(schema.File), filepath.Ext(schema.File))
-		}
-		folder := filepath.Join(*output, root)
-		if err := os.MkdirAll(folder, 0o755); err != nil {
-			return fmt.Errorf("create sample dir %s: %w", folder, err)
-		}
-		for i := 1; i <= *count; i++ {
-			path := filepath.Join(folder, fmt.Sprintf("%s-sample-%02d.xml", root, i))
-			content, err := generateCompleteSample(index, root, *xsdDir, schema.File)
-			if err != nil {
-				return fmt.Errorf("generate %s: %w", path, err)
-			}
-			if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-				return fmt.Errorf("write %s: %w", path, err)
-			}
-			fmt.Println(path)
-			generated++
-		}
+	version, err := resolveGeneratorVersion(*generatorVersion)
+	if err != nil {
+		return err
 	}
-	fmt.Printf("Generated %d samples under %s\n", generated, *output)
+	first, err := generateUBLPositiveCorpus(report, index, *xsdDir, *count, version)
+	if err != nil {
+		return err
+	}
+	second, err := generateUBLPositiveCorpus(report, index, *xsdDir, *count, version)
+	if err != nil {
+		return err
+	}
+	if err := verifyCorpusDeterminism(first, second); err != nil {
+		return err
+	}
+	xmllintPath, err := exec.LookPath("xmllint")
+	if err != nil {
+		return errors.New("xmllint is required for independent generated-corpus validation; install libxml2 and retry")
+	}
+	if err := validateGeneratedCorpus(xmllintPath, first); err != nil {
+		return err
+	}
+	if err := writeGeneratedCorpus(*output, first); err != nil {
+		return err
+	}
+	fmt.Printf("Generated and independently validated %d deterministic samples under %s\n", len(first.fixtures), *output)
 	return nil
 }
 
