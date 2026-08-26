@@ -44,20 +44,24 @@ The completed historical issues `#3` through `#31` are retained as project histo
 
 One issue = one implementation branch.
 
+The project is normally implemented with an AI coding agent such as **Claude** or **Codex** running in the editor. The coding agent must follow the same GitHub workflow as a human developer. It must never treat access to the working tree as permission to work directly on `main`, merge a branch, or close an issue automatically.
+
+### 2.1 Starting an issue
+
 Before starting or restarting work on an issue:
 
-1. switch to `main`;
-2. fetch/pull the latest `main`;
-3. remove any stale local branch for that issue if it exists;
-4. recreate a fresh branch dedicated to the issue;
-5. immediately rebase that branch onto the latest `main` before implementation begins;
-6. implement only the scope of that issue on the branch;
-7. run the required unit/integration/regression tests;
-8. before merge, fetch the latest `main` again and rebase the issue branch onto it again;
-9. rerun the required tests after the final rebase;
-10. merge through the normal GitHub review/merge process;
-11. close the GitHub Issue only when its acceptance criteria are satisfied;
-12. delete the merged issue branch.
+1. identify the GitHub Issue being addressed and read its complete description and acceptance criteria;
+2. read the relevant `TODO-*.md`/architecture documents referenced by the issue;
+3. switch to `main`;
+4. fetch/pull the latest `main`;
+5. remove any stale local branch for that issue if it exists;
+6. recreate a fresh branch dedicated to the issue from current `main`;
+7. immediately rebase that freshly recreated branch onto the latest `origin/main` before implementation begins;
+8. verify that the editor/Claude/Codex session is operating on the issue branch, never on `main`;
+9. implement only the scope of that GitHub Issue;
+10. run the unit, integration and regression tests required by the issue;
+11. commit the implementation to the issue branch and push that branch when appropriate;
+12. keep the GitHub Issue open while implementation, review and validation are still in progress.
 
 Recommended branch naming:
 
@@ -84,22 +88,123 @@ git switch -c issue/32-regression-contracts
 git rebase origin/main
 ```
 
-Before opening/updating the final pull request:
+The initial rebase is part of **starting the issue** and does not require the special issue-closure confirmation described below.
+
+If the issue branch has already been published and is later rebased, use:
 
 ```bash
-git fetch origin
-git rebase origin/main
-
-# run the tests required by the issue
-
 git push --force-with-lease origin issue/32-regression-contracts
 ```
 
-`--force-with-lease` must be used instead of an unconditional force push after rebasing a published branch.
+`--force-with-lease` must be used instead of an unconditional force push.
 
-No new issue should be implemented directly on `main`.
+No new issue may be implemented directly on `main`.
 
-If `main` changes materially while an issue is being developed, rebase again before continuing when necessary and always rebase before final merge.
+If `main` changes materially while an issue is being developed, the branch may be rebased during development when necessary. Such a development-time rebase does not by itself mean the issue is ready to close.
+
+### 2.2 Rules for Claude/Codex or another editor coding agent
+
+When Claude, Codex or another coding agent is asked to implement a GitHub Issue, it must:
+
+1. confirm the active Git branch before changing code;
+2. refuse to implement the issue directly on `main` and instead use the dedicated issue branch;
+3. use the GitHub Issue as the authoritative work item and the referenced roadmap files as the detailed technical specification;
+4. keep changes scoped to the active issue unless a required dependency makes additional work unavoidable;
+5. if genuinely independent additional work is discovered, create or propose a separate GitHub Issue rather than silently expanding scope;
+6. run the tests specified by the issue and any regression gate applicable at that point in the implementation roadmap;
+7. report test failures rather than hiding, skipping or automatically blessing changed expected results;
+8. never modify committed regression expectations merely because the new implementation produces different results unless the issue explicitly concerns a reviewed standards/baseline change;
+9. never merge the issue branch into `main` merely because implementation appears complete;
+10. never close the GitHub Issue without the explicit issue-closing workflow below.
+
+A pull request, when used, should reference the issue without prematurely closing it. During development prefer:
+
+```text
+Refs #<issue-number>
+```
+
+rather than relying on an automatic `Closes #<issue-number>` keyword before the final closure procedure has been approved.
+
+The PR description should summarize:
+
+- the issue being implemented;
+- important architectural decisions;
+- acceptance criteria addressed;
+- tests/regression suites executed;
+- any known limitations or follow-up issues.
+
+### 2.3 Mandatory confirmation barrier when closing an issue
+
+When the user says, for example:
+
+```text
+close issue #32
+```
+
+or otherwise requests that an issue be completed/closed, **do not immediately rebase, merge or close it**.
+
+First inspect the issue branch and current `main`, summarize whether the implementation appears ready for finalization, and then ask an explicit confirmation question equivalent to:
+
+> Confirm final rebase of the issue branch onto the latest `origin/main`, followed by the required post-rebase tests and, if they pass, merge and closure of the GitHub Issue?
+
+**Stop at that point and wait for explicit confirmation.**
+
+A request to close the issue is **not itself authorization to perform the final rebase**. The separate confirmation response is required.
+
+Only after the user confirms may the finalization sequence begin:
+
+1. fetch the latest `origin/main`;
+2. verify the working tree and issue branch are clean/understood;
+3. rebase the issue branch onto the latest `origin/main`;
+4. if the rebase produces conflicts that require a semantic/architectural choice, stop and obtain guidance rather than silently choosing a potentially incorrect resolution;
+5. rerun all tests required by the issue **after the final rebase**;
+6. rerun the applicable regression gate and produce/inspect regression evidence when required;
+7. push the rebased branch with `--force-with-lease` if the branch was already published;
+8. verify the relevant GitHub Actions checks when they exist;
+9. merge through the normal GitHub review/merge process;
+10. verify that the merge is present on `main`;
+11. close the GitHub Issue with reason `completed` only when all acceptance criteria are satisfied;
+12. delete the merged issue branch locally and remotely when appropriate.
+
+The final closure flow is therefore:
+
+```text
+user requests issue closure
+        |
+        v
+inspect branch / tests / acceptance criteria
+        |
+        v
+ASK FOR CONFIRMATION TO REBASE
+        |
+        +---- no / not yet ---> stop; leave issue open
+        |
+        v explicit confirmation
+fetch latest main
+        |
+        v
+final rebase onto origin/main
+        |
+        v
+post-rebase tests + regression evidence
+        |
+        v
+GitHub checks / review
+        |
+        v
+merge to main
+        |
+        v
+verify merge
+        |
+        v
+close issue as completed
+        |
+        v
+delete issue branch
+```
+
+A failing test, regression mismatch, unresolved conflict, unmet acceptance criterion or failed mandatory GitHub check stops the closure flow. The issue remains open until corrected.
 
 ---
 
@@ -813,15 +918,25 @@ LATER / GOVERNANCE
 
 An issue is not complete merely because its code exists.
 
-Before closing an issue:
+When implementation appears complete, leave the issue open until the user explicitly requests closure and then completes the confirmation barrier in section 2.3.
+
+Before an issue may be closed:
 
 1. its implementation is committed on its dedicated branch;
-2. the branch has been rebased onto current `main`;
-3. all acceptance criteria from the GitHub Issue and relevant `TODO-*.md` specification are satisfied;
-4. required tests pass after the final rebase;
-5. regression evidence is produced when applicable;
-6. the change is merged to `main`;
-7. only then is the GitHub Issue closed as completed.
+2. the user has requested issue closure;
+3. the agent has inspected the issue branch/current `main` and asked for explicit confirmation to perform the final rebase;
+4. the user has explicitly confirmed that final rebase;
+5. the branch has then been rebased onto the latest current `origin/main`;
+6. all acceptance criteria from the GitHub Issue and relevant `TODO-*.md` specification are satisfied;
+7. required tests pass after the final rebase;
+8. regression evidence is produced and matches the accepted expectations when applicable;
+9. mandatory GitHub Actions checks pass when they exist;
+10. the change is merged to `main`;
+11. the merge is verified on `main`;
+12. only then is the GitHub Issue closed as `completed`;
+13. the merged issue branch is deleted.
+
+The coding agent must never interpret phrases such as `implementation is done`, `looks good`, or `tests pass` as authorization for final rebase/merge/closure. The closure request and the subsequent explicit rebase confirmation are separate control points.
 
 If implementation discovers a new independent body of work, create a new GitHub Issue instead of silently expanding the active issue indefinitely.
 
