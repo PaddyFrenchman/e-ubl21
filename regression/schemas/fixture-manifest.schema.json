@@ -115,6 +115,18 @@
         {"$ref": "#/$defs/importedProvenance"}
       ]
     },
+    "mutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "description": {"type": "string", "minLength": 1}
+      }
+    },
     "standards": {
       "type": "object",
       "additionalProperties": false,
@@ -151,6 +163,7 @@
         "sha256": {"$ref": "#/$defs/sha256"},
         "standards": {"$ref": "#/$defs/standards"},
         "provenance": {"$ref": "#/$defs/provenance"},
+        "mutation": {"$ref": "#/$defs/mutation"},
         "expectedFinal": {"enum": ["valid", "invalid"]},
         "expectedStages": {
           "type": "array",

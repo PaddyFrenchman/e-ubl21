@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,7 +62,7 @@ func TestCommandsAndInventoryErrors(t *testing.T) {
 	if err := runGenerate([]string{"--profile", "en16931"}); err == nil {
 		t.Fatal("generate accepted an unsupported profile")
 	}
-	if err := runGenerate([]string{"--set", "negative"}); err == nil {
+	if err := runGenerate([]string{"--set", "stress"}); err == nil {
 		t.Fatal("generate accepted an unsupported fixture set")
 	}
 	emptyTree := t.TempDir()
@@ -151,6 +152,31 @@ func TestInventoryGenerateAndValidateCommands(t *testing.T) {
 	}
 	if err := runValidate([]string{"--xsd", dir, "--samples", filepath.Join(dir, "empty")}); err == nil {
 		t.Fatal("expected missing samples error")
+	}
+}
+
+func TestGenerateUBLNegativeSet(t *testing.T) {
+	output := filepath.Join(t.TempDir(), "negative")
+	if err := run([]string{
+		"generate", "--profile", "ubl21", "--set", "negative",
+		"--xsd", filepath.Join("..", "XSD"), "--output", output,
+		"--generator-version", testGeneratorVersion,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	manifestBytes, err := os.ReadFile(filepath.Join(output, "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifestBytes); err != nil {
+		t.Fatalf("negative manifest rejected: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) != 6 {
+		t.Fatalf("negative manifest fixtures = %d, want 6", len(manifest.Fixtures))
 	}
 }
 

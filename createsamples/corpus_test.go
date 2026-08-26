@@ -91,7 +91,79 @@ func TestCompleteUBLPositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *te
 	}
 }
 
-func TestTrackedUBLPositiveCorpusMatchesManifest(t *testing.T) {
+func TestUBLNegativeCorpusIsDeterministicManifestDrivenAndPredictablyXSDInvalid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	xmllintPath, err := exec.LookPath("xmllint")
+	if err != nil {
+		t.Fatal("xmllint is required for the UBL negative-corpus acceptance test")
+	}
+	baseline := generatedCorpus{fixtures: []generatedFixture{{
+		entry:   fixtureManifestEntry{ID: "ubl21.invoice.negative-baseline", ExpectedFinal: "valid"},
+		content: []byte(minimalValidInvoice), schemaPath: filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd"),
+	}}}
+	if err := validateGeneratedCorpus(xmllintPath, baseline); err != nil {
+		t.Fatalf("negative mutation baseline is not XSD-valid: %v", err)
+	}
+
+	first, err := generateUBLNegativeCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := generateUBLNegativeCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := verifyCorpusDeterminism(first, second); err != nil {
+		t.Fatal(err)
+	}
+	if len(first.fixtures) != 6 {
+		t.Fatalf("negative fixtures = %d, want 6", len(first.fixtures))
+	}
+	if err := validateGeneratedCorpus(xmllintPath, first); err != nil {
+		t.Fatal(err)
+	}
+	wantMutations := []string{
+		"invalid-datatype", "invalid-enumeration", "invalid-namespace",
+		"malformed-xml", "missing-required-element", "wrong-element-order",
+	}
+	for index, fixture := range first.fixtures {
+		if fixture.entry.Mutation == nil || fixture.entry.Mutation.ID != wantMutations[index] {
+			t.Fatalf("fixture %d mutation = %+v, want %s", index, fixture.entry.Mutation, wantMutations[index])
+		}
+		if fixture.entry.Mutation.Description == "" {
+			t.Errorf("fixture %s does not record why it must fail", fixture.entry.ID)
+		}
+		if fixture.entry.ExpectedFinal != "invalid" || len(fixture.entry.ExpectedStages) != 1 ||
+			fixture.entry.ExpectedStages[0].Stage != "ubl21-xsd" ||
+			fixture.entry.ExpectedStages[0].Outcome != "standards-invalid" {
+			t.Errorf("fixture %s permits a later semantic stage: %+v", fixture.entry.ID, fixture.entry.ExpectedStages)
+		}
+	}
+}
+
+func TestNegativeCorpusValidationRequiresTheCataloguedFailure(t *testing.T) {
+	xmllintPath, err := exec.LookPath("xmllint")
+	if err != nil {
+		t.Fatal(err)
+	}
+	schemaPath := filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")
+	accepted := generatedCorpus{fixtures: []generatedFixture{{
+		entry:   fixtureManifestEntry{ID: "ubl21.invoice.accepted", ExpectedFinal: "invalid"},
+		content: []byte(minimalValidInvoice), schemaPath: schemaPath, expectedDiagnostic: "must fail",
+	}}}
+	if err := validateGeneratedCorpus(xmllintPath, accepted); err == nil || !strings.Contains(err.Error(), "unexpectedly accepted") {
+		t.Fatalf("accepted negative fixture error = %v", err)
+	}
+	wrongReason := generatedCorpus{fixtures: []generatedFixture{{
+		entry:   fixtureManifestEntry{ID: "ubl21.invoice.wrong-reason", ExpectedFinal: "invalid"},
+		content: []byte("<Invoice>"), schemaPath: schemaPath, expectedDiagnostic: "unrelated diagnostic",
+	}}}
+	if err := validateGeneratedCorpus(xmllintPath, wrongReason); err == nil || !strings.Contains(err.Error(), "without expected diagnostic") {
+		t.Fatalf("wrong negative diagnostic error = %v", err)
+	}
+}
+
+func TestTrackedUBLCorpusMatchesFreshGeneration(t *testing.T) {
 	root := "samples"
 	manifestBytes, err := os.ReadFile(filepath.Join(root, "manifest.json"))
 	if err != nil {
@@ -104,8 +176,8 @@ func TestTrackedUBLPositiveCorpusMatchesManifest(t *testing.T) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if len(manifest.Fixtures) != 65 {
-		t.Fatalf("tracked manifest fixtures = %d, want 65", len(manifest.Fixtures))
+	if len(manifest.Fixtures) != 71 {
+		t.Fatalf("tracked manifest fixtures = %d, want 71", len(manifest.Fixtures))
 	}
 	generatorVersion := manifest.Fixtures[0].Provenance.GeneratorVersion
 	for _, fixture := range manifest.Fixtures {
@@ -114,8 +186,8 @@ func TestTrackedUBLPositiveCorpusMatchesManifest(t *testing.T) {
 		}
 	}
 	files := snapshotGeneratedDirectory(t, root)
-	if len(files) != 67 {
-		t.Fatalf("tracked corpus files = %d, want 67 including manifest and ownership marker", len(files))
+	if len(files) != 73 {
+		t.Fatalf("tracked corpus files = %d, want 73 including manifest and ownership marker", len(files))
 	}
 	for _, fixture := range manifest.Fixtures {
 		content, ok := files[fixture.File]
@@ -138,7 +210,15 @@ func TestTrackedUBLPositiveCorpusMatchesManifest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fresh, err := generateUBLPositiveCorpus(report, index, xsdDir, 1, generatorVersion)
+	positive, err := generateUBLPositiveCorpus(report, index, xsdDir, 1, generatorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	negative, err := generateUBLNegativeCorpus(xsdDir, generatorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fresh, err := combineGeneratedCorpora(positive, negative)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -190,7 +270,7 @@ func snapshotGeneratedDirectory(t *testing.T, root string) map[string][]byte {
 }
 
 func TestCorpusDeterminismDetectsChangedBytes(t *testing.T) {
-	first := generatedPositiveCorpus{
+	first := generatedCorpus{
 		fixtures:     []generatedFixture{{entry: fixtureManifestEntry{ID: "ubl21.demo.minimal", File: "Demo/Demo-sample-01.xml"}, content: []byte("first")}},
 		manifestJSON: []byte("same"),
 	}
@@ -286,7 +366,7 @@ func TestGeneratedCorpusRejectsUnsafeOutputDirectories(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, output := range []string{"", ".", "..", string(filepath.Separator), filepath.Join("..", "createsamples"), filepath.Join("..", "XSD"), unowned, symlink} {
-		if err := writeGeneratedCorpus(output, generatedPositiveCorpus{}); err == nil {
+		if err := writeGeneratedCorpus(output, generatedCorpus{}); err == nil {
 			t.Errorf("writeGeneratedCorpus(%q) accepted unsafe output", output)
 		}
 	}
@@ -294,13 +374,13 @@ func TestGeneratedCorpusRejectsUnsafeOutputDirectories(t *testing.T) {
 
 func TestGeneratedCorpusReplacesOnlyMarkedOutput(t *testing.T) {
 	output := filepath.Join(t.TempDir(), "samples")
-	if err := writeGeneratedCorpus(output, generatedPositiveCorpus{manifestJSON: []byte("first")}); err != nil {
+	if err := writeGeneratedCorpus(output, generatedCorpus{manifestJSON: []byte("first")}); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(output, "stale.xml"), []byte("stale"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeGeneratedCorpus(output, generatedPositiveCorpus{manifestJSON: []byte("second")}); err != nil {
+	if err := writeGeneratedCorpus(output, generatedCorpus{manifestJSON: []byte("second")}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(output, "stale.xml")); !errors.Is(err, os.ErrNotExist) {

@@ -51,6 +51,37 @@ Replacement is staged in a temporary sibling directory and is permitted only
 when an existing output directory contains the valid marker; an arbitrary
 directory is never recursively cleared.
 
+## Deterministic UBL 2.1 targeted-negative corpus
+
+The canonical checked-in UBL corpus contains both sets and is regenerated with:
+
+```bash
+go run ./createsamples generate \
+  --profile ubl21 \
+  --set all \
+  --xsd XSD \
+  --output createsamples/samples
+```
+
+Use `--set negative` to generate only the six targeted Invoice mutations. Each
+starts from the same compact XSD-valid baseline and introduces one catalogued
+defect:
+
+| Mutation ID | Deliberate defect |
+| --- | --- |
+| `missing-required-element` | Removes the required top-level `cbc:ID`. |
+| `invalid-datatype` | Uses a non-boolean `cbc:CopyIndicator`. |
+| `invalid-namespace` | Places the required ID in an unrecognized namespace. |
+| `wrong-element-order` | Places `cbc:IssueDate` before `cbc:ID`. |
+| `invalid-enumeration` | Uses a value outside the imported XAdES qualifier enumeration. |
+| `malformed-xml` | Removes the closing `Invoice` tag. |
+
+Every negative fixture records the mutation ID and exact reason in its manifest
+entry, expects only `ubl21-xsd = standards-invalid`, and is independently
+required to fail with the diagnostic associated with that mutation. Tests also
+run the tracked fixtures through the current validation pipeline and prove that
+the EN 16931 validator is never invoked after the structural failure.
+
 ## Stable names
 
 Fixture IDs are lowercase dotted identifiers. They identify the semantic test
@@ -101,6 +132,9 @@ Every fixture records one of two provenance forms:
 `sha256` on the fixture itself always hashes the exact XML file named by
 `file`. `sourceSha256` records the imported upstream asset and can differ when
 an archive contains the fixture or when a documented extraction is applied.
+Generated targeted-negative fixtures additionally carry a `mutation` object
+with a stable lowercase-hyphenated ID and a human-reviewable description of the
+single deliberate defect.
 
 ## Semantic normalization
 

@@ -49,9 +49,9 @@ func runGenerate(args []string) error {
 	xsdDir := flags.String("xsd", filepath.Join("XSD"), "path to the UBL XSD tree")
 	output := flags.String("output", filepath.Join("createsamples", "samples"), "output directory for generated samples")
 	profile := flags.String("profile", "ubl21", "validation profile to generate (currently ubl21)")
-	set := flags.String("set", "positive", "fixture set to generate (currently positive)")
+	set := flags.String("set", "positive", "fixture set to generate (positive, negative, or all)")
 	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: latest generator implementation commit)")
-	count := flags.Int("count", 1, "number of sample files to generate per main document schema")
+	count := flags.Int("count", 1, "number of positive sample files to generate per main document schema")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -59,10 +59,10 @@ func runGenerate(args []string) error {
 		return errors.New("count must be greater than zero")
 	}
 	if *profile != "ubl21" {
-		return fmt.Errorf("unsupported generation profile %q; issue #33 supports ubl21", *profile)
+		return fmt.Errorf("unsupported generation profile %q; supported profile is ubl21", *profile)
 	}
-	if *set != "positive" {
-		return fmt.Errorf("unsupported generation set %q; issue #33 supports positive", *set)
+	if *set != "positive" && *set != "negative" && *set != "all" {
+		return fmt.Errorf("unsupported generation set %q; supported sets are positive, negative, and all", *set)
 	}
 	if err := validateCorpusOutputDirectory(*output); err != nil {
 		return err
@@ -83,11 +83,29 @@ func runGenerate(args []string) error {
 	if err != nil {
 		return err
 	}
-	first, err := generateUBLPositiveCorpus(report, index, *xsdDir, *count, version)
+	generate := func() (generatedCorpus, error) {
+		switch *set {
+		case "positive":
+			return generateUBLPositiveCorpus(report, index, *xsdDir, *count, version)
+		case "negative":
+			return generateUBLNegativeCorpus(*xsdDir, version)
+		default:
+			positive, err := generateUBLPositiveCorpus(report, index, *xsdDir, *count, version)
+			if err != nil {
+				return generatedCorpus{}, err
+			}
+			negative, err := generateUBLNegativeCorpus(*xsdDir, version)
+			if err != nil {
+				return generatedCorpus{}, err
+			}
+			return combineGeneratedCorpora(positive, negative)
+		}
+	}
+	first, err := generate()
 	if err != nil {
 		return err
 	}
-	second, err := generateUBLPositiveCorpus(report, index, *xsdDir, *count, version)
+	second, err := generate()
 	if err != nil {
 		return err
 	}

@@ -79,6 +79,14 @@ func TestFixtureManifestContractRejectsInvalidSemantics(t *testing.T) {
 			},
 		},
 		{
+			name: "unstable mutation id",
+			mutate: func(document map[string]any) {
+				firstFixture(document)["mutation"] = map[string]any{
+					"id": "Missing Required ID", "description": "remove ID",
+				}
+			},
+		},
+		{
 			name: "import without immutable checksum",
 			mutate: func(document map[string]any) {
 				fixtures := document["fixtures"].([]any)

@@ -44,6 +44,7 @@ type fixtureManifestEntry struct {
 	SHA256         string                 `json:"sha256"`
 	Standards      fixtureStandards       `json:"standards"`
 	Provenance     generatedProvenance    `json:"provenance"`
+	Mutation       *fixtureMutation       `json:"mutation,omitempty"`
 	ExpectedFinal  string                 `json:"expectedFinal"`
 	ExpectedStages []fixtureExpectedStage `json:"expectedStages"`
 	Tags           []string               `json:"tags"`
@@ -61,6 +62,11 @@ type generatedProvenance struct {
 	GeneratorVersion string `json:"generatorVersion"`
 }
 
+type fixtureMutation struct {
+	ID          string `json:"id"`
+	Description string `json:"description"`
+}
+
 type fixtureExpectedStage struct {
 	Stage   string   `json:"stage"`
 	Outcome string   `json:"outcome"`
@@ -68,12 +74,13 @@ type fixtureExpectedStage struct {
 }
 
 type generatedFixture struct {
-	entry      fixtureManifestEntry
-	content    []byte
-	schemaPath string
+	entry              fixtureManifestEntry
+	content            []byte
+	schemaPath         string
+	expectedDiagnostic string
 }
 
-type generatedPositiveCorpus struct {
+type generatedCorpus struct {
 	fixtures     []generatedFixture
 	manifestJSON []byte
 }
@@ -119,7 +126,7 @@ func resolveGeneratorVersionInRepo(root string) (string, error) {
 	return version, nil
 }
 
-func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir string, count int, generatorVersion string) (generatedPositiveCorpus, error) {
+func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir string, count int, generatorVersion string) (generatedCorpus, error) {
 	fixtures := make([]generatedFixture, 0, len(report.MainFiles)*count)
 	for _, schema := range report.MainFiles {
 		root := schema.RootElement
@@ -129,7 +136,7 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 		for sample := 1; sample <= count; sample++ {
 			content, err := generateCompleteSample(index, root, xsdDir, schema.File)
 			if err != nil {
-				return generatedPositiveCorpus{}, fmt.Errorf("generate %s sample %d: %w", root, sample, err)
+				return generatedCorpus{}, fmt.Errorf("generate %s sample %d: %w", root, sample, err)
 			}
 			fileName := fmt.Sprintf("%s-sample-%02d.xml", root, sample)
 			relativePath := filepath.ToSlash(filepath.Join(root, fileName))
@@ -151,6 +158,10 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 			})
 		}
 	}
+	return buildGeneratedCorpus(fixtures)
+}
+
+func buildGeneratedCorpus(fixtures []generatedFixture) (generatedCorpus, error) {
 	sort.Slice(fixtures, func(i, j int) bool { return fixtures[i].entry.ID < fixtures[j].entry.ID })
 	entries := make([]fixtureManifestEntry, len(fixtures))
 	for index := range fixtures {
@@ -158,16 +169,24 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 	}
 	manifestJSON, err := json.MarshalIndent(fixtureManifest{SchemaVersion: 1, Fixtures: entries}, "", "  ")
 	if err != nil {
-		return generatedPositiveCorpus{}, fmt.Errorf("marshal fixture manifest: %w", err)
+		return generatedCorpus{}, fmt.Errorf("marshal fixture manifest: %w", err)
 	}
 	manifestJSON = append(manifestJSON, '\n')
 	if err := regression.ValidateFixtureManifest(manifestJSON); err != nil {
-		return generatedPositiveCorpus{}, fmt.Errorf("validate generated fixture manifest: %w", err)
+		return generatedCorpus{}, fmt.Errorf("validate generated fixture manifest: %w", err)
 	}
-	return generatedPositiveCorpus{fixtures: fixtures, manifestJSON: manifestJSON}, nil
+	return generatedCorpus{fixtures: fixtures, manifestJSON: manifestJSON}, nil
 }
 
-func verifyCorpusDeterminism(first, second generatedPositiveCorpus) error {
+func combineGeneratedCorpora(corpora ...generatedCorpus) (generatedCorpus, error) {
+	var fixtures []generatedFixture
+	for _, corpus := range corpora {
+		fixtures = append(fixtures, corpus.fixtures...)
+	}
+	return buildGeneratedCorpus(fixtures)
+}
+
+func verifyCorpusDeterminism(first, second generatedCorpus) error {
 	if !bytes.Equal(first.manifestJSON, second.manifestJSON) {
 		return fmt.Errorf("generated manifest differs between consecutive clean generations")
 	}
@@ -182,19 +201,33 @@ func verifyCorpusDeterminism(first, second generatedPositiveCorpus) error {
 	return nil
 }
 
-func validateGeneratedCorpus(xmllintPath string, corpus generatedPositiveCorpus) error {
+func validateGeneratedCorpus(xmllintPath string, corpus generatedCorpus) error {
 	for _, fixture := range corpus.fixtures {
 		command := exec.Command(xmllintPath, "--nonet", "--noout", "--schema", fixture.schemaPath, "-")
 		command.Stdin = bytes.NewReader(fixture.content)
 		output, err := command.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("xmllint validate %s against %s: %w: %s", fixture.entry.ID, fixture.schemaPath, err, strings.TrimSpace(string(output)))
+		diagnostics := strings.TrimSpace(string(output))
+		if fixture.entry.ExpectedFinal == "valid" {
+			if err != nil {
+				return fmt.Errorf("xmllint validate %s against %s: %w: %s", fixture.entry.ID, fixture.schemaPath, err, diagnostics)
+			}
+			continue
+		}
+		if err == nil {
+			return fmt.Errorf("xmllint unexpectedly accepted negative fixture %s against %s", fixture.entry.ID, fixture.schemaPath)
+		}
+		var exitError *exec.ExitError
+		if !errors.As(err, &exitError) {
+			return fmt.Errorf("run xmllint for negative fixture %s: %w", fixture.entry.ID, err)
+		}
+		if fixture.expectedDiagnostic == "" || !strings.Contains(diagnostics, fixture.expectedDiagnostic) {
+			return fmt.Errorf("negative fixture %s failed without expected diagnostic %q: %s", fixture.entry.ID, fixture.expectedDiagnostic, diagnostics)
 		}
 	}
 	return nil
 }
 
-func writeGeneratedCorpus(outputDir string, corpus generatedPositiveCorpus) error {
+func writeGeneratedCorpus(outputDir string, corpus generatedCorpus) error {
 	if err := validateCorpusOutputDirectory(outputDir); err != nil {
 		return err
 	}
@@ -259,7 +292,7 @@ func writeGeneratedCorpus(outputDir string, corpus generatedPositiveCorpus) erro
 	return nil
 }
 
-func writeCorpusFiles(outputDir string, corpus generatedPositiveCorpus) error {
+func writeCorpusFiles(outputDir string, corpus generatedCorpus) error {
 	if err := os.WriteFile(filepath.Join(outputDir, corpusOwnershipMarkerName), []byte(corpusOwnershipMarkerContent), 0o644); err != nil {
 		return fmt.Errorf("write generated corpus ownership marker: %w", err)
 	}
