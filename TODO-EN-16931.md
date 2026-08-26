@@ -598,6 +598,7 @@ positive CreditNote fixture using the same exact-arithmetic model as Invoice.
 The mandatory `make test-en16931` release/CI target preflights Java and
 `xmllint`, downloads and verifies the checksum-pinned Saxon/XML Resolver JARs
 when absent, verifies the pinned stylesheet/configuration, and runs this corpus
+along with the 22-case targeted-negative corpus and XSD short-circuit control,
 with dependency skipping disabled. Ordinary developer `go test ./...` retains
 its convenient optional-runtime skip behavior.
 

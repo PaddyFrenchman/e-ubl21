@@ -32,6 +32,8 @@ fi
 echo "Verifying pinned EN 16931, Saxon, XML Resolver, and Saxon configuration assets."
 go run ./tools/verify-validation-assets -saxon-dir "$SAXON_DIR"
 
-echo "Running the mandatory ten-case EN 16931 positive corpus."
+echo "Running the mandatory EN 16931 positive, targeted-negative, and XSD short-circuit corpora."
 EUBL21_REQUIRE_EN16931_TEST_RUNTIME=1 \
-    go test ./server -run '^TestPositiveEN16931FixturesPassCompleteValidationPipeline$' -count=1 -v
+    go test ./server \
+        -run '^(TestPositiveEN16931FixturesPassCompleteValidationPipeline|TestTargetedEN16931NegativeCorpus|TestXSDInvalidControlSkipsEN16931)$' \
+        -count=1 -v

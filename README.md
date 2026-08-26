@@ -53,5 +53,6 @@ make test-en16931
 This target requires Java and `xmllint`, downloads Saxon 12.7 and XML Resolver
 6.0.17 when absent, verifies their pinned SHA-256 digests together with the
 checked-in EN 16931 1.3.16 stylesheet and restricted Saxon configuration, and
-runs all ten positive Invoice/CreditNote fixtures with missing dependencies
-treated as test failures rather than skips.
+runs all ten positive Invoice/CreditNote fixtures, all 22 rule-targeted
+semantic-negative fixtures, and the XSD-invalid short-circuit control with
+missing dependencies treated as test failures rather than skips.
