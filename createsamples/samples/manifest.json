@@ -1,0 +1,1825 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "ubl21.applicationresponse.minimal",
+      "documentType": "ApplicationResponse",
+      "profile": "ubl21",
+      "file": "ApplicationResponse/ApplicationResponse-sample-01.xml",
+      "sha256": "dc7564947bb67daf97a72470f21e93d3498b775797679d0614baae391c895717",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.attacheddocument.minimal",
+      "documentType": "AttachedDocument",
+      "profile": "ubl21",
+      "file": "AttachedDocument/AttachedDocument-sample-01.xml",
+      "sha256": "54f7da65b87a9225dcef1e87912ab9029a6a64004323faf0d6a822c42d4dbc06",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.awardednotification.minimal",
+      "documentType": "AwardedNotification",
+      "profile": "ubl21",
+      "file": "AwardedNotification/AwardedNotification-sample-01.xml",
+      "sha256": "05543e58e67fe4744fbbb02a79a4d71620f8c8ff1be68c8b3b8e1440a787b8e1",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.billoflading.minimal",
+      "documentType": "BillOfLading",
+      "profile": "ubl21",
+      "file": "BillOfLading/BillOfLading-sample-01.xml",
+      "sha256": "bf3e3cd1418e468fa87080eb318b4fdc0debac6d69907ab68766efce28656391",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.callfortenders.minimal",
+      "documentType": "CallForTenders",
+      "profile": "ubl21",
+      "file": "CallForTenders/CallForTenders-sample-01.xml",
+      "sha256": "da8a449e8076a69da2e66c1f688aab97565919216f8640de883bc99af881f344",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.catalogue.minimal",
+      "documentType": "Catalogue",
+      "profile": "ubl21",
+      "file": "Catalogue/Catalogue-sample-01.xml",
+      "sha256": "89933c0d6828d8a01b68bc5d003de734f73600d365f90ac427bb69475b545b2c",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.cataloguedeletion.minimal",
+      "documentType": "CatalogueDeletion",
+      "profile": "ubl21",
+      "file": "CatalogueDeletion/CatalogueDeletion-sample-01.xml",
+      "sha256": "d07d50562997fdb1d8b2780d7759709eb005420f921d18ca2e4b9fd4e84c4542",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.catalogueitemspecificationupdate.minimal",
+      "documentType": "CatalogueItemSpecificationUpdate",
+      "profile": "ubl21",
+      "file": "CatalogueItemSpecificationUpdate/CatalogueItemSpecificationUpdate-sample-01.xml",
+      "sha256": "980a83c347f2bea1c249439d41e646ae7c8aafc6a88e52f021d81a6d3c23cd9a",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.cataloguepricingupdate.minimal",
+      "documentType": "CataloguePricingUpdate",
+      "profile": "ubl21",
+      "file": "CataloguePricingUpdate/CataloguePricingUpdate-sample-01.xml",
+      "sha256": "48c14bf07086ba46011df981e08185383d80a98f3ddd9d9e8ce2e1b6c331f44e",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.cataloguerequest.minimal",
+      "documentType": "CatalogueRequest",
+      "profile": "ubl21",
+      "file": "CatalogueRequest/CatalogueRequest-sample-01.xml",
+      "sha256": "ce5eab5f4647680c6764096b691b0b7480411a5365760191e2876eb1060bfa36",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.certificateoforigin.minimal",
+      "documentType": "CertificateOfOrigin",
+      "profile": "ubl21",
+      "file": "CertificateOfOrigin/CertificateOfOrigin-sample-01.xml",
+      "sha256": "1dcc986987cf58d907cf7c31dbefce171139f8fb721cdb887826e6111022681f",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.contractawardnotice.minimal",
+      "documentType": "ContractAwardNotice",
+      "profile": "ubl21",
+      "file": "ContractAwardNotice/ContractAwardNotice-sample-01.xml",
+      "sha256": "0f02396d2377df70deb54a9f1aa9e59419a531447e5076265e85df0be6317ade",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.contractnotice.minimal",
+      "documentType": "ContractNotice",
+      "profile": "ubl21",
+      "file": "ContractNotice/ContractNotice-sample-01.xml",
+      "sha256": "599113bb8fbeab33a80f7efeecc277158b9b8459bd085dff8a6bfd05cef6ac3b",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.creditnote.minimal",
+      "documentType": "CreditNote",
+      "profile": "ubl21",
+      "file": "CreditNote/CreditNote-sample-01.xml",
+      "sha256": "91691c9d061cbe1acac37b2e031fc081ecb92a9611db56a320af375b982e986c",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.debitnote.minimal",
+      "documentType": "DebitNote",
+      "profile": "ubl21",
+      "file": "DebitNote/DebitNote-sample-01.xml",
+      "sha256": "aec5de1971e081834231dc7cf3747db10aa46675b311c25713a5664c832cf9b2",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.despatchadvice.minimal",
+      "documentType": "DespatchAdvice",
+      "profile": "ubl21",
+      "file": "DespatchAdvice/DespatchAdvice-sample-01.xml",
+      "sha256": "acdc4def94ff2f093fe64fd2d35b5fb4aff6f12bfbdcb6adee5a510921eaca38",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.documentstatus.minimal",
+      "documentType": "DocumentStatus",
+      "profile": "ubl21",
+      "file": "DocumentStatus/DocumentStatus-sample-01.xml",
+      "sha256": "8d7e892416cc22e72aea69a8c2726e3dfd6215e772745bf00d55696b2118c792",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.documentstatusrequest.minimal",
+      "documentType": "DocumentStatusRequest",
+      "profile": "ubl21",
+      "file": "DocumentStatusRequest/DocumentStatusRequest-sample-01.xml",
+      "sha256": "cf7ff5926d7a27731451488a5dc298fd44583fe2b5d6540fde59a938716de29c",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.exceptioncriteria.minimal",
+      "documentType": "ExceptionCriteria",
+      "profile": "ubl21",
+      "file": "ExceptionCriteria/ExceptionCriteria-sample-01.xml",
+      "sha256": "3bb75c6ceeb7d594dbc3f4500b4b6650b1a3b0be0095da1205e459e420052b1d",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.exceptionnotification.minimal",
+      "documentType": "ExceptionNotification",
+      "profile": "ubl21",
+      "file": "ExceptionNotification/ExceptionNotification-sample-01.xml",
+      "sha256": "c7178617c1b6071025be8a55dae7efd127680b589baacb7455fccb281298170f",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.forecast.minimal",
+      "documentType": "Forecast",
+      "profile": "ubl21",
+      "file": "Forecast/Forecast-sample-01.xml",
+      "sha256": "9708569f7296d56d1169caa72dfef7d0ee209ec1c445e6d76c765d78ce62d9d3",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.forecastrevision.minimal",
+      "documentType": "ForecastRevision",
+      "profile": "ubl21",
+      "file": "ForecastRevision/ForecastRevision-sample-01.xml",
+      "sha256": "02034bae8cf7589ebfc7280b5e80ee7d0709fceb78daeea09aa4fc224ff1af67",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.forwardinginstructions.minimal",
+      "documentType": "ForwardingInstructions",
+      "profile": "ubl21",
+      "file": "ForwardingInstructions/ForwardingInstructions-sample-01.xml",
+      "sha256": "456bb26ae823b1bb200c1acc9be0ca1c10732d2088b7d28b8209ae8f0efbca72",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.freightinvoice.minimal",
+      "documentType": "FreightInvoice",
+      "profile": "ubl21",
+      "file": "FreightInvoice/FreightInvoice-sample-01.xml",
+      "sha256": "e9a4f15e01adb49d212b42c01af597da340b918e25fdd27a3b4313d5c7612d36",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.fulfilmentcancellation.minimal",
+      "documentType": "FulfilmentCancellation",
+      "profile": "ubl21",
+      "file": "FulfilmentCancellation/FulfilmentCancellation-sample-01.xml",
+      "sha256": "8c8728a169f71ce3821a1f2095763cb6e5c8c7d68fdccb15b7c8d4b1cc7e1d9a",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.goodsitemitinerary.minimal",
+      "documentType": "GoodsItemItinerary",
+      "profile": "ubl21",
+      "file": "GoodsItemItinerary/GoodsItemItinerary-sample-01.xml",
+      "sha256": "8337171c57cc0225a072478adc0f43d819dff3e078b72ef7d7c1427de8bf3a86",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.guaranteecertificate.minimal",
+      "documentType": "GuaranteeCertificate",
+      "profile": "ubl21",
+      "file": "GuaranteeCertificate/GuaranteeCertificate-sample-01.xml",
+      "sha256": "bd38e5d128cb69906841c7e9855d8bbad72ab2dcdc699cc726624e2c6dcbef9e",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.instructionforreturns.minimal",
+      "documentType": "InstructionForReturns",
+      "profile": "ubl21",
+      "file": "InstructionForReturns/InstructionForReturns-sample-01.xml",
+      "sha256": "cd8cca15b0560565d30d9fcef3b8d581971be51130dd1e8570ea83b2f760d6d5",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.inventoryreport.minimal",
+      "documentType": "InventoryReport",
+      "profile": "ubl21",
+      "file": "InventoryReport/InventoryReport-sample-01.xml",
+      "sha256": "0d2674b2641bffc4e3434ada08db90ed1f86937b824ea19fb797e46bec646b02",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.invoice.minimal",
+      "documentType": "Invoice",
+      "profile": "ubl21",
+      "file": "Invoice/Invoice-sample-01.xml",
+      "sha256": "8368973c33bce89b52ee18e2c80816b3fb5e2f1e35990d6a715870f53d2c14bf",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.iteminformationrequest.minimal",
+      "documentType": "ItemInformationRequest",
+      "profile": "ubl21",
+      "file": "ItemInformationRequest/ItemInformationRequest-sample-01.xml",
+      "sha256": "05144953db33e6b9fd2ebef26907cd621df6983c48acb1d0a13636ccdc2f553d",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.order.minimal",
+      "documentType": "Order",
+      "profile": "ubl21",
+      "file": "Order/Order-sample-01.xml",
+      "sha256": "7f3b36a19e7ab0ce7931a911945b5cf0ad1423064cf5cb219870971e874abfc9",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.ordercancellation.minimal",
+      "documentType": "OrderCancellation",
+      "profile": "ubl21",
+      "file": "OrderCancellation/OrderCancellation-sample-01.xml",
+      "sha256": "cd03aea2656e0318a0a43a75ee723a635bb7d3ce6ce118563d718c26f63605f2",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.orderchange.minimal",
+      "documentType": "OrderChange",
+      "profile": "ubl21",
+      "file": "OrderChange/OrderChange-sample-01.xml",
+      "sha256": "c7fa53b0eb7f2b5f80fc7778b0a9b7b0fa046a568fc95260782e669f68d3c292",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.orderresponse.minimal",
+      "documentType": "OrderResponse",
+      "profile": "ubl21",
+      "file": "OrderResponse/OrderResponse-sample-01.xml",
+      "sha256": "27c1a7a36d6242441fb951080e873a748f07bdcacbd60a7688601b86fbed6e2e",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.orderresponsesimple.minimal",
+      "documentType": "OrderResponseSimple",
+      "profile": "ubl21",
+      "file": "OrderResponseSimple/OrderResponseSimple-sample-01.xml",
+      "sha256": "7a7718ab0cb26bcb2c96163298d53e7c1aa55961d860c1d40c4bb80967628e16",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.packinglist.minimal",
+      "documentType": "PackingList",
+      "profile": "ubl21",
+      "file": "PackingList/PackingList-sample-01.xml",
+      "sha256": "d38bef342be55ba822604568412b9a877d60217b66c1770180c78f52f1d386bf",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.priorinformationnotice.minimal",
+      "documentType": "PriorInformationNotice",
+      "profile": "ubl21",
+      "file": "PriorInformationNotice/PriorInformationNotice-sample-01.xml",
+      "sha256": "4353ac153a1200b410762c3bbe7d8a273a1bbfa0d3315845d8cf2cca466ea8ba",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.productactivity.minimal",
+      "documentType": "ProductActivity",
+      "profile": "ubl21",
+      "file": "ProductActivity/ProductActivity-sample-01.xml",
+      "sha256": "c0690b1d3d254f60cd7406f2d451f3896e5d6e2b4f95177b22e78b171d75c59d",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.quotation.minimal",
+      "documentType": "Quotation",
+      "profile": "ubl21",
+      "file": "Quotation/Quotation-sample-01.xml",
+      "sha256": "5c7408e531ae8c059b47b0cf8439abdab975a102827111855d6e675d7fa8e9ad",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.receiptadvice.minimal",
+      "documentType": "ReceiptAdvice",
+      "profile": "ubl21",
+      "file": "ReceiptAdvice/ReceiptAdvice-sample-01.xml",
+      "sha256": "754bd8c4b39760d7bcba06c384d4d3f2535a05bfcba534b31f7d1fa930156fd5",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.reminder.minimal",
+      "documentType": "Reminder",
+      "profile": "ubl21",
+      "file": "Reminder/Reminder-sample-01.xml",
+      "sha256": "662475a8d12d3c45b3a8818bd49840bef4e133ccfd6a5508aa35d6f829ee4662",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.remittanceadvice.minimal",
+      "documentType": "RemittanceAdvice",
+      "profile": "ubl21",
+      "file": "RemittanceAdvice/RemittanceAdvice-sample-01.xml",
+      "sha256": "84bbb7d73a4fd2027ebdace3b5b4406b46a7c95228faa7c8cdb1ba52540e58a3",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.requestforquotation.minimal",
+      "documentType": "RequestForQuotation",
+      "profile": "ubl21",
+      "file": "RequestForQuotation/RequestForQuotation-sample-01.xml",
+      "sha256": "370c980944e80ccc92ef7d813d56fcfab7e2975350dab90814d5c728df0b1d19",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.retailevent.minimal",
+      "documentType": "RetailEvent",
+      "profile": "ubl21",
+      "file": "RetailEvent/RetailEvent-sample-01.xml",
+      "sha256": "a8610ddeaf0268126a95b79c915d0c3beb84e4c51280008de58eba173729dd7f",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.selfbilledcreditnote.minimal",
+      "documentType": "SelfBilledCreditNote",
+      "profile": "ubl21",
+      "file": "SelfBilledCreditNote/SelfBilledCreditNote-sample-01.xml",
+      "sha256": "501da6262b25e1f995109cd3175bf23bfbc48dc3945a5959d8af93414b38e63a",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.selfbilledinvoice.minimal",
+      "documentType": "SelfBilledInvoice",
+      "profile": "ubl21",
+      "file": "SelfBilledInvoice/SelfBilledInvoice-sample-01.xml",
+      "sha256": "8763cafe89edbc91cba2515b2d7fc9dcf6f24b2abe24b9dcef9978863e468d14",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.statement.minimal",
+      "documentType": "Statement",
+      "profile": "ubl21",
+      "file": "Statement/Statement-sample-01.xml",
+      "sha256": "ff0d6281e2016682e80d51535a48fea3e8f4053ec240b07617ea04e0c52ea546",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.stockavailabilityreport.minimal",
+      "documentType": "StockAvailabilityReport",
+      "profile": "ubl21",
+      "file": "StockAvailabilityReport/StockAvailabilityReport-sample-01.xml",
+      "sha256": "345272f250324444276404b54ba6be46946788ffc3ea3d97dd7e01a1a0799e1c",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.tender.minimal",
+      "documentType": "Tender",
+      "profile": "ubl21",
+      "file": "Tender/Tender-sample-01.xml",
+      "sha256": "cf080daa8356b977804dd55e56514b45b7d6439fbc2a1b6b412bc829126df0e6",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.tendererqualification.minimal",
+      "documentType": "TendererQualification",
+      "profile": "ubl21",
+      "file": "TendererQualification/TendererQualification-sample-01.xml",
+      "sha256": "ce181ba4e21695ac7751c176c4c7e547ec621971f7ac981f8ab50372dd2ba5e5",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.tendererqualificationresponse.minimal",
+      "documentType": "TendererQualificationResponse",
+      "profile": "ubl21",
+      "file": "TendererQualificationResponse/TendererQualificationResponse-sample-01.xml",
+      "sha256": "2c6fe4551ebb46843938e0aa8b46d35a1ff31d9a55509980c9cd2b20ef11b8a1",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.tenderreceipt.minimal",
+      "documentType": "TenderReceipt",
+      "profile": "ubl21",
+      "file": "TenderReceipt/TenderReceipt-sample-01.xml",
+      "sha256": "b33a6540bc9983a51f23caa7c8eb4a9cd454d436b965c48ec28bda5571f5db38",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.tradeitemlocationprofile.minimal",
+      "documentType": "TradeItemLocationProfile",
+      "profile": "ubl21",
+      "file": "TradeItemLocationProfile/TradeItemLocationProfile-sample-01.xml",
+      "sha256": "b45456ac21b627f07bd63310ea7e8a2aac823c41337ad221def6eee164bf8e5d",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.transportationstatus.minimal",
+      "documentType": "TransportationStatus",
+      "profile": "ubl21",
+      "file": "TransportationStatus/TransportationStatus-sample-01.xml",
+      "sha256": "2cddc13dfd9591a7c45a58edc6fc669d76f5d023c64d3f50a95be9635ef7edad",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.transportationstatusrequest.minimal",
+      "documentType": "TransportationStatusRequest",
+      "profile": "ubl21",
+      "file": "TransportationStatusRequest/TransportationStatusRequest-sample-01.xml",
+      "sha256": "b27b7dab709d0bc0f034a2792130df4114328de6420724bd4aeb68f4c62bafb2",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.transportexecutionplan.minimal",
+      "documentType": "TransportExecutionPlan",
+      "profile": "ubl21",
+      "file": "TransportExecutionPlan/TransportExecutionPlan-sample-01.xml",
+      "sha256": "383f73bd6b29d1d8789ce11729c40a3b101a06539973c9bd55e51a565e892db0",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.transportexecutionplanrequest.minimal",
+      "documentType": "TransportExecutionPlanRequest",
+      "profile": "ubl21",
+      "file": "TransportExecutionPlanRequest/TransportExecutionPlanRequest-sample-01.xml",
+      "sha256": "010ef4723902f252c847cfae881a4e655aa6f10da9799cd84296e2f599f70e25",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.transportprogressstatus.minimal",
+      "documentType": "TransportProgressStatus",
+      "profile": "ubl21",
+      "file": "TransportProgressStatus/TransportProgressStatus-sample-01.xml",
+      "sha256": "7ac01cd1f49d0f72660f4620aff115125a83192a177a4776dfb2e5f40cf8fe82",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.transportprogressstatusrequest.minimal",
+      "documentType": "TransportProgressStatusRequest",
+      "profile": "ubl21",
+      "file": "TransportProgressStatusRequest/TransportProgressStatusRequest-sample-01.xml",
+      "sha256": "c2a197652f82f1a981a6d9884f328f79f9401de92ab7196b6823430b96e866b4",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.transportservicedescription.minimal",
+      "documentType": "TransportServiceDescription",
+      "profile": "ubl21",
+      "file": "TransportServiceDescription/TransportServiceDescription-sample-01.xml",
+      "sha256": "35f632a120092342da80091eef3a7905234aaa6b5b16e16379a7e17c3b31d31f",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.transportservicedescriptionrequest.minimal",
+      "documentType": "TransportServiceDescriptionRequest",
+      "profile": "ubl21",
+      "file": "TransportServiceDescriptionRequest/TransportServiceDescriptionRequest-sample-01.xml",
+      "sha256": "0a2c96dfc5263e393a9dc81ca278b4a7257325dd5c9631dc8d683051ce9e6fa6",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.unawardednotification.minimal",
+      "documentType": "UnawardedNotification",
+      "profile": "ubl21",
+      "file": "UnawardedNotification/UnawardedNotification-sample-01.xml",
+      "sha256": "230162d9a18f3974d19faa66d57f688a027c52ea800d6bd0186aa2620966ca38",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.utilitystatement.minimal",
+      "documentType": "UtilityStatement",
+      "profile": "ubl21",
+      "file": "UtilityStatement/UtilityStatement-sample-01.xml",
+      "sha256": "838e7c6ff046a40f06eba7586c5075cf21a75098f51592c4494587118db659ec",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    },
+    {
+      "id": "ubl21.waybill.minimal",
+      "documentType": "Waybill",
+      "profile": "ubl21",
+      "file": "Waybill/Waybill-sample-01.xml",
+      "sha256": "b34f686e69d44d835328e5986d454b460bfb00323f1559585c6e76cde480bede",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": null,
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples",
+        "generatorVersion": "git:c5c45888f96284d5410bfce1b32fc38848d01f35"
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "positive",
+        "ubl21"
+      ]
+    }
+  ]
+}

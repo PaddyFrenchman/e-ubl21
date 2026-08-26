@@ -90,6 +90,39 @@ func TestCompleteUBLPositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *te
 	}
 }
 
+func TestTrackedUBLPositiveCorpusMatchesManifest(t *testing.T) {
+	root := "samples"
+	manifestBytes, err := os.ReadFile(filepath.Join(root, "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifestBytes); err != nil {
+		t.Fatalf("tracked manifest rejected: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) != 65 {
+		t.Fatalf("tracked manifest fixtures = %d, want 65", len(manifest.Fixtures))
+	}
+	files := snapshotGeneratedDirectory(t, root)
+	if len(files) != 66 {
+		t.Fatalf("tracked corpus files = %d, want 66 including manifest", len(files))
+	}
+	for _, fixture := range manifest.Fixtures {
+		content, ok := files[fixture.File]
+		if !ok {
+			t.Errorf("manifest fixture %s references missing file %s", fixture.ID, fixture.File)
+			continue
+		}
+		actual := fmt.Sprintf("%x", sha256.Sum256(content))
+		if actual != fixture.SHA256 {
+			t.Errorf("tracked fixture %s SHA-256 = %s, manifest has %s", fixture.ID, actual, fixture.SHA256)
+		}
+	}
+}
+
 func snapshotGeneratedDirectory(t *testing.T, root string) map[string][]byte {
 	t.Helper()
 	files := map[string][]byte{}
