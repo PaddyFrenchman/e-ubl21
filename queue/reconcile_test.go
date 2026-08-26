@@ -161,3 +161,53 @@ func TestReconcileUploadsPreservesPublishFailureAndHandlesAmbiguousAck(t *testin
 		t.Fatalf("ambiguous publish produced %d messages, want 1", info.State.Msgs)
 	}
 }
+
+func TestReconcileUploadsSkipsYoungReplayAndMalformedRecords(t *testing.T) {
+	client := newTestClient(t)
+	ctx := context.Background()
+	now := time.Now().UTC()
+	statuses := []queue.UploadRecord{
+		{DocumentType: "Invoice", Status: queue.StatusAccepting, ReceivedAt: now.Format(time.RFC3339)},
+		{DocumentType: "Invoice", Status: queue.StatusAccepting, ReceivedAt: "not-a-time"},
+		{DocumentType: "Invoice", Status: queue.StatusEnqueuePending, ReceivedAt: now.Add(-time.Hour).Format(time.RFC3339), ReplayMessageID: "replay"},
+		{DocumentType: "Invoice", Status: queue.StatusPending, ReceivedAt: now.Add(-time.Hour).Format(time.RFC3339)},
+	}
+	for i := range statuses {
+		statuses[i].ID, _ = queue.NewID()
+		if err := client.PutUploadRecord(ctx, statuses[i]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	report, err := client.ReconcileUploads(ctx, time.Hour)
+	if err != nil || report != (queue.ReconcileReport{}) {
+		t.Fatalf("skip-only reconciliation = %+v, %v", report, err)
+	}
+}
+
+func TestReconcileUploadsCountsCorruptRecordsAndCleanupFailures(t *testing.T) {
+	client := newTestClient(t)
+	ctx := context.Background()
+	kv, err := client.JS.KeyValue(ctx, client.Namespace.UploadsBucketName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	corruptID, _ := queue.NewID()
+	if _, err := kv.Put(ctx, corruptID, []byte("{")); err != nil {
+		t.Fatal(err)
+	}
+	cleanupID, _ := queue.NewID()
+	record := queue.UploadRecord{ID: cleanupID, DocumentType: "Invoice", Status: queue.StatusCleanupPending, ReceivedAt: time.Now().Add(-time.Hour).UTC().Format(time.RFC3339)}
+	if err := client.PutUploadRecord(ctx, record); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PutUploadContent(ctx, cleanupID, []byte("partial")); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.JS.DeleteStream(ctx, "OBJ_"+client.Namespace.UploadContentBucketName()); err != nil {
+		t.Fatal(err)
+	}
+	report, err := client.ReconcileUploads(ctx, 0)
+	if err != nil || report.Scanned != 1 || report.Errors != 2 {
+		t.Fatalf("report = %+v, %v", report, err)
+	}
+}

@@ -50,6 +50,29 @@ func TestCommandsAndInventoryErrors(t *testing.T) {
 	if err := runInventory([]string{"--bad-flag"}); err == nil {
 		t.Fatal("expected flag parse error")
 	}
+	if err := runInventory([]string{"--xsd", filepath.Join(t.TempDir(), "missing")}); err == nil {
+		t.Fatal("inventory accepted a missing XSD tree")
+	}
+	if err := runGenerate([]string{"--xsd", filepath.Join(t.TempDir(), "missing")}); err == nil {
+		t.Fatal("generate accepted a missing XSD tree")
+	}
+	emptyTree := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(emptyTree, "maindoc"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(emptyTree, "common"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := runGenerate([]string{"--xsd", emptyTree, "--output", filepath.Join(t.TempDir(), "samples")}); err == nil || !strings.Contains(err.Error(), "no main document") {
+		t.Fatalf("empty XSD tree error = %v", err)
+	}
+	blockedParent := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(blockedParent, []byte("not a directory"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := runInventory([]string{"--xsd", filepath.Join("..", "XSD"), "--output", filepath.Join(blockedParent, "inventory.json")}); err == nil {
+		t.Fatal("inventory wrote beneath a regular file")
+	}
 	if _, err := listXSDs(filepath.Join(t.TempDir(), "missing")); err == nil {
 		t.Fatal("expected missing directory error")
 	}

@@ -128,6 +128,15 @@ func TestManifestFixtureIDsAreUnique(t *testing.T) {
 	}
 }
 
+func TestManifestValidatorRejectsMalformedAndSchemaInvalidDocuments(t *testing.T) {
+	if err := regression.ValidateFixtureManifest([]byte(`{`)); err == nil || !strings.Contains(err.Error(), "decode fixture manifest") {
+		t.Fatalf("malformed manifest error = %v", err)
+	}
+	if err := regression.ValidateFixtureManifest([]byte(`{"schemaVersion":1,"fixtures":[]}`)); err == nil || !strings.Contains(err.Error(), "validate fixture manifest schema") {
+		t.Fatalf("schema-invalid manifest error = %v", err)
+	}
+}
+
 func TestNormalizedResultRejectsVolatileAndMisorderedFields(t *testing.T) {
 	schema := compileSchema(t, "normalized-result.schema.json")
 	valid := readObject(t, filepath.Join("testdata", "normalized-result.example.json"))

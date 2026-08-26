@@ -2,6 +2,7 @@ package queue_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -45,8 +46,35 @@ func TestDocumentWorkItemAndClientValidationErrors(t *testing.T) {
 	if err := client.PutUploadRecord(ctx, queue.UploadRecord{ID: "bad"}); err == nil {
 		t.Error("invalid record ID accepted")
 	}
+	if _, err := client.CreateUploadRecord(ctx, queue.UploadRecord{ID: "bad"}); err == nil {
+		t.Error("invalid create ID accepted")
+	}
+	if _, err := client.UpdateUploadRecord(ctx, queue.UploadRecord{ID: "bad"}, 1); err == nil {
+		t.Error("invalid update ID accepted")
+	}
+	if _, err := client.GetUploadRecordVersion(ctx, "bad"); !errors.Is(err, queue.ErrRecordNotFound) {
+		t.Errorf("invalid record lookup error = %v", err)
+	}
+	if keys, err := client.UploadRecordKeys(ctx); err != nil || len(keys) != 0 {
+		t.Errorf("empty record keys = %v, %v", keys, err)
+	}
 	if err := client.PutUploadContent(ctx, "bad", nil); err == nil {
 		t.Error("invalid content ID accepted")
+	}
+	if _, err := client.OpenUploadContent(ctx, "bad"); !errors.Is(err, queue.ErrRecordNotFound) {
+		t.Errorf("invalid content open error = %v", err)
+	}
+	if err := client.DeleteUploadContent(ctx, "bad"); err == nil {
+		t.Error("invalid content delete ID accepted")
+	}
+	if exists, err := client.HasUploadContent(ctx, "bad"); err != nil || exists {
+		t.Errorf("invalid content existence = %v, %v", exists, err)
+	}
+	if err := client.PublishDeadLetter(ctx, queue.DeadLetter{ID: "bad"}); err == nil {
+		t.Error("invalid dead-letter ID accepted")
+	}
+	if depth, err := client.DeadLetterDepth(ctx); err != nil || depth != 0 {
+		t.Errorf("empty dead-letter depth = %d, %v", depth, err)
 	}
 	if err := client.PublishResult(ctx, queue.ValidationResult{ID: "bad"}); err == nil {
 		t.Error("invalid result ID accepted")
@@ -62,6 +90,15 @@ func TestDocumentWorkItemAndClientValidationErrors(t *testing.T) {
 	if err := client.PutUploadRecord(ctx, queue.UploadRecord{ID: id}); err == nil {
 		t.Error("record write on closed connection succeeded")
 	}
+	if _, err := client.CreateUploadRecord(ctx, queue.UploadRecord{ID: id}); err == nil {
+		t.Error("record create on closed connection succeeded")
+	}
+	if _, err := client.UpdateUploadRecord(ctx, queue.UploadRecord{ID: id}, 1); err == nil {
+		t.Error("record update on closed connection succeeded")
+	}
+	if _, err := client.UploadRecordKeys(ctx); err == nil {
+		t.Error("record key scan on closed connection succeeded")
+	}
 	if _, err := client.GetUploadRecord(ctx, id); err == nil {
 		t.Error("record read on closed connection succeeded")
 	}
@@ -70,6 +107,18 @@ func TestDocumentWorkItemAndClientValidationErrors(t *testing.T) {
 	}
 	if _, err := client.GetUploadContent(ctx, id); err == nil {
 		t.Error("content read on closed connection succeeded")
+	}
+	if err := client.DeleteUploadContent(ctx, id); err == nil {
+		t.Error("content delete on closed connection succeeded")
+	}
+	if _, err := client.HasUploadContent(ctx, id); err == nil {
+		t.Error("content inspection on closed connection succeeded")
+	}
+	if _, err := client.DeadLetterDepth(ctx); err == nil {
+		t.Error("dead-letter depth on closed connection succeeded")
+	}
+	if err := client.ReplayProcessingFailure(ctx, id); err == nil {
+		t.Error("replay on closed connection succeeded")
 	}
 	if err := client.PublishResult(ctx, queue.ValidationResult{ID: id}); err == nil {
 		t.Error("result publish on closed connection succeeded")

@@ -21,6 +21,46 @@ import (
 
 const emptySVRL = `<svrl:schematron-output xmlns:svrl="http://purl.oclc.org/dsdl/svrl"/>`
 
+func TestEN16931ValidatorDefaultsAndInputGuards(t *testing.T) {
+	validator := newSaxonEN16931Validator(saxonRuntimeConfig{}, 0)
+	if validator.timeout != defaultEN16931ValidationTimeout {
+		t.Fatalf("default timeout = %s", validator.timeout)
+	}
+	var nilValidator *saxonEN16931Validator
+	if _, err := nilValidator.Validate(context.Background(), strings.NewReader("x")); err == nil {
+		t.Fatal("nil validator was accepted")
+	}
+	if _, err := validator.Validate(nil, strings.NewReader("x")); err == nil {
+		t.Fatal("nil context was accepted")
+	}
+	if _, err := validator.Validate(context.Background(), nil); err == nil {
+		t.Fatal("nil XML reader was accepted")
+	}
+	validator.limits.MaxInputBytes = 0
+	if _, err := validator.Validate(context.Background(), strings.NewReader("x")); !errors.Is(err, errEN16931RuntimeSVRL) {
+		t.Fatalf("invalid limit error = %v", err)
+	}
+}
+
+func TestRequireReadableRegularFileAndBoundedOutput(t *testing.T) {
+	if err := requireReadableRegularFile(""); err == nil {
+		t.Fatal("empty path was accepted")
+	}
+	if err := requireReadableRegularFile(t.TempDir()); err == nil || !strings.Contains(err.Error(), "not a regular file") {
+		t.Fatalf("directory error = %v", err)
+	}
+	output := &boundedCommandOutput{limit: 3}
+	if n, err := output.Write([]byte("ab")); n != 2 || err != nil {
+		t.Fatalf("initial write = %d, %v", n, err)
+	}
+	if n, err := output.Write([]byte("cd")); n != 1 || !errors.Is(err, errEN16931SVRLOutputLimit) || string(output.data) != "abc" {
+		t.Fatalf("overflow write = %d, %v, %q", n, err, output.data)
+	}
+	if n, err := output.Write([]byte("e")); n != 0 || !errors.Is(err, errEN16931SVRLOutputLimit) {
+		t.Fatalf("exhausted write = %d, %v", n, err)
+	}
+}
+
 func TestEN16931ValidatorReturnsTypedSemanticOutcomes(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -258,10 +298,9 @@ func TestEN16931CancellationKillsJavaProcess(t *testing.T) {
 		body, err := os.ReadFile(pidPath)
 		if err == nil {
 			pid, err = strconv.Atoi(string(body))
-			if err != nil {
-				t.Fatal(err)
+			if err == nil && pid != 0 {
+				break
 			}
-			break
 		}
 		time.Sleep(time.Millisecond)
 	}

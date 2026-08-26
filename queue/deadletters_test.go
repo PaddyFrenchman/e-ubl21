@@ -2,11 +2,49 @@ package queue_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 )
+
+func TestReplayProcessingFailureRejectsUnsafeStates(t *testing.T) {
+	client := newTestClient(t)
+	ctx := context.Background()
+	now := time.Now().UTC().Truncate(time.Second)
+	put := func(record queue.UploadRecord) string {
+		t.Helper()
+		record.ID, _ = queue.NewID()
+		if record.DocumentType == "" {
+			record.DocumentType = "Invoice"
+		}
+		if err := client.PutUploadRecord(ctx, record); err != nil {
+			t.Fatal(err)
+		}
+		return record.ID
+	}
+
+	missingContent := put(queue.UploadRecord{Status: queue.StatusProcessingFailed, ReceivedAt: now.Format(time.RFC3339)})
+	if err := client.ReplayProcessingFailure(ctx, missingContent); err == nil || !strings.Contains(err.Error(), "no raw content") {
+		t.Fatalf("missing-content replay error = %v", err)
+	}
+
+	pending := put(queue.UploadRecord{Status: queue.StatusPending, ReceivedAt: now.Format(time.RFC3339)})
+	if err := client.ReplayProcessingFailure(ctx, pending); err == nil || !strings.Contains(err.Error(), "no replay in progress") {
+		t.Fatalf("ordinary pending replay error = %v", err)
+	}
+
+	claimed := put(queue.UploadRecord{Status: queue.StatusPending, ReceivedAt: now.Format(time.RFC3339), ReplayClaimedSeq: 9})
+	if err := client.ReplayProcessingFailure(ctx, claimed); err != nil {
+		t.Fatalf("claimed replay should be idempotent: %v", err)
+	}
+
+	malformedTime := put(queue.UploadRecord{Status: queue.StatusEnqueuePending, ReceivedAt: "bad-time", ReplayMessageID: "replay"})
+	if err := client.ReplayProcessingFailure(ctx, malformedTime); err == nil || !strings.Contains(err.Error(), "parse receivedAt") {
+		t.Fatalf("malformed-time replay error = %v", err)
+	}
+}
 
 func TestReplayRecoversAfterDLQPurgeFailureWithoutDuplicateWork(t *testing.T) {
 	client := newTestClient(t)

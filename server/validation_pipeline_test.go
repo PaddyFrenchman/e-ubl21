@@ -38,13 +38,80 @@ func (source *memoryValidationContentSource) OpenUploadContent(context.Context, 
 
 type memoryValidationContentReader struct {
 	*strings.Reader
-	closed bool
-	err    error
+	closed   bool
+	err      error
+	closeErr error
 }
 
 func (reader *memoryValidationContentReader) Close() error {
 	reader.closed = true
-	return nil
+	return reader.closeErr
+}
+
+func TestDocumentValidationPipelineDefaultsAndGuards(t *testing.T) {
+	pipeline := newDocumentValidationPipelineWithTimeouts(&memoryValidationContentSource{}, nil, 0, 0)
+	if pipeline.overallTimeout != defaultValidationTimeout || pipeline.xsdTimeout != defaultValidationTimeout {
+		t.Fatalf("default timeouts = %s/%s", pipeline.overallTimeout, pipeline.xsdTimeout)
+	}
+	for name, candidate := range map[string]*documentValidationPipeline{
+		"nil pipeline":      nil,
+		"missing content":   {},
+		"missing validator": {content: &memoryValidationContentSource{}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := candidate.Validate(context.Background(), "id", "Order", "xsd"); err == nil {
+				t.Fatal("Validate accepted an unconfigured pipeline")
+			}
+		})
+	}
+	if _, err := pipeline.Validate(nil, "id", "Order", "xsd"); err == nil {
+		t.Fatal("Validate accepted a nil context")
+	}
+}
+
+func TestValidationContentStreamErrorsArePreserved(t *testing.T) {
+	validationFailure := errors.New("validation failed")
+	for _, test := range []struct {
+		name       string
+		reader     *memoryValidationContentReader
+		validate   error
+		wantJoined bool
+	}{
+		{name: "reader error", reader: &memoryValidationContentReader{Reader: strings.NewReader("x"), err: errors.New("read failed")}},
+		{name: "close error", reader: &memoryValidationContentReader{Reader: strings.NewReader("x"), closeErr: errors.New("close failed")}},
+		{name: "joined validation and stream errors", reader: &memoryValidationContentReader{Reader: strings.NewReader("x"), err: errors.New("read failed")}, validate: validationFailure, wantJoined: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			source := &singleValidationReaderSource{reader: test.reader}
+			pipeline := &documentValidationPipeline{content: source}
+			err := pipeline.withContent(context.Background(), "id", func(io.Reader) error { return test.validate })
+			if !errors.Is(err, errValidationContentStream) || test.wantJoined && !errors.Is(err, validationFailure) {
+				t.Fatalf("withContent error = %v", err)
+			}
+		})
+	}
+}
+
+type singleValidationReaderSource struct{ reader queue.UploadContentReader }
+
+func (source *singleValidationReaderSource) OpenUploadContent(context.Context, string) (queue.UploadContentReader, error) {
+	return source.reader, nil
+}
+
+func TestEN16931InvalidMessageFallbacks(t *testing.T) {
+	tests := []struct {
+		issue queue.ValidationIssue
+		want  string
+	}{
+		{issue: queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Severity: "error", Rule: "BR-1"}, want: "EN 16931 rule BR-1 failed"},
+		{issue: queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Severity: "fatal", Message: "bad value"}, want: "EN 16931 validation failed: bad value"},
+		{issue: queue.ValidationIssue{Kind: queue.ValidationIssueSuccessfulReport, Severity: "error", Message: "ignored"}, want: "EN 16931 validation failed"},
+	}
+	for _, test := range tests {
+		if got := en16931InvalidMessage(queue.ValidationStageResult{Issues: []queue.ValidationIssue{test.issue}}); got != test.want {
+			t.Errorf("en16931InvalidMessage(%+v) = %q, want %q", test.issue, got, test.want)
+		}
+	}
 }
 
 func (reader *memoryValidationContentReader) Error() error { return reader.err }
