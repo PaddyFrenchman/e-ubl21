@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 )
 
 // validationContentSource reopens immutable upload content for each stage.
@@ -37,6 +39,7 @@ type documentValidationPipeline struct {
 	overallTimeout time.Duration
 	xsdTimeout     time.Duration
 	now            func() time.Time
+	logger         *slog.Logger
 }
 
 func newDocumentValidationPipeline(content validationContentSource, en16931 EN16931Validator, timeout time.Duration) *documentValidationPipeline {
@@ -84,6 +87,9 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 	}
 	if xsdErr != nil {
 		if xsdOperationalFailure(validationCtx, xsdErr) {
+			if ctx.Err() == nil {
+				pipeline.observeStage(uploadID, documentType, xsdStage, "error", xsdCompleted.Sub(xsdStarted), xsdErr)
+			}
 			return documentValidationResult{}, fmt.Errorf("UBL 2.1 XSD stage: %w", xsdErr)
 		}
 		xsdStage.Issues = []queue.ValidationIssue{{
@@ -92,6 +98,7 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 			Severity: "error",
 			Message:  xsdErr.Error(),
 		}}
+		pipeline.observeStage(uploadID, documentType, xsdStage, "invalid", xsdCompleted.Sub(xsdStarted), nil)
 		return documentValidationResult{
 			Status:      queue.StatusInvalid,
 			Error:       xsdErr.Error(),
@@ -99,11 +106,17 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 			ValidatedAt: xsdCompleted,
 		}, nil
 	}
+	pipeline.observeStage(uploadID, documentType, xsdStage, "valid", xsdCompleted.Sub(xsdStarted), nil)
 
 	stages := queue.ValidationStages{xsdStage}
 	if requiresEN16931(documentType) {
+		enStarted := pipeline.now()
 		if pipeline.en16931 == nil {
-			return documentValidationResult{}, fmt.Errorf("EN 16931 validator is required for %s", documentType)
+			enErr := fmt.Errorf("%w: EN 16931 validator is required for %s", errEN16931RuntimeAsset, documentType)
+			pipeline.observeStage(uploadID, documentType, queue.ValidationStageResult{
+				Layer: queue.ValidationLayerEN16931, Version: validationassets.EN16931().Version,
+			}, "error", pipeline.now().Sub(enStarted), enErr)
+			return documentValidationResult{}, enErr
 		}
 		var enStage queue.ValidationStageResult
 		enErr := pipeline.withContent(validationCtx, uploadID, func(reader io.Reader) error {
@@ -111,9 +124,20 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 			enStage, err = pipeline.en16931.Validate(validationCtx, reader)
 			return err
 		})
+		enCompleted := pipeline.now()
 		if enErr != nil {
+			if ctx.Err() == nil {
+				pipeline.observeStage(uploadID, documentType, queue.ValidationStageResult{
+					Layer: queue.ValidationLayerEN16931, Version: validationassets.EN16931().Version,
+				}, "error", enCompleted.Sub(enStarted), enErr)
+			}
 			return documentValidationResult{}, fmt.Errorf("EN 16931 stage: %w", enErr)
 		}
+		enOutcome := "valid"
+		if !enStage.Valid {
+			enOutcome = "invalid"
+		}
+		pipeline.observeStage(uploadID, documentType, enStage, enOutcome, enCompleted.Sub(enStarted), nil)
 		stages = append(stages, enStage)
 		if !enStage.Valid {
 			return documentValidationResult{
@@ -135,7 +159,7 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 func (pipeline *documentValidationPipeline) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {
 	content, err := pipeline.content.OpenUploadContent(ctx, uploadID)
 	if err != nil {
-		return fmt.Errorf("%w: open upload content: %v", errValidationContentStream, err)
+		return fmt.Errorf("%w: open upload content: %w", errValidationContentStream, err)
 	}
 	validationErr := validate(content)
 	streamErr := content.Error()
@@ -144,7 +168,7 @@ func (pipeline *documentValidationPipeline) withContent(ctx context.Context, upl
 		streamErr = closeErr
 	}
 	if streamErr != nil {
-		contentErr := fmt.Errorf("%w: stream upload content: %v", errValidationContentStream, streamErr)
+		contentErr := fmt.Errorf("%w: stream upload content: %w", errValidationContentStream, streamErr)
 		if validationErr != nil {
 			return errors.Join(validationErr, contentErr)
 		}

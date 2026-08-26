@@ -21,7 +21,13 @@ const (
 	defaultEN16931ProcessWaitDelay  = time.Second
 )
 
-var errEN16931SVRLOutputLimit = errors.New("EN 16931 SVRL output limit exceeded")
+var (
+	errEN16931SVRLOutputLimit = errors.New("EN 16931 SVRL output limit exceeded")
+	errEN16931RuntimeAsset    = errors.New("EN 16931 runtime asset failure")
+	errEN16931RuntimeSaxon    = errors.New("EN 16931 Saxon process failure")
+	errEN16931RuntimeSVRL     = errors.New("EN 16931 SVRL failure")
+	errEN16931RuntimeInput    = errors.New("EN 16931 input stream failure")
+)
 
 // EN16931Validator executes the pinned semantic ruleset for one UBL document.
 // A non-compliant document is returned as a successful result with Valid=false;
@@ -69,12 +75,12 @@ func (validator *saxonEN16931Validator) Validate(ctx context.Context, xmlInput i
 		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: XML reader is nil")
 	}
 	if validator.limits.MaxInputBytes <= 0 || validator.limits.MaxInputBytes > int64(maxInt()) {
-		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: invalid SVRL output limit %d", validator.limits.MaxInputBytes)
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: invalid SVRL output limit %d", errEN16931RuntimeSVRL, validator.limits.MaxInputBytes)
 	}
 
 	javaPath, err := exec.LookPath(validator.runtime.javaExecutable)
 	if err != nil {
-		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: Java executable %q is unavailable: %w", validator.runtime.javaExecutable, err)
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: Java executable %q is unavailable: %v", errEN16931RuntimeAsset, validator.runtime.javaExecutable, err)
 	}
 	for _, asset := range []struct {
 		name string
@@ -86,7 +92,7 @@ func (validator *saxonEN16931Validator) Validate(ctx context.Context, xmlInput i
 		{"EN 16931 XSLT", validator.runtime.xsltPath},
 	} {
 		if err := requireReadableRegularFile(asset.path); err != nil {
-			return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: read %s: %w", asset.name, err)
+			return queue.ValidationStageResult{}, fmt.Errorf("%w: read %s: %v", errEN16931RuntimeAsset, asset.name, err)
 		}
 	}
 
@@ -121,11 +127,11 @@ func (validator *saxonEN16931Validator) Validate(ctx context.Context, xmlInput i
 	// the caller's responsibility.
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: create Saxon stdin: %w", err)
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: create Saxon stdin: %v", errEN16931RuntimeSaxon, err)
 	}
 	if err := cmd.Start(); err != nil {
 		stdin.Close()
-		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: start Saxon transform: %w", err)
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: start Saxon transform: %v", errEN16931RuntimeSaxon, err)
 	}
 	stdinCopyDone := make(chan error, 1)
 	go func() {
@@ -140,7 +146,7 @@ func (validator *saxonEN16931Validator) Validate(ctx context.Context, xmlInput i
 	commandErr := cmd.Wait()
 	stdin.Close()
 	if output.exceeded {
-		return queue.ValidationStageResult{}, fmt.Errorf("%w: maximum is %d bytes", errEN16931SVRLOutputLimit, validator.limits.MaxInputBytes)
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: %w: maximum is %d bytes", errEN16931RuntimeSVRL, errEN16931SVRLOutputLimit, validator.limits.MaxInputBytes)
 	}
 	if errors.Is(validationCtx.Err(), context.DeadlineExceeded) {
 		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation timed out after %s: %w", validator.timeout, validationCtx.Err())
@@ -149,21 +155,21 @@ func (validator *saxonEN16931Validator) Validate(ctx context.Context, xmlInput i
 		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation canceled: %w", validationCtx.Err())
 	}
 	if commandErr != nil {
-		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 Saxon transform failed: %w: %s", commandErr, diagnostics.String())
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: EN 16931 Saxon transform failed: %v: %s", errEN16931RuntimeSaxon, commandErr, diagnostics.String())
 	}
 	var stdinCopyErr error
 	select {
 	case stdinCopyErr = <-stdinCopyDone:
 	case <-time.After(waitDelay):
-		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: XML input reader did not finish after Saxon exited within %s", waitDelay)
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: XML input reader did not finish after Saxon exited within %s", errEN16931RuntimeInput, waitDelay)
 	}
 	if stdinCopyErr != nil {
-		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: stream XML to Saxon: %w", stdinCopyErr)
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: stream XML to Saxon: %w", errEN16931RuntimeInput, stdinCopyErr)
 	}
 
 	report, err := svrl.ParseWithLimits(bytes.NewReader(output.data), validator.limits)
 	if err != nil {
-		return queue.ValidationStageResult{}, fmt.Errorf("EN 16931 validation: parse Saxon SVRL: %w", err)
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: parse Saxon SVRL: %w", errEN16931RuntimeSVRL, err)
 	}
 	valid := true
 	for _, issue := range report.Issues {

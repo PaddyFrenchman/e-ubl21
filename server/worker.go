@@ -192,6 +192,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	}
 
 	validationPipeline := newDocumentValidationPipelineWithTimeouts(q, en16931Validator, settings.validationTimeout, settings.xsdValidationTimeout)
+	validationPipeline.logger = logger
 	worker := &documentWorker{queue: q, catalog: catalog, validator: validationPipeline, logger: logger, lifecycleCtx: ctx, progressInterval: settings.ackWait / 3, contentRetention: cfg.UploadContentRetention, maxDeliver: uint64(settings.maxDeliver)}
 	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
 	if err != nil {

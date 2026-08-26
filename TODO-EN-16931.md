@@ -696,7 +696,7 @@ control).
 
 ---
 
-## TODO-EN-16931-013 — Add observability for the semantic stage
+## TODO-EN-16931-013 — Add observability for the semantic stage ✅ DONE
 
 ### Goal
 
@@ -721,6 +721,25 @@ Add structured logs containing upload ID, document type, stage, profile version,
 ### Acceptance criteria
 
 Operators can distinguish XSD failures, genuine EN 16931 non-compliance, and EN validator infrastructure failures from metrics/logs alone.
+
+Implemented stage-level counters and duration histograms using the fixed
+`ubl21_xsd` / `en16931` stage labels and `valid` / `invalid` / `error`
+outcomes. EN 16931 issues are counted under normalized severities (`fatal`,
+`error`, `warning`, `info`, or `other`), while operational failures use the
+closed reason set `timeout`, `canceled`, `asset`, `saxon`, `svrl`, `input`, or
+`other`. Saxon now returns typed runtime causes so classification does not
+depend on parsing diagnostic strings. Upload IDs, document types, rule IDs,
+and attacker-controlled severities never become metric labels.
+
+The production pipeline emits one structured log for each completed or failed
+stage with upload ID, document type, stage, profile version, result, issue
+count, and duration. EN runtime failures also include their normalized reason;
+invoice content is never logged. Tests assert all three XSD outcomes, genuine
+EN non-compliance, EN infrastructure failure, bounded label normalization,
+Prometheus exposition, required log fields, and absence of invoice-body data.
+
+Verified with `go test ./... -count=1` and the mandatory `make test-en16931`
+gate.
 
 ---
 

@@ -8,7 +8,9 @@ package server
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -61,6 +63,23 @@ var (
 		Help:    "Worker document validation duration in seconds, labeled by document type.",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"document_type"})
+	validationStageTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_validation_stage_total",
+		Help: "Total validation stage executions, labeled by bounded stage and outcome values.",
+	}, []string{"stage", "outcome"})
+	validationStageDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "e_ubl21_validation_stage_duration_seconds",
+		Help:    "Validation stage execution duration in seconds, labeled by bounded stage values.",
+		Buckets: prometheus.DefBuckets,
+	}, []string{"stage"})
+	en16931IssuesTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_en16931_issues_total",
+		Help: "Total EN 16931 SVRL issues, labeled by normalized bounded severity values.",
+	}, []string{"severity"})
+	en16931RuntimeFailuresTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_en16931_runtime_failures_total",
+		Help: "Total EN 16931 operational failures, labeled by a bounded reason classification.",
+	}, []string{"reason"})
 
 	workerValidationsInFlight = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "e_ubl21_worker_validations_in_flight",
@@ -118,6 +137,41 @@ func recordValidationOutcome(outcome string) {
 // document of the given type against its XSD.
 func recordValidationDuration(documentType string, seconds float64) {
 	validationDuration.WithLabelValues(documentType).Observe(seconds)
+}
+
+const (
+	validationMetricStageXSD     = "ubl21_xsd"
+	validationMetricStageEN16931 = "en16931"
+)
+
+func recordValidationStage(stage, outcome string, seconds float64) {
+	validationStageTotal.WithLabelValues(stage, outcome).Inc()
+	validationStageDuration.WithLabelValues(stage).Observe(seconds)
+}
+
+func recordEN16931Issues(issues []queue.ValidationIssue) {
+	for _, issue := range issues {
+		en16931IssuesTotal.WithLabelValues(normalizeEN16931MetricSeverity(issue.Severity)).Inc()
+	}
+}
+
+func normalizeEN16931MetricSeverity(severity string) string {
+	switch strings.ToLower(strings.TrimSpace(severity)) {
+	case "fatal":
+		return "fatal"
+	case "error":
+		return "error"
+	case "warning", "warn":
+		return "warning"
+	case "info", "information":
+		return "info"
+	default:
+		return "other"
+	}
+}
+
+func recordEN16931RuntimeFailure(reason string) {
+	en16931RuntimeFailuresTotal.WithLabelValues(reason).Inc()
 }
 
 // metricsHandler exposes all registered metrics in the Prometheus text

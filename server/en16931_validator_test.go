@@ -124,7 +124,7 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 	t.Run("malformed SVRL", func(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `cat >/dev/null; printf '%s' '<not-svrl/>'`)
 		result, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
-		if err == nil || !strings.Contains(err.Error(), "parse Saxon SVRL") || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+		if err == nil || !errors.Is(err, errEN16931RuntimeSVRL) || !strings.Contains(err.Error(), "parse Saxon SVRL") || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
 			t.Fatalf("result/error = %+v / %v", result, err)
 		}
 	})
@@ -132,7 +132,7 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 	t.Run("process crash with bounded stderr", func(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `i=0; while [ "$i" -lt 10000 ]; do printf x >&2; i=$((i + 1)); done; exit 7`)
 		result, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
-		if err == nil || !strings.Contains(err.Error(), "Saxon transform failed") || !strings.Contains(err.Error(), "[truncated]") || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+		if err == nil || !errors.Is(err, errEN16931RuntimeSaxon) || !strings.Contains(err.Error(), "Saxon transform failed") || !strings.Contains(err.Error(), "[truncated]") || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
 			t.Fatalf("result/error = %+v / %v", result, err)
 		}
 		if len(err.Error()) > maxValidationDiagnosticBytes+512 {
@@ -143,7 +143,7 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 	t.Run("killed process", func(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `kill -9 $$`)
 		result, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
-		if err == nil || !strings.Contains(err.Error(), "Saxon transform failed") || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+		if err == nil || !errors.Is(err, errEN16931RuntimeSaxon) || !strings.Contains(err.Error(), "Saxon transform failed") || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
 			t.Fatalf("result/error = %+v / %v", result, err)
 		}
 	})
@@ -197,7 +197,7 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `exit 0`)
 		cfg.javaExecutable = filepath.Join(t.TempDir(), "missing-java")
 		_, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
-		if err == nil || !strings.Contains(err.Error(), "Java executable") {
+		if err == nil || !errors.Is(err, errEN16931RuntimeAsset) || !strings.Contains(err.Error(), "Java executable") {
 			t.Fatalf("error = %v", err)
 		}
 	})
@@ -206,7 +206,7 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `exit 0`)
 		cfg.saxonJARPath = filepath.Join(t.TempDir(), "missing-saxon.jar")
 		_, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
-		if err == nil || !strings.Contains(err.Error(), "read Saxon-HE JAR") {
+		if err == nil || !errors.Is(err, errEN16931RuntimeAsset) || !strings.Contains(err.Error(), "read Saxon-HE JAR") {
 			t.Fatalf("error = %v", err)
 		}
 	})
@@ -215,7 +215,7 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `exit 0`)
 		cfg.xmlResolverJARPath = filepath.Join(t.TempDir(), "missing-xmlresolver.jar")
 		_, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
-		if err == nil || !strings.Contains(err.Error(), "read xmlresolver JAR") {
+		if err == nil || !errors.Is(err, errEN16931RuntimeAsset) || !strings.Contains(err.Error(), "read xmlresolver JAR") {
 			t.Fatalf("error = %v", err)
 		}
 	})
@@ -224,7 +224,7 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `exit 0`)
 		cfg.xsltPath = filepath.Join(t.TempDir(), "missing.xslt")
 		_, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
-		if err == nil || !strings.Contains(err.Error(), "read EN 16931 XSLT") {
+		if err == nil || !errors.Is(err, errEN16931RuntimeAsset) || !strings.Contains(err.Error(), "read EN 16931 XSLT") {
 			t.Fatalf("error = %v", err)
 		}
 	})
@@ -235,7 +235,7 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 		validator.limits = svrl.DefaultLimits()
 		validator.limits.MaxInputBytes = 64
 		result, err := validator.Validate(context.Background(), strings.NewReader(`<Invoice/>`))
-		if !errors.Is(err, errEN16931SVRLOutputLimit) || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+		if !errors.Is(err, errEN16931RuntimeSVRL) || !errors.Is(err, errEN16931SVRLOutputLimit) || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
 			t.Fatalf("result/error = %+v / %v", result, err)
 		}
 	})
