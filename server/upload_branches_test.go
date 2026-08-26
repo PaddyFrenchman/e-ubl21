@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -65,7 +66,22 @@ func TestUploadHandlerStorageFailuresAndContentResponse(t *testing.T) {
 
 	h, q = directUploadHandler(t)
 	id, _ := queue.NewID()
-	record := queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusInvalid, Error: "bad", ReceivedAt: time.Now().Format(time.RFC3339), ValidatedAt: time.Now().Format(time.RFC3339)}
+	validatedAt := time.Now().UTC().Format(time.RFC3339)
+	record := queue.UploadRecord{
+		ID: id, DocumentType: "Invoice", Status: queue.StatusInvalid, Error: "bad",
+		ReceivedAt: validatedAt, ValidatedAt: validatedAt,
+		ValidationStages: queue.ValidationStages{
+			{Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: true, ValidatedAt: validatedAt},
+			{
+				Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: false, ValidatedAt: validatedAt,
+				Issues: []queue.ValidationIssue{{
+					Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931,
+					Rule: "BR-CO-13", Severity: "fatal", Location: "/ubl:Invoice/cac:LegalMonetaryTotal",
+					Message: "Invoice totals do not reconcile.",
+				}},
+			},
+		},
+	}
 	if err := q.PutUploadRecord(context.Background(), record); err != nil {
 		t.Fatal(err)
 	}
@@ -78,6 +94,17 @@ func TestUploadHandlerStorageFailuresAndContentResponse(t *testing.T) {
 	h.handleGetUpload(res, req)
 	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), `"content":"\u003cInvoice/\u003e"`) || !strings.Contains(res.Body.String(), `"validatedAt"`) {
 		t.Fatalf("content response = %d %s", res.Code, res.Body)
+	}
+	var response struct {
+		ValidationStages queue.ValidationStages `json:"validationStages"`
+	}
+	if err := json.Unmarshal(res.Body.Bytes(), &response); err != nil {
+		t.Fatal(err)
+	}
+	semantic, ok := response.ValidationStages.Find(queue.ValidationLayerEN16931)
+	if !ok || semantic.Version != "1.3.16" || semantic.Valid || len(semantic.Issues) != 1 ||
+		semantic.Issues[0].Rule != "BR-CO-13" || semantic.Issues[0].Severity != "fatal" {
+		t.Fatalf("structured EN 16931 response = %+v", semantic)
 	}
 
 	expiredID, _ := queue.NewID()

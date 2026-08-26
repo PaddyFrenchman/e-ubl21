@@ -493,6 +493,29 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 			t.Fatalf("retrieval schema missing %s", field)
 		}
 	}
+	stageSchema := spec["components"].(map[string]any)["schemas"].(map[string]any)["ValidationStageResult"].(map[string]any)
+	requiredStageFields := stageSchema["required"].([]any)
+	for _, want := range []string{"layer", "version", "valid", "validatedAt"} {
+		found := false
+		for _, field := range requiredStageFields {
+			found = found || field == want
+		}
+		if !found {
+			t.Fatalf("validation stage schema does not require %s", want)
+		}
+	}
+	examples := mediaType["examples"].(map[string]any)
+	for _, name := range []string{"xsdInvalidInvoice", "en16931InvalidInvoice", "compliantInvoice", "validOrder", "processingFailed"} {
+		if _, ok := examples[name]; !ok {
+			t.Fatalf("retrieval response missing %s example", name)
+		}
+	}
+	semanticExample := examples["en16931InvalidInvoice"].(map[string]any)["value"].(map[string]any)
+	semanticStages := semanticExample["validationStages"].([]any)
+	semanticIssue := semanticStages[1].(map[string]any)["issues"].([]any)[0].(map[string]any)
+	if semanticStages[1].(map[string]any)["version"] != "1.3.16" || semanticIssue["rule"] != "BR-CO-13" || semanticIssue["severity"] != "fatal" {
+		t.Fatalf("EN 16931 example lost profile or structured rule fields: stage=%v issue=%v", semanticStages[1], semanticIssue)
+	}
 	components := spec["components"].(map[string]any)
 	securitySchemes := components["securitySchemes"].(map[string]any)
 	if securitySchemes["oauth2"].(map[string]any)["type"] != "oauth2" {

@@ -499,7 +499,7 @@ terminal outcomes.
 
 ---
 
-## TODO-EN-16931-009 — Extend HTTP/OpenAPI result semantics
+## TODO-EN-16931-009 — Extend HTTP/OpenAPI result semantics ✅ DONE
 
 ### Goal
 
@@ -550,6 +550,17 @@ Example target shape:
 ### Acceptance criteria
 
 A client can determine exactly why an invoice failed and which validation layer rejected it without parsing a single combined error string.
+
+Implemented by the ordered `validationStages` response on
+`GET /api/v1/ubl/{id}`. Each completed stage exposes its stable layer,
+validator/profile version, validity, timestamp, duration and bounded structured
+issues; EN 16931 issues retain their rule ID, severity, location, test, message
+and diagnostic without exposing raw SVRL. The runtime OpenAPI document is now
+loaded from the embedded reviewed `server/openapi.yaml`, eliminating drift
+between served and static representations. The contract documents XSD-invalid,
+EN-invalid, compliant Invoice, XSD-only non-billing, and operational-failure
+examples. HTTP and OpenAPI regression tests cover profile/rule/severity
+preservation, and the strict OpenAPI lint passes at 100/100.
 
 ---
 

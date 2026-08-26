@@ -127,12 +127,10 @@ paths:
         - UBL
       summary: Upload a UBL 2.1 XML document
       description: >-
-        Accepts an XML payload, and if it has a syntactically valid root
-        element that is a recognized UBL 2.1 main document type (local name
-        and namespace), stores the raw XML once and queues a compact work
-        descriptor on its per-document-type NATS JetStream subject for
-        asynchronous XSD validation. Full XML well-formedness and UBL 2.1
-        schema validity are established asynchronously by the worker.
+        Accepts an XML payload, stores it once, and queues a compact work
+        descriptor for asynchronous standards validation. Every recognized
+        document is validated against UBL 2.1 XSD; Invoice and CreditNote then
+        undergo mandatory EN 16931 semantic validation.
       requestBody:
         required: true
         description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.
@@ -152,7 +150,7 @@ paths:
           description: >-
             The payload has a syntactically valid root element that is a
             recognized UBL 2.1 document type. It has been queued for
-            asynchronous XSD validation. Its status is accepting or
+            asynchronous standards validation. Its status is accepting or
             enqueue_pending while a partial acceptance is being reconciled,
             pending once queued, and later valid, invalid, or processing_failed
             after a recoverable dead_letter_pending transition.
@@ -260,7 +258,11 @@ paths:
                     example: '2026-08-20T12:00:01Z'
                   validationStages:
                     type: array
-                    description: Independently reportable validation-layer outcomes, in execution order.
+                    description: >-
+                      Completed validation-layer outcomes in execution order.
+                      Invoice and CreditNote are valid only after both
+                      ubl21-xsd and en16931 stages pass. Raw SVRL is never
+                      returned by this endpoint.
                     items:
                       $ref: '#/components/schemas/ValidationStageResult'
                     example:
@@ -312,20 +314,105 @@ paths:
                     description: The original raw XML payload. Present only when includeContent=true.
                     example: '<?xml version="1.0" encoding="UTF-8"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">...</Invoice>'
                 required: [id, document, status, receivedAt, contentAvailable]
-              example:
-                id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
-                document: Invoice
-                status: valid
-                receivedAt: '2026-08-20T12:00:00Z'
-                validatedAt: '2026-08-20T12:00:01Z'
-                validationStages:
-                  - layer: ubl21-xsd
-                    version: '2.1'
-                    valid: true
+              examples:
+                xsdInvalidInvoice:
+                  summary: Invoice rejected by UBL 2.1 XSD
+                  value:
+                    id: '11111111111111111111111111111111'
+                    document: Invoice
+                    status: invalid
+                    receivedAt: '2026-08-20T12:00:00Z'
                     validatedAt: '2026-08-20T12:00:01Z'
-                    durationMs: 14
-                contentAvailable: true
-                contentExpiresAt: '2026-09-19T12:00:01Z'
+                    validationStages:
+                      - layer: ubl21-xsd
+                        version: '2.1'
+                        valid: false
+                        issues:
+                          - kind: xsd-report
+                            layer: ubl21-xsd
+                            severity: error
+                            location: '/Invoice/cbc:IssueDate'
+                            message: Element IssueDate is required.
+                        validatedAt: '2026-08-20T12:00:01Z'
+                        durationMs: 12
+                    contentAvailable: true
+                en16931InvalidInvoice:
+                  summary: XSD-valid Invoice rejected by EN 16931
+                  value:
+                    id: '22222222222222222222222222222222'
+                    document: Invoice
+                    status: invalid
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    validatedAt: '2026-08-20T12:00:02Z'
+                    validationStages:
+                      - layer: ubl21-xsd
+                        version: '2.1'
+                        valid: true
+                        validatedAt: '2026-08-20T12:00:01Z'
+                        durationMs: 14
+                      - layer: en16931
+                        version: '1.3.16'
+                        valid: false
+                        issues:
+                          - kind: failed-assert
+                            layer: en16931
+                            rule: BR-CO-13
+                            severity: fatal
+                            location: '/ubl:Invoice/cac:LegalMonetaryTotal'
+                            test: 'cbc:TaxExclusiveAmount = sum(cac:InvoiceLine/cbc:LineExtensionAmount)'
+                            message: Invoice total amount without VAT must equal the sum of invoice line net amounts.
+                            diagnostic: BT-109 does not reconcile with BT-131.
+                        validatedAt: '2026-08-20T12:00:02Z'
+                        durationMs: 38
+                    contentAvailable: true
+                compliantInvoice:
+                  summary: Invoice passing UBL 2.1 and EN 16931
+                  value:
+                    id: '33333333333333333333333333333333'
+                    document: Invoice
+                    status: valid
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    validatedAt: '2026-08-20T12:00:02Z'
+                    validationStages:
+                      - layer: ubl21-xsd
+                        version: '2.1'
+                        valid: true
+                        validatedAt: '2026-08-20T12:00:01Z'
+                        durationMs: 14
+                      - layer: en16931
+                        version: '1.3.16'
+                        valid: true
+                        validatedAt: '2026-08-20T12:00:02Z'
+                        durationMs: 31
+                    contentAvailable: true
+                    contentExpiresAt: '2026-09-19T12:00:02Z'
+                validOrder:
+                  summary: Non-billing UBL document passing its XSD-only contract
+                  value:
+                    id: '44444444444444444444444444444444'
+                    document: Order
+                    status: valid
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    validatedAt: '2026-08-20T12:00:01Z'
+                    validationStages:
+                      - layer: ubl21-xsd
+                        version: '2.1'
+                        valid: true
+                        validatedAt: '2026-08-20T12:00:01Z'
+                        durationMs: 11
+                    contentAvailable: true
+                processingFailed:
+                  summary: Validation could not complete for an operational reason
+                  value:
+                    id: '55555555555555555555555555555555'
+                    document: Invoice
+                    status: processing_failed
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    error: 'EN 16931 validation failed: Saxon process timed out'
+                    lastError: 'EN 16931 validation failed: Saxon process timed out'
+                    processingAttempts: 5
+                    processingFailedAt: '2026-08-20T12:05:00Z'
+                    contentAvailable: true
         '400':
           description: Invalid includeContent query parameter.
           content:
@@ -400,7 +487,9 @@ components:
       required: [kind, layer, severity, message]
       additionalProperties: false
     ValidationStageResult:
-      description: Outcome of one completed validation layer.
+      description: >-
+        Outcome of one completed validation layer. Version identifies the UBL
+        schema or semantic profile release used for that result.
       type: object
       properties:
         layer:
@@ -422,7 +511,7 @@ components:
           type: integer
           format: int64
           minimum: 0
-      required: [layer, valid, validatedAt]
+      required: [layer, version, valid, validatedAt]
       additionalProperties: false
     ErrorResponse:
       description: Standard error payload returned when a request is rejected.
