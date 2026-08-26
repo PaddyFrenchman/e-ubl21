@@ -124,7 +124,7 @@ func TestPinnedSaxonConfigurationRejectsNetworkResources(t *testing.T) {
 	}
 }
 
-func localSaxonRuntimeConfig(t *testing.T) (saxonRuntimeConfig, bool) {
+func localSaxonRuntimeConfig(t testing.TB) (saxonRuntimeConfig, bool) {
 	t.Helper()
 	required := os.Getenv("EUBL21_REQUIRE_EN16931_TEST_RUNTIME") == "1"
 	java, err := exec.LookPath("java")

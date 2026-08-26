@@ -7,6 +7,8 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -14,30 +16,105 @@ import (
 	"testing"
 	"time"
 
+	fixtures "github.com/PaddyFrenchman/e-ubl21/createsamples/en16931"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-// BenchmarkWorkerValidationThroughput measures the complete bounded worker
-// path: Object Store fetch, xmllint process, KV update and result publish.
-// Run with a fixed benchtime (for example -benchtime=10x) when comparing
-// concurrency/prefetch configurations.
+// BenchmarkWorkerValidationThroughput measures the complete production worker
+// path: Object Store fetch, xmllint, optional Saxon EN 16931 validation, KV
+// update, and result publication. The matrix makes XSD-only, semantic-valid,
+// semantic-invalid, size, and concurrency costs directly comparable.
+//
+// Run through `make benchmark-en16931`; a fixed iteration count is required
+// for meaningful concurrency comparisons.
 func BenchmarkWorkerValidationThroughput(b *testing.B) {
+	saxonRuntime, ok := localSaxonRuntimeConfig(b)
+	if !ok {
+		return
+	}
+	if err := ensureXMLLint(); err != nil {
+		b.Skip(err)
+	}
+	validInvoice, err := fixtures.BuildInvoiceXML(fixtures.NewInvoiceVariantS())
+	if err != nil {
+		b.Fatal(err)
+	}
+	negative, err := fixtures.NegativeInvoiceFixtures()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if len(negative) == 0 {
+		b.Fatal("negative Invoice corpus is empty")
+	}
+	order, err := os.ReadFile(filepath.Join("..", "createsamples", "samples", "Order", "Order-sample-01.xml"))
+	if err != nil {
+		b.Fatal(err)
+	}
+	padInvoice := func(padding int) []byte {
+		return []byte(strings.Replace(validInvoice, "</Invoice>", "<!--"+strings.Repeat("x", padding)+"--></Invoice>", 1))
+	}
 	cases := []struct {
-		name    string
-		padding int
+		name         string
+		documentType string
+		body         []byte
+		wantStatus   queue.ValidationStatus
+		concurrency  int
+		prefetch     int
 	}{
-		{name: "small"},
-		{name: "medium_1MiB", padding: 1 << 20},
-		{name: "near_limit_9MiB", padding: 9 << 20},
+		{name: "xsd_only_order_112KiB/c1_p1", documentType: "Order", body: order, wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_small/c1_p1", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_invalid_small/c1_p1", documentType: "Invoice", body: []byte(negative[0].XML), wantStatus: queue.StatusInvalid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_medium_1MiB/c1_p1", documentType: "Invoice", body: padInvoice(1 << 20), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_near_limit_9MiB/c1_p1", documentType: "Invoice", body: padInvoice(9 << 20), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_small/c1_p4", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 4},
+		{name: "invoice_valid_small/c2_p1", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 2, prefetch: 1},
+		{name: "invoice_valid_small/c2_p2", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 2, prefetch: 2},
+		{name: "invoice_valid_small/c4_p4", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 4, prefetch: 4},
 	}
 	for _, tc := range cases {
 		b.Run(tc.name, func(b *testing.B) {
-			benchmarkWorkerValidationThroughput(b, tc.padding)
+			benchmarkWorkerValidationThroughput(b, saxonRuntime, tc.documentType, tc.body, tc.wantStatus, tc.concurrency, tc.prefetch)
 		})
 	}
+}
+
+// BenchmarkEN16931ProcessCost quantifies the per-document process model. The
+// Java case is a launch-only baseline; the Saxon case includes JVM launch,
+// stylesheet compilation, transformation, bounded SVRL capture, and parsing.
+func BenchmarkEN16931ProcessCost(b *testing.B) {
+	saxonRuntime, ok := localSaxonRuntimeConfig(b)
+	if !ok {
+		return
+	}
+	validInvoice, err := fixtures.BuildInvoiceXML(fixtures.NewInvoiceVariantS())
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Run("java_startup", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			cmd := exec.Command(saxonRuntime.javaExecutable, "-version")
+			cmd.Stdout = io.Discard
+			cmd.Stderr = io.Discard
+			if err := cmd.Run(); err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+	b.Run("saxon_transform", func(b *testing.B) {
+		validator := newSaxonEN16931Validator(saxonRuntime, 30*time.Second)
+		b.ReportAllocs()
+		b.SetBytes(int64(len(validInvoice)))
+		for i := 0; i < b.N; i++ {
+			result, err := validator.Validate(context.Background(), strings.NewReader(validInvoice))
+			if err != nil || !result.Valid {
+				b.Fatalf("Saxon validation result/error = %+v / %v", result, err)
+			}
+		}
+	})
 }
 
 // BenchmarkWorkerDeepBacklogMemory is an opt-in stress benchmark for peak
@@ -166,7 +243,7 @@ func waitForBenchmarkConsumer(b *testing.B, ctx context.Context, q *queue.Client
 	}
 }
 
-func benchmarkWorkerValidationThroughput(b *testing.B, padding int) {
+func benchmarkWorkerValidationThroughput(b *testing.B, saxonRuntime saxonRuntimeConfig, documentType string, body []byte, wantStatus queue.ValidationStatus, concurrency, prefetch int) {
 	natsServer := queuetest.StartServer(b)
 	q, err := queue.ConnectWithOptions(natsServer.URL, queue.DefaultNamespace, natsServer.Options...)
 	if err != nil {
@@ -182,14 +259,22 @@ func benchmarkWorkerValidationThroughput(b *testing.B, padding int) {
 	done := make(chan error, 1)
 	go func() {
 		done <- RunWorker(workerCtx, WorkerConfig{
-			NATSURL:           natsServer.URL,
-			NATSOptions:       natsServer.Options,
-			ConsumerName:      "worker-benchmark",
-			ValidationTimeout: 30 * time.Second,
-			AckWait:           60 * time.Second,
-			Concurrency:       2,
-			Prefetch:          2,
-			Logger:            slog.New(slog.NewTextHandler(io.Discard, nil)),
+			NATSURL:                  natsServer.URL,
+			NATSOptions:              natsServer.Options,
+			ConsumerName:             "worker-benchmark",
+			ValidationTimeout:        30 * time.Second,
+			XSDValidationTimeout:     30 * time.Second,
+			EN16931ValidationTimeout: 30 * time.Second,
+			AckWait:                  60 * time.Second,
+			Concurrency:              concurrency,
+			Prefetch:                 prefetch,
+			JavaExecutable:           saxonRuntime.javaExecutable,
+			SaxonJARPath:             saxonRuntime.saxonJARPath,
+			XMLResolverJARPath:       saxonRuntime.xmlResolverJARPath,
+			SaxonConfigurationPath:   saxonRuntime.configurationPath,
+			EN16931XSLTPath:          saxonRuntime.xsltPath,
+			SaxonStartupTimeout:      30 * time.Second,
+			Logger:                   slog.New(slog.NewTextHandler(io.Discard, nil)),
 		})
 	}()
 	defer func() {
@@ -210,10 +295,6 @@ func benchmarkWorkerValidationThroughput(b *testing.B, padding int) {
 		time.Sleep(10 * time.Millisecond)
 	}
 
-	body := validInvoiceXML
-	if padding > 0 {
-		body = strings.Replace(body, "</Invoice>", "<!--"+strings.Repeat("x", padding)+"--></Invoice>", 1)
-	}
 	ids := make([]string, b.N)
 	b.ReportAllocs()
 	b.SetBytes(int64(len(body)))
@@ -222,13 +303,13 @@ func benchmarkWorkerValidationThroughput(b *testing.B, padding int) {
 	for i := 0; i < b.N; i++ {
 		id, _ := queue.NewID()
 		ids[i] = id
-		if err := q.PutUploadContent(ctx, id, []byte(body)); err != nil {
+		if err := q.PutUploadContent(ctx, id, body); err != nil {
 			b.Fatal(err)
 		}
-		if err := q.PutUploadRecord(ctx, queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusPending, ReceivedAt: time.Now().Format(time.RFC3339)}); err != nil {
+		if err := q.PutUploadRecord(ctx, queue.UploadRecord{ID: id, DocumentType: documentType, Status: queue.StatusPending, ReceivedAt: time.Now().Format(time.RFC3339)}); err != nil {
 			b.Fatal(err)
 		}
-		if err := q.PublishDocument(ctx, id, "Invoice", time.Now()); err != nil {
+		if err := q.PublishDocument(ctx, id, documentType, time.Now()); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -239,8 +320,8 @@ func benchmarkWorkerValidationThroughput(b *testing.B, padding int) {
 				b.Fatal(err)
 			}
 			if record.Status != queue.StatusPending {
-				if record.Status != queue.StatusValid {
-					b.Fatal(fmt.Errorf("upload %s status %s: %s", id, record.Status, record.Error))
+				if record.Status != wantStatus {
+					b.Fatal(fmt.Errorf("upload %s status %s, want %s: %s", id, record.Status, wantStatus, record.Error))
 				}
 				break
 			}
@@ -250,4 +331,7 @@ func benchmarkWorkerValidationThroughput(b *testing.B, padding int) {
 	elapsed := time.Since(started)
 	b.StopTimer()
 	b.ReportMetric(float64(b.N)/elapsed.Seconds(), "docs/s")
+	b.ReportMetric(elapsed.Seconds()*1000/float64(b.N), "wall_ms/doc")
+	b.ReportMetric(float64(concurrency), "workers")
+	b.ReportMetric(float64(prefetch), "prefetch")
 }

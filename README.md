@@ -63,3 +63,11 @@ checked-in EN 16931 1.3.16 stylesheet and restricted Saxon configuration, and
 runs all ten positive Invoice/CreditNote fixtures, all 22 rule-targeted
 semantic-negative fixtures, and the XSD-invalid short-circuit control with
 missing dependencies treated as test failures rather than skips.
+
+### EN 16931 capacity benchmark
+
+Run `BENCHTIME=4x make benchmark-en16931` to measure the real XSD-only and
+XSD-plus-EN worker paths across document sizes and concurrency settings. See
+[the EN 16931 capacity baseline](docs/EN16931-CAPACITY.md) for recorded results,
+resource starting points, scaling assumptions, and the optional aggregate-RSS
+measurement.

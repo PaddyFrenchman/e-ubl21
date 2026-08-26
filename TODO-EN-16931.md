@@ -743,7 +743,7 @@ gate.
 
 ---
 
-## TODO-EN-16931-014 — Verify performance and worker capacity
+## TODO-EN-16931-014 — Verify performance and worker capacity ✅ DONE
 
 ### Goal
 
@@ -764,6 +764,38 @@ Measure the cost of adding a Java/Saxon stage and adjust worker defaults with ev
 ### Acceptance criteria
 
 The project has measurements for the real two-stage invoice path and documented worker capacity assumptions.
+
+Implemented a mandatory-runtime `make benchmark-en16931` target that records
+the host and Go/Java/libxml versions, verifies all pinned validation assets,
+and measures the complete Object Store → XSD → EN 16931 → KV/result
+pipeline with fixed document counts. Its matrix covers an XSD-only Order,
+EN-valid and EN-invalid Invoices, small/1 MiB/near-limit 9 MiB inputs,
+prefetch isolation, and one/two/four concurrent validators. `-benchmem`,
+documents/second, wall time/document, GNU-time RSS, and optional sampled
+aggregate process-tree RSS provide allocation, latency, throughput, and memory
+evidence. A separate benchmark distinguishes bare JVM launch from the current
+per-document Saxon launch, stylesheet compilation, transform, and SVRL parse.
+
+The recorded baseline and decisions live in
+`docs/EN16931-CAPACITY.md`. On the measured 16-logical-CPU host, the real
+single-worker valid Invoice path sustained about 0.66 documents/second,
+EN-invalid cost essentially the same, a near-limit input sustained about 0.53
+documents/second, and XSD-only Order validation sustained about 13.8
+documents/second. Two validators improved invoice throughput, four gave no
+reliable additional gain, and extra prefetch alone gave none. Bare JVM launch
+was under 2% of the complete Saxon operation, so one isolated, cancellable JVM
+per document remains acceptable; a persistent JVM is explicitly deferred
+behind production profiling while retaining the validator interface.
+
+The evidence supports retaining the conservative defaults of concurrency 1,
+prefetch 1, 30-second validation budgets, and 60-second `AckWait`, preferring
+horizontal replicas. The capacity document supplies initial Kubernetes
+CPU/memory requests and limits, `MaxAckPending` guidance, a queue-based replica
+formula with headroom, and explicit instructions to rerun the benchmark on the
+deployment node type.
+
+Verified with `BENCHTIME=4x make benchmark-en16931`, the aggregate-memory
+diagnostic, and `go test ./... -count=1`.
 
 ---
 
