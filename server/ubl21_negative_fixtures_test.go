@@ -23,6 +23,7 @@ func TestTrackedUBLNegativeFixturesShortCircuitBeforeEN16931(t *testing.T) {
 	type fixture struct {
 		ID             string    `json:"id"`
 		DocumentType   string    `json:"documentType"`
+		Profile        string    `json:"profile"`
 		File           string    `json:"file"`
 		Mutation       *mutation `json:"mutation"`
 		ExpectedFinal  string    `json:"expectedFinal"`
@@ -42,10 +43,15 @@ func TestTrackedUBLNegativeFixturesShortCircuitBeforeEN16931(t *testing.T) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
+	manifest.Fixtures = append(manifest.Fixtures, fixture{
+		ID: "en16931.invoice.future-mutation", DocumentType: "Invoice", Profile: "ubl21-en16931",
+		File: "this-file-must-not-be-opened.xml", Mutation: &mutation{ID: "future-en-mutation", Description: "test exclusion"},
+		ExpectedFinal: "invalid",
+	})
 
 	negativeCount := 0
 	for _, candidate := range manifest.Fixtures {
-		if candidate.Mutation == nil || candidate.ExpectedFinal != "invalid" {
+		if candidate.Profile != "ubl21" || candidate.Mutation == nil || candidate.ExpectedFinal != "invalid" {
 			continue
 		}
 		negativeCount++
