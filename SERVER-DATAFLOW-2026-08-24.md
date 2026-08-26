@@ -2,8 +2,15 @@
 
 **Project:** e-ubl21 / UBL-21 e-invoice validation  
 **Document:** `SERVER-DATAFLOW-2026-08-24.md`  
-**Status:** Current-state architecture and gap analysis  
+**Status:** Historical snapshot; superseded for current server behavior
 **Date:** 24 August 2026
+
+> This document preserves the pre-EN-server architecture snapshot and is no
+> longer the operational source of truth. Mandatory server-side EN 16931 is
+> documented in [`server/FUNCTIONALITY.md`](server/FUNCTIONALITY.md), the
+> [`validation contract`](docs/EN16931-VALIDATION-CONTRACT.md), and the
+> [`deployment guide`](docs/EN16931-DEPLOYMENT.md). Statements below that EN
+> validation is absent describe the historical milestone boundary only.
 
 ## 1. Purpose and scope
 

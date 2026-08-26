@@ -34,18 +34,19 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/e-ubl21
 # ---- Runtime stage ----------------------------------------------------------
 FROM docker.io/library/alpine:3.21
 
-# openjdk21 is pinned to the Alpine 3.21 package revision used to run the
-# checksum-pinned Saxon 12.7 runtime. A repository update therefore fails the
-# image build rather than silently changing Java underneath the validator.
+# Validation executables and trust data are pinned to exact Alpine 3.21 package
+# revisions. A repository update therefore fails the image build rather than
+# silently changing Java or xmllint underneath the validator.
 RUN apk add --no-cache \
-        libxml2-utils \
-        ca-certificates \
+        libxml2-utils=2.13.9-r1 \
+        ca-certificates=20260413-r0 \
         openjdk21-jre-headless=21.0.10_p7-r0 && \
     addgroup -S eubl21 && adduser -S -G eubl21 eubl21
 
 COPY --from=build /out/e-ubl21 /usr/local/bin/e-ubl21
 COPY --from=build /out/validation-assets/ /opt/e-ubl21/validation-assets/
 COPY --from=build /out/saxon/ /opt/e-ubl21/saxon/
+COPY THIRD_PARTY_NOTICES.md /opt/e-ubl21/THIRD_PARTY_NOTICES.md
 
 USER eubl21
 WORKDIR /home/eubl21

@@ -811,7 +811,7 @@ diagnostic, and `go test ./... -count=1`.
 
 ---
 
-## TODO-EN-16931-015 — Production packaging, documentation and upgrade policy
+## TODO-EN-16931-015 — Production packaging, documentation and upgrade policy ✅ DONE
 
 ### Goal
 
@@ -833,6 +833,21 @@ Make EN 16931 validation reproducible in Docker, local development, CI and deplo
 ### Acceptance criteria
 
 A clean deployment contains everything necessary to validate invoices offline and exposes exactly which standards/tool versions are running.
+
+Implemented by the checksum-verifying multi-stage `Dockerfile`, explicit
+Compose runtime paths, the mandatory GitHub Actions gate, and
+`make test-en16931-image`, which builds the production image and proves its
+real Saxon startup transform with container networking disabled. Successful
+production startup emits `validation runtime verified` with the UBL schema,
+EN artefact/release, Saxon, and XML Resolver versions plus pinned digests.
+Deployment/configuration is documented in `docs/EN16931-DEPLOYMENT.md`, the
+component upgrade and regression gate in `docs/EN16931-ASSET-UPGRADE.md`, and
+redistributed component provenance/licenses in `THIRD_PARTY_NOTICES.md` (also
+packaged in the image). The historical dataflow snapshot now directs readers
+to its current successor.
+
+Verified with `go test ./... -count=1`, `make test-en16931`,
+`make test-en16931-image`, and `docker compose config --quiet`.
 
 ---
 

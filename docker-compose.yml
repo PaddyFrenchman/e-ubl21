@@ -102,6 +102,14 @@ services:
       EUBL21_WORKER_VALIDATION_TIMEOUT: "30s"
       EUBL21_WORKER_XSD_VALIDATION_TIMEOUT: "30s"
       EUBL21_WORKER_EN16931_VALIDATION_TIMEOUT: "30s"
+      # These explicit paths match the immutable files baked into the worker
+      # image. Do not mount mutable or remotely updated validation assets here.
+      EUBL21_WORKER_JAVA_EXECUTABLE: "/usr/bin/java"
+      EUBL21_WORKER_SAXON_JAR_PATH: "/opt/e-ubl21/saxon/saxon-he-12.7.jar"
+      EUBL21_WORKER_XMLRESOLVER_JAR_PATH: "/opt/e-ubl21/saxon/xmlresolver-6.0.17.jar"
+      EUBL21_WORKER_SAXON_CONFIGURATION_PATH: "/opt/e-ubl21/validation-assets/saxon/saxon-config.xml"
+      EUBL21_WORKER_EN16931_XSLT_PATH: "/opt/e-ubl21/validation-assets/en16931/1.3.16/EN16931-UBL-validation.xslt"
+      EUBL21_WORKER_SAXON_STARTUP_TIMEOUT: "30s"
       EUBL21_WORKER_CONCURRENCY: "1"
       EUBL21_WORKER_PREFETCH: "1"
       EUBL21_WORKER_ACK_WAIT: "60s"

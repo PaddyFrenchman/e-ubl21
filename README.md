@@ -37,6 +37,14 @@ Worker validation uses three coherent deadlines:
 - `--worker-en16931-validation-timeout` / `EUBL21_WORKER_EN16931_VALIDATION_TIMEOUT` bounds Saxon alone; `0` inherits the overall timeout.
 - `--worker-ack-wait` / `EUBL21_WORKER_ACK_WAIT` must exceed the overall timeout. Pulled and prefetched messages receive progress heartbeats while queued and during validation.
 
+Java, Saxon/XML Resolver, the restricted Saxon configuration, the EN 16931
+stylesheet, and its startup timeout are also configurable for controlled local
+layouts. Production uses the checksum-verified files baked into the image; see
+[the EN 16931 deployment guide](docs/EN16931-DEPLOYMENT.md) for the complete
+flag/environment table, clean offline image check, version log, and rollout
+policy. Third-party validation-runtime licenses and provenance are recorded in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 Raw XML defaults to 30 days of post-validation retention and a shared 10 GiB
 Object Store cap. Validation metadata remains available after content expiry.
 See [UPLOAD-CONTENT-RETENTION.md](UPLOAD-CONTENT-RETENTION.md) for deployment,
@@ -55,6 +63,7 @@ must instead run:
 
 ```bash
 make test-en16931
+make test-en16931-image
 ```
 
 This target requires Java and `xmllint`, downloads Saxon 12.7 and XML Resolver
@@ -63,6 +72,9 @@ checked-in EN 16931 1.3.16 stylesheet and restricted Saxon configuration, and
 runs all ten positive Invoice/CreditNote fixtures, all 22 rule-targeted
 semantic-negative fixtures, and the XSD-invalid short-circuit control with
 missing dependencies treated as test failures rather than skips.
+
+The image target additionally builds the production container and proves its
+checksum-verified Saxon smoke transform succeeds with networking disabled.
 
 ### EN 16931 capacity benchmark
 

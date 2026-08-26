@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"time"
 
+	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 )
@@ -80,7 +81,7 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 	xsdCompleted := pipeline.now()
 	xsdStage := queue.ValidationStageResult{
 		Layer:       queue.ValidationLayerUBL21XSD,
-		Version:     "2.1",
+		Version:     xsdschemas.Version,
 		Valid:       xsdErr == nil,
 		ValidatedAt: xsdCompleted.UTC().Format(time.RFC3339Nano),
 		DurationMS:  xsdCompleted.Sub(xsdStarted).Milliseconds(),

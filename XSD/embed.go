@@ -7,6 +7,9 @@ package xsdschemas
 
 import "embed"
 
+// Version identifies the authoritative schema release embedded in FS.
+const Version = "2.1"
+
 // FS holds every UBL 2.1 XSD file under common/ and maindoc/, rooted at this
 // package's directory (i.e. FS.Open("maindoc/UBL-Invoice-2.1.xsd") works).
 //

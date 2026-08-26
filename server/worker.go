@@ -14,7 +14,9 @@ import (
 	"sync"
 	"time"
 
+	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -139,6 +141,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		if err := ensureSaxonRuntime(ctx, saxonRuntime); err != nil {
 			return err
 		}
+		logValidationRuntimeVersions(logger)
 		en16931Validator = newSaxonEN16931Validator(saxonRuntime, settings.en16931ValidationTimeout)
 	}
 
@@ -281,6 +284,21 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	workers.Wait()
 	logger.Info("worker shutting down")
 	return nil
+}
+
+func logValidationRuntimeVersions(logger *slog.Logger) {
+	profile := validationassets.EN16931()
+	saxon := validationassets.Saxon()
+	logger.Info("validation runtime verified",
+		"ublSchemaVersion", xsdschemas.Version,
+		"en16931ArtifactVersion", profile.Version,
+		"en16931SourceRelease", profile.SourceRelease,
+		"en16931XSLTSHA256", profile.XSLTSHA256,
+		"saxonVersion", saxon.SaxonVersion,
+		"saxonJARSHA256", saxon.SaxonJARSHA256,
+		"xmlResolverVersion", saxon.XMLResolverVersion,
+		"xmlResolverJARSHA256", saxon.XMLResolverSHA256,
+	)
 }
 
 func nonEmpty(value, fallback string) string {
