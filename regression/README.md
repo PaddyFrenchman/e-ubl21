@@ -35,11 +35,13 @@ go run ./createsamples generate \
   --output createsamples/samples
 ```
 
-Generation resolves the current full Git commit for immutable provenance,
-generates the complete corpus twice and rejects any byte difference, computes
-each fixture's SHA-256, validates the canonical manifest, and independently
-validates every XML document with `xmllint` before replacing the output tree.
-The canonical manifest is written as `<output>/manifest.json`. Use
+Generation resolves the latest full Git commit that changed generator source
+or its manifest contract for immutable provenance, generates the complete
+corpus twice and rejects any byte difference, computes each fixture's SHA-256,
+validates the canonical manifest, and independently validates every XML
+document with `xmllint` before replacing the output tree. Tests and generated
+artifacts do not change that provenance version. The canonical manifest is
+written as `<output>/manifest.json`. Use
 `--generator-version git:<40-or-64-lowercase-hex-commit>` when generation
 runs outside a Git checkout.
 

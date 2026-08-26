@@ -50,7 +50,7 @@ func runGenerate(args []string) error {
 	output := flags.String("output", filepath.Join("createsamples", "samples"), "output directory for generated samples")
 	profile := flags.String("profile", "ubl21", "validation profile to generate (currently ubl21)")
 	set := flags.String("set", "positive", "fixture set to generate (currently positive)")
-	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: current HEAD)")
+	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: latest generator implementation commit)")
 	count := flags.Int("count", 1, "number of sample files to generate per main document schema")
 	if err := flags.Parse(args); err != nil {
 		return err

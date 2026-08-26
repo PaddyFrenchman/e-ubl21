@@ -71,10 +71,21 @@ func resolveGeneratorVersion(explicit string) (string, error) {
 		}
 		return explicit, nil
 	}
-	command := exec.Command("git", "rev-parse", "HEAD")
+	rootCommand := exec.Command("git", "rev-parse", "--show-toplevel")
+	rootOutput, err := rootCommand.Output()
+	if err != nil {
+		return "", fmt.Errorf("locate generator Git checkout (use --generator-version to provide it explicitly): %w", err)
+	}
+	command := exec.Command("git", "log", "-1", "--format=%H", "--",
+		":(glob)createsamples/**/*.go",
+		":(exclude,glob)createsamples/**/*_test.go",
+		"regression/manifest.go",
+		"regression/schemas/fixture-manifest.schema.json",
+	)
+	command.Dir = strings.TrimSpace(string(rootOutput))
 	output, err := command.Output()
 	if err != nil {
-		return "", fmt.Errorf("resolve generator Git commit (use --generator-version to provide it explicitly): %w", err)
+		return "", fmt.Errorf("resolve generator implementation Git commit (use --generator-version to provide it explicitly): %w", err)
 	}
 	version := "git:" + strings.TrimSpace(string(output))
 	if !immutableGeneratorVersion.MatchString(version) {
