@@ -208,3 +208,23 @@ func NewInvoiceVariantO() InvoiceDocument {
 	doc.Totals = totals
 	return doc
 }
+
+// NewCreditNoteVariantS builds a standard-rated UBL CreditNote using the
+// same exact-arithmetic and EN 16931 party/payment baseline as the Invoice S
+// variant. It is the positive fixture proving the mandatory semantic stage
+// supports both EN 16931 UBL billing roots.
+func NewCreditNoteVariantS() CreditNoteDocument {
+	base := baseInvoiceSkeleton()
+	base.Seller.VATSchemeID = "NL123456789B01"
+	base.Seller.LegalRegistrationID = "12345678"
+	lines, breakdown, totals := Finalize([]Line{{
+		ID: "1", Quantity: 1, UnitCode: "C62", ItemName: "Returned widget",
+		NetPrice: NewMoneyFromMajorUnits(50.00), VATCategoryID: "S", VATRate: 21,
+	}})
+	return CreditNoteDocument{
+		CustomizationID: EN16931CustomizationID, ID: "CN-0001", IssueDate: "2026-01-21",
+		CreditNoteTypeCode: "381", DocumentCurrencyCode: base.DocumentCurrencyCode,
+		Seller: base.Seller, Buyer: base.Buyer, PaymentMeans: base.PaymentMeans,
+		Lines: lines, TaxBreakdown: breakdown, Totals: totals,
+	}
+}

@@ -24,9 +24,10 @@ import (
 // document root is unprefixed (default namespace), while cac/cbc-qualified
 // elements use their usual prefixes.
 const (
-	nsInvoice = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
-	nsCAC     = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
-	nsCBC     = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+	nsInvoice    = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+	nsCreditNote = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2"
+	nsCAC        = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	nsCBC        = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
 )
 
 // leaf builds a childless element with the given namespace prefix, name
@@ -236,5 +237,54 @@ func BuildInvoiceXML(doc InvoiceDocument) (string, error) {
 		Children: children,
 	}
 
+	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(root, 0) + "\n", nil
+}
+
+// BuildCreditNoteXML converts a populated CreditNoteDocument into a complete,
+// serialized UBL CreditNote. Its EN 16931 business terms mirror Invoice, while
+// the UBL syntax uses CreditNoteTypeCode, CreditNoteLine and CreditedQuantity.
+func BuildCreditNoteXML(doc CreditNoteDocument) (string, error) {
+	if len(doc.Lines) == 0 {
+		return "", fmt.Errorf("credit note %q has no lines to render", doc.ID)
+	}
+
+	children := []xmlnode.Node{
+		cbcLeaf("CustomizationID", doc.CustomizationID),
+		cbcLeaf("ID", doc.ID),
+		cbcLeaf("IssueDate", doc.IssueDate),
+		cbcLeaf("CreditNoteTypeCode", doc.CreditNoteTypeCode),
+		cbcLeaf("DocumentCurrencyCode", doc.DocumentCurrencyCode),
+		buildPartyNode("AccountingSupplierParty", doc.Seller),
+		buildPartyNode("AccountingCustomerParty", doc.Buyer),
+	}
+	for _, pm := range doc.PaymentMeans {
+		children = append(children, buildPaymentMeansNode(pm))
+	}
+
+	taxTotalChildren := make([]xmlnode.Node, 0, len(doc.TaxBreakdown)+1)
+	taxTotalChildren = append(taxTotalChildren, cbcAmount("TaxAmount", doc.Totals.TaxAmount, doc.DocumentCurrencyCode))
+	for _, subtotal := range doc.TaxBreakdown {
+		taxTotalChildren = append(taxTotalChildren, buildTaxSubtotalNode(subtotal, doc.DocumentCurrencyCode))
+	}
+	children = append(children, cacParent("TaxTotal", taxTotalChildren...))
+	children = append(children, cacParent("LegalMonetaryTotal",
+		cbcAmount("LineExtensionAmount", doc.Totals.LineExtensionAmount, doc.DocumentCurrencyCode),
+		cbcAmount("TaxExclusiveAmount", doc.Totals.TaxExclusiveAmount, doc.DocumentCurrencyCode),
+		cbcAmount("TaxInclusiveAmount", doc.Totals.TaxInclusiveAmount, doc.DocumentCurrencyCode),
+		cbcAmount("PayableAmount", doc.Totals.PayableAmount, doc.DocumentCurrencyCode),
+	))
+	for _, line := range doc.Lines {
+		children = append(children, buildLineNode("CreditNoteLine", "CreditedQuantity", line, doc.DocumentCurrencyCode))
+	}
+
+	root := xmlnode.Node{
+		Name: "CreditNote",
+		Attributes: map[string]string{
+			"xmlns":     nsCreditNote,
+			"xmlns:cac": nsCAC,
+			"xmlns:cbc": nsCBC,
+		},
+		Children: children,
+	}
 	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(root, 0) + "\n", nil
 }

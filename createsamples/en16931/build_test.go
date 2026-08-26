@@ -56,3 +56,24 @@ func TestBuildInvoiceXMLRejectsNoLinesAndCoversOptionalNodes(t *testing.T) {
 		t.Fatalf("Money.String() = %q", got)
 	}
 }
+
+func TestCreditNoteVariantBuildsCompleteXML(t *testing.T) {
+	xml, err := BuildCreditNoteXML(NewCreditNoteVariantS())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{
+		`<CreditNote xmlns="` + nsCreditNote + `"`,
+		"<cbc:CustomizationID>" + EN16931CustomizationID + "</cbc:CustomizationID>",
+		"<cbc:CreditNoteTypeCode>381</cbc:CreditNoteTypeCode>",
+		"<cac:CreditNoteLine>",
+		"<cbc:CreditedQuantity unitCode=\"C62\">1</cbc:CreditedQuantity>",
+	} {
+		if !strings.Contains(xml, required) {
+			t.Errorf("generated credit note lacks %s", required)
+		}
+	}
+	if _, err := BuildCreditNoteXML(CreditNoteDocument{ID: "empty"}); err == nil {
+		t.Fatal("expected no-lines error")
+	}
+}

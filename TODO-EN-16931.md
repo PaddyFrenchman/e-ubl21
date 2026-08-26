@@ -564,7 +564,7 @@ preservation, and the strict OpenAPI lint passes at 100/100.
 
 ---
 
-## TODO-EN-16931-010 — Add positive EN 16931 integration fixtures
+## TODO-EN-16931-010 — Add positive EN 16931 integration fixtures ✅ DONE
 
 ### Goal
 
@@ -586,6 +586,15 @@ Prove that known compliant Invoice/CreditNote documents pass both validation lay
 ### Acceptance criteria
 
 The integration suite demonstrates positive compliance across representative EN 16931 Invoice rules and both supported UBL billing document roots.
+
+Implemented by `TestPositiveEN16931FixturesPassCompleteValidationPipeline`,
+which runs the real extracted UBL 2.1 schemas and pinned EN 16931 1.3.16 Saxon
+validator over all seven generated Invoice VAT variants (`S`, `Z`, `E`, `AE`,
+`G`, `K`, `O`), both vendored ConnectingEurope guide examples, and a generated
+standard-rated UBL CreditNote. Every case asserts a passing XSD stage, a
+passing EN stage, overall `valid`, no fatal EN assertion, and the pinned profile
+version. `BuildCreditNoteXML` and `NewCreditNoteVariantS` provide the missing
+positive CreditNote fixture using the same exact-arithmetic model as Invoice.
 
 ---
 
