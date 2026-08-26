@@ -63,6 +63,7 @@ must instead run:
 
 ```bash
 make test-en16931
+make test-en16931-compliance
 make test-en16931-image
 ```
 
@@ -75,6 +76,11 @@ missing dependencies treated as test failures rather than skips.
 
 The image target additionally builds the production container and proves its
 checksum-verified Saxon smoke transform succeeds with networking disabled.
+`test-en16931-compliance` is the explicit release-gate alias. In addition to
+the fixture corpora it exercises the public API and durable worker path for
+valid/invalid Invoice, CreditNote, XSD-only Order, EN-runtime exhaustion and
+successful replay, worker interruption between stages, and duplicate replay
+suppression. See [the compliance evidence matrix](docs/EN16931-COMPLIANCE-GATE.md).
 
 ### EN 16931 capacity benchmark
 

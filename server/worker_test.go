@@ -270,7 +270,10 @@ func TestWorkerShutdownCancelsActiveValidationWithoutConsumingAttempt(t *testing
 	go func() { replacementDone <- RunWorker(replacementCtx, replacementCfg) }()
 	defer cancelReplacement()
 
-	deadline := time.Now().Add(3 * time.Second)
+	// The full integration suite can have several xmllint/Saxon subprocesses
+	// completing concurrently. Keep this bounded, but do not confuse host CPU
+	// contention with a failed JetStream redelivery.
+	deadline := time.Now().Add(10 * time.Second)
 	for {
 		record, err = q.GetUploadRecord(ctx, id)
 		if err == nil && record.Status == queue.StatusValid {
@@ -884,6 +887,17 @@ func TestWorkerClaimsOneReplayAfterMessageIDDeduplicationWindow(t *testing.T) {
 			}
 			if !terminalValidationStagesComplete(stored) {
 				t.Fatalf("duplicate replay persisted incomplete validation stages: %+v", stored.ValidationStages)
+			}
+			results, resultErr := q.JS.Stream(ctx, q.Namespace.ResultsStreamName())
+			if resultErr != nil {
+				t.Fatal(resultErr)
+			}
+			resultInfo, resultErr := results.Info(ctx)
+			if resultErr != nil {
+				t.Fatal(resultErr)
+			}
+			if resultInfo.State.Msgs != 1 {
+				t.Fatalf("duplicate replay final results = %d, want exactly 1", resultInfo.State.Msgs)
 			}
 			return
 		}

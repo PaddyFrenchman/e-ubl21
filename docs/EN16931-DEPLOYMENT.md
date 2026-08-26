@@ -34,11 +34,15 @@ Use the reproducible gate from a clean checkout:
 
 ```sh
 make test-en16931
+make test-en16931-compliance
 make test-en16931-image
 ```
 
 The first command treats missing Java or `xmllint` as a failure and exercises
-the positive corpus, targeted-negative corpus, and XSD short-circuit control.
+the positive corpus, targeted-negative corpus, XSD short-circuit control, and
+the final public/durable compliance scenarios. The explicitly named
+`test-en16931-compliance` release target is an alias for that complete gate;
+its scenario-to-assertion map is in `EN16931-COMPLIANCE-GATE.md`.
 The second builds the production image and starts its worker with container
 networking disabled. It succeeds only when the checksum verification and real
 Saxon transform complete before the expected NATS connection failure. This

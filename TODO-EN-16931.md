@@ -851,7 +851,7 @@ Verified with `go test ./... -count=1`, `make test-en16931`,
 
 ---
 
-## TODO-EN-16931-016 — Final end-to-end compliance gate
+## TODO-EN-16931-016 — Final end-to-end compliance gate ✅ DONE
 
 ### Goal
 
@@ -905,6 +905,21 @@ Prove that the public server behavior meets the requirement, not merely that ind
 `TODO-EN-16931` is complete only when the following statement is true:
 
 > For every submitted UBL `Invoice` or `CreditNote`, the e-ubl21 server reports `valid` only after the document has successfully passed both the correct UBL 2.1 XML Schema validation and the pinned EN 16931 UBL semantic/business-rule validation. Standards failures are returned as structured layer-specific diagnostics; validator infrastructure failures remain retryable operational failures and participate safely in the existing queue, dead-letter and replay mechanisms.
+
+Implemented by `TestEN16931PublicComplianceScenarios`,
+`TestEN16931OperationalFailureReplayEndToEnd`,
+`TestEN16931CrashRestartEndToEnd`, and the strengthened duplicate-replay test.
+The tests cross the authenticated public API, embedded NATS/Object Store/KV,
+real XSD and Saxon stages where applicable, durable result/DLQ state, replay,
+and worker replacement. They wait for completed permanent publication rather
+than stopping at a terminal KV status and require exactly one final result.
+
+The mandatory `make test-en16931-compliance` gate retains the ten positive
+fixtures, 22 targeted semantic-negative fixtures, and XSD short-circuit
+control, then runs all eight end-to-end scenarios with dependency skipping
+disabled. The evidence map is documented in
+`docs/EN16931-COMPLIANCE-GATE.md`; the production image remains covered by
+`make test-en16931-image`.
 
 ---
 
