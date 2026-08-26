@@ -673,8 +673,12 @@ bounded overall pipeline deadline. Worker configuration rejects an `AckWait`
 that does not exceed the overall budget, and progress heartbeats now begin when
 a message is pulled, covering prefetched work as well as active validation.
 Saxon runs under `exec.CommandContext`, including bounded shutdown waiting and
-stdin handling that cannot wedge `Wait`; cancellation is verified to terminate
-the Java process.
+stdin handling that cannot wedge `Wait`. The production worker propagates its
+lifecycle context through the complete pipeline, so shutdown cancellation
+terminates Java immediately, NAKs the interrupted descriptor for another
+worker, and does not increment `ProcessingAttempts` or move the upload toward
+the DLQ. Separate adapter and worker-level regression tests verify both halves
+of that cancellation chain.
 
 Saxon stderr is capped at 8 KiB, SVRL at 4 MiB, parsed issues at 256, normalized
 issue text at 256 KiB total, and individual rule, location, test, message, and

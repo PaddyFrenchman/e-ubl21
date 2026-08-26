@@ -181,6 +181,117 @@ func TestWorkerDeadLettersExhaustedFailureAndSupportsReplay(t *testing.T) {
 	}
 }
 
+func TestWorkerShutdownCancelsActiveValidationWithoutConsumingAttempt(t *testing.T) {
+	cfg := testConfig(t, nil)
+	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(q.Close)
+	ctx := context.Background()
+	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := queue.NewID()
+	receivedAt := time.Now().UTC()
+	if err := q.PutUploadRecord(ctx, queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusPending, ReceivedAt: receivedAt.Format(time.RFC3339)}); err != nil {
+		t.Fatal(err)
+	}
+	if err := q.PutUploadContent(ctx, id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+
+	validationStarted := make(chan struct{})
+	validationCanceled := make(chan struct{})
+	workerCfg := WorkerConfig{
+		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace,
+		UploadContentRetention: cfg.UploadContentRetention, UploadContentMaxBytes: cfg.UploadContentMaxBytes,
+		ValidationTimeout: 30 * time.Second, AckWait: 60 * time.Second,
+		en16931Validator: en16931ValidatorFunc(func(validationCtx context.Context, _ io.Reader) (queue.ValidationStageResult, error) {
+			close(validationStarted)
+			<-validationCtx.Done()
+			close(validationCanceled)
+			return queue.ValidationStageResult{}, validationCtx.Err()
+		}),
+	}
+	workerCtx, cancelWorker := context.WithCancel(context.Background())
+	workerDone := make(chan error, 1)
+	go func() { workerDone <- RunWorker(workerCtx, workerCfg) }()
+	defer cancelWorker()
+
+	if err := q.PublishDocument(ctx, id, "Invoice", receivedAt); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-validationStarted:
+	case <-time.After(3 * time.Second):
+		t.Fatal("worker did not enter EN 16931 validation")
+	}
+	cancelWorker()
+	select {
+	case <-validationCanceled:
+	case <-time.After(time.Second):
+		t.Fatal("worker lifecycle cancellation did not reach the active validator")
+	}
+	select {
+	case err := <-workerDone:
+		if err != nil {
+			t.Fatalf("RunWorker returned error during shutdown: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("RunWorker waited for the validation timeout instead of canceling active work")
+	}
+
+	record, err := q.GetUploadRecord(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if record.Status != queue.StatusPending || record.ProcessingAttempts != 0 || record.LastError != "" || record.ProcessingFailedAt != "" {
+		t.Fatalf("shutdown cancellation changed retry state: %+v", record)
+	}
+	if depth, err := q.DeadLetterDepth(ctx); err != nil || depth != 0 {
+		t.Fatalf("dead-letter depth after shutdown=%d err=%v, want 0", depth, err)
+	}
+
+	// A replacement worker must receive and complete the NAKed descriptor.
+	replacementCfg := workerCfg
+	replacementCfg.en16931Validator = en16931ValidatorFunc(func(_ context.Context, xml io.Reader) (queue.ValidationStageResult, error) {
+		if _, err := io.Copy(io.Discard, xml); err != nil {
+			return queue.ValidationStageResult{}, err
+		}
+		return queue.ValidationStageResult{
+			Layer: queue.ValidationLayerEN16931, Version: "test", Valid: true,
+			ValidatedAt: time.Now().UTC().Format(time.RFC3339Nano),
+		}, nil
+	})
+	replacementCtx, cancelReplacement := context.WithCancel(context.Background())
+	replacementDone := make(chan error, 1)
+	go func() { replacementDone <- RunWorker(replacementCtx, replacementCfg) }()
+	defer cancelReplacement()
+
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		record, err = q.GetUploadRecord(ctx, id)
+		if err == nil && record.Status == queue.StatusValid {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("replacement worker did not receive canceled work: record=%+v err=%v", record, err)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	cancelReplacement()
+	select {
+	case err := <-replacementDone:
+		if err != nil {
+			t.Fatalf("replacement RunWorker returned error: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("replacement worker did not stop")
+	}
+}
+
 func TestWorkerCreatesCanonicalFailureWhenRecordIsMissingAtExhaustion(t *testing.T) {
 	cfg := testConfig(t, nil)
 	runTestWorker(t, cfg, func(worker *WorkerConfig) { worker.MaxDeliver = 1 })

@@ -192,7 +192,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	}
 
 	validationPipeline := newDocumentValidationPipelineWithTimeouts(q, en16931Validator, settings.validationTimeout, settings.xsdValidationTimeout)
-	worker := &documentWorker{queue: q, catalog: catalog, validator: validationPipeline, logger: logger, progressInterval: settings.ackWait / 3, contentRetention: cfg.UploadContentRetention, maxDeliver: uint64(settings.maxDeliver)}
+	worker := &documentWorker{queue: q, catalog: catalog, validator: validationPipeline, logger: logger, lifecycleCtx: ctx, progressInterval: settings.ackWait / 3, contentRetention: cfg.UploadContentRetention, maxDeliver: uint64(settings.maxDeliver)}
 	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
 	if err != nil {
 		if ctx.Err() != nil {
@@ -294,6 +294,7 @@ type documentWorker struct {
 	catalog          *validationCatalog
 	validator        *documentValidationPipeline
 	logger           *slog.Logger
+	lifecycleCtx     context.Context
 	progressInterval time.Duration
 	contentRetention time.Duration
 	maxDeliver       uint64
@@ -353,7 +354,14 @@ func startProgressHeartbeats(msg jetstream.Msg, interval time.Duration) func() {
 
 func (w *documentWorker) handle(msg jetstream.Msg) {
 	start := time.Now()
-	ctx := context.Background()
+	ctx := w.lifecycleCtx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if ctx.Err() != nil {
+		w.deferForShutdown(msg, queue.DocumentWorkItem{})
+		return
+	}
 
 	item, err := queue.DecodeDocumentWorkItem(msg.Data())
 	if err != nil {
@@ -599,6 +607,10 @@ publishResult:
 }
 
 func (w *documentWorker) retryOperationalFailure(ctx context.Context, msg jetstream.Msg, item queue.DocumentWorkItem, versioned *queue.VersionedUploadRecord, processingErr error) {
+	if ctx.Err() != nil {
+		w.deferForShutdown(msg, item)
+		return
+	}
 	logger := w.logger.With("id", item.ID, "documentType", item.DocumentType)
 	if versioned == nil {
 		metadata, metadataErr := msg.Metadata()
@@ -660,6 +672,18 @@ func (w *documentWorker) retryOperationalFailure(ctx context.Context, msg jetstr
 		return
 	}
 	w.finalizeDeadLetter(ctx, msg, queue.VersionedUploadRecord{Record: record, Revision: revision})
+}
+
+// deferForShutdown deliberately bypasses processing-attempt accounting. A
+// worker lifecycle cancellation is not a document or validator failure; NAK
+// leaves the descriptor available for another worker while active subprocesses
+// are terminated through the same context.
+func (w *documentWorker) deferForShutdown(msg jetstream.Msg, item queue.DocumentWorkItem) {
+	w.logger.Info("worker shutdown interrupted document processing; leaving message for redelivery",
+		"id", item.ID,
+		"documentType", item.DocumentType,
+	)
+	_ = msg.Nak()
 }
 
 func (w *documentWorker) finalizeDeadLetter(ctx context.Context, msg jetstream.Msg, versioned queue.VersionedUploadRecord) {
