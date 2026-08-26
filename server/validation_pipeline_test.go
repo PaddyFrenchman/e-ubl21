@@ -211,3 +211,27 @@ func TestDocumentValidationPipelineReturnsOperationalFailures(t *testing.T) {
 		}
 	})
 }
+
+func TestDocumentValidationPipelineUsesDistinctXSDAndOverallTimeouts(t *testing.T) {
+	source := &memoryValidationContentSource{content: []byte(`<Invoice/>`)}
+	var receivedXSDTimeout time.Duration
+	pipeline := newDocumentValidationPipelineWithTimeouts(source, en16931ValidatorFunc(func(ctx context.Context, _ io.Reader) (queue.ValidationStageResult, error) {
+		<-ctx.Done()
+		return queue.ValidationStageResult{}, ctx.Err()
+	}), 30*time.Millisecond, 7*time.Millisecond)
+	pipeline.xsdValidate = func(_ context.Context, _ string, _ io.Reader, timeout time.Duration) error {
+		receivedXSDTimeout = timeout
+		return nil
+	}
+	started := time.Now()
+	result, err := pipeline.Validate(context.Background(), "upload", "Invoice", "invoice.xsd")
+	if err == nil || !errors.Is(err, context.DeadlineExceeded) || !reflect.DeepEqual(result, documentValidationResult{}) {
+		t.Fatalf("result/error = %+v / %v", result, err)
+	}
+	if receivedXSDTimeout != 7*time.Millisecond {
+		t.Fatalf("XSD timeout = %s, want 7ms", receivedXSDTimeout)
+	}
+	if elapsed := time.Since(started); elapsed > 500*time.Millisecond {
+		t.Fatalf("overall pipeline timeout returned after %s", elapsed)
+	}
+}

@@ -34,12 +34,15 @@ type Limits struct {
 // DefaultLimits returns an independent copy of the production parser bounds.
 func DefaultLimits() Limits {
 	return Limits{
-		MaxInputBytes:      4 << 20,
-		MaxIssues:          256,
-		MaxRuleBytes:       256,
-		MaxSeverityBytes:   64,
-		MaxLocationBytes:   2 << 10,
-		MaxTestBytes:       2 << 10,
+		MaxInputBytes:    4 << 20,
+		MaxIssues:        256,
+		MaxRuleBytes:     256,
+		MaxSeverityBytes: 64,
+		MaxLocationBytes: 2 << 10,
+		// The pinned ruleset contains legitimate failed-assert test expressions
+		// above 2 KiB (notably VAT breakdown reconciliation). Keep them bounded
+		// without turning a real semantic failure into an operational retry.
+		MaxTestBytes:       16 << 10,
 		MaxMessageBytes:    4 << 10,
 		MaxDiagnosticBytes: 4 << 10,
 		MaxTotalTextBytes:  256 << 10,

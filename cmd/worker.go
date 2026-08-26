@@ -32,6 +32,8 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	workerCmd.Flags().String("worker-subject-filter", "", "Restrict this worker to a single document type's queue (e.g. ubl.documents.Invoice); empty processes every document type")
 	workerCmd.Flags().String("worker-metrics-addr", ":9091", "Address the worker's Prometheus /metrics and /healthz are served on")
 	workerCmd.Flags().Duration("worker-validation-timeout", 30*time.Second, "Maximum total validation time per document")
+	workerCmd.Flags().Duration("worker-xsd-validation-timeout", 0, "Maximum UBL 2.1 XSD stage time per document (0 inherits worker-validation-timeout)")
+	workerCmd.Flags().Duration("worker-en16931-validation-timeout", 0, "Maximum EN 16931 semantic stage time per Invoice or CreditNote (0 inherits worker-validation-timeout)")
 	workerCmd.Flags().Int("worker-concurrency", 1, "Maximum documents validated concurrently per worker process")
 	workerCmd.Flags().Int("worker-prefetch", 1, "Maximum pulled documents buffered locally while validations are busy")
 	workerCmd.Flags().Duration("worker-ack-wait", 60*time.Second, "JetStream acknowledgement deadline; must exceed validation timeout")
@@ -48,6 +50,8 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	mustBindLocalFlag(v, workerCmd, "worker-subject-filter")
 	mustBindLocalFlag(v, workerCmd, "worker-metrics-addr")
 	mustBindLocalFlag(v, workerCmd, "worker-validation-timeout")
+	mustBindLocalFlag(v, workerCmd, "worker-xsd-validation-timeout")
+	mustBindLocalFlag(v, workerCmd, "worker-en16931-validation-timeout")
 	mustBindLocalFlag(v, workerCmd, "worker-concurrency")
 	mustBindLocalFlag(v, workerCmd, "worker-prefetch")
 	mustBindLocalFlag(v, workerCmd, "worker-ack-wait")
@@ -74,26 +78,28 @@ func worker(ctx context.Context, cfg *Config) error {
 	defer stop()
 
 	return runWorker(ctx, server.WorkerConfig{
-		NATSURL:                cfg.NATSURL,
-		NATSOptions:            cfg.NATSOptions,
-		QueueNamespace:         cfg.QueueNamespace,
-		ConsumerName:           cfg.WorkerConsumerName,
-		SubjectFilter:          cfg.WorkerSubjectFilter,
-		MetricsAddr:            cfg.WorkerMetricsAddr,
-		ValidationTimeout:      cfg.WorkerValidationTimeout,
-		Concurrency:            cfg.WorkerConcurrency,
-		Prefetch:               cfg.WorkerPrefetch,
-		AckWait:                cfg.WorkerAckWait,
-		MaxDeliver:             cfg.WorkerMaxDeliver,
-		MaxAckPending:          cfg.WorkerMaxAckPending,
-		JavaExecutable:         cfg.WorkerJavaExecutable,
-		SaxonJARPath:           cfg.WorkerSaxonJARPath,
-		XMLResolverJARPath:     cfg.WorkerXMLResolverJARPath,
-		SaxonConfigurationPath: cfg.WorkerSaxonConfigurationPath,
-		EN16931XSLTPath:        cfg.WorkerEN16931XSLTPath,
-		SaxonStartupTimeout:    cfg.WorkerSaxonStartupTimeout,
-		UploadContentRetention: cfg.UploadContentRetention,
-		UploadContentMaxBytes:  cfg.UploadContentMaxBytes,
-		Logger:                 slog.Default(),
+		NATSURL:                  cfg.NATSURL,
+		NATSOptions:              cfg.NATSOptions,
+		QueueNamespace:           cfg.QueueNamespace,
+		ConsumerName:             cfg.WorkerConsumerName,
+		SubjectFilter:            cfg.WorkerSubjectFilter,
+		MetricsAddr:              cfg.WorkerMetricsAddr,
+		ValidationTimeout:        cfg.WorkerValidationTimeout,
+		XSDValidationTimeout:     cfg.WorkerXSDValidationTimeout,
+		EN16931ValidationTimeout: cfg.WorkerEN16931ValidationTimeout,
+		Concurrency:              cfg.WorkerConcurrency,
+		Prefetch:                 cfg.WorkerPrefetch,
+		AckWait:                  cfg.WorkerAckWait,
+		MaxDeliver:               cfg.WorkerMaxDeliver,
+		MaxAckPending:            cfg.WorkerMaxAckPending,
+		JavaExecutable:           cfg.WorkerJavaExecutable,
+		SaxonJARPath:             cfg.WorkerSaxonJARPath,
+		XMLResolverJARPath:       cfg.WorkerXMLResolverJARPath,
+		SaxonConfigurationPath:   cfg.WorkerSaxonConfigurationPath,
+		EN16931XSLTPath:          cfg.WorkerEN16931XSLTPath,
+		SaxonStartupTimeout:      cfg.WorkerSaxonStartupTimeout,
+		UploadContentRetention:   cfg.UploadContentRetention,
+		UploadContentMaxBytes:    cfg.UploadContentMaxBytes,
+		Logger:                   slog.Default(),
 	})
 }

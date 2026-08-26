@@ -30,6 +30,13 @@ All settings can be provided either as flags or environment variables prefixed w
 - `--upload-content-retention` / `EUBL21_UPLOAD_CONTENT_RETENTION`
 - `--upload-content-max-bytes` / `EUBL21_UPLOAD_CONTENT_MAX_BYTES`
 
+Worker validation uses three coherent deadlines:
+
+- `--worker-validation-timeout` / `EUBL21_WORKER_VALIDATION_TIMEOUT` bounds the complete XSD plus EN 16931 pipeline.
+- `--worker-xsd-validation-timeout` / `EUBL21_WORKER_XSD_VALIDATION_TIMEOUT` bounds XSD alone; `0` inherits the overall timeout.
+- `--worker-en16931-validation-timeout` / `EUBL21_WORKER_EN16931_VALIDATION_TIMEOUT` bounds Saxon alone; `0` inherits the overall timeout.
+- `--worker-ack-wait` / `EUBL21_WORKER_ACK_WAIT` must exceed the overall timeout. Pulled and prefetched messages receive progress heartbeats while queued and during validation.
+
 Raw XML defaults to 30 days of post-validation retention and a shared 10 GiB
 Object Store cap. Validation metadata remains available after content expiry.
 See [UPLOAD-CONTENT-RETENTION.md](UPLOAD-CONTENT-RETENTION.md) for deployment,

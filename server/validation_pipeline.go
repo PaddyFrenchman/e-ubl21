@@ -31,23 +31,32 @@ type documentValidationResult struct {
 // documentValidationPipeline owns mandatory stage ordering and short-circuit
 // policy. Invoice and CreditNote can never succeed without an EN validator.
 type documentValidationPipeline struct {
-	content     validationContentSource
-	en16931     EN16931Validator
-	xsdValidate xsdStreamValidator
-	timeout     time.Duration
-	now         func() time.Time
+	content        validationContentSource
+	en16931        EN16931Validator
+	xsdValidate    xsdStreamValidator
+	overallTimeout time.Duration
+	xsdTimeout     time.Duration
+	now            func() time.Time
 }
 
 func newDocumentValidationPipeline(content validationContentSource, en16931 EN16931Validator, timeout time.Duration) *documentValidationPipeline {
-	if timeout <= 0 {
-		timeout = defaultValidationTimeout
+	return newDocumentValidationPipelineWithTimeouts(content, en16931, timeout, timeout)
+}
+
+func newDocumentValidationPipelineWithTimeouts(content validationContentSource, en16931 EN16931Validator, overallTimeout, xsdTimeout time.Duration) *documentValidationPipeline {
+	if overallTimeout <= 0 {
+		overallTimeout = defaultValidationTimeout
+	}
+	if xsdTimeout <= 0 {
+		xsdTimeout = overallTimeout
 	}
 	return &documentValidationPipeline{
-		content:     content,
-		en16931:     en16931,
-		xsdValidate: validateReaderAgainstSchema,
-		timeout:     timeout,
-		now:         time.Now,
+		content:        content,
+		en16931:        en16931,
+		xsdValidate:    validateReaderAgainstSchema,
+		overallTimeout: overallTimeout,
+		xsdTimeout:     xsdTimeout,
+		now:            time.Now,
 	}
 }
 
@@ -58,12 +67,12 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 	if ctx == nil {
 		return documentValidationResult{}, fmt.Errorf("validation pipeline context is nil")
 	}
-	validationCtx, cancel := context.WithTimeout(ctx, pipeline.timeout)
+	validationCtx, cancel := context.WithTimeout(ctx, pipeline.overallTimeout)
 	defer cancel()
 
 	xsdStarted := pipeline.now()
 	xsdErr := pipeline.withContent(validationCtx, uploadID, func(reader io.Reader) error {
-		return pipeline.xsdValidate(validationCtx, schemaPath, reader, pipeline.timeout)
+		return pipeline.xsdValidate(validationCtx, schemaPath, reader, pipeline.xsdTimeout)
 	})
 	xsdCompleted := pipeline.now()
 	xsdStage := queue.ValidationStageResult{

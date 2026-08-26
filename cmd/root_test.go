@@ -32,6 +32,9 @@ func TestWorkerCommandMakesEN16931MandatoryAndDescribesOverallTimeout(t *testing
 	if timeout == nil || timeout.Usage != "Maximum total validation time per document" {
 		t.Fatalf("validation timeout help = %#v", timeout)
 	}
+	if worker.Flags().Lookup("worker-xsd-validation-timeout") == nil || worker.Flags().Lookup("worker-en16931-validation-timeout") == nil {
+		t.Fatal("worker does not expose both stage-specific validation timeouts")
+	}
 }
 
 func TestLoadConfigReadsFileAndEnvironment(t *testing.T) {
@@ -83,6 +86,9 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	if cfg.WorkerJavaExecutable != "java" || cfg.WorkerSaxonStartupTimeout != 30*time.Second {
 		t.Fatalf("default worker EN 16931 runtime config = java %q, startup timeout %s", cfg.WorkerJavaExecutable, cfg.WorkerSaxonStartupTimeout)
 	}
+	if cfg.WorkerValidationTimeout != 30*time.Second || cfg.WorkerXSDValidationTimeout != 0 || cfg.WorkerEN16931ValidationTimeout != 0 {
+		t.Fatalf("default worker validation timeouts = overall %s XSD %s EN %s", cfg.WorkerValidationTimeout, cfg.WorkerXSDValidationTimeout, cfg.WorkerEN16931ValidationTimeout)
+	}
 }
 
 func TestLoadConfigReadsQueueNamespaceFromEnvironment(t *testing.T) {
@@ -115,6 +121,8 @@ func TestLoadConfigReadsWorkerValidationTimeout(t *testing.T) {
 	v := viper.New()
 	configureViper(v)
 	t.Setenv("EUBL21_WORKER_VALIDATION_TIMEOUT", "750ms")
+	t.Setenv("EUBL21_WORKER_XSD_VALIDATION_TIMEOUT", "250ms")
+	t.Setenv("EUBL21_WORKER_EN16931_VALIDATION_TIMEOUT", "500ms")
 	t.Setenv("EUBL21_WORKER_CONCURRENCY", "3")
 	t.Setenv("EUBL21_WORKER_PREFETCH", "4")
 	t.Setenv("EUBL21_WORKER_ACK_WAIT", "2s")
@@ -126,8 +134,8 @@ func TestLoadConfigReadsWorkerValidationTimeout(t *testing.T) {
 	if err := loadConfig(v, cfg); err != nil {
 		t.Fatal(err)
 	}
-	if cfg.WorkerValidationTimeout != 750*time.Millisecond {
-		t.Fatalf("validation timeout = %s", cfg.WorkerValidationTimeout)
+	if cfg.WorkerValidationTimeout != 750*time.Millisecond || cfg.WorkerXSDValidationTimeout != 250*time.Millisecond || cfg.WorkerEN16931ValidationTimeout != 500*time.Millisecond {
+		t.Fatalf("validation timeouts = overall %s XSD %s EN %s", cfg.WorkerValidationTimeout, cfg.WorkerXSDValidationTimeout, cfg.WorkerEN16931ValidationTimeout)
 	}
 	if cfg.WorkerConcurrency != 3 || cfg.WorkerPrefetch != 4 || cfg.WorkerAckWait != 2*time.Second || cfg.WorkerMaxDeliver != 9 || cfg.WorkerMaxAckPending != 12 {
 		t.Fatalf("worker delivery config = concurrency %d, prefetch %d, ack wait %s, max deliver %d, max ack pending %d", cfg.WorkerConcurrency, cfg.WorkerPrefetch, cfg.WorkerAckWait, cfg.WorkerMaxDeliver, cfg.WorkerMaxAckPending)

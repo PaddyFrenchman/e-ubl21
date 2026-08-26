@@ -43,3 +43,16 @@ func TestProgressHeartbeatsResetAckDeadline(t *testing.T) {
 		t.Fatal("disabled heartbeat returned nil stop function")
 	}
 }
+
+func TestPrefetchedJobStartsHeartbeatsBeforeProcessing(t *testing.T) {
+	msg := &progressTestMsg{}
+	job := newQueuedDocumentJob(msg, time.Millisecond)
+	defer job.stopProgress()
+	deadline := time.Now().Add(100 * time.Millisecond)
+	for msg.calls.Load() == 0 && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	if msg.calls.Load() == 0 {
+		t.Fatal("prefetched job sent no heartbeat while waiting for a worker")
+	}
+}

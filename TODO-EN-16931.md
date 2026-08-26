@@ -644,7 +644,7 @@ XSD rejection.
 
 ---
 
-## TODO-EN-16931-012 — Harden timeout, retry, cancellation and resource limits
+## TODO-EN-16931-012 — Harden timeout, retry, cancellation and resource limits ✅ DONE
 
 ### Goal
 
@@ -667,6 +667,28 @@ Give Saxon the same production hardening expectations already applied to `xmllin
 ### Acceptance criteria
 
 A malformed or adversarial invoice cannot cause an unbounded Saxon process, unbounded SVRL memory growth, or a permanently wedged JetStream work item.
+
+Implemented with configurable XSD and EN 16931 stage deadlines beneath a
+bounded overall pipeline deadline. Worker configuration rejects an `AckWait`
+that does not exceed the overall budget, and progress heartbeats now begin when
+a message is pulled, covering prefetched work as well as active validation.
+Saxon runs under `exec.CommandContext`, including bounded shutdown waiting and
+stdin handling that cannot wedge `Wait`; cancellation is verified to terminate
+the Java process.
+
+Saxon stderr is capped at 8 KiB, SVRL at 4 MiB, parsed issues at 256, normalized
+issue text at 256 KiB total, and individual rule, location, test, message, and
+diagnostic fields have explicit limits. Limit violations fail closed without
+returning partial results. Adversarial tests cover hung and killed processes,
+blocked input, malformed XSLT and SVRL, oversized output and diagnostics, and
+missing Java, Saxon JAR, XML Resolver JAR, or stylesheet assets. Queue-level
+tests prove representative operational failures consume the retry budget and
+end in canonical `processing_failed` state plus the DLQ, rather than being
+recorded as document-invalid or leaving partial validation state.
+
+Verified with `go test ./... -count=1` and the mandatory `make test-en16931`
+gate (10 positive fixtures, 22 targeted negatives, and the XSD short-circuit
+control).
 
 ---
 

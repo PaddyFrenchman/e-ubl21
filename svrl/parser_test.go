@@ -144,7 +144,9 @@ func TestParseFailsClosedAtEveryBound(t *testing.T) {
 	}{
 		{"input", prefix + suffix, with(base, func(l *svrl.Limits) { l.MaxInputBytes = 10 })},
 		{"issues", prefix + `<svrl:failed-assert/><svrl:failed-assert/>` + suffix, with(base, func(l *svrl.Limits) { l.MaxIssues = 1 })},
-		{"field", prefix + `<svrl:failed-assert id="TOO-LONG"/>` + suffix, with(base, func(l *svrl.Limits) { l.MaxRuleBytes = 3 })},
+		{"rule", prefix + `<svrl:failed-assert id="TOO-LONG"/>` + suffix, with(base, func(l *svrl.Limits) { l.MaxRuleBytes = 3 })},
+		{"message", prefix + `<svrl:failed-assert><svrl:text>TOO-LONG</svrl:text></svrl:failed-assert>` + suffix, with(base, func(l *svrl.Limits) { l.MaxMessageBytes = 3 })},
+		{"diagnostic", prefix + `<svrl:failed-assert><svrl:diagnostic-reference>TOO-LONG</svrl:diagnostic-reference></svrl:failed-assert>` + suffix, with(base, func(l *svrl.Limits) { l.MaxDiagnosticBytes = 3 })},
 		{"total", prefix + `<svrl:failed-assert id="1234" flag="error"/>` + suffix, with(base, func(l *svrl.Limits) { l.MaxTotalTextBytes = 4 })},
 	}
 	for _, test := range tests {
@@ -162,6 +164,20 @@ func TestParseRejectsInvalidLimits(t *testing.T) {
 	limits.MaxIssues = 0
 	if _, err := svrl.ParseWithLimits(strings.NewReader(prefix+suffix), limits); err == nil {
 		t.Fatal("ParseWithLimits() accepted an unbounded/invalid limit configuration")
+	}
+}
+
+func TestDefaultLimitsAcceptPinnedLongRuleExpressions(t *testing.T) {
+	// The official VAT reconciliation assertions exceed the former 2 KiB
+	// field limit. They must remain bounded, but must not become operational
+	// failures merely because a non-compliant document causes them to appear.
+	document := prefix + `<svrl:failed-assert id="BR-S-08" flag="fatal" test="` + strings.Repeat("x", 3<<10) + `"><svrl:text>Mismatch</svrl:text></svrl:failed-assert>` + suffix
+	report, err := svrl.Parse(strings.NewReader(document))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Issues) != 1 || len(report.Issues[0].Test) != 3<<10 {
+		t.Fatalf("long official-style test expression was not retained: %+v", report)
 	}
 }
 

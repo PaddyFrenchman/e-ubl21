@@ -20,23 +20,26 @@ import (
 )
 
 type WorkerConfig struct {
-	NATSURL                string
-	NATSOptions            []nats.Option
-	QueueNamespace         queue.Namespace
-	ConsumerName           string
-	SubjectFilter          string
-	MetricsAddr            string
-	ValidationTimeout      time.Duration
-	Concurrency            int
-	Prefetch               int
-	AckWait                time.Duration
-	MaxDeliver             int
-	JavaExecutable         string
-	SaxonJARPath           string
-	XMLResolverJARPath     string
-	SaxonConfigurationPath string
-	EN16931XSLTPath        string
-	SaxonStartupTimeout    time.Duration
+	NATSURL        string
+	NATSOptions    []nats.Option
+	QueueNamespace queue.Namespace
+	ConsumerName   string
+	SubjectFilter  string
+	MetricsAddr    string
+	// ValidationTimeout bounds the complete XSD + EN 16931 pipeline.
+	ValidationTimeout        time.Duration
+	XSDValidationTimeout     time.Duration
+	EN16931ValidationTimeout time.Duration
+	Concurrency              int
+	Prefetch                 int
+	AckWait                  time.Duration
+	MaxDeliver               int
+	JavaExecutable           string
+	SaxonJARPath             string
+	XMLResolverJARPath       string
+	SaxonConfigurationPath   string
+	EN16931XSLTPath          string
+	SaxonStartupTimeout      time.Duration
 	// MaxAckPending is the fleet-wide outstanding-message limit on the shared
 	// durable consumer. Zero derives Concurrency + Prefetch for one replica.
 	MaxAckPending          int
@@ -57,25 +60,35 @@ const defaultWorkerMaxDeliver = 5
 const workerCompletionReconcileInterval = 30 * time.Second
 
 type workerRuntimeSettings struct {
-	validationTimeout time.Duration
-	concurrency       int
-	prefetch          int
-	ackWait           time.Duration
-	maxDeliver        int
-	maxAckPending     int
+	validationTimeout        time.Duration
+	xsdValidationTimeout     time.Duration
+	en16931ValidationTimeout time.Duration
+	concurrency              int
+	prefetch                 int
+	ackWait                  time.Duration
+	maxDeliver               int
+	maxAckPending            int
 }
 
 func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, error) {
 	s := workerRuntimeSettings{
-		validationTimeout: cfg.ValidationTimeout,
-		concurrency:       cfg.Concurrency,
-		prefetch:          cfg.Prefetch,
-		ackWait:           cfg.AckWait,
-		maxDeliver:        cfg.MaxDeliver,
-		maxAckPending:     cfg.MaxAckPending,
+		validationTimeout:        cfg.ValidationTimeout,
+		xsdValidationTimeout:     cfg.XSDValidationTimeout,
+		en16931ValidationTimeout: cfg.EN16931ValidationTimeout,
+		concurrency:              cfg.Concurrency,
+		prefetch:                 cfg.Prefetch,
+		ackWait:                  cfg.AckWait,
+		maxDeliver:               cfg.MaxDeliver,
+		maxAckPending:            cfg.MaxAckPending,
 	}
 	if s.validationTimeout <= 0 {
 		s.validationTimeout = defaultValidationTimeout
+	}
+	if s.xsdValidationTimeout <= 0 {
+		s.xsdValidationTimeout = s.validationTimeout
+	}
+	if s.en16931ValidationTimeout <= 0 {
+		s.en16931ValidationTimeout = s.validationTimeout
 	}
 	if s.concurrency <= 0 {
 		s.concurrency = defaultWorkerConcurrency
@@ -99,6 +112,12 @@ func resolveWorkerRuntimeSettings(cfg WorkerConfig) (workerRuntimeSettings, erro
 	if s.ackWait <= s.validationTimeout {
 		return workerRuntimeSettings{}, fmt.Errorf("worker ack wait (%s) must exceed validation timeout (%s)", s.ackWait, s.validationTimeout)
 	}
+	if s.validationTimeout < s.xsdValidationTimeout {
+		return workerRuntimeSettings{}, fmt.Errorf("worker validation timeout (%s) must be at least XSD validation timeout (%s)", s.validationTimeout, s.xsdValidationTimeout)
+	}
+	if s.validationTimeout < s.en16931ValidationTimeout {
+		return workerRuntimeSettings{}, fmt.Errorf("worker validation timeout (%s) must be at least EN 16931 validation timeout (%s)", s.validationTimeout, s.en16931ValidationTimeout)
+	}
 	return s, nil
 }
 
@@ -120,7 +139,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		if err := ensureSaxonRuntime(ctx, saxonRuntime); err != nil {
 			return err
 		}
-		en16931Validator = newSaxonEN16931Validator(saxonRuntime, settings.validationTimeout)
+		en16931Validator = newSaxonEN16931Validator(saxonRuntime, settings.en16931ValidationTimeout)
 	}
 
 	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
@@ -172,8 +191,8 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		}()
 	}
 
-	validationPipeline := newDocumentValidationPipeline(q, en16931Validator, settings.validationTimeout)
-	worker := &documentWorker{queue: q, catalog: catalog, validator: validationPipeline, logger: logger, progressInterval: settings.ackWait / 2, contentRetention: cfg.UploadContentRetention, maxDeliver: uint64(settings.maxDeliver)}
+	validationPipeline := newDocumentValidationPipelineWithTimeouts(q, en16931Validator, settings.validationTimeout, settings.xsdValidationTimeout)
+	worker := &documentWorker{queue: q, catalog: catalog, validator: validationPipeline, logger: logger, progressInterval: settings.ackWait / 3, contentRetention: cfg.UploadContentRetention, maxDeliver: uint64(settings.maxDeliver)}
 	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
 	if err != nil {
 		if ctx.Err() != nil {
@@ -193,7 +212,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		cancelReconcile()
 		reconciler.Wait()
 	}()
-	jobs := make(chan jetstream.Msg, settings.prefetch)
+	jobs := make(chan queuedDocumentJob, settings.prefetch)
 	workerJobsChannelCapacity.Set(float64(settings.prefetch))
 	workerNATSIteratorCapacity.Set(float64(localCapacity))
 	defer workerJobsChannelDepth.Set(0)
@@ -203,9 +222,9 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
-			for msg := range jobs {
+			for job := range jobs {
 				workerJobsChannelDepth.Set(float64(len(jobs)))
-				worker.process(msg)
+				worker.processWithProgress(job.msg, job.stopProgress)
 			}
 		}()
 	}
@@ -217,6 +236,9 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		"concurrency", settings.concurrency,
 		"prefetch", settings.prefetch,
 		"ackWait", settings.ackWait,
+		"validationTimeout", settings.validationTimeout,
+		"xsdValidationTimeout", settings.xsdValidationTimeout,
+		"en16931ValidationTimeout", settings.en16931ValidationTimeout,
 		"applicationMaxAttempts", settings.maxDeliver,
 		"brokerMaxDeliver", "unlimited",
 		"maxAckPending", settings.maxAckPending,
@@ -241,10 +263,12 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 			workers.Wait()
 			return fmt.Errorf("pull document: %w", nextErr)
 		}
+		job := newQueuedDocumentJob(msg, worker.progressInterval)
 		select {
-		case jobs <- msg:
+		case jobs <- job:
 			workerJobsChannelDepth.Set(float64(len(jobs)))
 		case <-ctx.Done():
+			job.stopProgress()
 			break
 		}
 		if ctx.Err() != nil {
@@ -275,17 +299,34 @@ type documentWorker struct {
 	maxDeliver       uint64
 }
 
+// queuedDocumentJob starts acknowledgement heartbeats at pull time, not when
+// a worker eventually begins validation. Prefetched documents can therefore
+// wait behind a full two-stage validation without consuming their AckWait.
+type queuedDocumentJob struct {
+	msg          jetstream.Msg
+	stopProgress func()
+}
+
+func newQueuedDocumentJob(msg jetstream.Msg, progressInterval time.Duration) queuedDocumentJob {
+	return queuedDocumentJob{msg: msg, stopProgress: startProgressHeartbeats(msg, progressInterval)}
+}
+
 const nakRetryDelay = 10 * time.Second
 const replayHandoffRetryDelay = 100 * time.Millisecond
 
 func (w *documentWorker) process(msg jetstream.Msg) {
+	w.processWithProgress(msg, startProgressHeartbeats(msg, w.progressInterval))
+}
+
+func (w *documentWorker) processWithProgress(msg jetstream.Msg, stopProgress func()) {
 	workerValidationsInFlight.Inc()
 	defer workerValidationsInFlight.Dec()
 	if metadata, err := msg.Metadata(); err == nil && metadata.NumDelivered > 1 {
 		workerRedeliveries.Inc()
 	}
-	stopProgress := startProgressHeartbeats(msg, w.progressInterval)
-	defer stopProgress()
+	if stopProgress != nil {
+		defer stopProgress()
+	}
 	w.handle(msg)
 }
 

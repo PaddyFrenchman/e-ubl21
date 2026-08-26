@@ -14,44 +14,46 @@ import (
 )
 
 type Config struct {
-	ConfigFile                   string
-	Host                         string
-	Port                         int
-	OpenAPIPath                  string
-	SwaggerPath                  string
-	OAuthIssuer                  string
-	OAuthAudience                string
-	OAuthHMACSecret              string
-	NATSURL                      string
-	NATSOptions                  []nats.Option
-	QueueNamespace               queue.Namespace
-	RateLimitRPS                 float64
-	RateLimitBurst               int
-	TLSCertFile                  string
-	TLSKeyFile                   string
-	HTTPReadHeaderTimeout        time.Duration
-	HTTPReadTimeout              time.Duration
-	HTTPWriteTimeout             time.Duration
-	HTTPIdleTimeout              time.Duration
-	HTTPShutdownTimeout          time.Duration
-	HTTPMaxHeaderBytes           int
-	UploadContentRetention       time.Duration
-	UploadContentMaxBytes        int64
-	WorkerConsumerName           string
-	WorkerSubjectFilter          string
-	WorkerMetricsAddr            string
-	WorkerValidationTimeout      time.Duration
-	WorkerConcurrency            int
-	WorkerPrefetch               int
-	WorkerAckWait                time.Duration
-	WorkerMaxDeliver             int
-	WorkerMaxAckPending          int
-	WorkerJavaExecutable         string
-	WorkerSaxonJARPath           string
-	WorkerXMLResolverJARPath     string
-	WorkerSaxonConfigurationPath string
-	WorkerEN16931XSLTPath        string
-	WorkerSaxonStartupTimeout    time.Duration
+	ConfigFile                     string
+	Host                           string
+	Port                           int
+	OpenAPIPath                    string
+	SwaggerPath                    string
+	OAuthIssuer                    string
+	OAuthAudience                  string
+	OAuthHMACSecret                string
+	NATSURL                        string
+	NATSOptions                    []nats.Option
+	QueueNamespace                 queue.Namespace
+	RateLimitRPS                   float64
+	RateLimitBurst                 int
+	TLSCertFile                    string
+	TLSKeyFile                     string
+	HTTPReadHeaderTimeout          time.Duration
+	HTTPReadTimeout                time.Duration
+	HTTPWriteTimeout               time.Duration
+	HTTPIdleTimeout                time.Duration
+	HTTPShutdownTimeout            time.Duration
+	HTTPMaxHeaderBytes             int
+	UploadContentRetention         time.Duration
+	UploadContentMaxBytes          int64
+	WorkerConsumerName             string
+	WorkerSubjectFilter            string
+	WorkerMetricsAddr              string
+	WorkerValidationTimeout        time.Duration
+	WorkerXSDValidationTimeout     time.Duration
+	WorkerEN16931ValidationTimeout time.Duration
+	WorkerConcurrency              int
+	WorkerPrefetch                 int
+	WorkerAckWait                  time.Duration
+	WorkerMaxDeliver               int
+	WorkerMaxAckPending            int
+	WorkerJavaExecutable           string
+	WorkerSaxonJARPath             string
+	WorkerXMLResolverJARPath       string
+	WorkerSaxonConfigurationPath   string
+	WorkerEN16931XSLTPath          string
+	WorkerSaxonStartupTimeout      time.Duration
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -163,6 +165,8 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-subject-filter", "")
 	v.SetDefault("worker-metrics-addr", ":9091")
 	v.SetDefault("worker-validation-timeout", 30*time.Second)
+	v.SetDefault("worker-xsd-validation-timeout", time.Duration(0))
+	v.SetDefault("worker-en16931-validation-timeout", time.Duration(0))
 	v.SetDefault("worker-concurrency", 1)
 	v.SetDefault("worker-prefetch", 1)
 	v.SetDefault("worker-ack-wait", 60*time.Second)
@@ -219,6 +223,8 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerSubjectFilter = v.GetString("worker-subject-filter")
 	cfg.WorkerMetricsAddr = v.GetString("worker-metrics-addr")
 	cfg.WorkerValidationTimeout = v.GetDuration("worker-validation-timeout")
+	cfg.WorkerXSDValidationTimeout = v.GetDuration("worker-xsd-validation-timeout")
+	cfg.WorkerEN16931ValidationTimeout = v.GetDuration("worker-en16931-validation-timeout")
 	cfg.WorkerConcurrency = v.GetInt("worker-concurrency")
 	cfg.WorkerPrefetch = v.GetInt("worker-prefetch")
 	cfg.WorkerAckWait = v.GetDuration("worker-ack-wait")

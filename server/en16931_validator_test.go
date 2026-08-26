@@ -8,7 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -138,6 +140,14 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 		}
 	})
 
+	t.Run("killed process", func(t *testing.T) {
+		cfg := fakeSaxonRuntime(t, `kill -9 $$`)
+		result, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
+		if err == nil || !strings.Contains(err.Error(), "Saxon transform failed") || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+			t.Fatalf("result/error = %+v / %v", result, err)
+		}
+	})
+
 	t.Run("timeout", func(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `while :; do :; done`)
 		result, err := newSaxonEN16931Validator(cfg, 10*time.Millisecond).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
@@ -192,6 +202,24 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 		}
 	})
 
+	t.Run("missing Saxon JAR", func(t *testing.T) {
+		cfg := fakeSaxonRuntime(t, `exit 0`)
+		cfg.saxonJARPath = filepath.Join(t.TempDir(), "missing-saxon.jar")
+		_, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
+		if err == nil || !strings.Contains(err.Error(), "read Saxon-HE JAR") {
+			t.Fatalf("error = %v", err)
+		}
+	})
+
+	t.Run("missing XML Resolver JAR", func(t *testing.T) {
+		cfg := fakeSaxonRuntime(t, `exit 0`)
+		cfg.xmlResolverJARPath = filepath.Join(t.TempDir(), "missing-xmlresolver.jar")
+		_, err := newSaxonEN16931Validator(cfg, time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
+		if err == nil || !strings.Contains(err.Error(), "read xmlresolver JAR") {
+			t.Fatalf("error = %v", err)
+		}
+	})
+
 	t.Run("unreadable XSLT", func(t *testing.T) {
 		cfg := fakeSaxonRuntime(t, `exit 0`)
 		cfg.xsltPath = filepath.Join(t.TempDir(), "missing.xslt")
@@ -211,6 +239,69 @@ func TestEN16931ValidatorClassifiesOperationalFailures(t *testing.T) {
 			t.Fatalf("result/error = %+v / %v", result, err)
 		}
 	})
+}
+
+func TestEN16931CancellationKillsJavaProcess(t *testing.T) {
+	pidPath := filepath.Join(t.TempDir(), "java.pid")
+	cfg := fakeSaxonRuntime(t, `printf '%s' "$$" > "`+pidPath+`"; while :; do :; done`)
+	validator := newSaxonEN16931Validator(cfg, 5*time.Second)
+	validator.waitDelay = 25 * time.Millisecond
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		_, err := validator.Validate(ctx, strings.NewReader(`<Invoice/>`))
+		done <- err
+	}()
+	var pid int
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		body, err := os.ReadFile(pidPath)
+		if err == nil {
+			pid, err = strconv.Atoi(string(body))
+			if err != nil {
+				t.Fatal(err)
+			}
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if pid == 0 {
+		t.Fatal("fake Java process did not start")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err == nil || !errors.Is(err, context.Canceled) {
+			t.Fatalf("canceled validation error = %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("validation did not return after cancellation")
+	}
+	deadline = time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		err := syscall.Kill(pid, 0)
+		if errors.Is(err, syscall.ESRCH) {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatalf("Java process %d remains alive after cancellation", pid)
+}
+
+func TestPinnedEN16931ValidatorRejectsMalformedXSLT(t *testing.T) {
+	cfg, ok := localSaxonRuntimeConfig(t)
+	if !ok {
+		return
+	}
+	path := filepath.Join(t.TempDir(), "malformed.xslt")
+	if err := os.WriteFile(path, []byte(`<xsl:stylesheet`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg.xsltPath = path
+	result, err := newSaxonEN16931Validator(cfg, 5*time.Second).Validate(context.Background(), strings.NewReader(`<Invoice/>`))
+	if err == nil || !strings.Contains(err.Error(), "Saxon transform failed") || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+		t.Fatalf("result/error = %+v / %v", result, err)
+	}
 }
 
 type blockingValidationReader struct {
