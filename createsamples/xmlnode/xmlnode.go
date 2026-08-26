@@ -10,7 +10,6 @@
 package xmlnode
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 )
@@ -30,11 +29,20 @@ type Node struct {
 // indent level (in 2-space units). Attribute keys are emitted in sorted
 // order for deterministic output.
 func Render(node Node, indent int) string {
+	var output strings.Builder
+	renderTo(&output, node, indent)
+	return output.String()
+}
+
+func renderTo(output *strings.Builder, node Node, indent int) {
 	prefix := ""
 	if node.Prefix != "" {
 		prefix = node.Prefix + ":"
 	}
-	attrText := ""
+	output.WriteString(indentString(indent))
+	output.WriteByte('<')
+	output.WriteString(prefix)
+	output.WriteString(node.Name)
 	if len(node.Attributes) > 0 {
 		keys := make([]string, 0, len(node.Attributes))
 		for k := range node.Attributes {
@@ -42,18 +50,31 @@ func Render(node Node, indent int) string {
 		}
 		sort.Strings(keys)
 		for _, k := range keys {
-			attrText += fmt.Sprintf(" %s=\"%s\"", k, escapeText(node.Attributes[k]))
+			output.WriteByte(' ')
+			output.WriteString(k)
+			output.WriteString("=\"")
+			output.WriteString(escapeText(node.Attributes[k]))
+			output.WriteByte('"')
 		}
 	}
 	if len(node.Children) == 0 {
-		return indentString(indent) + "<" + prefix + node.Name + attrText + ">" + escapeText(node.Value) + "</" + prefix + node.Name + ">\n"
+		output.WriteByte('>')
+		output.WriteString(escapeText(node.Value))
+		output.WriteString("</")
+		output.WriteString(prefix)
+		output.WriteString(node.Name)
+		output.WriteString(">\n")
+		return
 	}
-	buf := indentString(indent) + "<" + prefix + node.Name + attrText + ">\n"
+	output.WriteString(">\n")
 	for _, child := range node.Children {
-		buf += Render(child, indent+2)
+		renderTo(output, child, indent+2)
 	}
-	buf += indentString(indent) + "</" + prefix + node.Name + ">\n"
-	return buf
+	output.WriteString(indentString(indent))
+	output.WriteString("</")
+	output.WriteString(prefix)
+	output.WriteString(node.Name)
+	output.WriteString(">\n")
 }
 
 func indentString(n int) string {

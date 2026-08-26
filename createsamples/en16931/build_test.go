@@ -77,3 +77,26 @@ func TestCreditNoteVariantBuildsCompleteXML(t *testing.T) {
 		t.Fatal("expected no-lines error")
 	}
 }
+
+func TestLineHeavyInvoiceVariantReconcilesEveryLine(t *testing.T) {
+	if _, err := NewLineHeavyInvoiceVariantS(0); err == nil {
+		t.Fatal("zero lines returned nil error")
+	}
+	doc, err := NewLineHeavyInvoiceVariantS(1000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(doc.Lines) != 1000 || len(doc.TaxBreakdown) != 1 {
+		t.Fatalf("lines=%d tax breakdowns=%d", len(doc.Lines), len(doc.TaxBreakdown))
+	}
+	if doc.Totals.LineExtensionAmount != Money(100000) || doc.Totals.TaxAmount != Money(21000) || doc.Totals.PayableAmount != Money(121000) {
+		t.Fatalf("line-heavy totals = %+v", doc.Totals)
+	}
+	xml, err := BuildInvoiceXML(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Count(xml, "<cac:InvoiceLine>"); got != 1000 {
+		t.Fatalf("rendered InvoiceLine count = %d, want 1000", got)
+	}
+}

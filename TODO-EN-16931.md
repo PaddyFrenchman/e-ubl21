@@ -768,9 +768,12 @@ The project has measurements for the real two-stage invoice path and documented 
 Implemented a mandatory-runtime `make benchmark-en16931` target that records
 the host and Go/Java/libxml versions, verifies all pinned validation assets,
 and measures the complete Object Store → XSD → EN 16931 → KV/result
-pipeline with fixed document counts. Its matrix covers an XSD-only Order,
-EN-valid and EN-invalid Invoices, small/1 MiB/near-limit 9 MiB inputs,
-prefetch isolation, and one/two/four concurrent validators. `-benchmem`,
+pipeline with fixed document counts. Completion requires the expected KV
+status, `ResultPending=false`, a permanent validation result, and no outstanding
+message acknowledgement. Its matrix covers an XSD-only Order, EN-valid and
+EN-invalid Invoices, explicitly labeled 1 MiB/9 MiB byte-volume inputs, real
+100-line and 1,000-line invoices, a 2,950-line 9.94 MiB high-cardinality
+invoice, prefetch isolation, and one/two/four concurrent validators. `-benchmem`,
 documents/second, wall time/document, GNU-time RSS, and optional sampled
 aggregate process-tree RSS provide allocation, latency, throughput, and memory
 evidence. A separate benchmark distinguishes bare JVM launch from the current
@@ -778,9 +781,10 @@ per-document Saxon launch, stylesheet compilation, transform, and SVRL parse.
 
 The recorded baseline and decisions live in
 `docs/EN16931-CAPACITY.md`. On the measured 16-logical-CPU host, the real
-single-worker valid Invoice path sustained about 0.66 documents/second,
-EN-invalid cost essentially the same, a near-limit input sustained about 0.53
-documents/second, and XSD-only Order validation sustained about 13.8
+single-worker valid Invoice path sustained about 0.69 documents/second,
+EN-invalid cost essentially the same, a 1,000-line invoice sustained about
+0.48 documents/second, the 2,950-line near-limit semantic case sustained about
+0.35 documents/second, and XSD-only Order validation sustained about 14.8
 documents/second. Two validators improved invoice throughput, four gave no
 reliable additional gain, and extra prefetch alone gave none. Bare JVM launch
 was under 2% of the complete Saxon operation, so one isolated, cancellable JVM
@@ -793,6 +797,14 @@ horizontal replicas. The capacity document supplies initial Kubernetes
 CPU/memory requests and limits, `MaxAckPending` guidance, a queue-based replica
 formula with headroom, and explicit instructions to rerun the benchmark on the
 deployment node type.
+
+The generated high-cardinality corpus uses exact-arithmetic reconciliation for
+every line and VAT/monetary total. The shared XML renderer was converted from
+quadratic string concatenation to a linear `strings.Builder` traversal so
+near-limit fixture construction remains setup rather than contaminating the
+timed worker path. The highest tested passing production point is 2,950 lines;
+2,990 and above exceeded the bounded 4 MiB SVRL output and are documented as a
+capacity boundary rather than reported as successful throughput.
 
 Verified with `BENCHTIME=4x make benchmark-en16931`, the aggregate-memory
 diagnostic, and `go test ./... -count=1`.

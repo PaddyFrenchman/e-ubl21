@@ -60,15 +60,22 @@ func BenchmarkWorkerValidationThroughput(b *testing.B) {
 		name         string
 		documentType string
 		body         []byte
+		buildBody    func(*testing.B) ([]byte, int)
 		wantStatus   queue.ValidationStatus
 		concurrency  int
 		prefetch     int
+		lineCount    int
 	}{
 		{name: "xsd_only_order_112KiB/c1_p1", documentType: "Order", body: order, wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
 		{name: "invoice_valid_small/c1_p1", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
 		{name: "invoice_invalid_small/c1_p1", documentType: "Invoice", body: []byte(negative[0].XML), wantStatus: queue.StatusInvalid, concurrency: 1, prefetch: 1},
-		{name: "invoice_valid_medium_1MiB/c1_p1", documentType: "Invoice", body: padInvoice(1 << 20), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
-		{name: "invoice_valid_near_limit_9MiB/c1_p1", documentType: "Invoice", body: padInvoice(9 << 20), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_byte_padded_1MiB/c1_p1", documentType: "Invoice", body: padInvoice(1 << 20), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_byte_padded_9MiB/c1_p1", documentType: "Invoice", body: padInvoice(9 << 20), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_semantic_100_lines/c1_p1", documentType: "Invoice", buildBody: func(b *testing.B) ([]byte, int) { return buildBenchmarkLineHeavyInvoice(b, 100), 100 }, wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_semantic_1000_lines/c1_p1", documentType: "Invoice", buildBody: func(b *testing.B) ([]byte, int) { return buildBenchmarkLineHeavyInvoice(b, 1000), 1000 }, wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
+		{name: "invoice_valid_semantic_near_limit_2950_lines/c1_p1", documentType: "Invoice", buildBody: func(b *testing.B) ([]byte, int) {
+			return buildBenchmarkLineHeavyInvoiceToSize(b, 2950, maxUploadBytes-(64<<10)), 2950
+		}, wantStatus: queue.StatusValid, concurrency: 1, prefetch: 1},
 		{name: "invoice_valid_small/c1_p4", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 1, prefetch: 4},
 		{name: "invoice_valid_small/c2_p1", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 2, prefetch: 1},
 		{name: "invoice_valid_small/c2_p2", documentType: "Invoice", body: []byte(validInvoice), wantStatus: queue.StatusValid, concurrency: 2, prefetch: 2},
@@ -76,9 +83,61 @@ func BenchmarkWorkerValidationThroughput(b *testing.B) {
 	}
 	for _, tc := range cases {
 		b.Run(tc.name, func(b *testing.B) {
-			benchmarkWorkerValidationThroughput(b, saxonRuntime, tc.documentType, tc.body, tc.wantStatus, tc.concurrency, tc.prefetch)
+			body, lineCount := tc.body, tc.lineCount
+			if tc.buildBody != nil {
+				body, lineCount = tc.buildBody(b)
+			}
+			benchmarkWorkerValidationThroughput(b, saxonRuntime, tc.documentType, body, tc.wantStatus, tc.concurrency, tc.prefetch, lineCount)
 		})
 	}
+}
+
+func buildBenchmarkLineHeavyInvoice(b *testing.B, lineCount int) []byte {
+	b.Helper()
+	document, err := fixtures.NewLineHeavyInvoiceVariantS(lineCount)
+	if err != nil {
+		b.Fatal(err)
+	}
+	xml, err := fixtures.BuildInvoiceXML(document)
+	if err != nil {
+		b.Fatal(err)
+	}
+	return []byte(xml)
+}
+
+func buildBenchmarkLineHeavyInvoiceToSize(b *testing.B, lineCount, targetBytes int) []byte {
+	b.Helper()
+	if targetBytes <= 0 || targetBytes >= maxUploadBytes {
+		b.Fatalf("invalid line-heavy target size %d", targetBytes)
+	}
+	document, err := fixtures.NewLineHeavyInvoiceVariantS(lineCount)
+	if err != nil {
+		b.Fatal(err)
+	}
+	baseline, err := fixtures.BuildInvoiceXML(document)
+	if err != nil {
+		b.Fatal(err)
+	}
+	padding := targetBytes - len(baseline)
+	if padding < lineCount {
+		b.Fatalf("%d-line invoice is already %d bytes; cannot pad to %d", lineCount, len(baseline), targetBytes)
+	}
+	perLine, remainder := padding/lineCount, padding%lineCount
+	for index := range document.Lines {
+		extra := perLine
+		if index < remainder {
+			extra++
+		}
+		document.Lines[index].ItemName += strings.Repeat("x", extra)
+	}
+	xml, err := fixtures.BuildInvoiceXML(document)
+	if err != nil {
+		b.Fatal(err)
+	}
+	if len(xml) != targetBytes {
+		b.Fatalf("near-limit line-heavy invoice is %d bytes, want %d", len(xml), targetBytes)
+	}
+	return []byte(xml)
 }
 
 // BenchmarkEN16931ProcessCost quantifies the per-document process model. The
@@ -243,7 +302,7 @@ func waitForBenchmarkConsumer(b *testing.B, ctx context.Context, q *queue.Client
 	}
 }
 
-func benchmarkWorkerValidationThroughput(b *testing.B, saxonRuntime saxonRuntimeConfig, documentType string, body []byte, wantStatus queue.ValidationStatus, concurrency, prefetch int) {
+func benchmarkWorkerValidationThroughput(b *testing.B, saxonRuntime saxonRuntimeConfig, documentType string, body []byte, wantStatus queue.ValidationStatus, concurrency, prefetch, lineCount int) {
 	natsServer := queuetest.StartServer(b)
 	q, err := queue.ConnectWithOptions(natsServer.URL, queue.DefaultNamespace, natsServer.Options...)
 	if err != nil {
@@ -284,16 +343,7 @@ func benchmarkWorkerValidationThroughput(b *testing.B, saxonRuntime saxonRuntime
 		}
 	}()
 
-	deadline := time.Now().Add(5 * time.Second)
-	for {
-		if _, err := q.JS.Consumer(ctx, q.Namespace.DocumentsStreamName(), "worker-benchmark"); err == nil {
-			break
-		}
-		if time.Now().After(deadline) {
-			b.Fatal("worker consumer did not become ready")
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
+	consumer := waitForBenchmarkConsumer(b, ctx, q, "worker-benchmark")
 
 	ids := make([]string, b.N)
 	b.ReportAllocs()
@@ -314,19 +364,43 @@ func benchmarkWorkerValidationThroughput(b *testing.B, saxonRuntime saxonRuntime
 		}
 	}
 	for _, id := range ids {
+		deadline := time.Now().Add(5 * time.Minute)
 		for {
 			record, err := q.GetUploadRecord(ctx, id)
 			if err != nil {
 				b.Fatal(err)
 			}
-			if record.Status != queue.StatusPending {
-				if record.Status != wantStatus {
-					b.Fatal(fmt.Errorf("upload %s status %s, want %s: %s", id, record.Status, wantStatus, record.Error))
+			if record.Status != queue.StatusPending && record.Status != queue.StatusEnqueuePending && record.Status != wantStatus {
+				b.Fatal(fmt.Errorf("upload %s status %s, want %s: %s", id, record.Status, wantStatus, record.Error))
+			}
+			if record.Status == wantStatus && !record.ResultPending {
+				published, err := q.HasValidationResult(ctx, id)
+				if err != nil {
+					b.Fatal(err)
 				}
-				break
+				if benchmarkDocumentResultComplete(record, published, wantStatus) {
+					break
+				}
+			}
+			if time.Now().After(deadline) {
+				b.Fatalf("upload %s did not durably publish its validation result: status=%s resultPending=%t", id, record.Status, record.ResultPending)
 			}
 			time.Sleep(5 * time.Millisecond)
 		}
+	}
+	ackDeadline := time.Now().Add(5 * time.Second)
+	for {
+		info, err := consumer.Info(ctx)
+		if err != nil {
+			b.Fatal(err)
+		}
+		if info.NumAckPending == 0 {
+			break
+		}
+		if time.Now().After(ackDeadline) {
+			b.Fatalf("worker left %d benchmark messages awaiting acknowledgement", info.NumAckPending)
+		}
+		time.Sleep(5 * time.Millisecond)
 	}
 	elapsed := time.Since(started)
 	b.StopTimer()
@@ -334,4 +408,34 @@ func benchmarkWorkerValidationThroughput(b *testing.B, saxonRuntime saxonRuntime
 	b.ReportMetric(elapsed.Seconds()*1000/float64(b.N), "wall_ms/doc")
 	b.ReportMetric(float64(concurrency), "workers")
 	b.ReportMetric(float64(prefetch), "prefetch")
+	if lineCount > 0 {
+		b.ReportMetric(float64(lineCount), "invoice_lines")
+	}
+}
+
+func benchmarkDocumentResultComplete(record queue.UploadRecord, published bool, wantStatus queue.ValidationStatus) bool {
+	return record.Status == wantStatus && !record.ResultPending && published
+}
+
+func TestBenchmarkCompletionRequiresDurableResultPublication(t *testing.T) {
+	complete := queue.UploadRecord{Status: queue.StatusValid}
+	tests := []struct {
+		name      string
+		record    queue.UploadRecord
+		published bool
+		want      bool
+	}{
+		{name: "complete", record: complete, published: true, want: true},
+		{name: "result pending", record: queue.UploadRecord{Status: queue.StatusValid, ResultPending: true}, published: true},
+		{name: "result absent", record: complete},
+		{name: "status pending", record: queue.UploadRecord{Status: queue.StatusPending}, published: true},
+		{name: "wrong terminal status", record: queue.UploadRecord{Status: queue.StatusInvalid}, published: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := benchmarkDocumentResultComplete(test.record, test.published, queue.StatusValid); got != test.want {
+				t.Fatalf("complete = %t, want %t for record %+v published=%t", got, test.want, test.record, test.published)
+			}
+		})
+	}
 }

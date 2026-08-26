@@ -25,6 +25,11 @@
 // the S variant produced here.
 package en16931
 
+import (
+	"fmt"
+	"strconv"
+)
+
 // baseInvoiceSkeleton returns the document metadata, seller/buyer identity
 // and payment means shared by every VAT-category variant below. Callers
 // still need to set Lines/TaxBreakdown/Totals (via Finalize) and any
@@ -83,6 +88,31 @@ func NewInvoiceVariantS() InvoiceDocument {
 	}
 	doc.Lines, doc.TaxBreakdown, doc.Totals = Finalize(lines)
 	return doc
+}
+
+// NewLineHeavyInvoiceVariantS builds a reconciled standard-rated invoice with
+// lineCount distinct InvoiceLine elements. It is intended for semantic
+// complexity and capacity fixtures: unlike byte padding, every added byte is
+// represented by business nodes traversed by the EN 16931 ruleset.
+func NewLineHeavyInvoiceVariantS(lineCount int) (InvoiceDocument, error) {
+	if lineCount <= 0 {
+		return InvoiceDocument{}, fmt.Errorf("line count must be positive")
+	}
+	doc := baseInvoiceSkeleton()
+	doc.ID = fmt.Sprintf("INV-LINES-%d", lineCount)
+	doc.Seller.VATSchemeID = "NL123456789B01"
+	doc.Seller.LegalRegistrationID = "12345678"
+	lines := make([]Line, lineCount)
+	for index := range lines {
+		lineNumber := index + 1
+		lines[index] = Line{
+			ID: strconv.Itoa(lineNumber), Quantity: 1, UnitCode: "C62",
+			ItemName: fmt.Sprintf("Capacity item %d", lineNumber),
+			NetPrice: NewMoneyFromMajorUnits(1), VATCategoryID: "S", VATRate: 21,
+		}
+	}
+	doc.Lines, doc.TaxBreakdown, doc.Totals = Finalize(lines)
+	return doc, nil
 }
 
 // NewInvoiceVariantZ builds the "Zero rated" VAT-category variant
