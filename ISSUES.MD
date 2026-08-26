@@ -10,6 +10,32 @@ The sequence is intentionally structured around three principles:
 
 The order below is the recommended default execution path. Some documentation, corpus, and asset-packaging work can proceed in parallel where dependencies allow.
 
+## Issue implementation and closing workflow
+
+Each GitHub issue should be implemented on its own issue branch.
+
+When Codex in VS Code is told to **close an issue**, it must use a **rebase-first, fast-forward-only** integration workflow. The intent is to keep `main` linear and avoid merging `main` into the issue branch.
+
+1. Fetch the latest remote state with `git fetch origin --prune` and ensure the working tree is clean.
+2. Switch to the issue branch.
+3. Rebase the issue branch onto the current `origin/main` with `git rebase origin/main`.
+4. Resolve any conflicts on the issue branch. If the rebase cannot be completed safely, abort it and report the problem rather than merging `main` into the issue branch.
+5. Run the tests and verification required by the issue/repository.
+6. If the rebase rewrote commits on an already-published issue branch, update that remote branch with `git push --force-with-lease origin <issue-branch>`; otherwise use a normal push as appropriate.
+7. Switch to `main` and update it with `git pull --ff-only origin main`.
+8. Integrate the issue branch with `git merge --ff-only <issue-branch>`.
+9. Run the final required verification on the integrated `main` state.
+10. Push `main` with `git push origin main`.
+11. Only after the push succeeds should Codex close the GitHub issue.
+
+If `git merge --ff-only` fails because `main` advanced after the rebase, return to the issue branch, rebase it onto the new `origin/main`, repeat verification, and try the fast-forward integration again.
+
+**Do not:**
+
+- merge `main` into the issue branch;
+- create a merge commit when integrating an issue branch unless explicitly instructed;
+- close the GitHub issue before the rebased branch has been successfully fast-forwarded into `main`, verified, and pushed.
+
 ---
 
 ## Phase 1 — Freeze deterministic regression behavior
