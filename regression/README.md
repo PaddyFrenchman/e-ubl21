@@ -12,8 +12,10 @@ that JSON Schema cannot express by itself.
   `results.jsonl` output.
 - `testdata/*.example.json` are reviewable examples validated by the Go test
   suite.
-- `ValidateFixtureManifest` applies the fixture schema and rejects duplicate
-  IDs across manifest entries, which JSON Schema cannot express by property.
+- `ValidateFixtureManifest` applies the fixture schema, rejects duplicate IDs,
+  and enforces lexicographically sorted rule IDs.
+- `ValidateNormalizedResult` applies the normalized-result schema and enforces
+  lexicographically sorted expected and actual rule IDs.
 
 Both contracts use JSON Schema draft 2020-12 and start at `schemaVersion: 1`.
 Changing the meaning of an existing field requires a new schema version.

@@ -128,6 +128,19 @@ func TestManifestFixtureIDsAreUnique(t *testing.T) {
 	}
 }
 
+func TestManifestValidatorRejectsUnsortedRuleIDs(t *testing.T) {
+	document := readObject(t, filepath.Join("testdata", "fixture-manifest.example.json"))
+	stages := firstFixture(document)["expectedStages"].([]any)
+	stages[1].(map[string]any)["ruleIds"] = []any{"BR-Z", "BR-A"}
+	data, err := json.Marshal(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(data); err == nil || !strings.Contains(err.Error(), "sorted lexicographically") {
+		t.Fatalf("unsorted fixture rule IDs error = %v", err)
+	}
+}
+
 func TestManifestValidatorRejectsMalformedAndSchemaInvalidDocuments(t *testing.T) {
 	if err := regression.ValidateFixtureManifest([]byte(`{`)); err == nil || !strings.Contains(err.Error(), "decode fixture manifest") {
 		t.Fatalf("malformed manifest error = %v", err)
@@ -228,6 +241,43 @@ func TestNormalizedResultRejectsVolatileAndMisorderedFields(t *testing.T) {
 			test.mutate(candidate)
 			if err := schema.Validate(candidate); err == nil {
 				t.Fatal("non-normalized result unexpectedly satisfied the schema")
+			}
+		})
+	}
+}
+
+func TestNormalizedResultValidatorEnforcesRuleIDOrdering(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "normalized-result.example.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateNormalizedResult(data); err != nil {
+		t.Fatalf("valid normalized result rejected: %v", err)
+	}
+	sorted := readObject(t, filepath.Join("testdata", "normalized-result.example.json"))
+	for _, field := range []string{"expectedStages", "actualStages"} {
+		stages := sorted[field].([]any)
+		stages[1].(map[string]any)["ruleIds"] = []any{"BR-A", "BR-Z"}
+	}
+	sortedData, err := json.Marshal(sorted)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateNormalizedResult(sortedData); err != nil {
+		t.Fatalf("sorted multi-rule normalized result rejected: %v", err)
+	}
+
+	for _, field := range []string{"expectedStages", "actualStages"} {
+		t.Run(field, func(t *testing.T) {
+			document := readObject(t, filepath.Join("testdata", "normalized-result.example.json"))
+			stages := document[field].([]any)
+			stages[1].(map[string]any)["ruleIds"] = []any{"BR-Z", "BR-A"}
+			candidate, err := json.Marshal(document)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := regression.ValidateNormalizedResult(candidate); err == nil || !strings.Contains(err.Error(), "sorted lexicographically") {
+				t.Fatalf("unsorted %s rule IDs error = %v", field, err)
 			}
 		})
 	}
