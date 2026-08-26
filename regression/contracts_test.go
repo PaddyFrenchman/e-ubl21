@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/PaddyFrenchman/e-ubl21/regression"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
@@ -71,10 +73,23 @@ func TestFixtureManifestContractRejectsInvalidSemantics(t *testing.T) {
 			},
 		},
 		{
+			name: "abbreviated generator commit",
+			mutate: func(document map[string]any) {
+				firstFixture(document)["provenance"].(map[string]any)["generatorVersion"] = "git:0123456"
+			},
+		},
+		{
 			name: "import without immutable checksum",
 			mutate: func(document map[string]any) {
 				fixtures := document["fixtures"].([]any)
 				delete(fixtures[1].(map[string]any)["provenance"].(map[string]any), "sourceSha256")
+			},
+		},
+		{
+			name: "import without extraction description",
+			mutate: func(document map[string]any) {
+				fixtures := document["fixtures"].([]any)
+				delete(fixtures[1].(map[string]any)["provenance"].(map[string]any), "extraction")
 			},
 		},
 	}
@@ -91,15 +106,25 @@ func TestFixtureManifestContractRejectsInvalidSemantics(t *testing.T) {
 }
 
 func TestManifestFixtureIDsAreUnique(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "fixture-manifest.example.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(data); err != nil {
+		t.Fatalf("valid fixture manifest rejected: %v", err)
+	}
+
 	document := readObject(t, filepath.Join("testdata", "fixture-manifest.example.json"))
 	fixtures := document["fixtures"].([]any)
-	seen := make(map[string]struct{}, len(fixtures))
-	for _, rawFixture := range fixtures {
-		id := rawFixture.(map[string]any)["id"].(string)
-		if _, exists := seen[id]; exists {
-			t.Fatalf("duplicate fixture id %q", id)
-		}
-		seen[id] = struct{}{}
+	duplicate := cloneObject(t, fixtures[0].(map[string]any))
+	document["fixtures"] = append(fixtures, duplicate)
+	data, err = json.Marshal(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = regression.ValidateFixtureManifest(data)
+	if err == nil || !strings.Contains(err.Error(), `duplicate fixture id "en16931.invoice.br-co-15"`) {
+		t.Fatalf("duplicate fixture ID error = %v", err)
 	}
 }
 
@@ -136,6 +161,54 @@ func TestNormalizedResultRejectsVolatileAndMisorderedFields(t *testing.T) {
 			mutate: func(document map[string]any) {
 				stages := document["actualStages"].([]any)
 				stages[1].(map[string]any)["outcome"] = "operational-failure"
+			},
+		},
+		{
+			name: "valid final with incomplete stages",
+			mutate: func(document map[string]any) {
+				document["actualFinal"] = "valid"
+				document["actualStages"] = document["actualStages"].([]any)[:1]
+				document["result"] = "fail"
+			},
+		},
+		{
+			name: "invalid final with operational failure",
+			mutate: func(document map[string]any) {
+				stages := document["actualStages"].([]any)
+				stage := stages[1].(map[string]any)
+				stage["outcome"] = "operational-failure"
+				delete(stage, "ruleIds")
+			},
+		},
+		{
+			name: "operational final with standards failure",
+			mutate: func(document map[string]any) {
+				document["actualFinal"] = "operational-failure"
+				document["result"] = "fail"
+			},
+		},
+		{
+			name: "XSD failure followed by EN stage",
+			mutate: func(document map[string]any) {
+				stages := document["actualStages"].([]any)
+				stages[0].(map[string]any)["outcome"] = "standards-invalid"
+				stages[1].(map[string]any)["outcome"] = "passed"
+				delete(stages[1].(map[string]any), "ruleIds")
+			},
+		},
+		{
+			name: "EN failure followed by Peppol stage",
+			mutate: func(document map[string]any) {
+				document["profile"] = "peppol-bis-billing"
+				document["expectedFinal"] = "valid"
+				document["expectedStages"] = []any{
+					map[string]any{"stage": "ubl21-xsd", "outcome": "passed"},
+					map[string]any{"stage": "en16931", "outcome": "passed"},
+					map[string]any{"stage": "peppol-bis-billing", "outcome": "passed"},
+				}
+				document["actualStages"] = append(document["actualStages"].([]any),
+					map[string]any{"stage": "peppol-bis-billing", "outcome": "passed"})
+				document["result"] = "fail"
 			},
 		},
 	}

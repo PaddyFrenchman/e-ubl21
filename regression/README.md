@@ -12,6 +12,8 @@ that JSON Schema cannot express by itself.
   `results.jsonl` output.
 - `testdata/*.example.json` are reviewable examples validated by the Go test
   suite.
+- `ValidateFixtureManifest` applies the fixture schema and rejects duplicate
+  IDs across manifest entries, which JSON Schema cannot express by property.
 
 Both contracts use JSON Schema draft 2020-12 and start at `schemaVersion: 1`.
 Changing the meaning of an existing field requires a new schema version.
@@ -58,10 +60,12 @@ also permit `operational-failure`, which must never be translated to
 
 Every fixture records one of two provenance forms:
 
-- `generated` identifies the generator and its immutable version (normally a
-  Git commit).
-- `official-import` identifies the publisher, source URL and release, SHA-256
-  of the bytes obtained from that source, and license/provenance note.
+- `generated` identifies the generator and its immutable full Git commit as
+  `git:<40-or-64-lowercase-hex-digits>`.
+- `official-import` identifies the publisher, exact asset/archive URL and
+  release, SHA-256 of the bytes obtained from that source, archive member (or
+  `null` for a direct asset), extraction/transformation description, and
+  license/provenance note.
 
 `sha256` on the fixture itself always hashes the exact XML file named by
 `file`. `sourceSha256` records the imported upstream asset and can differ when

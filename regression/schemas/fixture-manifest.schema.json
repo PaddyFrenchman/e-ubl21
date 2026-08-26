@@ -74,19 +74,38 @@
       "properties": {
         "kind": {"const": "generated"},
         "generator": {"type": "string", "minLength": 1},
-        "generatorVersion": {"type": "string", "minLength": 1}
+        "generatorVersion": {
+          "type": "string",
+          "pattern": "^git:(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+        }
       }
     },
     "importedProvenance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "publisher", "sourceUrl", "sourceVersion", "sourceSha256", "license"],
+      "required": [
+        "kind",
+        "publisher",
+        "sourceUrl",
+        "sourceVersion",
+        "sourceSha256",
+        "sourceMember",
+        "extraction",
+        "license"
+      ],
       "properties": {
         "kind": {"const": "official-import"},
         "publisher": {"type": "string", "minLength": 1},
         "sourceUrl": {"type": "string", "format": "uri"},
         "sourceVersion": {"type": "string", "minLength": 1},
         "sourceSha256": {"$ref": "#/$defs/sha256"},
+        "sourceMember": {
+          "oneOf": [
+            {"type": "string", "minLength": 1},
+            {"type": "null"}
+          ]
+        },
+        "extraction": {"type": "string", "minLength": 1},
         "license": {"type": "string", "minLength": 1}
       }
     },
