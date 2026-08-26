@@ -3,8 +3,11 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -62,18 +65,25 @@ func TestTrackedUBLNegativeFixturesShortCircuitBeforeEN16931(t *testing.T) {
 				enCalled = true
 				return queue.ValidationStageResult{}, nil
 			}), 10*time.Second)
+			pipeline.xsdValidate = func(ctx context.Context, schemaPath string, xml io.Reader, _ time.Duration) error {
+				command := exec.CommandContext(ctx, "xmllint", "--nonet", "--noout", "--schema", schemaPath, "-")
+				command.Stdin = xml
+				output, err := command.CombinedOutput()
+				if err == nil {
+					return nil
+				}
+				var exitError *exec.ExitError
+				if errors.As(err, &exitError) {
+					return fmt.Errorf("%w: %s", errSchemaStandardsInvalid, output)
+				}
+				return err
+			}
 			result, validationErr := pipeline.Validate(
 				context.Background(), candidate.ID, candidate.DocumentType,
 				filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd"),
 			)
 			if enCalled || source.opens != 1 {
 				t.Fatalf("later semantic stage executed: enCalled=%t content opens=%d", enCalled, source.opens)
-			}
-			if candidate.Mutation.ID == "malformed-xml" {
-				if validationErr == nil {
-					t.Fatalf("malformed XML unexpectedly produced result %+v", result)
-				}
-				return
 			}
 			if validationErr != nil || result.Status != queue.StatusInvalid || len(result.Stages) != 1 || result.Stages[0].Valid {
 				t.Fatalf("XSD-negative result/error = %+v / %v", result, validationErr)

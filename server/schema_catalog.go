@@ -272,10 +272,12 @@ func validateReaderAgainstSchema(ctx context.Context, schemaPath string, body io
 	}
 	if err != nil {
 		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && exitErr.ExitCode() == 3 {
-			return fmt.Errorf("%w: %s", errSchemaStandardsInvalid, diagnostics.String())
+		diagnosticText := diagnostics.String()
+		if errors.As(err, &exitErr) && (exitErr.ExitCode() == 3 ||
+			exitErr.ExitCode() == 1 && strings.Contains(diagnosticText, "parser error")) {
+			return fmt.Errorf("%w: %s", errSchemaStandardsInvalid, diagnosticText)
 		}
-		return fmt.Errorf("schema validator execution failed: %w: %s", err, diagnostics.String())
+		return fmt.Errorf("schema validator execution failed: %w: %s", err, diagnosticText)
 	}
 	select {
 	case copyErr := <-stdinCopyDone:

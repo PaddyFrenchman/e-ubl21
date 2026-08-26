@@ -27,6 +27,14 @@ func TestSchemaCatalogParsingErrorPaths(t *testing.T) {
 	}
 }
 
+func TestMalformedXMLIsAStandardsInvalidXSDOutcome(t *testing.T) {
+	schemaPath := filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")
+	err := validateReaderAgainstSchema(context.Background(), schemaPath, strings.NewReader("<Invoice>"), time.Second)
+	if !errors.Is(err, errSchemaStandardsInvalid) || !strings.Contains(err.Error(), "parser error") {
+		t.Fatalf("malformed XML classification = %v", err)
+	}
+}
+
 func TestXMLLintDiscoveryAndStartFailures(t *testing.T) {
 	originalErr, originalPath := xmllintErr, xmllintPath
 	t.Cleanup(func() {
