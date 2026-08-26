@@ -127,7 +127,7 @@ func TestInventoryGenerateAndValidateCommands(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := filepath.Join(dir, "samples")
-	if err := run([]string{"generate", "--xsd", dir, "--output", out, "--count", "2"}); err != nil {
+	if err := run([]string{"generate", "--xsd", dir, "--output", out, "--count", "2", "--generator-version", testGeneratorVersion}); err != nil {
 		t.Fatal(err)
 	}
 	manifest, err := os.ReadFile(filepath.Join(out, "manifest.json"))

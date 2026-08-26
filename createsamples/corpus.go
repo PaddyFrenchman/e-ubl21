@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,6 +17,19 @@ import (
 )
 
 var immutableGeneratorVersion = regexp.MustCompile(`^git:(?:[a-f0-9]{40}|[a-f0-9]{64})$`)
+
+const (
+	corpusOwnershipMarkerName    = ".e-ubl21-generated-corpus"
+	corpusOwnershipMarkerContent = "e-ubl21 createsamples generated corpus v1\n"
+)
+
+var generatorSourcePathspecs = []string{
+	":(glob)createsamples/**/*.go",
+	":(exclude,glob)createsamples/**/*_test.go",
+	"regression/manifest.go",
+	"regression/schemas/fixture-manifest.schema.json",
+	":(glob)XSD/**/*.xsd",
+}
 
 type fixtureManifest struct {
 	SchemaVersion int                    `json:"schemaVersion"`
@@ -76,13 +90,24 @@ func resolveGeneratorVersion(explicit string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("locate generator Git checkout (use --generator-version to provide it explicitly): %w", err)
 	}
-	command := exec.Command("git", "log", "-1", "--format=%H", "--",
-		":(glob)createsamples/**/*.go",
-		":(exclude,glob)createsamples/**/*_test.go",
-		"regression/manifest.go",
-		"regression/schemas/fixture-manifest.schema.json",
-	)
-	command.Dir = strings.TrimSpace(string(rootOutput))
+	return resolveGeneratorVersionInRepo(strings.TrimSpace(string(rootOutput)))
+}
+
+func resolveGeneratorVersionInRepo(root string) (string, error) {
+	statusArgs := append([]string{"status", "--porcelain", "--untracked-files=all", "--"}, generatorSourcePathspecs...)
+	statusCommand := exec.Command("git", statusArgs...)
+	statusCommand.Dir = root
+	statusOutput, err := statusCommand.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("check generator inputs for local changes: %w: %s", err, strings.TrimSpace(string(statusOutput)))
+	}
+	if dirty := strings.TrimSpace(string(statusOutput)); dirty != "" {
+		return "", fmt.Errorf("refuse automatic generator provenance with dirty generator, manifest-contract, or XSD inputs; commit them or deliberately use --generator-version to override:\n%s", dirty)
+	}
+
+	logArgs := append([]string{"log", "-1", "--format=%H", "--"}, generatorSourcePathspecs...)
+	command := exec.Command("git", logArgs...)
+	command.Dir = root
 	output, err := command.Output()
 	if err != nil {
 		return "", fmt.Errorf("resolve generator implementation Git commit (use --generator-version to provide it explicitly): %w", err)
@@ -173,8 +198,70 @@ func writeGeneratedCorpus(outputDir string, corpus generatedPositiveCorpus) erro
 	if err := validateCorpusOutputDirectory(outputDir); err != nil {
 		return err
 	}
-	if err := os.RemoveAll(outputDir); err != nil {
-		return fmt.Errorf("clear existing output %s: %w", outputDir, err)
+	absolute, err := filepath.Abs(outputDir)
+	if err != nil {
+		return fmt.Errorf("resolve generated corpus output: %w", err)
+	}
+	parent := filepath.Dir(absolute)
+	if err := os.MkdirAll(parent, 0o755); err != nil {
+		return fmt.Errorf("create generated corpus parent %s: %w", parent, err)
+	}
+	staging, err := os.MkdirTemp(parent, "."+filepath.Base(absolute)+".staging-*")
+	if err != nil {
+		return fmt.Errorf("create generated corpus staging directory: %w", err)
+	}
+	stagingExists := true
+	defer func() {
+		if stagingExists {
+			_ = os.RemoveAll(staging)
+		}
+	}()
+	if err := writeCorpusFiles(staging, corpus); err != nil {
+		return err
+	}
+	if err := validateCorpusOutputDirectory(absolute); err != nil {
+		return err
+	}
+
+	_, statErr := os.Lstat(absolute)
+	if errors.Is(statErr, os.ErrNotExist) {
+		if err := os.Rename(staging, absolute); err != nil {
+			return fmt.Errorf("install generated corpus at %s: %w", absolute, err)
+		}
+		stagingExists = false
+	} else if statErr != nil {
+		return fmt.Errorf("inspect generated corpus output %s: %w", absolute, statErr)
+	} else {
+		backup, err := os.MkdirTemp(parent, "."+filepath.Base(absolute)+".backup-*")
+		if err != nil {
+			return fmt.Errorf("reserve generated corpus backup path: %w", err)
+		}
+		if err := os.Remove(backup); err != nil {
+			return fmt.Errorf("prepare generated corpus backup path: %w", err)
+		}
+		if err := os.Rename(absolute, backup); err != nil {
+			return fmt.Errorf("move existing generated corpus to backup: %w", err)
+		}
+		if err := os.Rename(staging, absolute); err != nil {
+			if restoreErr := os.Rename(backup, absolute); restoreErr != nil {
+				return fmt.Errorf("install generated corpus: %w (also failed to restore previous corpus: %v)", err, restoreErr)
+			}
+			return fmt.Errorf("install generated corpus: %w", err)
+		}
+		stagingExists = false
+		if err := os.RemoveAll(backup); err != nil {
+			return fmt.Errorf("remove replaced generated corpus backup %s: %w", backup, err)
+		}
+	}
+	for _, fixture := range corpus.fixtures {
+		fmt.Println(filepath.Join(outputDir, filepath.FromSlash(fixture.entry.File)))
+	}
+	return nil
+}
+
+func writeCorpusFiles(outputDir string, corpus generatedPositiveCorpus) error {
+	if err := os.WriteFile(filepath.Join(outputDir, corpusOwnershipMarkerName), []byte(corpusOwnershipMarkerContent), 0o644); err != nil {
+		return fmt.Errorf("write generated corpus ownership marker: %w", err)
 	}
 	for _, fixture := range corpus.fixtures {
 		path := filepath.Join(outputDir, filepath.FromSlash(fixture.entry.File))
@@ -184,7 +271,6 @@ func writeGeneratedCorpus(outputDir string, corpus generatedPositiveCorpus) erro
 		if err := os.WriteFile(path, fixture.content, 0o644); err != nil {
 			return fmt.Errorf("write %s: %w", path, err)
 		}
-		fmt.Println(path)
 	}
 	manifestPath := filepath.Join(outputDir, "manifest.json")
 	if err := os.MkdirAll(filepath.Dir(manifestPath), 0o755); err != nil {
@@ -207,6 +293,20 @@ func validateCorpusOutputDirectory(outputDir string) error {
 	volumeRoot := filepath.VolumeName(absolute) + string(filepath.Separator)
 	if absolute == volumeRoot {
 		return fmt.Errorf("generated corpus output must not be a filesystem root")
+	}
+	info, err := os.Lstat(absolute)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("inspect generated corpus output %s: %w", absolute, err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("generated corpus output %s must be a directory and not a symlink", absolute)
+	}
+	marker, err := os.ReadFile(filepath.Join(absolute, corpusOwnershipMarkerName))
+	if err != nil || string(marker) != corpusOwnershipMarkerContent {
+		return fmt.Errorf("refuse to replace %s because it is not recognizably generator-owned (missing or invalid %s)", absolute, corpusOwnershipMarkerName)
 	}
 	return nil
 }

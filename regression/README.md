@@ -35,15 +35,21 @@ go run ./createsamples generate \
   --output createsamples/samples
 ```
 
-Generation resolves the latest full Git commit that changed generator source
-or its manifest contract for immutable provenance, generates the complete
-corpus twice and rejects any byte difference, computes each fixture's SHA-256,
-validates the canonical manifest, and independently validates every XML
-document with `xmllint` before replacing the output tree. Tests and generated
+Generation resolves the latest full Git commit that changed generator source,
+its manifest contract, or UBL XSD inputs for immutable provenance. It generates
+the complete corpus twice and rejects any byte difference, computes each
+fixture's SHA-256, validates the canonical manifest, and independently validates
+every XML document with `xmllint` before replacing the output tree. Automatic
+provenance rejects uncommitted changes to those inputs. Tests and generated
 artifacts do not change that provenance version. The canonical manifest is
 written as `<output>/manifest.json`. Use
-`--generator-version git:<40-or-64-lowercase-hex-commit>` when generation
-runs outside a Git checkout.
+`--generator-version git:<40-or-64-lowercase-hex-commit>` when generation runs
+outside a Git checkout or when deliberately overriding the clean-input guard.
+
+Generated output contains `.e-ubl21-generated-corpus`, an ownership marker.
+Replacement is staged in a temporary sibling directory and is permitted only
+when an existing output directory contains the valid marker; an arbitrary
+directory is never recursively cleared.
 
 ## Stable names
 
