@@ -87,6 +87,24 @@ func TestFixtureManifestContractRejectsInvalidSemantics(t *testing.T) {
 			},
 		},
 		{
+			name: "positive fixture with mutation",
+			mutate: func(document map[string]any) {
+				fixtures := document["fixtures"].([]any)
+				fixtures[1].(map[string]any)["mutation"] = map[string]any{
+					"id": "missing-required-element", "description": "remove ID",
+				}
+			},
+		},
+		{
+			name: "UBL negative without recorded mutation",
+			mutate: func(document map[string]any) {
+				fixtures := document["fixtures"].([]any)
+				fixture := fixtures[1].(map[string]any)
+				fixture["expectedFinal"] = "invalid"
+				fixture["expectedStages"].([]any)[0].(map[string]any)["outcome"] = "standards-invalid"
+			},
+		},
+		{
 			name: "import without immutable checksum",
 			mutate: func(document map[string]any) {
 				fixtures := document["fixtures"].([]any)

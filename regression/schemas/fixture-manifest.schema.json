@@ -226,6 +226,22 @@
           }
         },
         {
+          "if": {
+            "properties": {
+              "profile": {"const": "ubl21"},
+              "expectedFinal": {"const": "invalid"}
+            },
+            "required": ["profile", "expectedFinal"]
+          },
+          "then": {"required": ["mutation"]}
+        },
+        {
+          "if": {"required": ["mutation"]},
+          "then": {
+            "properties": {"expectedFinal": {"const": "invalid"}}
+          }
+        },
+        {
           "if": {"properties": {"profile": {"const": "ubl21-en16931"}}, "required": ["profile"]},
           "then": {
             "properties": {
