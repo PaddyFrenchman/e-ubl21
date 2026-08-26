@@ -126,9 +126,13 @@ func TestPinnedSaxonConfigurationRejectsNetworkResources(t *testing.T) {
 
 func localSaxonRuntimeConfig(t *testing.T) (saxonRuntimeConfig, bool) {
 	t.Helper()
+	required := os.Getenv("EUBL21_REQUIRE_EN16931_TEST_RUNTIME") == "1"
 	java, err := exec.LookPath("java")
 	if err != nil {
-		t.Skip("Java is not installed")
+		if required {
+			t.Fatalf("mandatory EN 16931 test runtime: Java is not installed: %v", err)
+		}
+		t.Skipf("Java is not installed: %v", err)
 		return saxonRuntimeConfig{}, false
 	}
 	saxon := validationassets.Saxon()
@@ -140,9 +144,17 @@ func localSaxonRuntimeConfig(t *testing.T) (saxonRuntimeConfig, bool) {
 		EN16931XSLTPath:        filepath.Join("..", "validation-assets", validationassets.EN16931().EmbeddedXSLTPath),
 		SaxonStartupTimeout:    10 * time.Second,
 	})
-	if _, err := os.Stat(cfg.saxonJARPath); err != nil {
-		t.Skip("pinned local Saxon JARs have not been downloaded")
-		return saxonRuntimeConfig{}, false
+	for name, path := range map[string]string{
+		"Saxon":        cfg.saxonJARPath,
+		"XML Resolver": cfg.xmlResolverJARPath,
+	} {
+		if _, err := os.Stat(path); err != nil {
+			if required {
+				t.Fatalf("mandatory EN 16931 test runtime: pinned %s JAR is unavailable at %s: %v", name, path, err)
+			}
+			t.Skipf("pinned local %s JAR is unavailable at %s: %v", name, path, err)
+			return saxonRuntimeConfig{}, false
+		}
 	}
 	return cfg, true
 }

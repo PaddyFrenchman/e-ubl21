@@ -595,10 +595,15 @@ standard-rated UBL CreditNote. Every case asserts a passing XSD stage, a
 passing EN stage, overall `valid`, no fatal EN assertion, and the pinned profile
 version. `BuildCreditNoteXML` and `NewCreditNoteVariantS` provide the missing
 positive CreditNote fixture using the same exact-arithmetic model as Invoice.
+The mandatory `make test-en16931` release/CI target preflights Java and
+`xmllint`, downloads and verifies the checksum-pinned Saxon/XML Resolver JARs
+when absent, verifies the pinned stylesheet/configuration, and runs this corpus
+with dependency skipping disabled. Ordinary developer `go test ./...` retains
+its convenient optional-runtime skip behavior.
 
 ---
 
-## TODO-EN-16931-011 — Add a rule-targeted negative corpus
+## TODO-EN-16931-011 — Add a rule-targeted negative corpus ✅ DONE
 
 ### Goal
 
@@ -624,6 +629,17 @@ Also add an XSD-invalid control fixture and assert that EN 16931 is not executed
 ### Acceptance criteria
 
 The test corpus proves the new layer catches documents which the existing UBL XSD validator alone would incorrectly accept as `valid`.
+
+Implemented by the generated 22-case `NegativeInvoiceFixtures` corpus and the
+real-pipeline `TestTargetedEN16931NegativeCorpus` integration test. Every
+fixture records a stable mutation description and expected fatal rule ID,
+passes the UBL 2.1 Invoice XSD, fails EN 16931, and produces overall `invalid`.
+Coverage includes monetary reconciliation, decimal precision, controlled
+codes, seller/buyer names and identifiers, all seven VAT-category rate
+families, every required exemption-reason family, credit-transfer account
+requirements, and fatal `UBL-SR`/`UBL-CR` syntax restrictions. A separate
+XSD-invalid control proves the semantic validator is never invoked after an
+XSD rejection.
 
 ---
 

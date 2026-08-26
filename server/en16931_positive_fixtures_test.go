@@ -19,6 +19,9 @@ func TestPositiveEN16931FixturesPassCompleteValidationPipeline(t *testing.T) {
 		return
 	}
 	if err := ensureXMLLint(); err != nil {
+		if os.Getenv("EUBL21_REQUIRE_EN16931_TEST_RUNTIME") == "1" {
+			t.Fatalf("mandatory EN 16931 test runtime: %v", err)
+		}
 		t.Skip(err)
 	}
 	catalog, err := loadValidationCatalog()
@@ -55,6 +58,9 @@ func TestPositiveEN16931FixturesPassCompleteValidationPipeline(t *testing.T) {
 			t.Fatal(readErr)
 		}
 		positive["official "+name] = positiveFixture{documentType: "Invoice", body: body}
+	}
+	if len(positive) != 10 {
+		t.Fatalf("positive EN 16931 fixture count = %d, want 10", len(positive))
 	}
 
 	for name, fixture := range positive {

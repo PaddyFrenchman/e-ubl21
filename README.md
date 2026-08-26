@@ -39,3 +39,19 @@ The first upgrade from XSD-only workers to mandatory EN 16931 validation
 requires a stop-and-drain worker-generation barrier; mixed old/new workers must
 not share a queue namespace during that migration. See
 [the EN 16931 validation contract](docs/EN16931-VALIDATION-CONTRACT.md#required-first-deployment-barrier).
+
+### Mandatory EN 16931 integration suite
+
+Ordinary `go test ./...` skips tests that need the local Java/Saxon runtime
+when those optional development dependencies are absent. The release/CI gate
+must instead run:
+
+```bash
+make test-en16931
+```
+
+This target requires Java and `xmllint`, downloads Saxon 12.7 and XML Resolver
+6.0.17 when absent, verifies their pinned SHA-256 digests together with the
+checked-in EN 16931 1.3.16 stylesheet and restricted Saxon configuration, and
+runs all ten positive Invoice/CreditNote fixtures with missing dependencies
+treated as test failures rather than skips.
