@@ -87,7 +87,7 @@ required to fail with the diagnostic associated with that mutation. Tests also
 run the tracked fixtures through the current validation pipeline and prove that
 the EN 16931 validator is never invoked after the structural failure.
 
-## Deterministic EN 16931 positive corpus
+## Deterministic EN 16931 corpus
 
 The EN 16931 semantic generator is available through the same CLI and writes a
 separate profile corpus:
@@ -95,7 +95,7 @@ separate profile corpus:
 ```bash
 go run ./createsamples generate \
   --profile en16931 \
-  --set positive \
+  --set all \
   --xsd XSD \
   --output createsamples/samples-en16931
 ```
@@ -107,6 +107,14 @@ official upstream guide examples. Every entry expects ordered UBL XSD and EN
 digest, and is independently checked against its UBL schema before output is
 installed. Official examples use the common `official-import` provenance
 contract rather than generator provenance.
+
+The same tracked corpus also contains 22 targeted-negative Invoices generated
+from compliant VAT-family baselines. Each negative changes one business
+condition, remains UBL 2.1 XSD-valid, and records its stable mutation ID,
+human-readable description, and expected official EN 16931 rule IDs. Generate
+only this subset with `--set negative`. The real Saxon acceptance gate reads
+the tracked manifest and requires every declared rule ID to appear as an
+invalidating failed assertion from the pinned `1.3.16` ruleset.
 
 ## Stable names
 

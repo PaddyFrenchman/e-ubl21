@@ -2,12 +2,15 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"io"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
-	fixtures "github.com/PaddyFrenchman/e-ubl21/createsamples/en16931"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/PaddyFrenchman/e-ubl21/regression"
 )
 
 func TestTargetedEN16931NegativeCorpus(t *testing.T) {
@@ -26,19 +29,65 @@ func TestTargetedEN16931NegativeCorpus(t *testing.T) {
 	if !found {
 		t.Fatal("missing Invoice schema")
 	}
-	corpus, err := fixtures.NegativeInvoiceFixtures()
+	corpusRoot := filepath.Join("..", "createsamples", "samples-en16931")
+	manifestBytes, err := os.ReadFile(filepath.Join(corpusRoot, "manifest.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := regression.ValidateFixtureManifest(manifestBytes); err != nil {
+		t.Fatalf("tracked EN 16931 manifest rejected: %v", err)
+	}
+	var manifest struct {
+		Fixtures []struct {
+			ID            string `json:"id"`
+			DocumentType  string `json:"documentType"`
+			Profile       string `json:"profile"`
+			File          string `json:"file"`
+			ExpectedFinal string `json:"expectedFinal"`
+			Mutation      *struct {
+				ID          string `json:"id"`
+				Description string `json:"description"`
+			} `json:"mutation"`
+			ExpectedStages []struct {
+				Stage   string   `json:"stage"`
+				Outcome string   `json:"outcome"`
+				RuleIDs []string `json:"ruleIds"`
+			} `json:"expectedStages"`
+		} `json:"fixtures"`
+	}
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
 
-	for _, fixture := range corpus {
+	negativeCount := 0
+	for _, fixture := range manifest.Fixtures {
+		if fixture.Profile != "ubl21-en16931" || fixture.ExpectedFinal != "invalid" {
+			continue
+		}
+		negativeCount++
 		fixture := fixture
 		t.Run(fixture.ID, func(t *testing.T) {
-			source := &memoryValidationContentSource{content: []byte(fixture.XML)}
+			if fixture.Mutation == nil || fixture.Mutation.ID == "" || fixture.Mutation.Description == "" {
+				t.Fatalf("fixture lacks mutation provenance: %+v", fixture.Mutation)
+			}
+			var expectedRuleIDs []string
+			for _, stage := range fixture.ExpectedStages {
+				if stage.Stage == "en16931" && stage.Outcome == "standards-invalid" {
+					expectedRuleIDs = stage.RuleIDs
+				}
+			}
+			if len(expectedRuleIDs) == 0 {
+				t.Fatal("fixture lacks expected EN 16931 rule IDs")
+			}
+			content, err := os.ReadFile(filepath.Join(corpusRoot, filepath.FromSlash(fixture.File)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			source := &memoryValidationContentSource{content: content}
 			pipeline := newDocumentValidationPipeline(source, newSaxonEN16931Validator(runtime, 20*time.Second), 20*time.Second)
 			result, validateErr := pipeline.Validate(context.Background(), fixture.ID, fixture.DocumentType, schemaPath)
 			if validateErr != nil {
-				t.Fatalf("pipeline operational failure for %q: %v", fixture.Mutation, validateErr)
+				t.Fatalf("pipeline operational failure for %q: %v", fixture.Mutation.Description, validateErr)
 			}
 			xsd, hasXSD := result.Stages.Find(queue.ValidationLayerUBL21XSD)
 			if !hasXSD || !xsd.Valid {
@@ -54,13 +103,16 @@ func TestTargetedEN16931NegativeCorpus(t *testing.T) {
 					actualRules[issue.Rule] = issue.Severity
 				}
 			}
-			for _, expected := range fixture.ExpectedRuleIDs {
+			for _, expected := range expectedRuleIDs {
 				severity, present := actualRules[expected]
 				if !present || !en16931SeverityInvalid(severity) {
-					t.Fatalf("missing expected rule %s for %q; actual rules=%v", expected, fixture.Mutation, actualRules)
+					t.Fatalf("missing expected rule %s for %q; actual rules=%v", expected, fixture.Mutation.Description, actualRules)
 				}
 			}
 		})
+	}
+	if negativeCount != 22 {
+		t.Fatalf("tracked EN 16931 negative fixture count = %d, want 22", negativeCount)
 	}
 }
 

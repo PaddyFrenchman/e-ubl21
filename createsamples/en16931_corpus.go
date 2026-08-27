@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/PaddyFrenchman/e-ubl21/createsamples/en16931"
@@ -16,6 +17,50 @@ type en16931PositiveVariant struct {
 	fileName     string
 	tags         []string
 	build        func() (string, error)
+}
+
+func generateEN16931NegativeCorpus(xsdDir, generatorVersion string) (generatedCorpus, error) {
+	if err := validationassets.VerifyEN16931(); err != nil {
+		return generatedCorpus{}, err
+	}
+	profile := validationassets.EN16931()
+	rulesets := &fixtureRulesets{EN16931: &fixtureRuleset{Version: profile.Version, SHA256: profile.XSLTSHA256}}
+	provenance := fixtureProvenance{
+		Kind: "generated", Generator: "createsamples/en16931", GeneratorVersion: generatorVersion,
+	}
+	negative, err := en16931.NegativeInvoiceFixtures()
+	if err != nil {
+		return generatedCorpus{}, err
+	}
+	fixtures := make([]generatedFixture, 0, len(negative))
+	for _, fixture := range negative {
+		content := []byte(fixture.XML)
+		ruleIDs := append([]string(nil), fixture.ExpectedRuleIDs...)
+		sort.Strings(ruleIDs)
+		version := profile.Version
+		fixtures = append(fixtures, generatedFixture{
+			entry: fixtureManifestEntry{
+				ID:            "en16931.invoice." + fixture.ID,
+				DocumentType:  fixture.DocumentType,
+				Profile:       "ubl21-en16931",
+				File:          filepath.ToSlash(filepath.Join("negative", fixture.DocumentType, fixture.ID+".xml")),
+				SHA256:        fmt.Sprintf("%x", sha256.Sum256(content)),
+				Standards:     fixtureStandards{UBL: "2.1", EN16931: &version},
+				Provenance:    provenance,
+				Rulesets:      rulesets,
+				Mutation:      &fixtureMutation{ID: fixture.ID, Description: fixture.Mutation},
+				ExpectedFinal: "invalid",
+				ExpectedStages: []fixtureExpectedStage{
+					{Stage: "ubl21-xsd", Outcome: "passed"},
+					{Stage: "en16931", Outcome: "standards-invalid", RuleIDs: ruleIDs},
+				},
+				Tags: []string{"en16931", "invoice", "negative", fixture.ID},
+			},
+			content:    content,
+			schemaPath: filepath.Join(xsdDir, "maindoc", "UBL-"+fixture.DocumentType+"-2.1.xsd"),
+		})
+	}
+	return buildGeneratedCorpus(fixtures)
 }
 
 func generateEN16931PositiveCorpus(xsdDir, generatorVersion string) (generatedCorpus, error) {

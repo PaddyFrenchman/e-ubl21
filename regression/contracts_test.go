@@ -105,6 +105,12 @@ func TestFixtureManifestContractRejectsInvalidSemantics(t *testing.T) {
 			},
 		},
 		{
+			name: "EN 16931 negative without recorded mutation",
+			mutate: func(document map[string]any) {
+				delete(firstFixture(document), "mutation")
+			},
+		},
+		{
 			name: "import without immutable checksum",
 			mutate: func(document map[string]any) {
 				fixtures := document["fixtures"].([]any)

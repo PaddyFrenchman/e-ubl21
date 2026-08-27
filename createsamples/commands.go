@@ -89,13 +89,25 @@ func runGenerate(args []string) error {
 	}
 	generate := func() (generatedCorpus, error) {
 		if *profile == "en16931" {
-			if *set != "positive" {
-				return generatedCorpus{}, fmt.Errorf("generation set %q is not available for profile en16931; supported set is positive", *set)
-			}
 			if *count != 1 {
 				return generatedCorpus{}, errors.New("count is only supported for profile ubl21")
 			}
-			return generateEN16931PositiveCorpus(*xsdDir, version)
+			switch *set {
+			case "positive":
+				return generateEN16931PositiveCorpus(*xsdDir, version)
+			case "negative":
+				return generateEN16931NegativeCorpus(*xsdDir, version)
+			default:
+				positive, err := generateEN16931PositiveCorpus(*xsdDir, version)
+				if err != nil {
+					return generatedCorpus{}, err
+				}
+				negative, err := generateEN16931NegativeCorpus(*xsdDir, version)
+				if err != nil {
+					return generatedCorpus{}, err
+				}
+				return combineGeneratedCorpora(positive, negative)
+			}
 		}
 		index, err := buildSchemaIndex(*xsdDir)
 		if err != nil {

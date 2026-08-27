@@ -23,6 +23,10 @@
         "generator": "createsamples",
         "generatorVersion": "git:0123456789abcdef0123456789abcdef01234567"
       },
+      "mutation": {
+        "id": "monetary-total-reconciliation",
+        "description": "increase TaxInclusiveAmount without changing its inputs"
+      },
       "expectedFinal": "invalid",
       "expectedStages": [
         {"stage": "ubl21-xsd", "outcome": "passed"},

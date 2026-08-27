@@ -236,18 +236,19 @@ go run ./createsamples generate \
   --output createsamples/samples
 ```
 
-Generate the independent EN 16931 positive corpus (seven Invoice VAT-family
-variants, one CreditNote, and two pinned official examples) with:
+Generate the independent EN 16931 corpus (seven positive Invoice VAT-family
+variants, one positive CreditNote, two pinned official examples, and 22
+targeted-negative Invoices) with:
 
 ```bash
 go run ./createsamples generate \
   --profile en16931 \
-  --set positive \
+  --set all \
   --xsd XSD \
   --output createsamples/samples-en16931
 ```
 
-The regression contract lives under [`regression/`](regression/) and defines stable fixture-manifest and normalized-result schemas. The current tracked corpora cover UBL positives and targeted negatives plus EN 16931 positives; future work adds EN 16931 targeted negatives and Peppol fixtures.
+The regression contract lives under [`regression/`](regression/) and defines stable fixture-manifest and normalized-result schemas. The current tracked corpora cover UBL positives and targeted negatives plus EN 16931 positives and rule-targeted negatives; future work adds Peppol fixtures.
 
 See [`TODO-REGRESSION-CORPUS.md`](TODO-REGRESSION-CORPUS.md) and [`regression/README.md`](regression/README.md).
 

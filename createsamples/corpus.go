@@ -224,7 +224,11 @@ func validateGeneratedCorpus(xmllintPath string, corpus generatedCorpus) error {
 		command.Stdin = bytes.NewReader(fixture.content)
 		output, err := command.CombinedOutput()
 		diagnostics := strings.TrimSpace(string(output))
-		if fixture.entry.ExpectedFinal == "valid" {
+		expectsXSDPass := fixture.entry.ExpectedFinal == "valid"
+		if len(fixture.entry.ExpectedStages) > 0 {
+			expectsXSDPass = fixture.entry.ExpectedStages[0].Outcome == "passed"
+		}
+		if expectsXSDPass {
 			if err != nil {
 				return fmt.Errorf("xmllint validate %s against %s: %w: %s", fixture.entry.ID, fixture.schemaPath, err, diagnostics)
 			}

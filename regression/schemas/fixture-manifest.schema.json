@@ -245,7 +245,7 @@
         {
           "if": {
             "properties": {
-              "profile": {"const": "ubl21"},
+              "profile": {"enum": ["ubl21", "ubl21-en16931"]},
               "expectedFinal": {"const": "invalid"}
             },
             "required": ["profile", "expectedFinal"]

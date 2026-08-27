@@ -66,7 +66,6 @@ func TestCommandsAndInventoryErrors(t *testing.T) {
 		t.Fatal("generate accepted an unsupported fixture set")
 	}
 	for _, args := range [][]string{
-		{"--profile", "en16931", "--set", "negative"},
 		{"--profile", "en16931", "--count", "2"},
 	} {
 		args = append(args, "--xsd", filepath.Join("..", "XSD"), "--output", filepath.Join(t.TempDir(), "samples"), "--generator-version", testGeneratorVersion)
@@ -219,6 +218,31 @@ func TestGenerateUBLNegativeSet(t *testing.T) {
 	}
 	if len(manifest.Fixtures) != 6 {
 		t.Fatalf("negative manifest fixtures = %d, want 6", len(manifest.Fixtures))
+	}
+}
+
+func TestGenerateEN16931NegativeSet(t *testing.T) {
+	output := filepath.Join(t.TempDir(), "negative")
+	if err := run([]string{
+		"generate", "--profile", "en16931", "--set", "negative",
+		"--xsd", filepath.Join("..", "XSD"), "--output", output,
+		"--generator-version", testGeneratorVersion,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	manifestBytes, err := os.ReadFile(filepath.Join(output, "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifestBytes); err != nil {
+		t.Fatalf("EN 16931 negative manifest rejected: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) != 22 {
+		t.Fatalf("EN 16931 negative manifest fixtures = %d, want 22", len(manifest.Fixtures))
 	}
 }
 

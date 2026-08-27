@@ -209,6 +209,45 @@ func TestEN16931PositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *testin
 	}
 }
 
+func TestEN16931NegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	first, err := generateEN16931NegativeCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := generateEN16931NegativeCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := verifyCorpusDeterminism(first, second); err != nil {
+		t.Fatal(err)
+	}
+	if len(first.fixtures) != 22 {
+		t.Fatalf("EN 16931 negative fixtures = %d, want 22", len(first.fixtures))
+	}
+	if err := regression.ValidateFixtureManifest(first.manifestJSON); err != nil {
+		t.Fatalf("EN 16931 negative manifest rejected: %v", err)
+	}
+	xmllintPath, err := exec.LookPath("xmllint")
+	if err != nil {
+		t.Fatal("xmllint is required for the EN 16931 negative-corpus acceptance test")
+	}
+	if err := validateGeneratedCorpus(xmllintPath, first); err != nil {
+		t.Fatal(err)
+	}
+	for _, fixture := range first.fixtures {
+		if fixture.entry.Mutation == nil || fixture.entry.Mutation.ID == "" || fixture.entry.Mutation.Description == "" {
+			t.Errorf("fixture %s lacks mutation provenance: %+v", fixture.entry.ID, fixture.entry.Mutation)
+		}
+		if fixture.entry.ExpectedFinal != "invalid" || len(fixture.entry.ExpectedStages) != 2 ||
+			fixture.entry.ExpectedStages[0].Stage != "ubl21-xsd" || fixture.entry.ExpectedStages[0].Outcome != "passed" ||
+			fixture.entry.ExpectedStages[1].Stage != "en16931" || fixture.entry.ExpectedStages[1].Outcome != "standards-invalid" ||
+			len(fixture.entry.ExpectedStages[1].RuleIDs) == 0 {
+			t.Errorf("fixture %s has wrong negative-stage contract: %+v", fixture.entry.ID, fixture.entry)
+		}
+	}
+}
+
 func TestNegativeCorpusValidationRequiresTheCataloguedFailure(t *testing.T) {
 	xmllintPath, err := exec.LookPath("xmllint")
 	if err != nil {
@@ -323,8 +362,8 @@ func TestTrackedEN16931CorpusMatchesFreshGeneration(t *testing.T) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if len(manifest.Fixtures) != 10 {
-		t.Fatalf("tracked EN 16931 manifest fixtures = %d, want 10", len(manifest.Fixtures))
+	if len(manifest.Fixtures) != 32 {
+		t.Fatalf("tracked EN 16931 manifest fixtures = %d, want 32", len(manifest.Fixtures))
 	}
 	generatorVersion := ""
 	for _, fixture := range manifest.Fixtures {
@@ -343,8 +382,8 @@ func TestTrackedEN16931CorpusMatchesFreshGeneration(t *testing.T) {
 	}
 
 	files := snapshotGeneratedDirectory(t, root)
-	if len(files) != 12 {
-		t.Fatalf("tracked EN 16931 corpus files = %d, want 12 including manifest and ownership marker", len(files))
+	if len(files) != 34 {
+		t.Fatalf("tracked EN 16931 corpus files = %d, want 34 including manifest and ownership marker", len(files))
 	}
 	for _, fixture := range manifest.Fixtures {
 		content, ok := files[fixture.File]
@@ -358,7 +397,15 @@ func TestTrackedEN16931CorpusMatchesFreshGeneration(t *testing.T) {
 		}
 	}
 
-	fresh, err := generateEN16931PositiveCorpus(filepath.Join("..", "XSD"), generatorVersion)
+	positive, err := generateEN16931PositiveCorpus(filepath.Join("..", "XSD"), generatorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	negative, err := generateEN16931NegativeCorpus(filepath.Join("..", "XSD"), generatorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fresh, err := combineGeneratedCorpora(positive, negative)
 	if err != nil {
 		t.Fatal(err)
 	}
