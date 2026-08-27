@@ -8,7 +8,7 @@ that JSON Schema cannot express by itself.
 ## Files
 
 - `schemas/fixture-manifest.schema.json` validates a complete corpus manifest.
-- `schemas/normalized-result.schema.json` validates one line of the future
+- `schemas/normalized-result.schema.json` validates one line of the
   `results.jsonl` output.
 - `testdata/*.example.json` are reviewable examples validated by the Go test
   suite.
@@ -26,6 +26,27 @@ EN 16931 fixtures also carry `rulesets.en16931.version` and the SHA-256 of
 the exact pinned validation stylesheet. The version mirrors
 `standards.en16931`; the digest makes a ruleset selection auditable even if an
 upstream asset is ever replaced without changing its release label.
+
+## Normalized regression runner
+
+Run a complete manifest through the authenticated public API and durable
+worker/result path with:
+
+```bash
+EUBL21_REGRESSION_TOKEN='<signed bearer token>' \
+go run . regression \
+  --base-url http://127.0.0.1:8080 \
+  --manifest createsamples/samples-en16931/manifest.json \
+  --profile all \
+  --output regression-results/latest
+```
+
+The command verifies manifest and fixture hashes, uploads fixtures in stable ID
+order with their requested validation profile, polls to a durable terminal
+status, removes IDs/timestamps/durations and other volatile fields, and writes
+`results.jsonl`, `summary.json`, and `junit.xml`. It returns non-zero after
+writing the artifacts if any expected final outcome, stage outcome, or required
+rule ID differs. Use the UBL manifest path to run the structural corpus.
 
 ## Deterministic UBL 2.1 positive corpus
 
@@ -189,6 +210,8 @@ messages, locations, XPath tests, and raw SVRL/XML are diagnostic and are not
 part of the normalized equality comparison.
 
 The runner sets `result` to `pass` only when the expected and actual final
-outcomes, ordered stages, and per-stage rule IDs are equal. JSON Schema checks
-the shape of a result; the runner introduced by TODO-REGRESSION-008 is
-responsible for that cross-field equality comparison.
+outcomes and ordered stage outcomes are equal. Every expected rule ID must be
+present in its actual stage; additional invalidating rule IDs are retained in
+`results.jsonl` without failing a targeted-negative fixture because one
+deliberate defect can trigger a legitimate rule cascade. JSON Schema checks
+the result shape, while the runner enforces this cross-field comparison.

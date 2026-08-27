@@ -74,15 +74,25 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expectedNamespace, ok := h.catalog.expectedNamespaceFor(localName)
-	if !ok || namespace != expectedNamespace {
+	documentType := strings.TrimSpace(r.URL.Query().Get("documentType"))
+	if documentType == "" {
+		documentType = localName
+	}
+	expectedNamespace, ok := h.catalog.expectedNamespaceFor(documentType)
+	if !ok || localName != documentType || (r.URL.Query().Get("documentType") == "" && namespace != expectedNamespace) {
 		recordUploadOutcome("unsupported_document_type")
 		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": fmt.Sprintf("unsupported UBL 2.1 document type: root element %q in namespace %q is not a recognized main document", localName, namespace),
+			"error": fmt.Sprintf("unsupported UBL 2.1 document type: root element %q in namespace %q is not a recognized main document matching requested document type %q", localName, namespace, documentType),
 		})
 		return
 	}
-	rootElement := localName
+	rootElement := documentType
+	profile, err := requestedValidationProfile(r, rootElement)
+	if err != nil {
+		recordUploadOutcome("unsupported_profile")
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
 
 	id, err := queue.NewID()
 	if err != nil {
@@ -95,7 +105,7 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 	// Persist intent first so every later partial failure is observable and
 	// can be reconciled. No content is written if this first boundary fails.
 	record := queue.UploadRecord{
-		ID: id, DocumentType: rootElement, Status: queue.StatusAccepting,
+		ID: id, DocumentType: rootElement, Profile: profile, Status: queue.StatusAccepting,
 		ReceivedAt: receivedAt.Format(time.RFC3339),
 	}
 	revision, err := h.queue.CreateUploadRecord(r.Context(), record)
@@ -170,6 +180,7 @@ func writeUploadAccepted(w http.ResponseWriter, record queue.UploadRecord) {
 		"status":     string(record.Status),
 		"id":         record.ID,
 		"document":   record.DocumentType,
+		"profile":    record.Profile,
 		"receivedAt": record.ReceivedAt,
 	})
 }
@@ -204,6 +215,7 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	response := map[string]any{
 		"id":               record.ID,
 		"document":         record.DocumentType,
+		"profile":          record.Profile,
 		"status":           string(record.Status),
 		"receivedAt":       record.ReceivedAt,
 		"contentAvailable": uploadContentAvailable(record),
@@ -253,6 +265,24 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, response)
+}
+
+func requestedValidationProfile(r *http.Request, documentType string) (queue.ValidationProfile, error) {
+	raw := strings.TrimSpace(r.URL.Query().Get("profile"))
+	if raw == "" {
+		if requiresEN16931(documentType) {
+			return queue.ValidationProfileUBL21EN16931, nil
+		}
+		return queue.ValidationProfileUBL21, nil
+	}
+	profile := queue.ValidationProfile(raw)
+	if !queue.ValidValidationProfile(profile) {
+		return "", fmt.Errorf("unsupported validation profile %q", raw)
+	}
+	if profile == queue.ValidationProfileUBL21EN16931 && !requiresEN16931(documentType) {
+		return "", fmt.Errorf("validation profile %q is only available for Invoice and CreditNote", raw)
+	}
+	return profile, nil
 }
 
 func uploadContentAvailable(record queue.UploadRecord) bool {

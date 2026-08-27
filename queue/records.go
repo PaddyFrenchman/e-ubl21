@@ -26,23 +26,24 @@ import (
 // PutUploadContent/GetUploadContent), so status updates never have to read
 // or rewrite the potentially large document body.
 type UploadRecord struct {
-	ID                 string           `json:"id"`
-	DocumentType       string           `json:"documentType"`
-	Status             ValidationStatus `json:"status"`
-	Error              string           `json:"error,omitempty"`
-	ReceivedAt         string           `json:"receivedAt"`
-	ValidatedAt        string           `json:"validatedAt,omitempty"`
-	ValidationStages   ValidationStages `json:"validationStages,omitempty"`
-	ContentExpiresAt   string           `json:"contentExpiresAt,omitempty"`
-	ContentExpiredAt   string           `json:"contentExpiredAt,omitempty"`
-	ResultPending      bool             `json:"resultPending,omitempty"`
-	LastError          string           `json:"lastError,omitempty"`
-	ProcessingAttempts uint64           `json:"processingAttempts,omitempty"`
-	ProcessingFailedAt string           `json:"processingFailedAt,omitempty"`
-	ReplayGeneration   uint64           `json:"replayGeneration,omitempty"`
-	ReplayMessageID    string           `json:"replayMessageId,omitempty"`
-	ReplayReady        bool             `json:"replayReady,omitempty"`
-	ReplayClaimedSeq   uint64           `json:"replayClaimedSequence,omitempty"`
+	ID                 string            `json:"id"`
+	DocumentType       string            `json:"documentType"`
+	Profile            ValidationProfile `json:"profile,omitempty"`
+	Status             ValidationStatus  `json:"status"`
+	Error              string            `json:"error,omitempty"`
+	ReceivedAt         string            `json:"receivedAt"`
+	ValidatedAt        string            `json:"validatedAt,omitempty"`
+	ValidationStages   ValidationStages  `json:"validationStages,omitempty"`
+	ContentExpiresAt   string            `json:"contentExpiresAt,omitempty"`
+	ContentExpiredAt   string            `json:"contentExpiredAt,omitempty"`
+	ResultPending      bool              `json:"resultPending,omitempty"`
+	LastError          string            `json:"lastError,omitempty"`
+	ProcessingAttempts uint64            `json:"processingAttempts,omitempty"`
+	ProcessingFailedAt string            `json:"processingFailedAt,omitempty"`
+	ReplayGeneration   uint64            `json:"replayGeneration,omitempty"`
+	ReplayMessageID    string            `json:"replayMessageId,omitempty"`
+	ReplayReady        bool              `json:"replayReady,omitempty"`
+	ReplayClaimedSeq   uint64            `json:"replayClaimedSequence,omitempty"`
 }
 
 // VersionedUploadRecord pairs a record with its JetStream KV revision for

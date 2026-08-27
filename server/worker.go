@@ -534,7 +534,7 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		}
 	}
 
-	validationResult, validationErr := w.validator.Validate(ctx, id, documentType, schemaPath)
+	validationResult, validationErr := w.validator.ValidateProfile(ctx, id, documentType, versioned.Record.Profile, schemaPath)
 	if validationErr != nil {
 		if errors.Is(validationErr, errValidationContentStream) {
 			recordValidationOutcome("content_unavailable")

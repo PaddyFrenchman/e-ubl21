@@ -129,8 +129,26 @@ paths:
       description: >-
         Accepts an XML payload, stores it once, and queues a compact work
         descriptor for asynchronous standards validation. Every recognized
-        document is validated against UBL 2.1 XSD; Invoice and CreditNote then
-        undergo mandatory EN 16931 semantic validation.
+        document is validated against UBL 2.1 XSD. By default Invoice and
+        CreditNote then undergo EN 16931 semantic validation; callers may
+        explicitly freeze either supported validation profile.
+      parameters:
+        - name: profile
+          in: query
+          required: false
+          description: Standards pipeline to persist for asynchronous validation.
+          schema:
+            type: string
+            enum: [ubl21, ubl21-en16931]
+        - name: documentType
+          in: query
+          required: false
+          description: >-
+            Explicit recognized UBL root local name. When supplied and equal
+            to the payload root local name, namespace defects are queued for
+            XSD validation instead of being rejected during cheap ingress.
+          schema:
+            type: string
       requestBody:
         required: true
         description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.
@@ -169,15 +187,20 @@ paths:
                   document:
                     type: string
                     example: Invoice
+                  profile:
+                    type: string
+                    enum: [ubl21, ubl21-en16931]
+                    example: ubl21-en16931
                   receivedAt:
                     type: string
                     format: date-time
                     example: '2026-08-20T12:00:00Z'
-                required: [status, id, document, receivedAt]
+                required: [status, id, document, profile, receivedAt]
               example:
                 status: pending
                 id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
                 document: Invoice
+                profile: ubl21-en16931
                 receivedAt: '2026-08-20T12:00:00Z'
         '400':
           description: Invalid or unsupported root element.
@@ -243,6 +266,10 @@ paths:
                   document:
                     type: string
                     example: Invoice
+                  profile:
+                    type: string
+                    enum: [ubl21, ubl21-en16931]
+                    example: ubl21-en16931
                   status:
                     type: string
                     enum: [accepting, cleanup_pending, enqueue_pending, pending, valid, invalid, acceptance_failed, dead_letter_pending, processing_failed]
@@ -313,13 +340,14 @@ paths:
                     type: string
                     description: The original raw XML payload. Present only when includeContent=true.
                     example: '<?xml version="1.0" encoding="UTF-8"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">...</Invoice>'
-                required: [id, document, status, receivedAt, contentAvailable]
+                required: [id, document, profile, status, receivedAt, contentAvailable]
               examples:
                 xsdInvalidInvoice:
                   summary: Invoice rejected by UBL 2.1 XSD
                   value:
                     id: '11111111111111111111111111111111'
                     document: Invoice
+                    profile: ubl21
                     status: invalid
                     receivedAt: '2026-08-20T12:00:00Z'
                     validatedAt: '2026-08-20T12:00:01Z'
@@ -341,6 +369,7 @@ paths:
                   value:
                     id: '22222222222222222222222222222222'
                     document: Invoice
+                    profile: ubl21-en16931
                     status: invalid
                     receivedAt: '2026-08-20T12:00:00Z'
                     validatedAt: '2026-08-20T12:00:02Z'
@@ -370,6 +399,7 @@ paths:
                   value:
                     id: '33333333333333333333333333333333'
                     document: Invoice
+                    profile: ubl21-en16931
                     status: valid
                     receivedAt: '2026-08-20T12:00:00Z'
                     validatedAt: '2026-08-20T12:00:02Z'
@@ -391,6 +421,7 @@ paths:
                   value:
                     id: '44444444444444444444444444444444'
                     document: Order
+                    profile: ubl21
                     status: valid
                     receivedAt: '2026-08-20T12:00:00Z'
                     validatedAt: '2026-08-20T12:00:01Z'
@@ -406,6 +437,7 @@ paths:
                   value:
                     id: '55555555555555555555555555555555'
                     document: Invoice
+                    profile: ubl21-en16931
                     status: processing_failed
                     receivedAt: '2026-08-20T12:00:00Z'
                     error: 'EN 16931 validation failed: Saxon process timed out'

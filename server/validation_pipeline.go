@@ -65,6 +65,12 @@ func newDocumentValidationPipelineWithTimeouts(content validationContentSource, 
 }
 
 func (pipeline *documentValidationPipeline) Validate(ctx context.Context, uploadID, documentType, schemaPath string) (documentValidationResult, error) {
+	return pipeline.ValidateProfile(ctx, uploadID, documentType, "", schemaPath)
+}
+
+// ValidateProfile executes the explicitly selected durable profile. An empty
+// profile preserves the legacy document-type-derived behavior.
+func (pipeline *documentValidationPipeline) ValidateProfile(ctx context.Context, uploadID, documentType string, profile queue.ValidationProfile, schemaPath string) (documentValidationResult, error) {
 	if pipeline == nil || pipeline.content == nil || pipeline.xsdValidate == nil {
 		return documentValidationResult{}, fmt.Errorf("validation pipeline is not configured")
 	}
@@ -110,7 +116,11 @@ func (pipeline *documentValidationPipeline) Validate(ctx context.Context, upload
 	pipeline.observeStage(uploadID, documentType, xsdStage, "valid", xsdCompleted.Sub(xsdStarted), nil)
 
 	stages := queue.ValidationStages{xsdStage}
-	if requiresEN16931(documentType) {
+	withEN16931 := requiresEN16931(documentType)
+	if profile != "" {
+		withEN16931 = profile == queue.ValidationProfileUBL21EN16931
+	}
+	if withEN16931 {
 		enStarted := pipeline.now()
 		if pipeline.en16931 == nil {
 			enErr := fmt.Errorf("%w: EN 16931 validator is required for %s", errEN16931RuntimeAsset, documentType)

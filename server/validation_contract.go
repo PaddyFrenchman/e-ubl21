@@ -45,8 +45,16 @@ func requiresEN16931(documentType string) bool {
 // requiredValidationLayers returns mandatory stages in execution order. XSD
 // is always first; EN 16931 is mandatory only for Invoice and CreditNote.
 func requiredValidationLayers(documentType string) []validationLayer {
+	return requiredValidationLayersForProfile(documentType, "")
+}
+
+func requiredValidationLayersForProfile(documentType string, profile queue.ValidationProfile) []validationLayer {
 	layers := structuralValidationLayers
-	if requiresEN16931(documentType) {
+	withEN16931 := requiresEN16931(documentType)
+	if profile != "" {
+		withEN16931 = profile == queue.ValidationProfileUBL21EN16931
+	}
+	if withEN16931 {
 		layers = billingValidationLayers
 	}
 	return append([]validationLayer(nil), layers...)
@@ -81,7 +89,7 @@ func terminalValidationStagesComplete(record queue.UploadRecord) bool {
 	if record.Status != queue.StatusValid && record.Status != queue.StatusInvalid {
 		return false
 	}
-	required := requiredValidationLayers(record.DocumentType)
+	required := requiredValidationLayersForProfile(record.DocumentType, record.Profile)
 	for index, layer := range required {
 		if index >= len(record.ValidationStages) ||
 			record.ValidationStages[index].Layer != layer ||

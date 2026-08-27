@@ -53,6 +53,39 @@ func TestUploadHandlerBadRequestBranches(t *testing.T) {
 	}
 }
 
+func TestUploadHandlerPersistsExplicitRegressionProfile(t *testing.T) {
+	h, q := directUploadHandler(t)
+	req := httptest.NewRequest(http.MethodPost, "/upload?profile=ubl21&documentType=Invoice", strings.NewReader(`<Invoice xmlns="urn:deliberately-invalid"/>`))
+	req.Header.Set("Content-Type", "application/xml")
+	res := httptest.NewRecorder()
+	h.handleUpload(res, req)
+	if res.Code != http.StatusAccepted {
+		t.Fatalf("upload status = %d body=%s", res.Code, res.Body.String())
+	}
+	var accepted struct {
+		ID      string                  `json:"id"`
+		Profile queue.ValidationProfile `json:"profile"`
+	}
+	if err := json.Unmarshal(res.Body.Bytes(), &accepted); err != nil {
+		t.Fatal(err)
+	}
+	record, err := q.GetUploadRecord(context.Background(), accepted.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if accepted.Profile != queue.ValidationProfileUBL21 || record.Profile != queue.ValidationProfileUBL21 {
+		t.Fatalf("accepted/record profiles = %q/%q", accepted.Profile, record.Profile)
+	}
+
+	req = httptest.NewRequest(http.MethodPost, "/upload?profile=peppol-bis-billing", strings.NewReader(`<Invoice xmlns="urn:test"/>`))
+	req.Header.Set("Content-Type", "application/xml")
+	res = httptest.NewRecorder()
+	h.handleUpload(res, req)
+	if res.Code != http.StatusBadRequest {
+		t.Fatalf("unsupported profile status = %d", res.Code)
+	}
+}
+
 func TestUploadHandlerStorageFailuresAndContentResponse(t *testing.T) {
 	h, q := directUploadHandler(t)
 	q.Close()

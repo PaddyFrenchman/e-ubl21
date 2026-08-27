@@ -250,6 +250,12 @@ go run ./createsamples generate \
 
 The regression contract lives under [`regression/`](regression/) and defines stable fixture-manifest and normalized-result schemas. The current tracked corpora cover UBL positives and targeted negatives plus EN 16931 positives and rule-targeted negatives; future work adds Peppol fixtures.
 
+Run a tracked manifest through the authenticated public API and durable result
+path with `go run . regression`; see [`regression/README.md`](regression/README.md)
+for token, profile, polling, and artifact options. Each run emits deterministic
+`results.jsonl`, `summary.json`, and `junit.xml` evidence and exits non-zero on
+any semantic mismatch.
+
 See [`TODO-REGRESSION-CORPUS.md`](TODO-REGRESSION-CORPUS.md) and [`regression/README.md`](regression/README.md).
 
 ## Running the project

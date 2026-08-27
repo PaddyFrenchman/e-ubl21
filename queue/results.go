@@ -13,6 +13,22 @@ import (
 // ValidationStatus describes the lifecycle state of an uploaded document.
 type ValidationStatus string
 
+// ValidationProfile identifies the standards pipeline selected when an
+// upload is accepted. It is persisted with the upload so asynchronous workers
+// cannot accidentally apply a different profile later.
+type ValidationProfile string
+
+const (
+	ValidationProfileUBL21        ValidationProfile = "ubl21"
+	ValidationProfileUBL21EN16931 ValidationProfile = "ubl21-en16931"
+)
+
+// ValidValidationProfile reports whether profile is a supported public API
+// selection.
+func ValidValidationProfile(profile ValidationProfile) bool {
+	return profile == ValidationProfileUBL21 || profile == ValidationProfileUBL21EN16931
+}
+
 // ValidationLayer is a stable identifier for one independently reportable
 // standards-validation stage.
 type ValidationLayer string

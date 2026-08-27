@@ -38,6 +38,7 @@ server/.bin/
 
 # generated reports and local API artifacts
 vacuum-report-*.json
+regression-results/
 
 # Editor/IDE
 # .idea/

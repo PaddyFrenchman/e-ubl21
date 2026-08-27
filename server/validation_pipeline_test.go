@@ -214,6 +214,24 @@ func TestDocumentValidationPipelineSkipsENForStructuralUBL(t *testing.T) {
 	}
 }
 
+func TestDocumentValidationPipelineHonorsExplicitUBLOnlyProfile(t *testing.T) {
+	source := &memoryValidationContentSource{content: []byte(`<Invoice/>`)}
+	enCalled := false
+	pipeline := newDocumentValidationPipeline(source, en16931ValidatorFunc(func(context.Context, io.Reader) (queue.ValidationStageResult, error) {
+		enCalled = true
+		return queue.ValidationStageResult{}, nil
+	}), time.Second)
+	pipeline.xsdValidate = func(context.Context, string, io.Reader, time.Duration) error { return nil }
+
+	result, err := pipeline.ValidateProfile(context.Background(), "upload", "Invoice", queue.ValidationProfileUBL21, "invoice.xsd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != queue.StatusValid || len(result.Stages) != 1 || enCalled || source.opens != 1 {
+		t.Fatalf("result=%+v enCalled=%t opens=%d", result, enCalled, source.opens)
+	}
+}
+
 func TestDocumentValidationPipelineRequiresENForBillingDocuments(t *testing.T) {
 	for _, documentType := range []string{"Invoice", "CreditNote"} {
 		t.Run(documentType, func(t *testing.T) {
