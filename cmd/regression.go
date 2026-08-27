@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newRegressionCmd() *cobra.Command {
+func newRegressionCmd(cfg *Config) *cobra.Command {
 	var baseURL, token, manifest, outputDir, profile string
 	var pollInterval, fixtureTimeout time.Duration
 	command := &cobra.Command{
@@ -35,5 +35,6 @@ func newRegressionCmd() *cobra.Command {
 	command.Flags().StringVar(&profile, "profile", "all", "Fixture profile selector (all, ubl21, or ubl21-en16931)")
 	command.Flags().DurationVar(&pollInterval, "poll-interval", 100*time.Millisecond, "Delay between durable status polls")
 	command.Flags().DurationVar(&fixtureTimeout, "fixture-timeout", 60*time.Second, "Maximum upload-to-terminal time per fixture")
+	command.AddCommand(newRegressionEvidenceCmd(cfg))
 	return command
 }

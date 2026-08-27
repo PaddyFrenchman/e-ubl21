@@ -48,6 +48,61 @@ status, removes IDs/timestamps/durations and other volatile fields, and writes
 writing the artifacts if any expected final outcome, stage outcome, or required
 rule ID differs. Use the UBL manifest path to run the structural corpus.
 
+## Diagnostic evidence collector
+
+Collect bounded diagnostics into the same artifact directory after every run,
+including failed runs:
+
+```bash
+go run . regression collect-evidence \
+  --manifest createsamples/samples-en16931/manifest.json \
+  --output regression-results/latest \
+  --log api=/tmp/e-ubl21-api.log \
+  --log worker=/tmp/e-ubl21-worker.log \
+  --metrics api=http://127.0.0.1:8080/metrics \
+  --metrics worker=http://127.0.0.1:9091/metrics \
+  --nats-state \
+  --nats-url nats://127.0.0.1:4222 \
+  --queue-namespace eubl21.dev
+```
+
+For a deployed run, add `--kubernetes`, `--kubernetes-namespace NAME`, and
+the deployment's `--kubernetes-selector`. The collector uses `kubectl` to
+capture events, a sanitized pod/container snapshot, and the last 2,000 log
+lines per selected container, including previous-container logs after a
+restart. It also records Kubernetes and Minikube version commands in
+`environment.json`.
+
+The diagnostic files are separate from normalized correctness results:
+
+```text
+environment.json
+manifest-used.json
+collection.json
+logs/*.log
+metrics/*.prom
+kubernetes/events.json
+kubernetes/pods.json
+nats/state.json
+```
+
+Logs are capped at 4 MiB per source, metrics at 2 MiB per endpoint, and command
+output at 4 MiB. Remote sources and commands have a configurable per-source
+deadline (`--source-timeout`, 15 seconds by default). Bearer credentials and
+Invoice/CreditNote XML blocks are redacted before logs are written. Kubernetes
+pod data is reduced to names, images, readiness, restart counts, and image IDs,
+so environment values and
+Secrets are not copied. NATS evidence contains only selected namespaced stream
+and consumer configuration/counters; it never reads messages or raw upload
+objects. Requested-source failures are retained in `collection.json`, other
+sources are still attempted, and the command exits non-zero after collection.
+
+`environment.json` records the commit and dirty state, manifest generator
+commits, UBL/EN/Saxon/XML Resolver versions and digests, Go/Java/xmllint
+versions, optional image digest, optional Kubernetes/Minikube/NATS versions,
+and test start/end timestamps. Supply `--started-at` and `--image-digest` (or
+`EUBL21_IMAGE_DIGEST`) when the surrounding runner knows them.
+
 ## Deterministic UBL 2.1 positive corpus
 
 The structural generator produces one manifest-driven, XSD-valid positive

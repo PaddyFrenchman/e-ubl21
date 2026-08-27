@@ -256,6 +256,12 @@ for token, profile, polling, and artifact options. Each run emits deterministic
 `results.jsonl`, `summary.json`, and `junit.xml` evidence and exits non-zero on
 any semantic mismatch.
 
+After a run—successful or failed—`go run . regression collect-evidence`
+collects bounded, redacted service logs, metrics, selected NATS state,
+environment metadata, and optional Kubernetes events/pod logs beside those
+normalized files. See [`regression/README.md`](regression/README.md) for the
+artifact layout and source flags.
+
 See [`TODO-REGRESSION-CORPUS.md`](TODO-REGRESSION-CORPUS.md) and [`regression/README.md`](regression/README.md).
 
 ## Running the project
