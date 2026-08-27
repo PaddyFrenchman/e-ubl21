@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/PaddyFrenchman/e-ubl21/regression"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 )
 
 const testGeneratorVersion = "git:0000000000000000000000000000000000000000"
@@ -138,6 +139,73 @@ func TestUBLNegativeCorpusIsDeterministicManifestDrivenAndPredictablyXSDInvalid(
 			fixture.entry.ExpectedStages[0].Outcome != "standards-invalid" {
 			t.Errorf("fixture %s permits a later semantic stage: %+v", fixture.entry.ID, fixture.entry.ExpectedStages)
 		}
+	}
+}
+
+func TestEN16931PositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	first, err := generateEN16931PositiveCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := generateEN16931PositiveCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := verifyCorpusDeterminism(first, second); err != nil {
+		t.Fatal(err)
+	}
+	if len(first.fixtures) != 10 {
+		t.Fatalf("EN 16931 fixtures = %d, want 10", len(first.fixtures))
+	}
+	if err := regression.ValidateFixtureManifest(first.manifestJSON); err != nil {
+		t.Fatalf("EN 16931 manifest rejected: %v", err)
+	}
+	xmllintPath, err := exec.LookPath("xmllint")
+	if err != nil {
+		t.Fatal("xmllint is required for the EN 16931 positive-corpus acceptance test")
+	}
+	if err := validateGeneratedCorpus(xmllintPath, first); err != nil {
+		t.Fatal(err)
+	}
+
+	generated, official, invoices, creditNotes := 0, 0, 0, 0
+	profile := validationassets.EN16931()
+	for _, fixture := range first.fixtures {
+		if fixture.entry.Profile != "ubl21-en16931" || fixture.entry.ExpectedFinal != "valid" {
+			t.Errorf("fixture %s has wrong profile/final expectation: %+v", fixture.entry.ID, fixture.entry)
+		}
+		if fixture.entry.Standards.EN16931 == nil || *fixture.entry.Standards.EN16931 != profile.Version ||
+			fixture.entry.Rulesets == nil || fixture.entry.Rulesets.EN16931 == nil ||
+			fixture.entry.Rulesets.EN16931.Version != profile.Version || fixture.entry.Rulesets.EN16931.SHA256 != profile.XSLTSHA256 {
+			t.Errorf("fixture %s lacks pinned EN ruleset metadata", fixture.entry.ID)
+		}
+		if len(fixture.entry.ExpectedStages) != 2 || fixture.entry.ExpectedStages[0].Stage != "ubl21-xsd" ||
+			fixture.entry.ExpectedStages[1].Stage != "en16931" || fixture.entry.ExpectedStages[1].Outcome != "passed" {
+			t.Errorf("fixture %s has wrong stage contract: %+v", fixture.entry.ID, fixture.entry.ExpectedStages)
+		}
+		switch fixture.entry.Provenance.Kind {
+		case "generated":
+			generated++
+		case "official-import":
+			official++
+			if fixture.entry.Provenance.SourceSHA256 != fixture.entry.SHA256 {
+				t.Errorf("unmodified official fixture %s source/file hashes differ", fixture.entry.ID)
+			}
+		default:
+			t.Errorf("fixture %s has unknown provenance %q", fixture.entry.ID, fixture.entry.Provenance.Kind)
+		}
+		switch fixture.entry.DocumentType {
+		case "Invoice":
+			invoices++
+		case "CreditNote":
+			creditNotes++
+		default:
+			t.Errorf("unexpected EN document type %q", fixture.entry.DocumentType)
+		}
+	}
+	if generated != 8 || official != 2 || invoices != 9 || creditNotes != 1 {
+		t.Fatalf("EN fixture coverage generated=%d official=%d invoices=%d creditNotes=%d", generated, official, invoices, creditNotes)
 	}
 }
 

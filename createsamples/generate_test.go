@@ -59,11 +59,20 @@ func TestCommandsAndInventoryErrors(t *testing.T) {
 	if err := runGenerate([]string{"--xsd", filepath.Join(t.TempDir(), "missing")}); err == nil {
 		t.Fatal("generate accepted a missing XSD tree")
 	}
-	if err := runGenerate([]string{"--profile", "en16931"}); err == nil {
+	if err := runGenerate([]string{"--profile", "peppol"}); err == nil {
 		t.Fatal("generate accepted an unsupported profile")
 	}
 	if err := runGenerate([]string{"--set", "stress"}); err == nil {
 		t.Fatal("generate accepted an unsupported fixture set")
+	}
+	for _, args := range [][]string{
+		{"--profile", "en16931", "--set", "negative"},
+		{"--profile", "en16931", "--count", "2"},
+	} {
+		args = append(args, "--xsd", filepath.Join("..", "XSD"), "--output", filepath.Join(t.TempDir(), "samples"), "--generator-version", testGeneratorVersion)
+		if err := runGenerate(args); err == nil {
+			t.Fatalf("generate accepted unsupported EN 16931 options %v", args)
+		}
 	}
 	emptyTree := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(emptyTree, "maindoc"), 0o755); err != nil {

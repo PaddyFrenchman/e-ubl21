@@ -137,6 +137,22 @@
         "peppol": {"type": ["string", "null"]}
       }
     },
+    "ruleset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "sha256"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "rulesets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "en16931": {"$ref": "#/$defs/ruleset"}
+      }
+    },
     "fixture": {
       "type": "object",
       "additionalProperties": false,
@@ -162,6 +178,7 @@
         },
         "sha256": {"$ref": "#/$defs/sha256"},
         "standards": {"$ref": "#/$defs/standards"},
+        "rulesets": {"$ref": "#/$defs/rulesets"},
         "provenance": {"$ref": "#/$defs/provenance"},
         "mutation": {"$ref": "#/$defs/mutation"},
         "expectedFinal": {"enum": ["valid", "invalid"]},
@@ -244,12 +261,16 @@
         {
           "if": {"properties": {"profile": {"const": "ubl21-en16931"}}, "required": ["profile"]},
           "then": {
+            "required": ["rulesets"],
             "properties": {
               "standards": {
                 "properties": {
                   "en16931": {"type": "string", "minLength": 1},
                   "peppol": {"const": null}
                 }
+              },
+              "rulesets": {
+                "required": ["en16931"]
               },
               "expectedStages": {
                 "minItems": 2,

@@ -1,9 +1,8 @@
 # Official EN 16931 UBL example fixtures
 
-**Purpose:** reference-shape fixtures for unit tests only. These are **not**
-distributed as generator output and are **not** part of the generated sample
-corpus — they exist solely so the new `en16931` model/build code can be
-compared against a known-correct official document while it is developed.
+**Purpose:** byte-pinned reference fixtures used by unit tests and imported by
+the unified EN 16931 positive-corpus generator. The generated corpus preserves
+their official-import provenance and copies their bytes without transformation.
 
 See [ideas/EN16931-samples-generator-plan.md](/home/a/e-ubl21/ideas/EN16931-samples-generator-plan.md)
 §2 and Phase EN-0.
@@ -30,5 +29,5 @@ Licensed under European Union Public Licence (EUPL) version 1.2.
 ```
 
 The `eInvoicing-EN16931` repository itself is licensed under EUPL 1.2 (see
-its `README.md`). These two files are vendored unmodified for internal
-test-development reference only.
+its `README.md`). These two files are vendored and redistributed unmodified as
+regression fixtures under those terms.

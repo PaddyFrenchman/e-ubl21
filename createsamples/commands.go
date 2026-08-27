@@ -48,7 +48,7 @@ func runGenerate(args []string) error {
 	flags := flag.NewFlagSet("generate", flag.ContinueOnError)
 	xsdDir := flags.String("xsd", filepath.Join("XSD"), "path to the UBL XSD tree")
 	output := flags.String("output", filepath.Join("createsamples", "samples"), "output directory for generated samples")
-	profile := flags.String("profile", "ubl21", "validation profile to generate (currently ubl21)")
+	profile := flags.String("profile", "ubl21", "validation profile to generate (ubl21 or en16931)")
 	set := flags.String("set", "positive", "fixture set to generate (positive, negative, or all)")
 	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: latest generator implementation commit)")
 	count := flags.Int("count", 1, "number of positive sample files to generate per main document schema")
@@ -58,8 +58,8 @@ func runGenerate(args []string) error {
 	if *count <= 0 {
 		return errors.New("count must be greater than zero")
 	}
-	if *profile != "ubl21" {
-		return fmt.Errorf("unsupported generation profile %q; supported profile is ubl21", *profile)
+	if *profile != "ubl21" && *profile != "en16931" {
+		return fmt.Errorf("unsupported generation profile %q; supported profiles are ubl21 and en16931", *profile)
 	}
 	if *set != "positive" && *set != "negative" && *set != "all" {
 		return fmt.Errorf("unsupported generation set %q; supported sets are positive, negative, and all", *set)
@@ -75,15 +75,24 @@ func runGenerate(args []string) error {
 	if len(report.MainFiles) == 0 {
 		return errors.New("no main document XSD files discovered")
 	}
-	index, err := buildSchemaIndex(*xsdDir)
-	if err != nil {
-		return err
-	}
 	version, err := resolveGeneratorVersion(*generatorVersion)
 	if err != nil {
 		return err
 	}
 	generate := func() (generatedCorpus, error) {
+		if *profile == "en16931" {
+			if *set != "positive" {
+				return generatedCorpus{}, fmt.Errorf("generation set %q is not available for profile en16931; supported set is positive", *set)
+			}
+			if *count != 1 {
+				return generatedCorpus{}, errors.New("count is only supported for profile ubl21")
+			}
+			return generateEN16931PositiveCorpus(*xsdDir, version)
+		}
+		index, err := buildSchemaIndex(*xsdDir)
+		if err != nil {
+			return generatedCorpus{}, err
+		}
 		switch *set {
 		case "positive":
 			return generateUBLPositiveCorpus(report, index, *xsdDir, *count, version)

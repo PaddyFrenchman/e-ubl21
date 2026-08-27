@@ -50,7 +50,15 @@ func ValidateFixtureManifest(data []byte) error {
 
 	var manifest struct {
 		Fixtures []struct {
-			ID             string         `json:"id"`
+			ID        string `json:"id"`
+			Standards struct {
+				EN16931 *string `json:"en16931"`
+			} `json:"standards"`
+			Rulesets struct {
+				EN16931 *struct {
+					Version string `json:"version"`
+				} `json:"en16931"`
+			} `json:"rulesets"`
 			ExpectedStages []stageRuleIDs `json:"expectedStages"`
 		} `json:"fixtures"`
 	}
@@ -63,6 +71,10 @@ func ValidateFixtureManifest(data []byte) error {
 			return fmt.Errorf("duplicate fixture id %q", fixture.ID)
 		}
 		seen[fixture.ID] = struct{}{}
+		if fixture.Rulesets.EN16931 != nil && fixture.Standards.EN16931 != nil &&
+			fixture.Rulesets.EN16931.Version != *fixture.Standards.EN16931 {
+			return fmt.Errorf("fixture %s EN 16931 ruleset version %q does not match standards version %q", fixture.ID, fixture.Rulesets.EN16931.Version, *fixture.Standards.EN16931)
+		}
 		if err := validateSortedRuleIDs("fixture "+fixture.ID+" expected", fixture.ExpectedStages); err != nil {
 			return err
 		}

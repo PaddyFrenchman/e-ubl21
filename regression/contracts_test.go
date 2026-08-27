@@ -167,6 +167,19 @@ func TestManifestValidatorRejectsUnsortedRuleIDs(t *testing.T) {
 	}
 }
 
+func TestManifestValidatorRejectsMismatchedRulesetVersion(t *testing.T) {
+	document := readObject(t, filepath.Join("testdata", "fixture-manifest.example.json"))
+	rulesets := firstFixture(document)["rulesets"].(map[string]any)
+	rulesets["en16931"].(map[string]any)["version"] = "different-release"
+	data, err := json.Marshal(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(data); err == nil || !strings.Contains(err.Error(), "does not match standards version") {
+		t.Fatalf("mismatched ruleset version error = %v", err)
+	}
+}
+
 func TestManifestValidatorRejectsMalformedAndSchemaInvalidDocuments(t *testing.T) {
 	if err := regression.ValidateFixtureManifest([]byte(`{`)); err == nil || !strings.Contains(err.Error(), "decode fixture manifest") {
 		t.Fatalf("malformed manifest error = %v", err)

@@ -117,7 +117,7 @@ func generateUBLNegativeCorpus(xsdDir, generatorVersion string) (generatedCorpus
 				File:         filepath.ToSlash(filepath.Join("negative", "Invoice", mutation.id+".xml")),
 				SHA256:       digest,
 				Standards:    fixtureStandards{UBL: "2.1"},
-				Provenance: generatedProvenance{
+				Provenance: fixtureProvenance{
 					Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion,
 				},
 				Mutation:       &fixtureMutation{ID: mutation.id, Description: mutation.description},

@@ -43,7 +43,8 @@ type fixtureManifestEntry struct {
 	File           string                 `json:"file"`
 	SHA256         string                 `json:"sha256"`
 	Standards      fixtureStandards       `json:"standards"`
-	Provenance     generatedProvenance    `json:"provenance"`
+	Provenance     fixtureProvenance      `json:"provenance"`
+	Rulesets       *fixtureRulesets       `json:"rulesets,omitempty"`
 	Mutation       *fixtureMutation       `json:"mutation,omitempty"`
 	ExpectedFinal  string                 `json:"expectedFinal"`
 	ExpectedStages []fixtureExpectedStage `json:"expectedStages"`
@@ -56,10 +57,26 @@ type fixtureStandards struct {
 	Peppol  *string `json:"peppol"`
 }
 
-type generatedProvenance struct {
+type fixtureProvenance struct {
 	Kind             string `json:"kind"`
-	Generator        string `json:"generator"`
-	GeneratorVersion string `json:"generatorVersion"`
+	Generator        string `json:"generator,omitempty"`
+	GeneratorVersion string `json:"generatorVersion,omitempty"`
+	Publisher        string `json:"publisher,omitempty"`
+	SourceURL        string `json:"sourceUrl,omitempty"`
+	SourceVersion    string `json:"sourceVersion,omitempty"`
+	SourceSHA256     string `json:"sourceSha256,omitempty"`
+	SourceMember     any    `json:"sourceMember,omitempty"`
+	Extraction       string `json:"extraction,omitempty"`
+	License          string `json:"license,omitempty"`
+}
+
+type fixtureRulesets struct {
+	EN16931 *fixtureRuleset `json:"en16931,omitempty"`
+}
+
+type fixtureRuleset struct {
+	Version string `json:"version"`
+	SHA256  string `json:"sha256"`
 }
 
 type fixtureMutation struct {
@@ -149,7 +166,7 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 				entry: fixtureManifestEntry{
 					ID: fixtureID, DocumentType: root, Profile: "ubl21", File: relativePath, SHA256: digest,
 					Standards:      fixtureStandards{UBL: "2.1"},
-					Provenance:     generatedProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+					Provenance:     fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
 					ExpectedFinal:  "valid",
 					ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
 					Tags:           []string{"positive", "ubl21"},

@@ -22,6 +22,11 @@ Changing the meaning of an existing field requires a new schema version.
 Additive changes must still be reviewed because version 1 rejects unknown
 properties.
 
+EN 16931 fixtures also carry `rulesets.en16931.version` and the SHA-256 of
+the exact pinned validation stylesheet. The version mirrors
+`standards.en16931`; the digest makes a ruleset selection auditable even if an
+upstream asset is ever replaced without changing its release label.
+
 ## Deterministic UBL 2.1 positive corpus
 
 The structural generator produces one manifest-driven, XSD-valid positive
@@ -81,6 +86,27 @@ entry, expects only `ubl21-xsd = standards-invalid`, and is independently
 required to fail with the diagnostic associated with that mutation. Tests also
 run the tracked fixtures through the current validation pipeline and prove that
 the EN 16931 validator is never invoked after the structural failure.
+
+## Deterministic EN 16931 positive corpus
+
+The EN 16931 semantic generator is available through the same CLI and writes a
+separate profile corpus:
+
+```bash
+go run ./createsamples generate \
+  --profile en16931 \
+  --set positive \
+  --xsd XSD \
+  --output createsamples/samples-en16931
+```
+
+The corpus covers generated Invoice variants for VAT categories S, Z, E, AE,
+G, K, and O, a generated standard-rated CreditNote, and the two byte-pinned
+official upstream guide examples. Every entry expects ordered UBL XSD and EN
+16931 passes, records ruleset version `1.3.16` and the packaged stylesheet
+digest, and is independently checked against its UBL schema before output is
+installed. Official examples use the common `official-import` provenance
+contract rather than generator provenance.
 
 ## Stable names
 

@@ -12,6 +12,12 @@
         "en16931": "1.3.16",
         "peppol": null
       },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        }
+      },
       "provenance": {
         "kind": "generated",
         "generator": "createsamples",
