@@ -15,7 +15,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/en16931",
-        "generatorVersion": "git:492933326baaeee362398d3118f00f61806117ae"
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
       },
       "rulesets": {
         "en16931": {
@@ -39,6 +39,570 @@
         "en16931",
         "positive",
         "vat-s"
+      ]
+    },
+    {
+      "id": "en16931.invoice.decimal-tax-exclusive",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/decimal-tax-exclusive.xml",
+      "sha256": "be204ab2ae27fc97a4370d7c1d093620a7cc27405378c84c4e24dafa157c275a",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "decimal-tax-exclusive",
+        "description": "add a third decimal place to TaxExclusiveAmount"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-DEC-12"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "decimal-tax-exclusive"
+      ]
+    },
+    {
+      "id": "en16931.invoice.exemption-ae-required",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/exemption-ae-required.xml",
+      "sha256": "78f185f52b232c58fb768fc3ebf099296553bd1e6f7616c5e45ae37c0885ea3e",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "exemption-ae-required",
+        "description": "remove the reverse-charge VAT reason"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-AE-10"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "exemption-ae-required"
+      ]
+    },
+    {
+      "id": "en16931.invoice.exemption-e-required",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/exemption-e-required.xml",
+      "sha256": "eb608c20ab2193ad96cc089dfb61a0c5cd25c323218096ec7ff5bf555c5b01cc",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "exemption-e-required",
+        "description": "remove the exempt VAT reason"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-E-10"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "exemption-e-required"
+      ]
+    },
+    {
+      "id": "en16931.invoice.exemption-g-required",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/exemption-g-required.xml",
+      "sha256": "33770b43d5e77058a35295ee24c8523de3106e9e22bdf7d818d564a1af1c9d7b",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "exemption-g-required",
+        "description": "remove the export VAT reason"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-G-10"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "exemption-g-required"
+      ]
+    },
+    {
+      "id": "en16931.invoice.exemption-k-required",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/exemption-k-required.xml",
+      "sha256": "5f3c3f721693f0411e69ebb331206871a4a977cb4037616d1bbb44cf39118e9c",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "exemption-k-required",
+        "description": "remove the intra-community VAT reason"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-IC-10"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "exemption-k-required"
+      ]
+    },
+    {
+      "id": "en16931.invoice.exemption-o-required",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/exemption-o-required.xml",
+      "sha256": "d7ba51722143cdaf8eab5761300c88029646b84dc6aa02150235211da18a5ba9",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "exemption-o-required",
+        "description": "remove the out-of-scope VAT reason"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-O-10"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "exemption-o-required"
+      ]
+    },
+    {
+      "id": "en16931.invoice.invalid-invoice-type-code",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/invalid-invoice-type-code.xml",
+      "sha256": "d55d1d9d704a2f7d2b1c38f1537e7f69118ee7c64a1e893b48eb3c68abe1711f",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "invalid-invoice-type-code",
+        "description": "replace InvoiceTypeCode with a value outside UNTDID 1001"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-CL-01"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "invalid-invoice-type-code"
+      ]
+    },
+    {
+      "id": "en16931.invoice.missing-buyer-identifier",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/missing-buyer-identifier.xml",
+      "sha256": "f26ab76fcfdf859341952d3585f79509c76adab8dc64ca6fbc1230c1f67d718b",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "missing-buyer-identifier",
+        "description": "remove the reverse-charge buyer's required VAT identifier"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-AE-02"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "missing-buyer-identifier"
+      ]
+    },
+    {
+      "id": "en16931.invoice.missing-buyer-name",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/missing-buyer-name.xml",
+      "sha256": "de308db868d0ed8a1cf4fc68f1e152e7a711002e335dff1a0a9c71245453829b",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "missing-buyer-name",
+        "description": "empty the buyer registration name"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-07"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "missing-buyer-name"
+      ]
+    },
+    {
+      "id": "en16931.invoice.missing-seller-identifier",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/missing-seller-identifier.xml",
+      "sha256": "8fbf83513649a17b1811e94604740fc45817c57edf23ea856d034abb4883d72c",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "missing-seller-identifier",
+        "description": "remove the out-of-scope seller's only identifying registration"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-CO-26"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "missing-seller-identifier"
+      ]
+    },
+    {
+      "id": "en16931.invoice.missing-seller-name",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/missing-seller-name.xml",
+      "sha256": "56fa1874a767c94c66eceaa0f9c5fb31d127ee3fc85fdc599783620f919e6260",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "missing-seller-name",
+        "description": "empty the seller registration name"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-06"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "missing-seller-name"
+      ]
+    },
+    {
+      "id": "en16931.invoice.monetary-total-reconciliation",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/monetary-total-reconciliation.xml",
+      "sha256": "46b859291669f76ff26582326a0d7653e2b7098b12070c0a78be06b2229e5a20",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "monetary-total-reconciliation",
+        "description": "increase TaxInclusiveAmount without changing its inputs"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-CO-15"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "monetary-total-reconciliation"
       ]
     },
     {
@@ -132,6 +696,147 @@
       ]
     },
     {
+      "id": "en16931.invoice.payment-account-required",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/payment-account-required.xml",
+      "sha256": "210a9757aa53368ed6fc683d0ab7dab41f4e735f5700f33c0e3914eec9c06bae",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "payment-account-required",
+        "description": "remove the account identifier from credit transfer payment means"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-61"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "payment-account-required"
+      ]
+    },
+    {
+      "id": "en16931.invoice.prohibited-invoice-object-description",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/prohibited-invoice-object-description.xml",
+      "sha256": "82363b690f05b9f198d111b29238a7d7af43d915ed651ff123f5ded65b876cbd",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "prohibited-invoice-object-description",
+        "description": "add a description to an invoice-object document reference"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "UBL-CR-673"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "prohibited-invoice-object-description"
+      ]
+    },
+    {
+      "id": "en16931.invoice.syntax-party-tax-scheme-count",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/syntax-party-tax-scheme-count.xml",
+      "sha256": "1aead5eec29f33db275ff39456677924e3dca6f0252b3900fe415193ed6bd131",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "syntax-party-tax-scheme-count",
+        "description": "repeat the seller PartyTaxScheme beyond the EN syntax limit"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "UBL-SR-42"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "syntax-party-tax-scheme-count"
+      ]
+    },
+    {
       "id": "en16931.invoice.vat-ae",
       "documentType": "Invoice",
       "profile": "ubl21-en16931",
@@ -145,7 +850,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/en16931",
-        "generatorVersion": "git:492933326baaeee362398d3118f00f61806117ae"
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
       },
       "rulesets": {
         "en16931": {
@@ -172,6 +877,53 @@
       ]
     },
     {
+      "id": "en16931.invoice.vat-ae-rate",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/vat-ae-rate.xml",
+      "sha256": "31d702e88d5ba211e8d572c4808e54cf9742476effe07620b5919806012c8c1f",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "vat-ae-rate",
+        "description": "set a reverse-charge line VAT rate above zero"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-AE-05"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "vat-ae-rate"
+      ]
+    },
+    {
       "id": "en16931.invoice.vat-e",
       "documentType": "Invoice",
       "profile": "ubl21-en16931",
@@ -185,7 +937,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/en16931",
-        "generatorVersion": "git:492933326baaeee362398d3118f00f61806117ae"
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
       },
       "rulesets": {
         "en16931": {
@@ -212,6 +964,53 @@
       ]
     },
     {
+      "id": "en16931.invoice.vat-e-rate",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/vat-e-rate.xml",
+      "sha256": "9cca3f9981ea7ef59733850272ac6590ebaa17c1a6239090188177ce20ba9c28",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "vat-e-rate",
+        "description": "set an exempt line VAT rate above zero"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-E-05"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "vat-e-rate"
+      ]
+    },
+    {
       "id": "en16931.invoice.vat-g",
       "documentType": "Invoice",
       "profile": "ubl21-en16931",
@@ -225,7 +1024,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/en16931",
-        "generatorVersion": "git:492933326baaeee362398d3118f00f61806117ae"
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
       },
       "rulesets": {
         "en16931": {
@@ -252,6 +1051,53 @@
       ]
     },
     {
+      "id": "en16931.invoice.vat-g-rate",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/vat-g-rate.xml",
+      "sha256": "327e896612515d730c31a2cfe5d4699f8915c80df2d2a459793aa3d235a35038",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "vat-g-rate",
+        "description": "set an export line VAT rate above zero"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-G-05"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "vat-g-rate"
+      ]
+    },
+    {
       "id": "en16931.invoice.vat-k",
       "documentType": "Invoice",
       "profile": "ubl21-en16931",
@@ -265,7 +1111,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/en16931",
-        "generatorVersion": "git:492933326baaeee362398d3118f00f61806117ae"
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
       },
       "rulesets": {
         "en16931": {
@@ -292,6 +1138,53 @@
       ]
     },
     {
+      "id": "en16931.invoice.vat-k-rate",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/vat-k-rate.xml",
+      "sha256": "6f589b8f9cb63fdca866ffe9f6e3e6c887af51b65db786ac215fb56c7559886b",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "vat-k-rate",
+        "description": "set an intra-community line VAT rate above zero"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-IC-05"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "vat-k-rate"
+      ]
+    },
+    {
       "id": "en16931.invoice.vat-o",
       "documentType": "Invoice",
       "profile": "ubl21-en16931",
@@ -305,7 +1198,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/en16931",
-        "generatorVersion": "git:492933326baaeee362398d3118f00f61806117ae"
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
       },
       "rulesets": {
         "en16931": {
@@ -332,6 +1225,53 @@
       ]
     },
     {
+      "id": "en16931.invoice.vat-o-rate",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/vat-o-rate.xml",
+      "sha256": "b717e4e3f4205fed18f2d59a29bb8e275eabaa5f6a3fed15fc96c64884873b9b",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "vat-o-rate",
+        "description": "add a forbidden VAT rate to an out-of-scope line"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-O-05"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "vat-o-rate"
+      ]
+    },
+    {
       "id": "en16931.invoice.vat-s",
       "documentType": "Invoice",
       "profile": "ubl21-en16931",
@@ -345,7 +1285,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/en16931",
-        "generatorVersion": "git:492933326baaeee362398d3118f00f61806117ae"
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
       },
       "rulesets": {
         "en16931": {
@@ -372,6 +1312,53 @@
       ]
     },
     {
+      "id": "en16931.invoice.vat-s-rate",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/vat-s-rate.xml",
+      "sha256": "055116b6b87f3e4007c2f28ff490ea8cb4f78b36adc35a8b8f20064c4c674fef",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "vat-s-rate",
+        "description": "set the standard VAT rate to zero and recompute dependent tax totals"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-S-05"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "vat-s-rate"
+      ]
+    },
+    {
       "id": "en16931.invoice.vat-z",
       "documentType": "Invoice",
       "profile": "ubl21-en16931",
@@ -385,7 +1372,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/en16931",
-        "generatorVersion": "git:492933326baaeee362398d3118f00f61806117ae"
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
       },
       "rulesets": {
         "en16931": {
@@ -409,6 +1396,53 @@
         "invoice",
         "positive",
         "vat-z"
+      ]
+    },
+    {
+      "id": "en16931.invoice.vat-z-rate",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/vat-z-rate.xml",
+      "sha256": "207268154e7c37ed88ab54285282dff5de7680874d8f9172e546d0999319ca9b",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:45bd34a85b7d5af6a5faeb736f1e9709b0acd309"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "vat-z-rate",
+        "description": "set a zero-rated line VAT rate above zero"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-Z-05"
+          ]
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "negative",
+        "vat-z-rate"
       ]
     }
   ]
