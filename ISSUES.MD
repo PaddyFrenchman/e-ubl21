@@ -14,7 +14,15 @@ The order below is the recommended default execution path. Some documentation, c
 
 Each GitHub issue should be implemented on its own issue branch.
 
-When Codex in VS Code is told to **close an issue**, it must use a **rebase-first, fast-forward-only** integration workflow. The intent is to keep `main` linear and avoid merging `main` into the issue branch.
+### Explicit authorization boundary
+
+Codex must **never close a GitHub issue unless the user explicitly instructs it to close that specific issue**. A request to review, fix, implement, test, commit, push, or otherwise work on an issue is not permission to close it.
+
+Until the user explicitly says to close the issue, Codex must keep the work on the issue branch. It may commit or push that issue branch when requested or when completing the implementation workflow, but it must not begin the closing workflow: do not rebase for integration, switch to `main`, merge into `main`, push `main`, or change the GitHub issue state.
+
+Mentioning this workflow, asking whether work is committed or pushed, or saying that the workflow should be followed does not authorize issue closure or integration. If the user's intent to close a specific issue is ambiguous, Codex must ask rather than infer permission.
+
+Only when Codex in VS Code is explicitly told to **close a specific issue** must it use the following **rebase-first, fast-forward-only** integration workflow. The intent is to keep `main` linear and avoid merging `main` into the issue branch.
 
 1. Fetch the latest remote state with `git fetch origin --prune` and ensure the working tree is clean.
 2. Switch to the issue branch.
