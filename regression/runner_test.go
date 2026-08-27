@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -90,6 +91,31 @@ func TestRunCorpusWritesFailuresAndReturnsError(t *testing.T) {
 		if _, err := os.Stat(filepath.Join(output, name)); err != nil {
 			t.Errorf("missing %s: %v", name, err)
 		}
+	}
+}
+
+func TestPollFixtureWaitsForCleanupReconciliation(t *testing.T) {
+	polls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		polls++
+		if polls == 1 {
+			_, _ = w.Write([]byte(`{"status":"cleanup_pending","profile":"ubl21"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"status":"acceptance_failed","profile":"ubl21"}`))
+	}))
+	defer server.Close()
+
+	baseURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := pollFixture(t.Context(), server.Client(), baseURL, "token", "0123456789abcdef0123456789abcdef", time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Status != "acceptance_failed" || polls != 2 {
+		t.Fatalf("status=%q polls=%d, want reconciled acceptance_failed after two polls", response.Status, polls)
 	}
 }
 

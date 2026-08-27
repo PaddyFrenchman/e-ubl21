@@ -244,7 +244,7 @@ func pollFixture(ctx context.Context, client *http.Client, baseURL *url.URL, tok
 			return apiResponse{}, fmt.Errorf("poll upload %s: %w", id, err)
 		}
 		switch response.Status {
-		case "valid", "invalid", "processing_failed", "acceptance_failed", "cleanup_pending":
+		case "valid", "invalid", "processing_failed", "acceptance_failed":
 			return response, nil
 		}
 		timer := time.NewTimer(interval)
