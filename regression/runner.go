@@ -63,6 +63,17 @@ type NormalizedResult struct {
 	Result         string          `json:"result"`
 }
 
+// RunMapEntry correlates a fixture with its volatile durable-upload identity.
+// It is diagnostic evidence and must not participate in semantic comparison.
+type RunMapEntry struct {
+	SchemaVersion  int    `json:"schemaVersion"`
+	FixtureID      string `json:"fixtureId"`
+	UploadID       string `json:"uploadId,omitempty"`
+	DocumentType   string `json:"documentType"`
+	Profile        string `json:"profile"`
+	TerminalStatus string `json:"terminalStatus"`
+}
+
 type Counts struct {
 	Passed int `json:"passed"`
 	Failed int `json:"failed"`
@@ -128,12 +139,14 @@ func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
 	}
 	corpusRoot := filepath.Dir(cfg.ManifestPath)
 	results := make([]NormalizedResult, 0, len(fixtures))
+	runMap := make([]RunMapEntry, 0, len(fixtures))
 	for _, fixture := range fixtures {
-		result := runFixture(ctx, client, baseURL, cfg.Token, corpusRoot, fixture, pollInterval, fixtureTimeout)
+		result, correlation := runFixture(ctx, client, baseURL, cfg.Token, corpusRoot, fixture, pollInterval, fixtureTimeout)
 		results = append(results, result)
+		runMap = append(runMap, correlation)
 	}
 	summary := summarize(results)
-	if err := writeArtifacts(cfg.OutputDir, results, summary); err != nil {
+	if err := writeArtifacts(cfg.OutputDir, results, runMap, summary); err != nil {
 		return Summary{}, err
 	}
 	if summary.Failed > 0 {
@@ -153,8 +166,9 @@ func selectFixtures(fixtures []Fixture, profile string) []Fixture {
 	return selected
 }
 
-func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, token, corpusRoot string, fixture Fixture, pollInterval, timeout time.Duration) NormalizedResult {
+func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, token, corpusRoot string, fixture Fixture, pollInterval, timeout time.Duration) (NormalizedResult, RunMapEntry) {
 	result := NormalizedResult{SchemaVersion: 1, FixtureID: fixture.ID, SHA256: fixture.SHA256, Profile: fixture.Profile, ExpectedFinal: fixture.ExpectedFinal, ExpectedStages: fixture.ExpectedStages}
+	correlation := RunMapEntry{SchemaVersion: 1, FixtureID: fixture.ID, DocumentType: fixture.DocumentType, Profile: fixture.Profile, TerminalStatus: "operational-failure"}
 	content, err := os.ReadFile(filepath.Join(corpusRoot, filepath.FromSlash(fixture.File)))
 	if err == nil {
 		actualHash := fmt.Sprintf("%x", sha256.Sum256(content))
@@ -163,27 +177,29 @@ func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, toke
 		}
 	}
 	if err != nil {
-		return operationalResult(result, err)
+		return operationalResult(result, err), correlation
 	}
 	fixtureCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	id, err := uploadFixture(fixtureCtx, client, baseURL, token, fixture, content)
 	if err != nil {
-		return operationalResult(result, err)
+		return operationalResult(result, err), correlation
 	}
+	correlation.UploadID = id
 	response, err := pollFixture(fixtureCtx, client, baseURL, token, id, pollInterval)
 	if err != nil {
-		return operationalResult(result, err)
+		return operationalResult(result, err), correlation
 	}
+	correlation.TerminalStatus = response.Status
 	if response.Profile != fixture.Profile {
-		return operationalResult(result, fmt.Errorf("status profile %q does not match requested %q", response.Profile, fixture.Profile))
+		return operationalResult(result, fmt.Errorf("status profile %q does not match requested %q", response.Profile, fixture.Profile)), correlation
 	}
 	result.ActualFinal, result.ActualStages = normalizeAPIResult(response, fixture.ExpectedStages)
 	result.Result = compareResult(result)
 	if encoded, err := json.Marshal(result); err != nil || ValidateNormalizedResult(encoded) != nil {
-		return operationalResult(result, fmt.Errorf("normalized result violates contract"))
+		return operationalResult(result, fmt.Errorf("normalized result violates contract")), correlation
 	}
-	return result
+	return result, correlation
 }
 
 func uploadFixture(ctx context.Context, client *http.Client, baseURL *url.URL, token string, fixture Fixture, content []byte) (string, error) {
@@ -370,7 +386,7 @@ func summarize(results []NormalizedResult) Summary {
 	return summary
 }
 
-func writeArtifacts(outputDir string, results []NormalizedResult, summary Summary) error {
+func writeArtifacts(outputDir string, results []NormalizedResult, runMap []RunMapEntry, summary Summary) error {
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("create regression output: %w", err)
 	}
@@ -388,6 +404,17 @@ func writeArtifacts(outputDir string, results []NormalizedResult, summary Summar
 		_ = writer.WriteByte('\n')
 	}
 	_ = writer.Flush()
+	var runMapLines bytes.Buffer
+	runMapWriter := bufio.NewWriter(&runMapLines)
+	for _, entry := range runMap {
+		encoded, err := json.Marshal(entry)
+		if err != nil {
+			return err
+		}
+		_, _ = runMapWriter.Write(encoded)
+		_ = runMapWriter.WriteByte('\n')
+	}
+	_ = runMapWriter.Flush()
 	summaryJSON, err := json.MarshalIndent(summary, "", "  ")
 	if err != nil {
 		return err
@@ -397,7 +424,7 @@ func writeArtifacts(outputDir string, results []NormalizedResult, summary Summar
 	if err != nil {
 		return err
 	}
-	for name, content := range map[string][]byte{"results.jsonl": lines.Bytes(), "summary.json": summaryJSON, "junit.xml": junitXML} {
+	for name, content := range map[string][]byte{"results.jsonl": lines.Bytes(), "run-map.jsonl": runMapLines.Bytes(), "summary.json": summaryJSON, "junit.xml": junitXML} {
 		if err := writeFileAtomically(filepath.Join(outputDir, name), content); err != nil {
 			return err
 		}

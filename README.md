@@ -253,8 +253,9 @@ The regression contract lives under [`regression/`](regression/) and defines sta
 Run a tracked manifest through the authenticated public API and durable result
 path with `go run . regression`; see [`regression/README.md`](regression/README.md)
 for token, profile, polling, and artifact options. Each run emits deterministic
-`results.jsonl`, `summary.json`, and `junit.xml` evidence and exits non-zero on
-any semantic mismatch.
+`results.jsonl`, `summary.json`, and `junit.xml` evidence, plus a volatile
+`run-map.jsonl` for fixture-to-upload correlation, and exits non-zero on any
+semantic mismatch.
 
 After a run—successful or failed—`go run . regression collect-evidence`
 collects bounded, redacted service logs, metrics, selected NATS state,

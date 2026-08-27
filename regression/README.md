@@ -44,7 +44,9 @@ go run . regression \
 The command verifies manifest and fixture hashes, uploads fixtures in stable ID
 order with their requested validation profile, polls to a durable terminal
 status, removes IDs/timestamps/durations and other volatile fields, and writes
-`results.jsonl`, `summary.json`, and `junit.xml`. It returns non-zero after
+`results.jsonl`, `summary.json`, and `junit.xml`. A separate volatile
+`run-map.jsonl` correlates each fixture ID with its upload ID, document type,
+profile, and terminal status for diagnostics. It returns non-zero after
 writing the artifacts if any expected final outcome, stage outcome, or required
 rule ID differs. Use the UBL manifest path to run the structural corpus.
 
@@ -79,6 +81,7 @@ The diagnostic files are separate from normalized correctness results:
 environment.json
 manifest-used.json
 collection.json
+run-map.jsonl
 logs/*.log
 metrics/*.prom
 kubernetes/events.json
@@ -86,7 +89,9 @@ kubernetes/pods.json
 nats/state.json
 ```
 
-Logs are capped at 4 MiB per source, metrics at 2 MiB per endpoint, and command
+`run-map.jsonl` is produced by the runner rather than the collector and is not
+part of deterministic semantic comparison. Logs are capped at 4 MiB per
+source, metrics at 2 MiB per endpoint, and command
 output at 4 MiB. Remote sources and commands have a configurable per-source
 deadline (`--source-timeout`, 15 seconds by default). Bearer credentials and
 Invoice/CreditNote XML blocks are redacted before logs are written. Kubernetes

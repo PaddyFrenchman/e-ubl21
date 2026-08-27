@@ -938,6 +938,7 @@ Keep enough diagnostics to explain every failed CI run.
 - Capture selected NATS consumer/stream state.
 - Capture bounded metrics snapshot.
 - Write environment metadata.
+- Write a volatile fixture-to-upload correlation map.
 - Never include raw invoice bodies in service logs.
 - Package diagnostics separately from normalized correctness results.
 

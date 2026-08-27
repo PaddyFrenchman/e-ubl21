@@ -20,7 +20,7 @@ import (
 func TestCollectEvidenceCapturesBoundedRedactedDiagnostics(t *testing.T) {
 	manifestPath := writeRunnerManifest(t)
 	logPath := filepath.Join(t.TempDir(), "worker.log")
-	logContent := "starting\nAuthorization: Bearer secret-token\n<ubl:Invoice xmlns:ubl=\"urn:oasis:names:specification:ubl:schema:xsd:Invoice-2\">\n<cbc:ID>private-invoice-id</cbc:ID>\n</ubl:Invoice>\n<CreditNote/>\n\\u003cInvoice/\\u003e\nfinished\n"
+	logContent := "starting\nAuthorization: Bearer secret-token\n{\"authorization\":\"Bearer json-secret\",\"message\":\"safe\"}\n<ubl:Invoice xmlns:ubl=\"urn:oasis:names:specification:ubl:schema:xsd:Invoice-2\">\n<cbc:ID>private-invoice-id</cbc:ID>\n</ubl:Invoice>\n<CreditNote/>\n\\u003cInvoice/\\u003e\nfinished\n"
 	if err := os.WriteFile(logPath, []byte(logContent), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -57,12 +57,12 @@ func TestCollectEvidenceCapturesBoundedRedactedDiagnostics(t *testing.T) {
 		t.Fatalf("normalized result changed: %q err=%v", actual, err)
 	}
 	redacted := readTestFile(t, filepath.Join(output, "logs", "worker.log"))
-	for _, secret := range []string{"secret-token", "private-invoice-id", "<ubl:Invoice", "<CreditNote", `\u003cInvoice`} {
+	for _, secret := range []string{"secret-token", "json-secret", "private-invoice-id", "<ubl:Invoice", "<CreditNote", `\u003cInvoice`} {
 		if strings.Contains(redacted, secret) {
 			t.Fatalf("redacted log contains %q: %s", secret, redacted)
 		}
 	}
-	if !strings.Contains(redacted, "Bearer [REDACTED]") || !strings.Contains(redacted, "[REDACTED UBL XML]") || !strings.Contains(redacted, "finished") {
+	if !strings.Contains(redacted, "Bearer [REDACTED]") || !strings.Contains(redacted, `"message":"safe"`) || !strings.Contains(redacted, "[REDACTED UBL XML]") || !strings.Contains(redacted, "finished") {
 		t.Fatalf("redaction markers missing: %s", redacted)
 	}
 	if metrics := readTestFile(t, filepath.Join(output, "metrics", "api.prom")); metrics != "e_ubl21_test_total 1\n" {

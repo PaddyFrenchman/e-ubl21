@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -17,6 +18,7 @@ import (
 func TestRunCorpusProducesDeterministicArtifacts(t *testing.T) {
 	manifest := writeRunnerManifest(t)
 	polls := 0
+	uploads := 0
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer test-token" {
 			t.Fatalf("authorization = %q", r.Header.Get("Authorization"))
@@ -26,8 +28,13 @@ func TestRunCorpusProducesDeterministicArtifacts(t *testing.T) {
 			if r.URL.Query().Get("profile") != "ubl21" || r.URL.Query().Get("documentType") != "Invoice" {
 				t.Fatalf("upload query = %s", r.URL.RawQuery)
 			}
+			uploads++
+			id := "11111111111111111111111111111111"
+			if uploads > 1 {
+				id = "22222222222222222222222222222222"
+			}
 			w.WriteHeader(http.StatusAccepted)
-			_, _ = w.Write([]byte(`{"id":"0123456789abcdef0123456789abcdef","profile":"ubl21","receivedAt":"volatile"}`))
+			_, _ = w.Write([]byte(fmt.Sprintf(`{"id":%q,"profile":"ubl21","receivedAt":"volatile"}`, id)))
 		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/v1/ubl/"):
 			polls++
 			w.Header().Set("Content-Type", "application/json")
@@ -69,6 +76,14 @@ func TestRunCorpusProducesDeterministicArtifacts(t *testing.T) {
 			t.Errorf("%s is nondeterministic", name)
 		}
 	}
+	firstMap := readRunMap(t, filepath.Join(first, "run-map.jsonl"))
+	secondMap := readRunMap(t, filepath.Join(second, "run-map.jsonl"))
+	if len(firstMap) != 1 || firstMap[0].FixtureID != "ubl21.invoice.runner" || firstMap[0].UploadID != "11111111111111111111111111111111" || firstMap[0].DocumentType != "Invoice" || firstMap[0].Profile != "ubl21" || firstMap[0].TerminalStatus != "valid" {
+		t.Fatalf("first run map = %+v", firstMap)
+	}
+	if len(secondMap) != 1 || secondMap[0].UploadID != "22222222222222222222222222222222" {
+		t.Fatalf("second run map = %+v", secondMap)
+	}
 }
 
 func TestRunCorpusWritesFailuresAndReturnsError(t *testing.T) {
@@ -87,10 +102,32 @@ func TestRunCorpusWritesFailuresAndReturnsError(t *testing.T) {
 	if err == nil || summary.Failed != 1 {
 		t.Fatalf("summary=%+v error=%v", summary, err)
 	}
-	for _, name := range []string{"results.jsonl", "summary.json", "junit.xml"} {
+	for _, name := range []string{"results.jsonl", "run-map.jsonl", "summary.json", "junit.xml"} {
 		if _, err := os.Stat(filepath.Join(output, name)); err != nil {
 			t.Errorf("missing %s: %v", name, err)
 		}
+	}
+}
+
+func TestRunCorpusRetainsUploadIDWhenPollingFails(t *testing.T) {
+	manifest := writeRunnerManifest(t)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			w.WriteHeader(http.StatusAccepted)
+			_, _ = w.Write([]byte(`{"id":"33333333333333333333333333333333","profile":"ubl21"}`))
+			return
+		}
+		http.Error(w, "worker unavailable", http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+	output := t.TempDir()
+	_, err := RunCorpus(t.Context(), RunnerConfig{BaseURL: server.URL, Token: "token", ManifestPath: manifest, OutputDir: output, PollInterval: time.Millisecond, FixtureTimeout: time.Second})
+	if err == nil {
+		t.Fatal("runner accepted polling failure")
+	}
+	runMap := readRunMap(t, filepath.Join(output, "run-map.jsonl"))
+	if len(runMap) != 1 || runMap[0].UploadID != "33333333333333333333333333333333" || runMap[0].TerminalStatus != "operational-failure" {
+		t.Fatalf("run map = %+v", runMap)
 	}
 }
 
@@ -172,4 +209,21 @@ func fmtHash(value []byte) string {
 		encoded[index*2+1] = digits[b&15]
 	}
 	return string(encoded)
+}
+
+func readRunMap(t *testing.T, path string) []RunMapEntry {
+	t.Helper()
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var entries []RunMapEntry
+	for _, line := range strings.Split(strings.TrimSpace(string(content)), "\n") {
+		var entry RunMapEntry
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			t.Fatal(err)
+		}
+		entries = append(entries, entry)
+	}
+	return entries
 }

@@ -35,6 +35,7 @@ const (
 var (
 	evidenceNamePattern  = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
 	credentialURLPattern = regexp.MustCompile(`://[^/@\s]+@`)
+	bearerTokenPattern   = regexp.MustCompile(`(?i)\bbearer[ \t]+[a-z0-9._~+/=-]+`)
 	ublBillingStart      = regexp.MustCompile(`(?i)(?:<|\\u003c)(?:[a-z_][a-z0-9._-]*:)?(?:invoice|creditnote)\b`)
 	ublBillingEnd        = regexp.MustCompile(`(?i)(?:</|\\u003c/)(?:[a-z_][a-z0-9._-]*:)?(?:invoice|creditnote)(?:>|\\u003e)`)
 )
@@ -457,13 +458,7 @@ func redactServiceLog(content []byte) ([]byte, bool) {
 }
 
 func redactBearer(line string) string {
-	fields := strings.Fields(line)
-	for index := 0; index+1 < len(fields); index++ {
-		if strings.EqualFold(strings.TrimSuffix(fields[index], ":"), "bearer") {
-			fields[index+1] = "[REDACTED]"
-		}
-	}
-	return strings.Join(fields, " ")
+	return bearerTokenPattern.ReplaceAllString(line, "Bearer [REDACTED]")
 }
 
 func readBounded(reader io.Reader, limit int64) ([]byte, bool, error) {
