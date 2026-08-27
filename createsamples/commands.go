@@ -47,7 +47,7 @@ func runInventory(args []string) error {
 func runGenerate(args []string) error {
 	flags := flag.NewFlagSet("generate", flag.ContinueOnError)
 	xsdDir := flags.String("xsd", filepath.Join("XSD"), "path to the UBL XSD tree")
-	output := flags.String("output", filepath.Join("createsamples", "samples"), "output directory for generated samples")
+	output := flags.String("output", "", "output directory for generated samples (default depends on profile)")
 	profile := flags.String("profile", "ubl21", "validation profile to generate (ubl21 or en16931)")
 	set := flags.String("set", "positive", "fixture set to generate (positive, negative, or all)")
 	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: latest generator implementation commit)")
@@ -60,6 +60,14 @@ func runGenerate(args []string) error {
 	}
 	if *profile != "ubl21" && *profile != "en16931" {
 		return fmt.Errorf("unsupported generation profile %q; supported profiles are ubl21 and en16931", *profile)
+	}
+	if *output == "" {
+		switch *profile {
+		case "ubl21":
+			*output = filepath.Join("createsamples", "samples")
+		case "en16931":
+			*output = filepath.Join("createsamples", "samples-en16931")
+		}
 	}
 	if *set != "positive" && *set != "negative" && *set != "all" {
 		return fmt.Errorf("unsupported generation set %q; supported sets are positive, negative, and all", *set)

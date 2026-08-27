@@ -164,6 +164,39 @@ func TestInventoryGenerateAndValidateCommands(t *testing.T) {
 	}
 }
 
+func TestGenerateEN16931UsesProfileDefaultOutput(t *testing.T) {
+	xsdDir, err := filepath.Abs(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	workingDir := t.TempDir()
+	ublOutput := filepath.Join(workingDir, "createsamples", "samples")
+	if err := os.MkdirAll(ublOutput, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(ublOutput, corpusOwnershipMarkerName), []byte(corpusOwnershipMarkerContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	sentinel := filepath.Join(ublOutput, "ubl-corpus-sentinel")
+	if err := os.WriteFile(sentinel, []byte("preserve UBL corpus"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(workingDir)
+
+	if err := run([]string{
+		"generate", "--profile", "en16931", "--xsd", xsdDir,
+		"--generator-version", testGeneratorVersion,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join("createsamples", "samples-en16931", "manifest.json")); err != nil {
+		t.Fatalf("EN 16931 corpus was not written to its profile default: %v", err)
+	}
+	if content, err := os.ReadFile(sentinel); err != nil || string(content) != "preserve UBL corpus" {
+		t.Fatalf("UBL corpus was modified: content=%q err=%v", content, err)
+	}
+}
+
 func TestGenerateUBLNegativeSet(t *testing.T) {
 	output := filepath.Join(t.TempDir(), "negative")
 	if err := run([]string{
