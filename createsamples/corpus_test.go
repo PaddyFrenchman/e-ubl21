@@ -310,6 +310,78 @@ func TestTrackedUBLCorpusMatchesFreshGeneration(t *testing.T) {
 	}
 }
 
+func TestTrackedEN16931CorpusMatchesFreshGeneration(t *testing.T) {
+	root := "samples-en16931"
+	manifestBytes, err := os.ReadFile(filepath.Join(root, "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifestBytes); err != nil {
+		t.Fatalf("tracked EN 16931 manifest rejected: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) != 10 {
+		t.Fatalf("tracked EN 16931 manifest fixtures = %d, want 10", len(manifest.Fixtures))
+	}
+	generatorVersion := ""
+	for _, fixture := range manifest.Fixtures {
+		if fixture.Provenance.Kind != "generated" {
+			continue
+		}
+		if generatorVersion == "" {
+			generatorVersion = fixture.Provenance.GeneratorVersion
+		}
+		if fixture.Provenance.GeneratorVersion != generatorVersion {
+			t.Fatalf("tracked fixture %s generator version = %q, want %q", fixture.ID, fixture.Provenance.GeneratorVersion, generatorVersion)
+		}
+	}
+	if !immutableGeneratorVersion.MatchString(generatorVersion) {
+		t.Fatalf("tracked EN 16931 generator version = %q", generatorVersion)
+	}
+
+	files := snapshotGeneratedDirectory(t, root)
+	if len(files) != 12 {
+		t.Fatalf("tracked EN 16931 corpus files = %d, want 12 including manifest and ownership marker", len(files))
+	}
+	for _, fixture := range manifest.Fixtures {
+		content, ok := files[fixture.File]
+		if !ok {
+			t.Errorf("manifest fixture %s references missing file %s", fixture.ID, fixture.File)
+			continue
+		}
+		actual := fmt.Sprintf("%x", sha256.Sum256(content))
+		if actual != fixture.SHA256 {
+			t.Errorf("tracked fixture %s SHA-256 = %s, manifest has %s", fixture.ID, actual, fixture.SHA256)
+		}
+	}
+
+	fresh, err := generateEN16931PositiveCorpus(filepath.Join("..", "XSD"), generatorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	freshDir := filepath.Join(t.TempDir(), "samples-en16931")
+	if err := writeGeneratedCorpus(freshDir, fresh); err != nil {
+		t.Fatal(err)
+	}
+	freshFiles := snapshotGeneratedDirectory(t, freshDir)
+	if len(freshFiles) != len(files) {
+		t.Fatalf("fresh/tracked EN 16931 corpus file counts = %d/%d", len(freshFiles), len(files))
+	}
+	for path, trackedBytes := range files {
+		freshBytes, ok := freshFiles[path]
+		if !ok {
+			t.Errorf("fresh EN 16931 generation is missing tracked file %s", path)
+			continue
+		}
+		if !bytes.Equal(freshBytes, trackedBytes) {
+			t.Errorf("fresh EN 16931 generation differs from tracked corpus at %s", path)
+		}
+	}
+}
+
 func snapshotGeneratedDirectory(t *testing.T, root string) map[string][]byte {
 	t.Helper()
 	files := map[string][]byte{}

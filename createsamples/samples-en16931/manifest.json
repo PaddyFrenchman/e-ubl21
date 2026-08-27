@@ -1,0 +1,415 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "en16931.creditnote.vat-s",
+      "documentType": "CreditNote",
+      "profile": "ubl21-en16931",
+      "file": "CreditNote/EN16931-CreditNote-VAT-S.xml",
+      "sha256": "c0ce1fe728aef678325ffabb538b81dbd4b46b553a2b57ecc5e5631f2c580a52",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:ff38feb7af9b7e4392a06399ae22ada3596fc957"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "creditnote",
+        "en16931",
+        "positive",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "en16931.invoice.official-guide-example1",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Official-guide-example1.xml",
+      "sha256": "8cf298f82ccc0b1e0a3fd57d07dd39f4c174ee6739e147020f22c8aebb364ca5",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "ConnectingEurope/eInvoicing-EN16931",
+        "sourceUrl": "https://github.com/ConnectingEurope/eInvoicing-EN16931/blob/validation-1.3.16/ubl/examples/guide-example1.xml",
+        "sourceVersion": "validation-1.3.16",
+        "sourceSha256": "8cf298f82ccc0b1e0a3fd57d07dd39f4c174ee6739e147020f22c8aebb364ca5",
+        "sourceMember": null,
+        "extraction": "Vendored byte-for-byte from the tagged upstream file.",
+        "license": "European Union Public Licence (EUPL) version 1.2"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "official",
+        "positive"
+      ]
+    },
+    {
+      "id": "en16931.invoice.official-guide-example2",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Official-guide-example2.xml",
+      "sha256": "7c073be56039d35d1caad07ecc407ff85910925b206a59a92fa5e3048bb891b5",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "ConnectingEurope/eInvoicing-EN16931",
+        "sourceUrl": "https://github.com/ConnectingEurope/eInvoicing-EN16931/blob/validation-1.3.16/ubl/examples/guide-example2.xml",
+        "sourceVersion": "validation-1.3.16",
+        "sourceSha256": "7c073be56039d35d1caad07ecc407ff85910925b206a59a92fa5e3048bb891b5",
+        "sourceMember": null,
+        "extraction": "Vendored byte-for-byte from the tagged upstream file.",
+        "license": "European Union Public Licence (EUPL) version 1.2"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "official",
+        "positive"
+      ]
+    },
+    {
+      "id": "en16931.invoice.vat-ae",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Invoice-VAT-AE.xml",
+      "sha256": "ec5e5c28a7902d580ba89da555be408432d45be5afd427c592df9d449c23656e",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:ff38feb7af9b7e4392a06399ae22ada3596fc957"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "positive",
+        "vat-ae"
+      ]
+    },
+    {
+      "id": "en16931.invoice.vat-e",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Invoice-VAT-E.xml",
+      "sha256": "f124ebe6dcf3c7e7cfd6eff1727068ad997cdf6db07245818cb9fb9dc3c1e223",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:ff38feb7af9b7e4392a06399ae22ada3596fc957"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "positive",
+        "vat-e"
+      ]
+    },
+    {
+      "id": "en16931.invoice.vat-g",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Invoice-VAT-G.xml",
+      "sha256": "0e9b38e825012ea02e66cdb8f02bd096691496c4224389f330025e9acaf5ffc9",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:ff38feb7af9b7e4392a06399ae22ada3596fc957"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "positive",
+        "vat-g"
+      ]
+    },
+    {
+      "id": "en16931.invoice.vat-k",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Invoice-VAT-K.xml",
+      "sha256": "401c1df05136384c3def79cac48a96b2717902653de8689dbbafbe7adf9393eb",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:ff38feb7af9b7e4392a06399ae22ada3596fc957"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "positive",
+        "vat-k"
+      ]
+    },
+    {
+      "id": "en16931.invoice.vat-o",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Invoice-VAT-O.xml",
+      "sha256": "8dce642a4f41ac546611a9ab423f670344568b180a22e6b9b6fd21f86d33ccff",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:ff38feb7af9b7e4392a06399ae22ada3596fc957"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "positive",
+        "vat-o"
+      ]
+    },
+    {
+      "id": "en16931.invoice.vat-s",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Invoice-VAT-S.xml",
+      "sha256": "a26c4e21859419bd9a78f216e9759acf28dec2990434ee8324d63fa87539d146",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:ff38feb7af9b7e4392a06399ae22ada3596fc957"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "positive",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "en16931.invoice.vat-z",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "Invoice/EN16931-Invoice-VAT-Z.xml",
+      "sha256": "149e25facfe7fd9218d0a5c95475c5854c0be8468b77ad45b934152e608b99f2",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/en16931",
+        "generatorVersion": "git:ff38feb7af9b7e4392a06399ae22ada3596fc957"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "en16931",
+        "invoice",
+        "positive",
+        "vat-z"
+      ]
+    }
+  ]
+}
