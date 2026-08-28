@@ -42,6 +42,10 @@ type ValidationIssueKind string
 const (
 	ValidationLayerUBL21XSD ValidationLayer = "ubl21-xsd"
 	ValidationLayerEN16931  ValidationLayer = "en16931"
+	// ValidationLayerPeppolBISBilling reserves the stable stage identity and
+	// queue topology for the future Peppol worker. It does not enable the
+	// public Peppol validation profile or runtime validator.
+	ValidationLayerPeppolBISBilling ValidationLayer = "peppol-bis-billing"
 
 	ValidationIssueXSDReport        ValidationIssueKind = "xsd-report"
 	ValidationIssueFailedAssert     ValidationIssueKind = "failed-assert"

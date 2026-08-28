@@ -58,6 +58,18 @@ const DefaultNamespace = Namespace("")
 // is required for a new storage contract.
 type Namespace string
 
+// StageQueueNames is the complete namespace-derived physical topology for
+// one logical validation stage. Request and result streams are separate so
+// their consumers, retention and scaling can never overlap accidentally.
+type StageQueueNames struct {
+	RequestSubject  string
+	ResultSubject   string
+	RequestStream   string
+	ResultStream    string
+	RequestConsumer string
+	ResultConsumer  string
+}
+
 // namespacePattern restricts a non-default Namespace's raw value to one or
 // more dot-separated segments of lowercase ASCII letters and digits (e.g.
 // "eubl21", "eubl21.prod", "eubl21.prod.eu"): no leading, trailing or
@@ -201,6 +213,44 @@ func (n Namespace) DeadLettersStreamName() string {
 		return defaultDeadLettersStreamName
 	}
 	return n.resourcePrefix() + "_VALIDATION_DEAD_LETTERS"
+}
+
+// StageQueue returns the exact subjects, streams and durable consumers for a
+// supported validation stage. Unknown stages fail closed instead of deriving
+// a subject that no intended worker owns.
+func (n Namespace) StageQueue(stage ValidationLayer) (StageQueueNames, error) {
+	token, ok := stageQueueToken(stage)
+	if !ok {
+		return StageQueueNames{}, fmt.Errorf("unsupported validation stage %q", stage)
+	}
+	subjectPrefix := string(n)
+	resourcePrefix := n.resourcePrefix()
+	if n == DefaultNamespace {
+		subjectPrefix = "ubl"
+		resourcePrefix = "UBL"
+	}
+	resourceToken := strings.ToUpper(token)
+	return StageQueueNames{
+		RequestSubject:  subjectPrefix + ".validation.request." + token,
+		ResultSubject:   subjectPrefix + ".validation.result." + token,
+		RequestStream:   resourcePrefix + "_VALIDATION_REQUEST_" + resourceToken,
+		ResultStream:    resourcePrefix + "_VALIDATION_RESULT_" + resourceToken,
+		RequestConsumer: resourcePrefix + "_VALIDATION_" + resourceToken + "_WORKER",
+		ResultConsumer:  resourcePrefix + "_VALIDATION_" + resourceToken + "_ORCHESTRATOR",
+	}, nil
+}
+
+func stageQueueToken(stage ValidationLayer) (string, bool) {
+	switch stage {
+	case ValidationLayerUBL21XSD:
+		return "xsd", true
+	case ValidationLayerEN16931:
+		return "en16931", true
+	case ValidationLayerPeppolBISBilling:
+		return "peppol", true
+	default:
+		return "", false
+	}
 }
 
 // DocumentsStreamName is the JetStream stream, within this namespace,

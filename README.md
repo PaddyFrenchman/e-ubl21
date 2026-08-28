@@ -156,6 +156,9 @@ Each stage will consume a durable `StageRequest`, publish a durable `StageResult
 The shared version 1 wire models, deterministic per-attempt message IDs,
 fail-closed decoding, outcome semantics, and evidence bounds are frozen in
 [`docs/VALIDATION-STAGE-CONTRACTS.md`](docs/VALIDATION-STAGE-CONTRACTS.md).
+The independently retained namespace-derived JetStream resources and their
+deployer/runtime ownership boundary are defined in
+[`docs/VALIDATION-STAGE-TOPOLOGY.md`](docs/VALIDATION-STAGE-TOPOLOGY.md).
 
 ## HTTP API
 

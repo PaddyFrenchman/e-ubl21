@@ -386,6 +386,10 @@ Provision durable queues/streams for independent stage processing.
 
 XSD and EN worker deployments can be stopped, scaled and upgraded independently while their queues retain work durably.
 
+The normative resource naming, retention, delivery, provisioning-ownership and
+migration-safety contract is
+[`docs/VALIDATION-STAGE-TOPOLOGY.md`](docs/VALIDATION-STAGE-TOPOLOGY.md).
+
 ---
 
 # TODO-VALIDATION-SPLIT-005 — Implement the validation orchestrator state machine
