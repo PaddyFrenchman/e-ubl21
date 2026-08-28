@@ -10,6 +10,10 @@ The sequence is intentionally structured around three principles:
 
 The order below is the recommended default execution path. Some documentation, corpus, and asset-packaging work can proceed in parallel where dependencies allow.
 
+### Issue-index synchronization rule
+
+Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-ordered, `ISSUES.MD` must be updated in the same workflow so that the repository issue index remains synchronized with GitHub. Deferred maintenance and future-improvement issues must also be recorded here even when they are intentionally outside the immediate implementation path.
+
 ### Current dependency checkpoint
 
 After completion of #44, the **next actionable issue is #48**. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
@@ -616,6 +620,56 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/82
 
 ---
 
+## Phase 8 — Deferred maintenance and future platform improvements
+
+These issues are intentionally tracked but are **not part of the current immediate implementation sequence** unless their revisit trigger becomes active.
+
+### 52. #85 — MAINTENANCE — Harden hosted regression CI runner environment
+
+**Goal:** Track non-blocking hosted CI maintenance, including Minikube/Docker disk-pressure risk and GitHub Actions runtime deprecation warnings.
+
+**Revisit:** When hosted regression jobs become unstable due to disk pressure, or before GitHub removes the compatibility path for currently used action runtimes.
+
+**Acceptance:** Hosted Minikube CI has an explicit stable disk-capacity strategy and the regression workflows no longer emit the tracked action-runtime deprecation warnings.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/85
+
+### 53. #87 — FUTURE IMPROVEMENT — Evaluate Perses as Grafana replacement for on-prem deployments
+
+**Goal:** Evaluate Perses as a permissively licensed dashboard/visualization layer for commercial on-prem deployments, potentially replacing Grafana OSS while retaining Prometheus/OpenTelemetry metrics.
+
+**Revisit:** Before the first commercially distributed on-prem release, or earlier if dashboard implementation work begins.
+
+**Acceptance:** Select Perses, retain Grafana under an approved licensing model, select another permissive dashboard, or deliberately ship without a dashboard. Capture the accepted decision in an ADR and deployment documentation.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/87
+
+### 54. #88 — FUTURE IMPROVEMENT — Replace JetStream raw XML storage with S3-compatible object storage
+
+**Goal:** Move raw XML persistence out of NATS JetStream Object Store into a backend-neutral S3-compatible storage layer, leaving NATS focused on messaging/orchestration.
+
+**Configuration principle:** The object-storage backend must be selected by configuration rather than hard-wired into application logic. Amazon S3 is the cloud target, while **SeaweedFS is the proposed standard local/on-prem S3-compatible alternative**. Customer-provided S3-compatible stores, including Ceph RGW, should also be supportable through the same endpoint/bucket/credential contract.
+
+**Revisit:** Before the first production-grade on-prem release, or earlier if storage is generalized for multi-environment deployment.
+
+**Acceptance:** Adopt S3-compatible raw-content storage with SeaweedFS available as the local/on-prem configuration option, explicitly retain JetStream Object Store, or document another selected storage architecture in an ADR and deployment documentation.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/88
+
+### 55. #89 — FUTURE IMPROVEMENT — Move upload metadata/status from JetStream KV to PostgreSQL
+
+**Goal:** Evaluate PostgreSQL as the durable system of record for upload metadata/status, queryable lifecycle state, retry state, retention metadata, and future multi-tenant reporting.
+
+**Target separation:** PostgreSQL stores metadata/status; S3-compatible storage stores raw XML; NATS/JetStream handles messaging and orchestration. The raw-content backend remains configurable, with **SeaweedFS proposed for local/on-prem deployment** and Amazon S3 for AWS.
+
+**Revisit:** Before the first production-grade on-prem release, or earlier if persistence is generalized for multi-environment deployment.
+
+**Acceptance:** Adopt PostgreSQL, explicitly retain JetStream KV, or document another metadata persistence architecture. Any accepted decision must be reflected in an ADR, deployment, retention, backup, and licensing documentation.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/89
+
+---
+
 ## Dependency summary
 
 ```text
@@ -664,10 +718,14 @@ Performance/release lifecycle
 Optional SBDH/envelope validation
 ```
 
+The Phase 8 items are deliberately outside this immediate dependency chain. They are future product/platform choices with explicit revisit triggers rather than prerequisites for the current validation/Peppol roadmap.
+
 ## Notes
 
 - Issues #64 and #73 are closely related and should be implemented as one coordinated Peppol-stage integration effort, while preserving both acceptance contracts.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
 - Issue #44 is the safety rail for the validation split and is now in place; #48 is therefore the next dependency-unblocked issue.
 - Issue #45 is the safety rail for declaring the first Peppol release supported and remains blocked until its real Peppol prerequisites are complete.
-- Issue #82 is intentionally last because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
+- Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
+- Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
+- Issue #88 and #89 should be evaluated together when the future persistence architecture is revisited, while remaining separate issues because raw-content storage and metadata persistence have different migration and failure semantics.
