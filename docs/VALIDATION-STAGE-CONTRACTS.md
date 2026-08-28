@@ -80,7 +80,15 @@ It also correlates the evidence to the deterministic `requestId`.
   "rulesetVersion": "1.3.16",
   "attempt": 1,
   "outcome": "standards-invalid",
-  "issues": [],
+  "issues": [
+    {
+      "kind": "failed-assert",
+      "layer": "en16931",
+      "rule": "BR-01",
+      "severity": "error",
+      "message": "Invoice identifier is required"
+    }
+  ],
   "startedAt": "2026-08-28T18:00:01Z",
   "completedAt": "2026-08-28T18:00:02Z",
   "durationMs": 1000
