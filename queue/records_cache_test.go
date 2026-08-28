@@ -36,8 +36,8 @@ func TestEnsureInfraCachesUploadHandles(t *testing.T) {
 	if err := client.EnsureInfra(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if client.cachedUploadsKV == nil || client.cachedUploadContentStore == nil {
-		t.Fatal("EnsureInfra did not cache both upload handles")
+	if client.cachedUploadsKV == nil || client.cachedValidationExecutionsKV == nil || client.cachedUploadContentStore == nil {
+		t.Fatal("EnsureInfra did not cache upload, validation execution, and content handles")
 	}
 	kv, err := client.uploadsBucket(context.Background())
 	if err != nil {
@@ -49,6 +49,13 @@ func TestEnsureInfraCachesUploadHandles(t *testing.T) {
 	}
 	if kv != client.cachedUploadsKV || store != client.cachedUploadContentStore {
 		t.Fatal("hot-path accessors did not return cached handles")
+	}
+	executions, err := client.validationExecutionsBucket(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if executions != client.cachedValidationExecutionsKV {
+		t.Fatal("hot-path execution accessor did not return cached handle")
 	}
 }
 
@@ -75,12 +82,19 @@ func TestColdHandleDiscoveryIsCoalesced(t *testing.T) {
 	start := make(chan struct{})
 	var callersDone sync.WaitGroup
 	for i := 0; i < callers; i++ {
-		callersDone.Add(2)
+		callersDone.Add(3)
 		go func() {
 			defer callersDone.Done()
 			<-start
 			if _, err := client.uploadsBucket(context.Background()); err != nil {
 				t.Errorf("uploadsBucket: %v", err)
+			}
+		}()
+		go func() {
+			defer callersDone.Done()
+			<-start
+			if _, err := client.validationExecutionsBucket(context.Background()); err != nil {
+				t.Errorf("validationExecutionsBucket: %v", err)
 			}
 		}()
 		go func() {
@@ -93,8 +107,8 @@ func TestColdHandleDiscoveryIsCoalesced(t *testing.T) {
 	}
 	close(start)
 	callersDone.Wait()
-	if got := counting.keyValueCalls.Load(); got != 1 {
-		t.Fatalf("KeyValue discovery calls = %d, want 1", got)
+	if got := counting.keyValueCalls.Load(); got != 2 {
+		t.Fatalf("KeyValue discovery calls = %d, want 2", got)
 	}
 	if got := counting.objectStoreCalls.Load(); got != 1 {
 		t.Fatalf("ObjectStore discovery calls = %d, want 1", got)

@@ -24,14 +24,15 @@ const (
 // idempotence requires a new stream so upgrading cannot compact or rewrite the
 // old single-subject UBL_VALIDATION_RESULTS stream.
 const (
-	legacyDocumentsStreamName     = "UBL_DOCUMENTS"
-	defaultResultsStreamName      = "UBL_VALIDATION_RESULTS_BY_UPLOAD"
-	legacyUploadsBucketName       = "UBL_UPLOADS"
-	legacyUploadContentBucketName = "UBL_UPLOAD_CONTENT"
-	legacyDocumentSubjectPrefix   = "ubl.documents."
-	legacyResultsSubject          = "ubl.validation.results"
-	legacyDeadLettersSubject      = "ubl.validation.dead_letters"
-	defaultDeadLettersStreamName  = "UBL_VALIDATION_DEAD_LETTERS"
+	legacyDocumentsStreamName             = "UBL_DOCUMENTS"
+	defaultResultsStreamName              = "UBL_VALIDATION_RESULTS_BY_UPLOAD"
+	legacyUploadsBucketName               = "UBL_UPLOADS"
+	defaultValidationExecutionsBucketName = "UBL_VALIDATION_EXECUTIONS"
+	legacyUploadContentBucketName         = "UBL_UPLOAD_CONTENT"
+	legacyDocumentSubjectPrefix           = "ubl.documents."
+	legacyResultsSubject                  = "ubl.validation.results"
+	legacyDeadLettersSubject              = "ubl.validation.dead_letters"
+	defaultDeadLettersStreamName          = "UBL_VALIDATION_DEAD_LETTERS"
 )
 
 // DefaultNamespace is the queue namespace used when EUBL21_QUEUE_NAMESPACE
@@ -233,6 +234,17 @@ func (n Namespace) UploadsBucketName() string {
 		return legacyUploadsBucketName
 	}
 	return n.resourcePrefix() + "_UPLOADS"
+}
+
+// ValidationExecutionsBucketName is the namespace-scoped KV bucket containing
+// durable execution generations and their frozen plans. It is separate from
+// upload acceptance metadata because one immutable upload may have multiple
+// validation lineages and generations.
+func (n Namespace) ValidationExecutionsBucketName() string {
+	if n == DefaultNamespace {
+		return defaultValidationExecutionsBucketName
+	}
+	return n.resourcePrefix() + "_VALIDATION_EXECUTIONS"
 }
 
 // UploadContentBucketName is the JetStream KV bucket, within this

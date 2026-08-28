@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"testing"
 	"time"
@@ -520,6 +521,9 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	if dev.Namespace.UploadsBucketName() == prod.Namespace.UploadsBucketName() {
 		t.Fatal("dev and prod must derive distinct uploads bucket names")
 	}
+	if dev.Namespace.ValidationExecutionsBucketName() == prod.Namespace.ValidationExecutionsBucketName() {
+		t.Fatal("dev and prod must derive distinct validation execution bucket names")
+	}
 	if dev.Namespace.UploadContentBucketName() == prod.Namespace.UploadContentBucketName() {
 		t.Fatal("dev and prod must derive distinct upload content bucket names")
 	}
@@ -594,6 +598,17 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 	}
 	if devRecord.Status != queue.StatusValid {
 		t.Fatalf("dev record status = %q, want %q", devRecord.Status, queue.StatusValid)
+	}
+
+	execution, err := queue.NewValidationExecution(id, "Invoice", queue.ValidationProfileUBL21EN16931, testFrozenPlan(), queue.ValidationTriggerInitial, time.Now())
+	if err != nil {
+		t.Fatalf("new dev validation execution: %v", err)
+	}
+	if _, err := dev.CreateValidationExecution(ctx, execution); err != nil {
+		t.Fatalf("create dev validation execution: %v", err)
+	}
+	if _, err := prod.GetValidationExecution(ctx, id, execution.ValidationID, execution.Generation); !errors.Is(err, queue.ErrValidationExecutionNotFound) {
+		t.Fatalf("prod observed dev validation execution: %v", err)
 	}
 
 	if _, err := prod.DocumentsConsumer(ctx, "prod-cross-namespace-worker", dev.Namespace.DocumentSubject("Invoice")); err == nil {

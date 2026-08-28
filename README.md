@@ -530,6 +530,7 @@ For deeper detail, start with:
 - [`regression/README.md`](regression/README.md) — fixture and normalized-result contracts.
 - [`TODO-VALIDATION-SPLIT.md`](TODO-VALIDATION-SPLIT.md) — target asynchronous stage architecture.
 - [`docs/VALIDATION-SPLIT-OWNERSHIP.md`](docs/VALIDATION-SPLIT-OWNERSHIP.md) — normative service boundaries, state ownership, and crash recovery for the validation split.
+- [`docs/VALIDATION-EXECUTION-IDENTITY.md`](docs/VALIDATION-EXECUTION-IDENTITY.md) — durable upload/execution identity, replay generations, and frozen validation plans.
 - [`TODO-PEPPOL.md`](TODO-PEPPOL.md) — Peppol BIS Billing validation roadmap.
 - [`docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md`](docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md) — broader e-invoicing platform direction.
 - [`docs/EN16931-VALIDATION-CONTRACT.md`](docs/EN16931-VALIDATION-CONTRACT.md) — EN validity semantics.

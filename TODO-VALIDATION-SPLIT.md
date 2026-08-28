@@ -330,6 +330,9 @@ Separate an uploaded document from one particular validation execution.
 
 One upload can be associated unambiguously with one or more validation executions without overwriting historical validation evidence.
 
+The durable identity, generation and frozen-plan contract is
+[`docs/VALIDATION-EXECUTION-IDENTITY.md`](docs/VALIDATION-EXECUTION-IDENTITY.md).
+
 ---
 
 # TODO-VALIDATION-SPLIT-003 — Define versioned StageRequest and StageResult contracts

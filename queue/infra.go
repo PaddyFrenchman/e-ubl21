@@ -20,6 +20,10 @@ const documentsStreamMaxAge = 7 * 24 * time.Hour
 // type, status, error message and timestamps).
 const uploadMetadataMaxValueSize = 64 << 10
 
+// validationExecutionMaxValueSize bounds frozen plan and execution metadata.
+// Stage evidence is introduced separately and raw XML never belongs here.
+const validationExecutionMaxValueSize = 64 << 10
+
 // InfraConfig controls deployer-owned JetStream storage limits. A zero
 // UploadContentMaxBytes leaves the Object Store unlimited; raw-content expiry
 // is coordinated by the application after validation rather than by the
@@ -91,6 +95,17 @@ func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) err
 		return fmt.Errorf("ensure %s KV bucket: %w", uploadsBucketName, err)
 	}
 
+	validationExecutionsBucketName := c.Namespace.ValidationExecutionsBucketName()
+	validationExecutionsKV, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
+		Bucket:       validationExecutionsBucketName,
+		Description:  "Durable validation execution generations and their immutable ordered plans, keyed by upload id, validation id and generation.",
+		Storage:      jetstream.FileStorage,
+		MaxValueSize: validationExecutionMaxValueSize,
+	})
+	if err != nil {
+		return fmt.Errorf("ensure %s KV bucket: %w", validationExecutionsBucketName, err)
+	}
+
 	uploadContentBucketName := c.Namespace.UploadContentBucketName()
 	uploadContentStore, err := c.JS.CreateOrUpdateObjectStore(ctx, jetstream.ObjectStoreConfig{
 		Bucket:      uploadContentBucketName,
@@ -104,6 +119,7 @@ func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) err
 
 	c.handlesMu.Lock()
 	c.cachedUploadsKV = uploadsKV
+	c.cachedValidationExecutionsKV = validationExecutionsKV
 	c.cachedUploadContentStore = uploadContentStore
 	c.handlesMu.Unlock()
 	return nil
