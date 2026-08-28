@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -9,6 +10,55 @@ import (
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 	"github.com/nats-io/nats.go/jetstream"
 )
+
+func TestValidationExecutionInfraSeparatesProvisioningFromRuntimeVerification(t *testing.T) {
+	server := queuetest.StartServer(t)
+	provisioner, err := ConnectWithOptions(server.URL, DefaultNamespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer provisioner.Close()
+	ctx := context.Background()
+	if err := provisioner.EnsureInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := provisioner.JS.KeyValue(ctx, DefaultNamespace.ValidationExecutionsBucketName()); !errors.Is(err, jetstream.ErrBucketNotFound) {
+		t.Fatalf("runtime EnsureInfra execution bucket lookup = %v, want %v", err, jetstream.ErrBucketNotFound)
+	}
+	if err := provisioner.ProvisionValidationExecutionInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	runtimeClient, err := ConnectWithOptions(server.URL, DefaultNamespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer runtimeClient.Close()
+	if err := runtimeClient.VerifyValidationExecutionInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if runtimeClient.cachedValidationExecutionsKV == nil {
+		t.Fatal("runtime verification did not cache the execution bucket")
+	}
+}
+
+func TestValidationExecutionInfraVerificationRejectsIncompatibleBucket(t *testing.T) {
+	server := queuetest.StartServer(t)
+	client, err := ConnectWithOptions(server.URL, MustNamespace("incompatible"), server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+	ctx := context.Background()
+	if _, err := client.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
+		Bucket: client.Namespace.ValidationExecutionsBucketName(), Storage: jetstream.MemoryStorage, MaxValueSize: 1024,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.VerifyValidationExecutionInfra(ctx); err == nil {
+		t.Fatal("runtime verification accepted incompatible execution infrastructure")
+	}
+}
 
 type countingJetStream struct {
 	jetstream.JetStream
@@ -36,8 +86,11 @@ func TestEnsureInfraCachesUploadHandles(t *testing.T) {
 	if err := client.EnsureInfra(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if client.cachedUploadsKV == nil || client.cachedValidationExecutionsKV == nil || client.cachedUploadContentStore == nil {
-		t.Fatal("EnsureInfra did not cache upload, validation execution, and content handles")
+	if client.cachedUploadsKV == nil || client.cachedUploadContentStore == nil {
+		t.Fatal("EnsureInfra did not cache both upload handles")
+	}
+	if client.cachedValidationExecutionsKV != nil {
+		t.Fatal("runtime EnsureInfra provisioned or opened deployer-owned validation execution infrastructure")
 	}
 	kv, err := client.uploadsBucket(context.Background())
 	if err != nil {
@@ -49,13 +102,6 @@ func TestEnsureInfraCachesUploadHandles(t *testing.T) {
 	}
 	if kv != client.cachedUploadsKV || store != client.cachedUploadContentStore {
 		t.Fatal("hot-path accessors did not return cached handles")
-	}
-	executions, err := client.validationExecutionsBucket(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if executions != client.cachedValidationExecutionsKV {
-		t.Fatal("hot-path execution accessor did not return cached handle")
 	}
 }
 
@@ -82,19 +128,12 @@ func TestColdHandleDiscoveryIsCoalesced(t *testing.T) {
 	start := make(chan struct{})
 	var callersDone sync.WaitGroup
 	for i := 0; i < callers; i++ {
-		callersDone.Add(3)
+		callersDone.Add(2)
 		go func() {
 			defer callersDone.Done()
 			<-start
 			if _, err := client.uploadsBucket(context.Background()); err != nil {
 				t.Errorf("uploadsBucket: %v", err)
-			}
-		}()
-		go func() {
-			defer callersDone.Done()
-			<-start
-			if _, err := client.validationExecutionsBucket(context.Background()); err != nil {
-				t.Errorf("validationExecutionsBucket: %v", err)
 			}
 		}()
 		go func() {
@@ -107,8 +146,8 @@ func TestColdHandleDiscoveryIsCoalesced(t *testing.T) {
 	}
 	close(start)
 	callersDone.Wait()
-	if got := counting.keyValueCalls.Load(); got != 2 {
-		t.Fatalf("KeyValue discovery calls = %d, want 2", got)
+	if got := counting.keyValueCalls.Load(); got != 1 {
+		t.Fatalf("KeyValue discovery calls = %d, want 1", got)
 	}
 	if got := counting.objectStoreCalls.Load(); got != 1 {
 		t.Fatalf("ObjectStore discovery calls = %d, want 1", got)

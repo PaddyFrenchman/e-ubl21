@@ -2,6 +2,8 @@ package queue
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -59,6 +61,27 @@ type FrozenValidationPlan struct {
 	Stages  []FrozenValidationStage `json:"stages"`
 }
 
+// ValidationExecutionReference identifies an existing generation without
+// relying on a mutable "latest" alias.
+type ValidationExecutionReference struct {
+	ValidationID string `json:"validationId"`
+	Generation   uint64 `json:"generation"`
+}
+
+// ValidationExecutionIntent is the immutable command context from which a
+// generation-1 identity is derived. IntentID is the durable start or
+// revalidation command ID and must be stable across broker redelivery.
+type ValidationExecutionIntent struct {
+	IntentID         string
+	UploadID         string
+	DocumentType     string
+	Trigger          ValidationExecutionTrigger
+	RequestedProfile ValidationProfile
+	Plan             FrozenValidationPlan
+	RevalidationOf   *ValidationExecutionReference
+	CreatedAt        time.Time
+}
+
 // ValidationExecution identifies one validation lineage and one immutable
 // generation within it. UploadID identifies the independently retained XML.
 //
@@ -67,32 +90,37 @@ type FrozenValidationPlan struct {
 // Revalidation against a changed plan or ruleset creates another ValidationID
 // at generation 1, preserving every earlier record.
 type ValidationExecution struct {
-	SchemaVersion    uint32                     `json:"schemaVersion"`
-	ValidationID     string                     `json:"validationId"`
-	UploadID         string                     `json:"uploadId"`
-	DocumentType     string                     `json:"documentType"`
-	Generation       uint64                     `json:"generation"`
-	Trigger          ValidationExecutionTrigger `json:"trigger"`
-	RequestedProfile ValidationProfile          `json:"requestedProfile"`
-	Plan             FrozenValidationPlan       `json:"plan"`
-	CreatedAt        string                     `json:"createdAt"`
+	SchemaVersion    uint32                        `json:"schemaVersion"`
+	ValidationID     string                        `json:"validationId"`
+	CreationIntentID string                        `json:"creationIntentId"`
+	UploadID         string                        `json:"uploadId"`
+	DocumentType     string                        `json:"documentType"`
+	Generation       uint64                        `json:"generation"`
+	Trigger          ValidationExecutionTrigger    `json:"trigger"`
+	RequestedProfile ValidationProfile             `json:"requestedProfile"`
+	Plan             FrozenValidationPlan          `json:"plan"`
+	RevalidationOf   *ValidationExecutionReference `json:"revalidationOf,omitempty"`
+	CreatedAt        string                        `json:"createdAt"`
 }
 
-// NewValidationExecution creates an identity for an initial validation or a
-// true revalidation. Both begin at generation 1 with a fresh ValidationID.
-func NewValidationExecution(uploadID, documentType string, profile ValidationProfile, plan FrozenValidationPlan, trigger ValidationExecutionTrigger, createdAt time.Time) (ValidationExecution, error) {
-	if trigger != ValidationTriggerInitial && trigger != ValidationTriggerRevalidation {
-		return ValidationExecution{}, fmt.Errorf("new validation execution trigger %q must be %q or %q", trigger, ValidationTriggerInitial, ValidationTriggerRevalidation)
+// NewValidationExecution creates generation 1 from a durable command. Initial
+// validation IDs are deterministic per upload, so even conflicting duplicate
+// start commands collide. Revalidation IDs are deterministic per command, so
+// redelivery converges while distinct commands remain distinct lineages.
+func NewValidationExecution(intent ValidationExecutionIntent) (ValidationExecution, error) {
+	if intent.Trigger != ValidationTriggerInitial && intent.Trigger != ValidationTriggerRevalidation {
+		return ValidationExecution{}, fmt.Errorf("new validation execution trigger %q must be %q or %q", intent.Trigger, ValidationTriggerInitial, ValidationTriggerRevalidation)
 	}
-	id, err := NewID()
-	if err != nil {
-		return ValidationExecution{}, fmt.Errorf("generate validation id: %w", err)
+	if !ValidID(intent.IntentID) {
+		return ValidationExecution{}, fmt.Errorf("invalid validation creation intent id %q", intent.IntentID)
 	}
+	validationID := deterministicValidationID(intent.Trigger, intent.UploadID, intent.IntentID)
 	execution := ValidationExecution{
-		SchemaVersion: ValidationExecutionSchemaVersion, ValidationID: id,
-		UploadID: uploadID, DocumentType: documentType, Generation: 1, Trigger: trigger,
-		RequestedProfile: profile, Plan: cloneFrozenValidationPlan(plan),
-		CreatedAt: createdAt.UTC().Format(time.RFC3339Nano),
+		SchemaVersion: ValidationExecutionSchemaVersion, ValidationID: validationID, CreationIntentID: intent.IntentID,
+		UploadID: intent.UploadID, DocumentType: intent.DocumentType, Generation: 1, Trigger: intent.Trigger,
+		RequestedProfile: intent.RequestedProfile, Plan: cloneFrozenValidationPlan(intent.Plan),
+		RevalidationOf: cloneValidationExecutionReference(intent.RevalidationOf),
+		CreatedAt:      intent.CreatedAt.UTC().Format(time.RFC3339Nano),
 	}
 	if err := execution.Validate(); err != nil {
 		return ValidationExecution{}, err
@@ -103,16 +131,21 @@ func NewValidationExecution(uploadID, documentType string, profile ValidationPro
 // NextValidationGeneration appends an explicit replay generation to one
 // validation lineage. Identity, upload, requested profile and frozen plan are
 // copied exactly; a changed plan is a revalidation and must use a new ID.
-func NextValidationGeneration(previous ValidationExecution, createdAt time.Time) (ValidationExecution, error) {
+func NextValidationGeneration(previous ValidationExecution, replayIntentID string, createdAt time.Time) (ValidationExecution, error) {
 	if err := previous.Validate(); err != nil {
 		return ValidationExecution{}, fmt.Errorf("previous validation execution: %w", err)
 	}
 	if previous.Generation == ^uint64(0) {
 		return ValidationExecution{}, errors.New("validation generation overflow")
 	}
+	if !ValidID(replayIntentID) {
+		return ValidationExecution{}, fmt.Errorf("invalid replay intent id %q", replayIntentID)
+	}
 	next := previous
 	next.Generation++
 	next.Trigger = ValidationTriggerReplay
+	next.CreationIntentID = replayIntentID
+	next.RevalidationOf = nil
 	next.Plan = cloneFrozenValidationPlan(previous.Plan)
 	next.CreatedAt = createdAt.UTC().Format(time.RFC3339Nano)
 	return next, nil
@@ -127,6 +160,9 @@ func (execution ValidationExecution) Validate() error {
 	if !ValidID(execution.ValidationID) {
 		return fmt.Errorf("invalid validation id %q", execution.ValidationID)
 	}
+	if !ValidID(execution.CreationIntentID) {
+		return fmt.Errorf("invalid validation creation intent id %q", execution.CreationIntentID)
+	}
 	if !ValidID(execution.UploadID) {
 		return fmt.Errorf("invalid validation execution upload id %q", execution.UploadID)
 	}
@@ -137,13 +173,32 @@ func (execution ValidationExecution) Validate() error {
 		return errors.New("validation generation must be at least 1")
 	}
 	switch execution.Trigger {
-	case ValidationTriggerInitial, ValidationTriggerRevalidation:
+	case ValidationTriggerInitial:
 		if execution.Generation != 1 {
 			return fmt.Errorf("validation trigger %q requires generation 1", execution.Trigger)
+		}
+		if execution.RevalidationOf != nil {
+			return errors.New("initial validation cannot reference a prior execution")
+		}
+		if want := deterministicValidationID(ValidationTriggerInitial, execution.UploadID, execution.CreationIntentID); execution.ValidationID != want {
+			return fmt.Errorf("initial validation id %q does not match deterministic id %q", execution.ValidationID, want)
+		}
+	case ValidationTriggerRevalidation:
+		if execution.Generation != 1 {
+			return fmt.Errorf("validation trigger %q requires generation 1", execution.Trigger)
+		}
+		if err := execution.RevalidationOf.validate(); err != nil {
+			return fmt.Errorf("revalidation predecessor: %w", err)
+		}
+		if want := deterministicValidationID(ValidationTriggerRevalidation, execution.UploadID, execution.CreationIntentID); execution.ValidationID != want {
+			return fmt.Errorf("revalidation id %q does not match deterministic id %q", execution.ValidationID, want)
 		}
 	case ValidationTriggerReplay:
 		if execution.Generation < 2 {
 			return errors.New("validation replay requires generation 2 or later")
+		}
+		if execution.RevalidationOf != nil {
+			return errors.New("replay generation cannot change revalidation predecessor")
 		}
 	default:
 		return fmt.Errorf("invalid validation execution trigger %q", execution.Trigger)
@@ -197,6 +252,16 @@ func (plan FrozenValidationPlan) validate() error {
 	return nil
 }
 
+func (reference *ValidationExecutionReference) validate() error {
+	if reference == nil {
+		return errors.New("reference is required")
+	}
+	if !ValidID(reference.ValidationID) || reference.Generation == 0 {
+		return fmt.Errorf("invalid validation execution reference %q generation %d", reference.ValidationID, reference.Generation)
+	}
+	return nil
+}
+
 // VersionedValidationExecution pairs a record with its JetStream KV revision.
 // The initial model is create-only; the revision is reserved for later
 // orchestrator CAS state without weakening frozen identity and plan fields.
@@ -220,6 +285,22 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 		return 0, err
 	}
 	if execution.Generation > 1 {
+		for generation := uint64(1); generation < execution.Generation; generation++ {
+			entry, getErr := kv.Get(ctx, validationExecutionKey(execution.UploadID, execution.ValidationID, generation))
+			if getErr != nil {
+				if errors.Is(getErr, jetstream.ErrKeyNotFound) {
+					return 0, fmt.Errorf("create validation execution %s generation %d: generation %d is missing", execution.ValidationID, execution.Generation, generation)
+				}
+				return 0, fmt.Errorf("inspect replay intent history for %s generation %d: %w", execution.ValidationID, generation, getErr)
+			}
+			var prior ValidationExecution
+			if err := json.Unmarshal(entry.Value(), &prior); err != nil {
+				return 0, fmt.Errorf("decode prior validation execution %s generation %d: %w", execution.ValidationID, generation, err)
+			}
+			if prior.CreationIntentID == execution.CreationIntentID {
+				return 0, fmt.Errorf("create validation execution %s generation %d: replay intent %s was already used by generation %d", execution.ValidationID, execution.Generation, execution.CreationIntentID, generation)
+			}
+		}
 		previousEntry, getErr := kv.Get(ctx, validationExecutionKey(execution.UploadID, execution.ValidationID, execution.Generation-1))
 		if getErr != nil {
 			if errors.Is(getErr, jetstream.ErrKeyNotFound) {
@@ -238,10 +319,27 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 			previous.RequestedProfile != execution.RequestedProfile || !reflect.DeepEqual(previous.Plan, execution.Plan) {
 			return 0, fmt.Errorf("create validation execution %s generation %d: replay lineage changed immutable identity, profile, or plan", execution.ValidationID, execution.Generation)
 		}
-		previousCreated, _ := time.Parse(time.RFC3339Nano, previous.CreatedAt)
-		created, _ := time.Parse(time.RFC3339Nano, execution.CreatedAt)
-		if !created.After(previousCreated) {
-			return 0, fmt.Errorf("create validation execution %s generation %d: createdAt must be after generation %d", execution.ValidationID, execution.Generation, previous.Generation)
+	} else if execution.Trigger == ValidationTriggerRevalidation {
+		reference := execution.RevalidationOf
+		previousEntry, getErr := kv.Get(ctx, validationExecutionKey(execution.UploadID, reference.ValidationID, reference.Generation))
+		if getErr != nil {
+			if errors.Is(getErr, jetstream.ErrKeyNotFound) {
+				return 0, fmt.Errorf("create revalidation %s: referenced execution is missing", execution.ValidationID)
+			}
+			return 0, fmt.Errorf("load revalidation predecessor %s generation %d: %w", reference.ValidationID, reference.Generation, getErr)
+		}
+		var previous ValidationExecution
+		if err := json.Unmarshal(previousEntry.Value(), &previous); err != nil {
+			return 0, fmt.Errorf("decode revalidation predecessor %s generation %d: %w", reference.ValidationID, reference.Generation, err)
+		}
+		if err := previous.Validate(); err != nil {
+			return 0, fmt.Errorf("validate revalidation predecessor %s generation %d: %w", reference.ValidationID, reference.Generation, err)
+		}
+		if previous.UploadID != execution.UploadID || previous.DocumentType != execution.DocumentType || previous.ValidationID != reference.ValidationID || previous.Generation != reference.Generation {
+			return 0, fmt.Errorf("create revalidation %s: predecessor identity or document type does not match", execution.ValidationID)
+		}
+		if previous.RequestedProfile == execution.RequestedProfile && reflect.DeepEqual(previous.Plan, execution.Plan) {
+			return 0, fmt.Errorf("create revalidation %s: requested profile and frozen plan are unchanged; use replay", execution.ValidationID)
 		}
 	}
 	encoded, err := json.Marshal(execution)
@@ -250,6 +348,15 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 	}
 	revision, err := kv.Create(ctx, validationExecutionKey(execution.UploadID, execution.ValidationID, execution.Generation), encoded)
 	if err != nil {
+		if errors.Is(err, jetstream.ErrKeyExists) {
+			entry, getErr := kv.Get(ctx, validationExecutionKey(execution.UploadID, execution.ValidationID, execution.Generation))
+			if getErr == nil {
+				var existing ValidationExecution
+				if decodeErr := json.Unmarshal(entry.Value(), &existing); decodeErr == nil && reflect.DeepEqual(existing, execution) {
+					return entry.Revision(), nil
+				}
+			}
+		}
 		return 0, fmt.Errorf("create validation execution %s generation %d: %w", execution.ValidationID, execution.Generation, err)
 	}
 	return revision, nil
@@ -349,6 +456,26 @@ func cloneFrozenValidationPlan(plan FrozenValidationPlan) FrozenValidationPlan {
 	return cloned
 }
 
+func cloneValidationExecutionReference(reference *ValidationExecutionReference) *ValidationExecutionReference {
+	if reference == nil {
+		return nil
+	}
+	cloned := *reference
+	return &cloned
+}
+
+func deterministicValidationID(trigger ValidationExecutionTrigger, uploadID, intentID string) string {
+	commandComponent := intentID
+	if trigger == ValidationTriggerInitial {
+		// One immutable upload has exactly one initial lineage. IntentID remains
+		// in the record so a conflicting second start command is rejected rather
+		// than silently treated as the original command.
+		commandComponent = "initial"
+	}
+	digest := sha256.Sum256([]byte("e-ubl21.validation-id.v1\x00" + string(trigger) + "\x00" + uploadID + "\x00" + commandComponent))
+	return hex.EncodeToString(digest[:16])
+}
+
 func (c *Client) validationExecutionsBucket(ctx context.Context) (jetstream.KeyValue, error) {
 	c.handlesMu.RLock()
 	cached := c.cachedValidationExecutionsKV
@@ -365,6 +492,19 @@ func (c *Client) validationExecutionsBucket(ctx context.Context) (jetstream.KeyV
 	kv, err := c.JS.KeyValue(ctx, bucketName)
 	if err != nil {
 		return nil, fmt.Errorf("open %s KV bucket: %w", bucketName, err)
+	}
+	stream, err := c.JS.Stream(ctx, "KV_"+bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("inspect %s KV stream: %w", bucketName, err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("inspect %s KV stream configuration: %w", bucketName, err)
+	}
+	config := info.Config
+	if config.Storage != jetstream.FileStorage || config.Retention != jetstream.LimitsPolicy || config.MaxMsgsPerSubject != 1 || config.MaxAge != 0 ||
+		(config.MaxMsgSize > 0 && config.MaxMsgSize < validationExecutionMaxValueSize) {
+		return nil, fmt.Errorf("%s KV bucket has incompatible configuration", bucketName)
 	}
 	c.cachedValidationExecutionsKV = kv
 	return kv, nil

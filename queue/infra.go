@@ -95,17 +95,6 @@ func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) err
 		return fmt.Errorf("ensure %s KV bucket: %w", uploadsBucketName, err)
 	}
 
-	validationExecutionsBucketName := c.Namespace.ValidationExecutionsBucketName()
-	validationExecutionsKV, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
-		Bucket:       validationExecutionsBucketName,
-		Description:  "Durable validation execution generations and their immutable ordered plans, keyed by upload id, validation id and generation.",
-		Storage:      jetstream.FileStorage,
-		MaxValueSize: validationExecutionMaxValueSize,
-	})
-	if err != nil {
-		return fmt.Errorf("ensure %s KV bucket: %w", validationExecutionsBucketName, err)
-	}
-
 	uploadContentBucketName := c.Namespace.UploadContentBucketName()
 	uploadContentStore, err := c.JS.CreateOrUpdateObjectStore(ctx, jetstream.ObjectStoreConfig{
 		Bucket:      uploadContentBucketName,
@@ -119,8 +108,35 @@ func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) err
 
 	c.handlesMu.Lock()
 	c.cachedUploadsKV = uploadsKV
-	c.cachedValidationExecutionsKV = validationExecutionsKV
 	c.cachedUploadContentStore = uploadContentStore
 	c.handlesMu.Unlock()
 	return nil
+}
+
+// ProvisionValidationExecutionInfra is the deployer-owned mutation that
+// creates or updates the execution bucket. Runtime services must use
+// VerifyValidationExecutionInfra (or a data operation that performs the same
+// cold-handle verification) and never call this method during startup.
+func (c *Client) ProvisionValidationExecutionInfra(ctx context.Context) error {
+	bucketName := c.Namespace.ValidationExecutionsBucketName()
+	kv, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
+		Bucket:       bucketName,
+		Description:  "Durable validation execution generations and their immutable ordered plans, keyed by upload id, validation id and generation.",
+		Storage:      jetstream.FileStorage,
+		MaxValueSize: validationExecutionMaxValueSize,
+	})
+	if err != nil {
+		return fmt.Errorf("provision %s KV bucket: %w", bucketName, err)
+	}
+	c.handlesMu.Lock()
+	c.cachedValidationExecutionsKV = kv
+	c.handlesMu.Unlock()
+	return nil
+}
+
+// VerifyValidationExecutionInfra performs a read-only compatibility check and
+// caches the verified runtime handle.
+func (c *Client) VerifyValidationExecutionInfra(ctx context.Context) error {
+	_, err := c.validationExecutionsBucket(ctx)
+	return err
 }

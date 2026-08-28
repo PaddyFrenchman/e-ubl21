@@ -27,7 +27,7 @@ even if another validation is later created for the upload.
 Every generation stores:
 
 - durable schema version;
-- upload and validation IDs;
+- upload and validation IDs plus the durable creation-command ID;
 - accepted UBL document type;
 - positive generation number;
 - creation trigger and timestamp;
@@ -50,6 +50,34 @@ associated with an upload. Creation uses the KV create operation, never put or
 update, so an existing generation cannot be replaced. Retrieval validates both
 the record and its agreement with the physical key.
 
+## Idempotent lineage creation
+
+Generation 1 is created only from a durable `ValidationExecutionIntent`. Its
+`creationIntentId`, timestamp, upload, document type, requested profile, frozen
+plan, trigger, and optional predecessor are immutable command data. Every
+orchestrator replica handling a redelivery must use that same data.
+
+The 128-bit validation ID is derived with a domain-separated SHA-256 digest:
+
+```text
+initial
+  hash(trigger, uploadId, "initial")
+
+revalidation
+  hash(trigger, uploadId, creationIntentId)
+```
+
+Consequently, every initial command for one upload targets the same physical
+generation-1 key. Redelivery of the identical command returns the already
+created record and revision as success. A conflicting second initial command
+cannot create another lineage because its differing command data collides with
+that key and is rejected.
+
+A revalidation command has its own deterministic lineage ID. Redelivery of
+that command converges on the same key, while another explicit revalidation
+command can create another lineage. Hash-derived IDs are identities, not
+authentication secrets.
+
 ## Replay versus revalidation
 
 The identity policy is deliberately explicit:
@@ -62,14 +90,23 @@ operator replay of the identical frozen plan
   same validationId, next contiguous generation, trigger replay
 
 revalidation with a changed profile, plan, or ruleset
-  new validationId, generation 1, trigger revalidation
+  new command-derived validationId, generation 1, trigger revalidation
 ```
 
 A replay generation is accepted only when its predecessor exists and its
 upload ID, validation ID, document type, requested profile, and entire frozen
-plan are equal.
-Its creation timestamp must advance. Competing writers for the same next
-generation converge through create-only KV semantics; gaps are rejected.
+plan are equal. Every replay command ID may occur only once in that lineage.
+Competing writers of the same command and generation converge through
+create-only KV semantics; gaps and command reuse are rejected.
+
+Generation is the sole ordering authority. `createdAt` is required audit data,
+but clock skew, NTP adjustment, or another replica's clock may make it earlier
+than the preceding generation and cannot invalidate an otherwise valid replay.
+
+A revalidation stores an explicit `(validationId, generation)` predecessor.
+That predecessor must exist for the same upload and document type, and either
+the requested profile or complete frozen plan must differ. An identical plan
+is replay, not revalidation.
 
 Changing a ruleset version under the same validation ID is forbidden. A new
 validation ID is what preserves the old plan and evidence while allowing the
@@ -84,3 +121,9 @@ create/read/list primitives. The later orchestrator issue activates record
 creation in the runtime; the StageRequest/StageResult issue carries the same
 identity tuple over the wire. Until that cutover, the existing monolithic
 upload/worker path and its public response remain unchanged.
+
+The execution bucket is provisioned only through the deployer-owned
+`ProvisionValidationExecutionInfra` operation. Runtime access performs the
+read-only `VerifyValidationExecutionInfra` compatibility check; the legacy
+runtime `EnsureInfra` path deliberately does not create, update, or open the
+new bucket.

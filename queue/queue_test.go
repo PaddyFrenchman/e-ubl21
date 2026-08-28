@@ -600,7 +600,13 @@ func TestNamespacesDoNotCrossConsume(t *testing.T) {
 		t.Fatalf("dev record status = %q, want %q", devRecord.Status, queue.StatusValid)
 	}
 
-	execution, err := queue.NewValidationExecution(id, "Invoice", queue.ValidationProfileUBL21EN16931, testFrozenPlan(), queue.ValidationTriggerInitial, time.Now())
+	if err := dev.ProvisionValidationExecutionInfra(ctx); err != nil {
+		t.Fatalf("provision dev validation execution infrastructure: %v", err)
+	}
+	if err := prod.ProvisionValidationExecutionInfra(ctx); err != nil {
+		t.Fatalf("provision prod validation execution infrastructure: %v", err)
+	}
+	execution, err := queue.NewValidationExecution(testInitialIntent(t, id, testFrozenPlan(), time.Now()))
 	if err != nil {
 		t.Fatalf("new dev validation execution: %v", err)
 	}
