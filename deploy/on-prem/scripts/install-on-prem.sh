@@ -105,6 +105,16 @@ install_base_packages() {
   fi
 }
 
+warn_about_active_firewall() {
+  if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet firewalld 2>/dev/null; then
+    warn "firewalld is active. Before relying on pod networking, configure the K3s-required rules documented in deploy/on-prem/deployment-on-prem.md."
+  fi
+
+  if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
+    warn "UFW is active. Before relying on pod networking, configure the K3s-required rules documented in deploy/on-prem/deployment-on-prem.md."
+  fi
+}
+
 disable_swap_if_requested() {
   if [[ "${DISABLE_SWAP}" != "1" ]]; then
     log "DISABLE_SWAP=${DISABLE_SWAP}; leaving swap configuration unchanged"
@@ -222,8 +232,12 @@ install_metallb() {
     pod-security.kubernetes.io/warn=privileged \
     --overwrite
 
+  # The single-server target uses L2 advertisement only. Disable FRR/FRR-K8s
+  # to keep the MetalLB footprint small and avoid unnecessary BGP components.
   helm upgrade --install metallb metallb/metallb \
     --namespace metallb-system \
+    --set speaker.frr.enabled=false \
+    --set frrk8s.enabled=false \
     --wait \
     --timeout 10m
 
@@ -434,10 +448,10 @@ install_monitoring() {
   helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
     --namespace monitoring \
     --create-namespace \
-    --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]=ReadWriteOnce \
-    --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage="${PROMETHEUS_STORAGE_SIZE}" \
+    --set 'prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]=ReadWriteOnce' \
+    --set "prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=${PROMETHEUS_STORAGE_SIZE}" \
     --set grafana.persistence.enabled=true \
-    --set grafana.persistence.size="${GRAFANA_STORAGE_SIZE}" \
+    --set "grafana.persistence.size=${GRAFANA_STORAGE_SIZE}" \
     --wait \
     --timeout 15m
 }
@@ -516,6 +530,7 @@ main() {
   require_root
   load_os
   install_base_packages
+  warn_about_active_firewall
   disable_swap_if_requested
   prepare_k3s_config
   install_k3s
