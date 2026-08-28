@@ -48,12 +48,43 @@ MANIFEST="$(cd "$(dirname "$MANIFEST")" && pwd)/$(basename "$MANIFEST")"
 export EUBL21_MINIKUBE_PROFILE="$MINIKUBE_PROFILE"
 
 PORT_FORWARD_PIDS=()
+DEPLOYMENT_STARTED=0
+EVIDENCE_ATTEMPTED=0
+
+collect_failure_evidence() {
+    local image_digest
+    local evidence_status
+
+    echo "Collecting Kubernetes failure evidence before cleanup"
+    image_digest="$(docker image inspect --format '{{.Id}}' "$IMAGE" 2>/dev/null)"
+    go run . regression collect-evidence \
+        --manifest "$MANIFEST" \
+        --output "$ARTIFACT_DIR/failure-evidence" \
+        --kubernetes \
+        --kubernetes-namespace "$NAMESPACE" \
+        --kubernetes-selector app.kubernetes.io/part-of=e-ubl21 \
+        --kubectl-executable "$KUBECTL_BIN" \
+        --minikube-executable minikube \
+        --image-digest "$image_digest" \
+        --source-timeout "$SOURCE_TIMEOUT" \
+        > >(tee "$ARTIFACT_DIR/failure-evidence.log") 2>&1
+    evidence_status=$?
+    if (( evidence_status != 0 )); then
+        echo "WARNING: failure evidence collection was incomplete (status $evidence_status)" >&2
+    fi
+}
+
 cleanup() {
     local status=$?
+    trap - EXIT INT TERM
+    set +e
     for pid in "${PORT_FORWARD_PIDS[@]}"; do
         kill "$pid" >/dev/null 2>&1 || true
         wait "$pid" >/dev/null 2>&1 || true
     done
+    if (( status != 0 && DEPLOYMENT_STARTED == 1 && EVIDENCE_ATTEMPTED == 0 )); then
+        collect_failure_evidence
+    fi
     if [[ "$KEEP_DEPLOYMENT" != "1" ]]; then
         "$KUBECTL_BIN" delete namespace "$NAMESPACE" --ignore-not-found=true --wait=true --timeout=2m >/dev/null 2>&1 || true
     else
@@ -79,12 +110,15 @@ TOKEN="$(go run ./tools/regression-token --issuer https://regression.e-ubl21.loc
 unset EUBL21_REGRESSION_HMAC_SECRET
 
 "$KUBECTL_BIN" apply -f deploy/minikube/namespace.yaml
+DEPLOYMENT_STARTED=1
 "$KUBECTL_BIN" --namespace "$NAMESPACE" create secret generic e-ubl21-regression-auth \
     --from-literal="hmac-secret=$HMAC_SECRET" --dry-run=client -o yaml | "$KUBECTL_BIN" apply -f -
 unset HMAC_SECRET
 "$KUBECTL_BIN" apply -k deploy/minikube
 "$KUBECTL_BIN" --namespace "$NAMESPACE" set image deployment/e-ubl21-api "api=$IMAGE"
 "$KUBECTL_BIN" --namespace "$NAMESPACE" set image deployment/e-ubl21-worker "worker=$IMAGE"
+"$KUBECTL_BIN" --namespace "$NAMESPACE" rollout restart deployment/e-ubl21-api
+"$KUBECTL_BIN" --namespace "$NAMESPACE" rollout restart deployment/e-ubl21-worker
 
 for deployment in nats e-ubl21-api e-ubl21-worker; do
     "$KUBECTL_BIN" --namespace "$NAMESPACE" rollout status "deployment/$deployment" --timeout="$ROLLOUT_TIMEOUT"
@@ -130,6 +164,7 @@ go run . regression \
 RUNNER_STATUS=${PIPESTATUS[0]}
 
 IMAGE_DIGEST="$(docker image inspect --format '{{.Id}}' "$IMAGE" 2>/dev/null)"
+EVIDENCE_ATTEMPTED=1
 go run . \
     --nats-url "nats://127.0.0.1:$NATS_LOCAL_PORT" \
     --queue-namespace "$QUEUE_NAMESPACE" \

@@ -20,11 +20,14 @@ Run the complete lifecycle from the repository root:
 make regression-minikube
 ```
 
-The command builds and loads `localhost/e-ubl21:regression`, creates a short-lived local
-JWT signing secret, waits for all rollouts and health endpoints, invokes the
-same `e-ubl21 regression` semantic runner used outside Kubernetes, collects
-the #40 evidence bundle, and deletes the namespace. It leaves the Minikube
-profile running for faster subsequent runs.
+The command builds and loads `localhost/e-ubl21:regression`, creates a
+short-lived local JWT signing secret, forces the API and worker Deployments to
+restart with the newly loaded image, waits for all rollouts and health
+endpoints, invokes the same `e-ubl21 regression` semantic runner used outside
+Kubernetes, collects the #40 evidence bundle, and deletes the namespace. On a
+post-deployment infrastructure failure it first writes best-effort Kubernetes
+events, pod state, and logs to `failure-evidence/` below the artifact
+directory. It leaves the Minikube profile running for faster subsequent runs.
 
 Artifacts are written to a timestamped directory below
 `regression-results/minikube/`. Override the defaults when needed:
