@@ -78,6 +78,13 @@ jobs:
               echo '```json'
               cat "$summary"
               echo '```'
+              equivalence="regression-results/minikube/${{ matrix.corpus }}/equivalence.json"
+              if [[ -f "$equivalence" ]]; then
+                echo "Validation-split equivalence:"
+                echo '```json'
+                cat "$equivalence"
+                echo '```'
+              fi
             else
               echo "No semantic summary was produced; inspect the uploaded infrastructure evidence."
             fi

@@ -165,6 +165,7 @@ wait_http worker "http://127.0.0.1:$WORKER_LOCAL_PORT/healthz" "" "$WORKER_PID"
 STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 RUNNER_STATUS=0
+EQUIVALENCE_STATUS=0
 EVIDENCE_STATUS=0
 run_corpus() {
     local name=$1
@@ -184,6 +185,17 @@ run_corpus() {
     set -e
     if (( status != 0 )); then
         RUNNER_STATUS=1
+    fi
+
+    set +e
+    "$TEMP_DIR/e-ubl21" regression equivalence \
+        --baseline "$ROOT_DIR/regression/baselines/validation-split/$name.results.jsonl" \
+        --candidate "$output/results.jsonl" \
+        --output "$output/equivalence.json" 2>&1 | tee "$output/equivalence.log"
+    status=${PIPESTATUS[0]}
+    set -e
+    if (( status != 0 )); then
+        EQUIVALENCE_STATUS=1
     fi
 
     set +e
@@ -214,6 +226,10 @@ run_corpus en16931 "$ROOT_DIR/createsamples/samples-en16931/manifest.json"
 echo "Correctness regression artifacts: $ARTIFACT_DIR"
 if (( RUNNER_STATUS != 0 )); then
     echo "ERROR: one or more semantic regression corpora failed" >&2
+    exit 1
+fi
+if (( EQUIVALENCE_STATUS != 0 )); then
+    echo "ERROR: one or more corpora differ from the frozen monolithic baseline" >&2
     exit 1
 fi
 if (( EVIDENCE_STATUS != 0 )); then

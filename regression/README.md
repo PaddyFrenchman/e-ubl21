@@ -50,6 +50,29 @@ profile, and terminal status for diagnostics. It returns non-zero after
 writing the artifacts if any expected final outcome, stage outcome, or required
 rule ID differs. Use the UBL manifest path to run the structural corpus.
 
+## Validation-split equivalence gate
+
+The reviewed monolithic-worker result sets live in
+`baselines/validation-split/`. Both standard regression lifecycles compare each
+canonical corpus with its baseline after producing `results.jsonl`, and write
+`equivalence.json`. The comparison is stricter than the manifest's required
+rule-ID subset: candidate and baseline actual rule-ID sets must be exactly
+equal, as must fixture identities, hashes, profiles, final outcomes, and
+ordered stage outcomes.
+
+To compare an independently produced split-stage result set:
+
+```bash
+make regression-equivalence \
+  BASELINE=regression/baselines/validation-split/en16931.results.jsonl \
+  CANDIDATE=path/to/split-stage/results.jsonl \
+  OUTPUT=path/to/split-stage/equivalence.json
+```
+
+Do not replace a baseline merely because a candidate differs. See the baseline
+directory README for the review policy and the separate mandatory asynchronous
+queue/restart/scale-to-zero scenarios.
+
 ## Diagnostic evidence collector
 
 Collect bounded diagnostics into the same artifact directory after every run,

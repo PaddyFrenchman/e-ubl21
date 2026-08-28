@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "architecture": "monolithic-worker",
+  "sourceCommit": "579f5f6a96bd3ec63574cad8d88b9bf1924ca936",
+  "corpora": [
+    {
+      "name": "ubl21",
+      "manifest": "createsamples/samples/manifest.json",
+      "manifestSha256": "f27eac6bb78448a9b67fee52146deac308da4f4cef1caa8f4bfbd0a3009bf45a",
+      "results": "regression/baselines/validation-split/ubl21.results.jsonl",
+      "resultsSha256": "e1303b72a7ea27d4ef84d744ff6caf2141d56ddcb42a3ce986789c98425ad7ec",
+      "fixtures": 71
+    },
+    {
+      "name": "en16931",
+      "manifest": "createsamples/samples-en16931/manifest.json",
+      "manifestSha256": "259706df3c2c2826e65e49bdb1acb6c3a6a763a20c22bec917433361f89daf76",
+      "results": "regression/baselines/validation-split/en16931.results.jsonl",
+      "resultsSha256": "d8dcc6e4a5f9935c679fae7c92a67e3db6dc21d20e7542b3b666a72ab6431a69",
+      "fixtures": 32
+    }
+  ]
+}

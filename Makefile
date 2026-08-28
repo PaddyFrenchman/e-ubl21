@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image benchmark-en16931 regression-correctness regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image benchmark-en16931 regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -24,6 +24,13 @@ benchmark-en16931:
 regression-correctness:
 	ARTIFACT_DIR="$(ARTIFACT_DIR)" \
 	./devsetup/regression-correctness.sh
+
+# Compare a candidate normalized result set with a reviewed monolithic
+# baseline. BASELINE and CANDIDATE are required; OUTPUT is optional.
+regression-equivalence:
+	@test -n "$(BASELINE)" || { echo "ERROR: BASELINE is required" >&2; exit 2; }
+	@test -n "$(CANDIDATE)" || { echo "ERROR: CANDIDATE is required" >&2; exit 2; }
+	go run . regression equivalence --baseline "$(BASELINE)" --candidate "$(CANDIDATE)" $(if $(OUTPUT),--output "$(OUTPUT)")
 
 # Build and load the candidate image, deploy the current distributed topology,
 # run the existing semantic regression runner, collect diagnostics, and remove

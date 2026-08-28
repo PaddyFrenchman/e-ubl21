@@ -30,6 +30,7 @@ RUN_STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 ARTIFACT_DIR="${ARTIFACT_DIR:-regression-results/minikube/$RUN_STAMP}"
 KUBECTL_BIN="${KUBECTL_BIN:-$ROOT_DIR/devsetup/minikube-kubectl.sh}"
 KEEP_DEPLOYMENT="${KEEP_DEPLOYMENT:-0}"
+EQUIVALENCE_BASELINE="${EQUIVALENCE_BASELINE:-}"
 
 for command in minikube docker go curl; do
     if ! command -v "$command" >/dev/null 2>&1; then
@@ -45,6 +46,16 @@ fi
 mkdir -p "$ARTIFACT_DIR/port-forward"
 ARTIFACT_DIR="$(cd "$ARTIFACT_DIR" && pwd)"
 MANIFEST="$(cd "$(dirname "$MANIFEST")" && pwd)/$(basename "$MANIFEST")"
+if [[ -z "$EQUIVALENCE_BASELINE" ]]; then
+    case "$MANIFEST" in
+        "$ROOT_DIR/createsamples/samples/manifest.json")
+            EQUIVALENCE_BASELINE="$ROOT_DIR/regression/baselines/validation-split/ubl21.results.jsonl"
+            ;;
+        "$ROOT_DIR/createsamples/samples-en16931/manifest.json")
+            EQUIVALENCE_BASELINE="$ROOT_DIR/regression/baselines/validation-split/en16931.results.jsonl"
+            ;;
+    esac
+fi
 export EUBL21_MINIKUBE_PROFILE="$MINIKUBE_PROFILE"
 
 PORT_FORWARD_PIDS=()
@@ -163,6 +174,17 @@ go run . regression \
     --output "$ARTIFACT_DIR" 2>&1 | tee "$ARTIFACT_DIR/runner.log"
 RUNNER_STATUS=${PIPESTATUS[0]}
 
+EQUIVALENCE_STATUS=0
+if [[ -n "$EQUIVALENCE_BASELINE" ]]; then
+    go run . regression equivalence \
+        --baseline "$EQUIVALENCE_BASELINE" \
+        --candidate "$ARTIFACT_DIR/results.jsonl" \
+        --output "$ARTIFACT_DIR/equivalence.json" 2>&1 | tee "$ARTIFACT_DIR/equivalence.log"
+    EQUIVALENCE_STATUS=${PIPESTATUS[0]}
+else
+    echo "No frozen equivalence baseline is registered for $MANIFEST; semantic manifest checks still apply" | tee "$ARTIFACT_DIR/equivalence.log"
+fi
+
 IMAGE_DIGEST="$(docker image inspect --format '{{.Id}}' "$IMAGE" 2>/dev/null)"
 EVIDENCE_ATTEMPTED=1
 go run . \
@@ -190,6 +212,10 @@ echo "Regression artifacts: $ARTIFACT_DIR"
 if (( RUNNER_STATUS != 0 )); then
     echo "ERROR: semantic regression runner failed with status $RUNNER_STATUS" >&2
     exit "$RUNNER_STATUS"
+fi
+if (( EQUIVALENCE_STATUS != 0 )); then
+    echo "ERROR: candidate results differ from the frozen monolithic baseline" >&2
+    exit "$EQUIVALENCE_STATUS"
 fi
 if (( EVIDENCE_STATUS != 0 )); then
     echo "ERROR: evidence collection failed with status $EVIDENCE_STATUS" >&2

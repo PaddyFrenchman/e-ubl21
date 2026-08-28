@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -36,5 +37,32 @@ func newRegressionCmd(cfg *Config) *cobra.Command {
 	command.Flags().DurationVar(&pollInterval, "poll-interval", 100*time.Millisecond, "Delay between durable status polls")
 	command.Flags().DurationVar(&fixtureTimeout, "fixture-timeout", 60*time.Second, "Maximum upload-to-terminal time per fixture")
 	command.AddCommand(newRegressionEvidenceCmd(cfg))
+	command.AddCommand(newRegressionEquivalenceCmd())
+	return command
+}
+
+func newRegressionEquivalenceCmd() *cobra.Command {
+	var baseline, candidate, output string
+	command := &cobra.Command{
+		Use:   "equivalence",
+		Short: "Compare candidate normalized results with the frozen monolithic baseline",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if baseline == "" || candidate == "" {
+				return errors.New("baseline and candidate result paths are required")
+			}
+			summary, comparisonErr := regression.CompareResultSets(baseline, candidate)
+			if output != "" {
+				if err := regression.WriteEquivalenceSummary(output, summary); err != nil {
+					return err
+				}
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "equivalence total=%d equivalent=%d changed=%d missing=%d unexpected=%d\n", summary.Total, summary.Equivalent, summary.Changed, summary.Missing, summary.Unexpected)
+			return comparisonErr
+		},
+	}
+	command.Flags().StringVar(&baseline, "baseline", "", "Frozen monolithic results.jsonl path")
+	command.Flags().StringVar(&candidate, "candidate", "", "Candidate topology results.jsonl path")
+	command.Flags().StringVar(&output, "output", "", "Optional equivalence summary JSON path")
 	return command
 }

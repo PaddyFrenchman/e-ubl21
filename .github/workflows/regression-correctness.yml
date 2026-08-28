@@ -45,6 +45,13 @@ jobs:
               echo '```json'
               cat "$summary"
               echo '```'
+              equivalence="$(dirname "$summary")/equivalence.json"
+              if [[ -f "$equivalence" ]]; then
+                echo "Validation-split equivalence:"
+                echo '```json'
+                cat "$equivalence"
+                echo '```'
+              fi
               results="$(dirname "$summary")/results.jsonl"
               failures="$(grep '"result":"fail"' "$results" || true)"
               if [[ -n "$failures" ]]; then

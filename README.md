@@ -285,6 +285,12 @@ uses the same candidate-image build/load, deployment, authenticated semantic
 runner, evidence collection, and cleanup code as local Minikube; it does not
 maintain a second CI-specific regression implementation.
 
+Both regression tiers additionally compare their normalized semantic output
+with the reviewed pre-split monolithic baselines in
+`regression/baselines/validation-split/`. This gate requires exact fixture
+outcomes, ordered validation stages, and actual rule-ID sets, so the future
+distributed validation refactor cannot silently change standards behavior.
+
 See [`TODO-REGRESSION-CORPUS.md`](TODO-REGRESSION-CORPUS.md) and [`regression/README.md`](regression/README.md).
 
 ## Running the project
