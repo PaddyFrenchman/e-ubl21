@@ -274,7 +274,7 @@ func validateReaderAgainstSchema(ctx context.Context, schemaPath string, body io
 		var exitErr *exec.ExitError
 		diagnosticText := diagnostics.String()
 		if errors.As(err, &exitErr) && (exitErr.ExitCode() == 3 ||
-			exitErr.ExitCode() == 1 && strings.Contains(diagnosticText, "parser error")) {
+			strings.Contains(diagnosticText, "parser error")) {
 			return fmt.Errorf("%w: %s", errSchemaStandardsInvalid, diagnosticText)
 		}
 		return fmt.Errorf("schema validator execution failed: %w: %s", err, diagnosticText)

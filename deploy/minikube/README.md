@@ -52,3 +52,14 @@ Useful overrides include `MINIKUBE_PROFILE`, `MINIKUBE_DRIVER`, `IMAGE`,
 secret, ephemeral NATS storage, and port-forwards are not production defaults.
 The script automatically selects rootless Podman when the installed `docker`
 command is the Podman compatibility wrapper; otherwise it defaults to Docker.
+
+## GitHub Actions
+
+`.github/workflows/regression-minikube.yml` runs this same
+`make regression-minikube` lifecycle for pull requests and pushes to `main`.
+UBL 2.1 and EN 16931 use separate matrix jobs so both deployed corpora run in
+parallel without sharing a cluster or namespace. Each job installs a
+checksum-pinned Minikube binary, starts a disposable Docker-driver cluster,
+uploads semantic and diagnostic artifacts on success or failure, and always
+deletes the complete Minikube profile afterward. Failed fixture IDs are also
+written to the GitHub job summary.

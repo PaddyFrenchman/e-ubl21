@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -32,6 +33,25 @@ func TestMalformedXMLIsAStandardsInvalidXSDOutcome(t *testing.T) {
 	err := validateReaderAgainstSchema(context.Background(), schemaPath, strings.NewReader("<Invoice>"), time.Second)
 	if !errors.Is(err, errSchemaStandardsInvalid) || !strings.Contains(err.Error(), "parser error") {
 		t.Fatalf("malformed XML classification = %v", err)
+	}
+}
+
+func TestXMLLintParserErrorExitCodeIsStandardsInvalid(t *testing.T) {
+	originalErr, originalPath := xmllintErr, xmllintPath
+	t.Cleanup(func() {
+		xmllintOnce, xmllintErr, xmllintPath = sync.Once{}, originalErr, originalPath
+		xmllintOnce.Do(func() {})
+	})
+
+	fakeXMLLint := filepath.Join(t.TempDir(), "xmllint")
+	if err := os.WriteFile(fakeXMLLint, []byte("#!/bin/sh\necho 'input.xml:1: parser error : malformed document' >&2\nexit 4\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	xmllintOnce, xmllintErr, xmllintPath = sync.Once{}, nil, fakeXMLLint
+	xmllintOnce.Do(func() {})
+	err := validateReaderAgainstSchema(context.Background(), "ignored.xsd", strings.NewReader("<Invoice>"), time.Second)
+	if !errors.Is(err, errSchemaStandardsInvalid) || !strings.Contains(err.Error(), "parser error") {
+		t.Fatalf("parser error exit classification = %v", err)
 	}
 }
 

@@ -279,6 +279,12 @@ executes both manifests, and retains normalized results, JUnit, logs, metrics,
 and evidence on success or failure. GitHub's job summary lists any failed
 fixture IDs directly.
 
+GitHub also runs the local `make regression-minikube` lifecycle against both
+tracked corpora in parallel disposable clusters. This hosted Kubernetes gate
+uses the same candidate-image build/load, deployment, authenticated semantic
+runner, evidence collection, and cleanup code as local Minikube; it does not
+maintain a second CI-specific regression implementation.
+
 See [`TODO-REGRESSION-CORPUS.md`](TODO-REGRESSION-CORPUS.md) and [`regression/README.md`](regression/README.md).
 
 ## Running the project
