@@ -529,6 +529,7 @@ For deeper detail, start with:
 - [`TODO-REGRESSION-CORPUS.md`](TODO-REGRESSION-CORPUS.md) — deterministic standards corpus and regression evidence.
 - [`regression/README.md`](regression/README.md) — fixture and normalized-result contracts.
 - [`TODO-VALIDATION-SPLIT.md`](TODO-VALIDATION-SPLIT.md) — target asynchronous stage architecture.
+- [`docs/VALIDATION-SPLIT-OWNERSHIP.md`](docs/VALIDATION-SPLIT-OWNERSHIP.md) — normative service boundaries, state ownership, and crash recovery for the validation split.
 - [`TODO-PEPPOL.md`](TODO-PEPPOL.md) — Peppol BIS Billing validation roadmap.
 - [`docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md`](docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md) — broader e-invoicing platform direction.
 - [`docs/EN16931-VALIDATION-CONTRACT.md`](docs/EN16931-VALIDATION-CONTRACT.md) — EN validity semantics.

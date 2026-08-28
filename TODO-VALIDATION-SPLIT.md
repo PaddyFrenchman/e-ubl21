@@ -305,6 +305,9 @@ Define which process owns which decisions before changing runtime behavior.
 
 There is a written ownership table with no state mutation performed by two unrelated roles without an explicit CAS/idempotency contract.
 
+The normative boundary, resource-ownership and crash-recovery contract is
+[`docs/VALIDATION-SPLIT-OWNERSHIP.md`](docs/VALIDATION-SPLIT-OWNERSHIP.md).
+
 ---
 
 # TODO-VALIDATION-SPLIT-002 — Introduce durable validation execution and plan IDs
