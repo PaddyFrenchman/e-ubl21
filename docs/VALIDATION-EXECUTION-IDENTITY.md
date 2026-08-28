@@ -131,3 +131,10 @@ The execution bucket is provisioned only through the deployer-owned
 read-only `VerifyValidationExecutionInfra` compatibility check; the legacy
 runtime `EnsureInfra` path deliberately does not create, update, or open the
 new bucket.
+
+The 256-byte plan and stage identifier bounds were added to schema V1 before
+execution records or stage messages were activated in a deployed runtime.
+`ValidationExecutionSchemaVersion` therefore remains `1`: there is no durable
+V1 population or active producer/consumer contract to migrate. After runtime
+activation, an incompatible semantic tightening requires an explicit schema
+version and migration or compatibility policy.

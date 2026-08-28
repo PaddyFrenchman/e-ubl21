@@ -52,6 +52,12 @@ func Connect(url string, namespace Namespace) (*Client, error) {
 // options. It is primarily useful for dependency injection in tests, such as
 // connecting to an embedded server without opening a TCP listener.
 func ConnectWithOptions(url string, namespace Namespace, options ...nats.Option) (*Client, error) {
+	// Namespace is an exported string type, so callers can bypass
+	// NewNamespace with a direct conversion. Revalidate here, before dialing,
+	// so malformed or legacy-colliding values can never become live clients.
+	if err := validateNamespace(namespace.String()); err != nil {
+		return nil, err
+	}
 	options = append([]nats.Option{
 		nats.Name("e-ubl21"),
 		nats.MaxReconnects(-1),

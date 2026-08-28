@@ -1,9 +1,11 @@
 package queue_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 )
 
 func TestDefaultNamespacePreservesLegacyNames(t *testing.T) {
@@ -130,6 +132,7 @@ func TestNamespaceResourceNameNormalization(t *testing.T) {
 func TestNewNamespaceRejectsAmbiguousOrMalformedValues(t *testing.T) {
 	t.Parallel()
 	invalid := []string{
+		"ubl",          // reserved: collides with DefaultNamespace's physical names
 		"eubl21--prod", // dashes are not part of the allowed charset
 		"Eubl21.Prod",  // mixed case would collide with "eubl21.prod"
 		"eubl21.prod.", // trailing separator
@@ -157,6 +160,68 @@ func TestNewNamespaceRejectsAmbiguousOrMalformedValues(t *testing.T) {
 	}
 	if got, want := prod.DocumentsStreamName(), "EUBL21_PROD_DOCUMENTS"; got != want {
 		t.Errorf("DocumentsStreamName() = %q, want %q", got, want)
+	}
+}
+
+func TestLegacyPhysicalNamespaceIsReserved(t *testing.T) {
+	t.Parallel()
+
+	if queue.ValidNamespace("ubl") {
+		t.Fatal("ValidNamespace(\"ubl\") = true, want false")
+	}
+	if _, err := queue.NewNamespace("ubl"); err == nil || !strings.Contains(err.Error(), "reserved") {
+		t.Fatalf("NewNamespace(\"ubl\") error = %v, want reserved-namespace error", err)
+	}
+	if _, err := queue.NewNamespace(" ubl "); err == nil || !strings.Contains(err.Error(), "reserved") {
+		t.Fatalf("NewNamespace(\" ubl \") error = %v, want reserved-namespace error", err)
+	}
+}
+
+func TestConnectRevalidatesDirectlyConvertedNamespace(t *testing.T) {
+	server := queuetest.StartServer(t)
+	for _, raw := range []string{"ubl", "bad_namespace", "EUBL21", " eubl21 "} {
+		client, err := queue.ConnectWithOptions(server.URL, queue.Namespace(raw), server.Options...)
+		if client != nil {
+			client.Close()
+			t.Errorf("ConnectWithOptions with namespace %q returned a client", raw)
+		}
+		if err == nil {
+			t.Errorf("ConnectWithOptions with namespace %q returned no error", raw)
+		}
+	}
+}
+
+func TestExplicitNamespacesCannotDeriveDefaultPhysicalNames(t *testing.T) {
+	t.Parallel()
+
+	defaultStage, err := queue.DefaultNamespace.StageQueue(queue.ValidationLayerUBL21XSD)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, raw := range []string{"a", "ubl2", "customer1", "eubl21", "eubl21.prod", "z9.eu1"} {
+		ns := queue.MustNamespace(raw)
+		stage, err := ns.StageQueue(queue.ValidationLayerUBL21XSD)
+		if err != nil {
+			t.Fatalf("namespace %q: StageQueue: %v", raw, err)
+		}
+		if stage == defaultStage {
+			t.Errorf("namespace %q derived the default stage topology: %+v", raw, stage)
+		}
+		if got, want := ns.DocumentSubject("Invoice"), queue.DefaultNamespace.DocumentSubject("Invoice"); got == want {
+			t.Errorf("namespace %q derived default document subject %q", raw, got)
+		}
+		if got, want := ns.ResultsStreamName(), queue.DefaultNamespace.ResultsStreamName(); got == want {
+			t.Errorf("namespace %q derived default results stream %q", raw, got)
+		}
+		if got, want := ns.UploadsBucketName(), queue.DefaultNamespace.UploadsBucketName(); got == want {
+			t.Errorf("namespace %q derived default uploads bucket %q", raw, got)
+		}
+		if got, want := ns.ValidationExecutionsBucketName(), queue.DefaultNamespace.ValidationExecutionsBucketName(); got == want {
+			t.Errorf("namespace %q derived default executions bucket %q", raw, got)
+		}
+		if got, want := ns.UploadContentBucketName(), queue.DefaultNamespace.UploadContentBucketName(); got == want {
+			t.Errorf("namespace %q derived default content bucket %q", raw, got)
+		}
 	}
 }
 

@@ -46,6 +46,13 @@ An explicit namespace prepends its normalized resource prefix, for example
 than mapped into an accidental subject. Reserving the Peppol resources now
 does not add Peppol to a validation plan or public API profile.
 
+The value `ubl` is reserved for the default deployment's legacy physical
+namespace and cannot be configured as an explicit namespace. Although
+`Namespace` remains an exported string type, `ConnectWithOptions` revalidates
+it before dialing NATS. Direct conversions therefore cannot bypass the
+character-set or reserved-name checks and create a client whose resources
+collide with the default deployment.
+
 Each stream has exactly one non-wildcard subject. Consequently an XSD worker
 cannot consume EN or Peppol traffic through a broad filter, and namespaces
 cannot cross-consume. Replicas of one logical worker role share that stage's

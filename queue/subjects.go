@@ -24,6 +24,10 @@ const (
 // idempotence requires a new stream so upgrading cannot compact or rewrite the
 // old single-subject UBL_VALIDATION_RESULTS stream.
 const (
+	// legacyPhysicalNamespace is reserved for DefaultNamespace. Allowing it
+	// as an explicit Namespace would derive the same subjects and resources
+	// as the default deployment and defeat namespace isolation.
+	legacyPhysicalNamespace               = "ubl"
 	legacyDocumentsStreamName             = "UBL_DOCUMENTS"
 	defaultResultsStreamName              = "UBL_VALIDATION_RESULTS_BY_UPLOAD"
 	legacyUploadsBucketName               = "UBL_UPLOADS"
@@ -54,8 +58,9 @@ const DefaultNamespace = Namespace("")
 //	ns.DocumentsStreamName()      // "EUBL21_PROD_DOCUMENTS"
 //
 // The zero value (DefaultNamespace) retains e-ubl21's original hard-coded
-// namespace. Existing resources remain untouched when a versioned replacement
-// is required for a new storage contract.
+// namespace. The explicit value "ubl" is reserved because it would derive
+// those same physical names. Existing resources remain untouched when a
+// versioned replacement is required for a new storage contract.
 type Namespace string
 
 // StageQueueNames is the complete namespace-derived physical topology for
@@ -85,9 +90,23 @@ type StageQueueNames struct {
 var namespacePattern = regexp.MustCompile(`^[a-z0-9]+(\.[a-z0-9]+)*$`)
 
 // ValidNamespace reports whether raw is a well-formed queue namespace value:
-// either empty (DefaultNamespace) or matching namespacePattern.
+// either empty (DefaultNamespace), or matching namespacePattern and not the
+// reserved legacy physical namespace "ubl".
 func ValidNamespace(raw string) bool {
-	return raw == "" || namespacePattern.MatchString(raw)
+	return validateNamespace(raw) == nil
+}
+
+func validateNamespace(raw string) error {
+	if raw == "" {
+		return nil
+	}
+	if raw == legacyPhysicalNamespace {
+		return fmt.Errorf("queue namespace %q is reserved for the legacy/default physical namespace", raw)
+	}
+	if !namespacePattern.MatchString(raw) {
+		return fmt.Errorf("invalid queue namespace %q: must be empty, or one or more dot-separated lowercase alphanumeric segments (e.g. %q)", raw, "eubl21.prod")
+	}
+	return nil
 }
 
 // NewNamespace validates and returns the Namespace for the given raw
@@ -99,8 +118,8 @@ func ValidNamespace(raw string) bool {
 // producing derived names that could collide with another namespace's.
 func NewNamespace(raw string) (Namespace, error) {
 	trimmed := strings.TrimSpace(raw)
-	if !ValidNamespace(trimmed) {
-		return "", fmt.Errorf("invalid queue namespace %q: must be empty, or one or more dot-separated lowercase alphanumeric segments (e.g. %q)", raw, "eubl21.prod")
+	if err := validateNamespace(trimmed); err != nil {
+		return "", err
 	}
 	return Namespace(trimmed), nil
 }
@@ -226,8 +245,8 @@ func (n Namespace) StageQueue(stage ValidationLayer) (StageQueueNames, error) {
 	subjectPrefix := string(n)
 	resourcePrefix := n.resourcePrefix()
 	if n == DefaultNamespace {
-		subjectPrefix = "ubl"
-		resourcePrefix = "UBL"
+		subjectPrefix = legacyPhysicalNamespace
+		resourcePrefix = strings.ToUpper(legacyPhysicalNamespace)
 	}
 	resourceToken := strings.ToUpper(token)
 	return StageQueueNames{
