@@ -558,6 +558,9 @@ kubectl get pvc -n e-ubl21
 ```
 
 NATS must have JetStream enabled and its file store backed by a PVC.
+Set the NATS server/account `max_payload` to at least `2097152` bytes so every
+V1 validation `StageResult`, including worst-case JSON-escaped diagnostics,
+fits the normative 2 MiB result stream ceiling.
 
 ### Step 9 - Verify PostgreSQL
 

@@ -28,6 +28,10 @@ func StartServer(t testing.TB) Server {
 	opts.DontListen = true
 	opts.JetStream = true
 	opts.StoreDir = t.TempDir()
+	// The V1 StageResult queue permits a 2 MiB payload after accounting for
+	// worst-case JSON escaping. Keep the embedded broker representative of the
+	// required deployment-level max_payload setting.
+	opts.MaxPayload = 2 << 20
 
 	srv := natstest.RunServer(&opts)
 	t.Cleanup(func() {

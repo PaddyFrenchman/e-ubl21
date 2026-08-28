@@ -2,7 +2,9 @@ package queue_test
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -67,7 +69,7 @@ func TestStageQueueProvisioningCreatesIndependentDurableTopology(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !reflect.DeepEqual(resultInfo.Config.Subjects, []string{names.ResultSubject}) || resultInfo.Config.Retention != jetstream.WorkQueuePolicy || resultInfo.Config.Storage != jetstream.FileStorage || resultInfo.Config.MaxAge != stage.ResultMaxAge || resultInfo.Config.MaxMsgSize != 512<<10 {
+		if !reflect.DeepEqual(resultInfo.Config.Subjects, []string{names.ResultSubject}) || resultInfo.Config.Retention != jetstream.WorkQueuePolicy || resultInfo.Config.Storage != jetstream.FileStorage || resultInfo.Config.MaxAge != stage.ResultMaxAge || resultInfo.Config.MaxMsgSize != 2<<20 {
 			t.Fatalf("%s result stream config = %+v", stage.Stage, resultInfo.Config)
 		}
 		resultConsumer, err := client.StageResultConsumer(ctx, stage.Stage)
@@ -134,6 +136,77 @@ func TestStageRequestStreamRejectsNonCompactPayload(t *testing.T) {
 	names, _ := client.Namespace.StageQueue(queue.ValidationLayerUBL21XSD)
 	if _, err := client.JS.Publish(ctx, names.RequestSubject, make([]byte, (16<<10)+1)); err == nil {
 		t.Fatal("stage request stream accepted a payload above the compact contract limit")
+	}
+}
+
+func TestMaximumValidStageMessagesAreTransportable(t *testing.T) {
+	server := queuetest.StartServer(t)
+	client := connectStageInfraClient(t, server, queue.MustNamespace("maximum"))
+	ctx := context.Background()
+	if err := client.ProvisionStageQueueInfra(ctx, queue.DefaultStageQueueInfraConfig()); err != nil {
+		t.Fatal(err)
+	}
+
+	plan := testFrozenPlan()
+	plan.ID = strings.Repeat("a", queue.MaxStagePlanIDBytes)
+	plan.Version = strings.Repeat("\x00", queue.MaxStageVersionBytes)
+	plan.Stages[0].RulesetVersion = strings.Repeat("\x00", queue.MaxStageVersionBytes)
+	intent := testInitialIntent(t, testID(t), plan, time.Now())
+	intent.DocumentType = strings.Repeat("I", 128)
+	execution, err := queue.NewValidationExecution(intent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request, err := queue.NewStageRequest(execution, 1, 1, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	requestJSON, err := json.Marshal(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(requestJSON) > 16<<10 {
+		t.Fatalf("maximum-valid StageRequest serialized to %d bytes, above 16 KiB", len(requestJSON))
+	}
+	names, _ := client.Namespace.StageQueue(request.Stage)
+	if _, err := client.JS.Publish(ctx, names.RequestSubject, requestJSON); err != nil {
+		t.Fatalf("publish maximum-valid StageRequest (%d bytes): %v", len(requestJSON), err)
+	}
+
+	issues := make([]queue.ValidationIssue, 0, queue.MaxStageIssues)
+	remainingText := queue.MaxStageIssueTextBytes
+	for remainingText > 0 {
+		messageBytes := queue.MaxStageIssueMessageBytes
+		if messageBytes > remainingText-1 {
+			messageBytes = remainingText - 1
+		}
+		issues = append(issues, queue.ValidationIssue{
+			Kind: queue.ValidationIssueFailedAssert, Layer: request.Stage,
+			Severity: "e", Message: strings.Repeat("\x00", messageBytes),
+		})
+		remainingText -= messageBytes + 1 // severity is part of aggregate text
+	}
+	startedAt := time.Now()
+	result, err := queue.NewStageResult(
+		request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, issues,
+		strings.Repeat("\x00", queue.MaxStageDiagnosticBytes),
+		startedAt, startedAt.Add(time.Second), time.Second,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resultJSON) <= 512<<10 {
+		t.Fatalf("escaping regression fixture serialized to only %d bytes; it must exercise the former 512 KiB failure", len(resultJSON))
+	}
+	if len(resultJSON) > 2<<20 {
+		t.Fatalf("maximum-valid StageResult serialized to %d bytes, above 2 MiB", len(resultJSON))
+	}
+	if _, err := client.JS.Publish(ctx, names.ResultSubject, resultJSON); err != nil {
+		t.Fatalf("publish maximum-valid StageResult (%d bytes): %v", len(resultJSON), err)
 	}
 }
 

@@ -15,9 +15,23 @@ const (
 	// stage_contracts.go. This broker limit is defense in depth against raw XML
 	// or another unbounded payload being published to a request queue.
 	stageRequestMaxMessageSize int32 = 16 << 10
-	// Results may contain the bounded issue collection defined by contract v1.
-	stageResultMaxMessageSize int32 = 512 << 10
+	// JSON can expand one valid UTF-8 source byte to six ASCII bytes (for
+	// example NUL becomes \u0000). The conservative calculation includes all
+	// bounded issue/diagnostic/version text, a maximum layer per issue, and
+	// 64 KiB of structural/identity overhead.
+	maxStageJSONByteExpansion            = 6
+	stageRequestWorstCaseSerializedBytes = maxStageJSONByteExpansion*(2*MaxStageVersionBytes) + MaxStagePlanIDBytes + MaxStageIDBytes + 128 + 4<<10
+	stageResultWorstCaseSerializedBytes  = maxStageJSONByteExpansion*(MaxStageIssueTextBytes+MaxStageDiagnosticBytes+2*MaxStageVersionBytes) +
+		MaxStageIssues*(MaxStageIDBytes+128) + 64<<10
+	stageResultMaxMessageSize int32 = 2 << 20
 	stageConsumerMaxDeliver         = -1
+)
+
+// Compile-time proof that each configured stream ceiling covers its
+// conservative V1 serialized-message bound.
+var (
+	_ [int(stageRequestMaxMessageSize) - stageRequestWorstCaseSerializedBytes]byte
+	_ [int(stageResultMaxMessageSize) - stageResultWorstCaseSerializedBytes]byte
 )
 
 // StageDeliveryConfig controls one durable pull consumer independently from

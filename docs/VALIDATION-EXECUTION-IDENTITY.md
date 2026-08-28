@@ -37,6 +37,10 @@ Every generation stores:
 - required/optional status for every stage;
 - exact ruleset version selected for every stage.
 
+Plan IDs and stage IDs use the shared stage-contract token grammar and are
+bounded to 256 ASCII bytes. This prevents a frozen execution from creating a
+valid record whose derived `StageRequest` cannot fit its durable queue.
+
 The record contains no invoice bytes and no mutable upload-acceptance fields.
 It is stored in the namespace-derived `*_VALIDATION_EXECUTIONS` JetStream KV
 bucket under:

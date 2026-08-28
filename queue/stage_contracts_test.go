@@ -199,9 +199,13 @@ func TestStageRequestValidationRejectsIdentityDrift(t *testing.T) {
 		{"upload id", func(value *queue.StageRequest) { value.UploadID = "bad" }},
 		{"document type", func(value *queue.StageRequest) { value.DocumentType = "Invoice Type" }},
 		{"plan", func(value *queue.StageRequest) { value.Plan = "Bad Plan" }},
+		{"plan too long", func(value *queue.StageRequest) { value.Plan = strings.Repeat("a", queue.MaxStagePlanIDBytes+1) }},
 		{"plan version", func(value *queue.StageRequest) { value.PlanVersion = "" }},
 		{"generation", func(value *queue.StageRequest) { value.Generation = 0 }},
 		{"stage", func(value *queue.StageRequest) { value.Stage = "Bad Stage" }},
+		{"stage too long", func(value *queue.StageRequest) {
+			value.Stage = queue.ValidationLayer(strings.Repeat("a", queue.MaxStageIDBytes+1))
+		}},
 		{"ordinal", func(value *queue.StageRequest) { value.StageOrdinal = 0 }},
 		{"ruleset", func(value *queue.StageRequest) { value.RulesetVersion = "" }},
 		{"attempt", func(value *queue.StageRequest) { value.Attempt = 0 }},

@@ -58,6 +58,11 @@ copied from the immutable plan rather than being chosen independently by a
 caller. `attempt` identifies one orchestrator-authorized logical attempt.
 Broker redelivery does not increment it.
 
+Plan IDs and stage IDs are each limited to 256 ASCII bytes by their token
+grammar. Plan and ruleset version strings are each limited to 256 UTF-8 bytes.
+Those bounds are shared with frozen execution validation so every valid
+request remains below its normative 16 KiB stream limit after JSON encoding.
+
 ## StageResult version 1
 
 `StageResult` repeats the complete request identity so the orchestrator can

@@ -9,11 +9,14 @@ services:
       - "/data"
       - "-m"
       - "8222"
+      - "-c"
+      - "/etc/nats/nats.conf"
     ports:
       - "4222:4222"
       - "8222:8222"
     volumes:
       - nats-data:/data
+      - ./deploy/nats/nats.conf:/etc/nats/nats.conf:ro
     healthcheck:
       test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:8222/healthz"]
       interval: 5s

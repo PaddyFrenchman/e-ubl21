@@ -20,6 +20,9 @@ import (
 const StageContractVersion uint32 = 1
 
 const (
+	MaxStagePlanIDBytes          = 256
+	MaxStageIDBytes              = 256
+	MaxStageVersionBytes         = 256
 	MaxStageIssues               = 256
 	MaxStageDiagnosticBytes      = 8 << 10
 	MaxStageIssueRuleBytes       = 256
@@ -29,7 +32,6 @@ const (
 	MaxStageIssueMessageBytes    = 8 << 10
 	MaxStageIssueDiagnosticBytes = 4 << 10
 	MaxStageIssueTextBytes       = 256 << 10
-	maxStageVersionBytes         = 256
 )
 
 // ErrUnsupportedStageContractVersion identifies a fail-closed wire-version
@@ -381,6 +383,9 @@ func validateStageIdentity(validationID, uploadID, documentType, plan, planVersi
 	if !validationDocumentTypePattern.MatchString(documentType) {
 		return fmt.Errorf("invalid document type %q", documentType)
 	}
+	if len(plan) > MaxStagePlanIDBytes {
+		return fmt.Errorf("plan exceeds %d bytes", MaxStagePlanIDBytes)
+	}
 	if !validationPlanTokenPattern.MatchString(plan) {
 		return fmt.Errorf("invalid plan %q", plan)
 	}
@@ -389,6 +394,9 @@ func validateStageIdentity(validationID, uploadID, documentType, plan, planVersi
 	}
 	if generation == 0 {
 		return errors.New("generation must be at least 1")
+	}
+	if len(stage) > MaxStageIDBytes {
+		return fmt.Errorf("stage exceeds %d bytes", MaxStageIDBytes)
 	}
 	if !validationPlanTokenPattern.MatchString(string(stage)) {
 		return fmt.Errorf("invalid stage %q", stage)
@@ -409,8 +417,8 @@ func validateStageVersion(name, value string) error {
 	if strings.TrimSpace(value) == "" {
 		return fmt.Errorf("%s is required", name)
 	}
-	if !utf8.ValidString(value) || len(value) > maxStageVersionBytes {
-		return fmt.Errorf("%s exceeds %d bytes or is not UTF-8", name, maxStageVersionBytes)
+	if !utf8.ValidString(value) || len(value) > MaxStageVersionBytes {
+		return fmt.Errorf("%s exceeds %d bytes or is not UTF-8", name, MaxStageVersionBytes)
 	}
 	return nil
 }

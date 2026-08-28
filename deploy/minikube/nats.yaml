@@ -1,4 +1,13 @@
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-config
+data:
+  nats.conf: |
+    # StageResult V1 worst-case serialized payload ceiling.
+    max_payload: 2097152
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: nats
@@ -34,7 +43,7 @@ spec:
         - name: nats
           image: docker.io/library/nats:2.14.5-alpine
           imagePullPolicy: IfNotPresent
-          args: ["-js", "-sd", "/data", "-m", "8222"]
+          args: ["-js", "-sd", "/data", "-m", "8222", "-c", "/etc/nats/nats.conf"]
           ports:
             - name: client
               containerPort: 4222
@@ -62,6 +71,12 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: config
+              mountPath: /etc/nats
+              readOnly: true
       volumes:
         - name: data
           emptyDir: {}
+        - name: config
+          configMap:
+            name: nats-config

@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -220,11 +219,14 @@ func (execution ValidationExecution) Validate() error {
 }
 
 func (plan FrozenValidationPlan) validate() error {
+	if len(plan.ID) > MaxStagePlanIDBytes {
+		return fmt.Errorf("validation plan id exceeds %d bytes", MaxStagePlanIDBytes)
+	}
 	if !validationPlanTokenPattern.MatchString(plan.ID) {
 		return fmt.Errorf("invalid validation plan id %q", plan.ID)
 	}
-	if strings.TrimSpace(plan.Version) == "" {
-		return errors.New("validation plan version is required")
+	if err := validateStageVersion("validation plan version", plan.Version); err != nil {
+		return err
 	}
 	if len(plan.Stages) == 0 {
 		return errors.New("validation plan must contain at least one stage")
@@ -234,6 +236,9 @@ func (plan FrozenValidationPlan) validate() error {
 		wantOrdinal := uint32(index + 1)
 		if stage.Ordinal != wantOrdinal {
 			return fmt.Errorf("validation plan stage %d has ordinal %d, want %d", index, stage.Ordinal, wantOrdinal)
+		}
+		if len(stage.ID) > MaxStageIDBytes {
+			return fmt.Errorf("validation plan stage %d id exceeds %d bytes", index, MaxStageIDBytes)
 		}
 		if !validationPlanTokenPattern.MatchString(string(stage.ID)) {
 			return fmt.Errorf("validation plan stage %d has invalid id %q", index, stage.ID)
@@ -245,8 +250,8 @@ func (plan FrozenValidationPlan) validate() error {
 		if stage.Requirement != ValidationStageRequired && stage.Requirement != ValidationStageOptional {
 			return fmt.Errorf("validation plan stage %q has invalid requirement %q", stage.ID, stage.Requirement)
 		}
-		if strings.TrimSpace(stage.RulesetVersion) == "" {
-			return fmt.Errorf("validation plan stage %q ruleset version is required", stage.ID)
+		if err := validateStageVersion("validation plan stage "+string(stage.ID)+" ruleset version", stage.RulesetVersion); err != nil {
+			return err
 		}
 	}
 	return nil

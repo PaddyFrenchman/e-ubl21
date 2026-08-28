@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -296,13 +297,21 @@ func TestValidationExecutionRecordRoundTripAndValidation(t *testing.T) {
 		{"created at", func(e *queue.ValidationExecution) { e.CreatedAt = "yesterday" }},
 		{"zero created at", func(e *queue.ValidationExecution) { e.CreatedAt = time.Time{}.Format(time.RFC3339Nano) }},
 		{"plan id", func(e *queue.ValidationExecution) { e.Plan.ID = "Bad Plan" }},
+		{"plan id too long", func(e *queue.ValidationExecution) { e.Plan.ID = strings.Repeat("a", queue.MaxStagePlanIDBytes+1) }},
 		{"plan version", func(e *queue.ValidationExecution) { e.Plan.Version = "" }},
+		{"plan version too long", func(e *queue.ValidationExecution) { e.Plan.Version = strings.Repeat("v", queue.MaxStageVersionBytes+1) }},
 		{"no stages", func(e *queue.ValidationExecution) { e.Plan.Stages = nil }},
 		{"ordinal", func(e *queue.ValidationExecution) { e.Plan.Stages[1].Ordinal = 3 }},
 		{"stage id", func(e *queue.ValidationExecution) { e.Plan.Stages[1].ID = "Bad Stage" }},
+		{"stage id too long", func(e *queue.ValidationExecution) {
+			e.Plan.Stages[1].ID = queue.ValidationLayer(strings.Repeat("a", queue.MaxStageIDBytes+1))
+		}},
 		{"duplicate stage", func(e *queue.ValidationExecution) { e.Plan.Stages[1].ID = e.Plan.Stages[0].ID }},
 		{"requirement", func(e *queue.ValidationExecution) { e.Plan.Stages[0].Requirement = "sometimes" }},
 		{"ruleset", func(e *queue.ValidationExecution) { e.Plan.Stages[0].RulesetVersion = "" }},
+		{"ruleset too long", func(e *queue.ValidationExecution) {
+			e.Plan.Stages[0].RulesetVersion = strings.Repeat("r", queue.MaxStageVersionBytes+1)
+		}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

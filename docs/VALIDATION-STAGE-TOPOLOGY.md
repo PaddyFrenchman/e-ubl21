@@ -84,9 +84,22 @@ policy. Negative ages, non-positive acknowledgement windows, duplicate stages,
 unknown stages, and non-positive pending limits are invalid.
 
 Request streams cap a single message at 16 KiB. A V1 `StageRequest` is a compact
-identity descriptor and never contains raw XML; the broker cap provides a
-second enforcement boundary. Result streams allow 512 KiB for the bounded V1
-issue collection.
+identity descriptor and never contains raw XML; shared 256-byte plan/stage ID
+bounds make every valid request transportable below that ceiling.
+
+Result streams allow 2 MiB. The bound is derived conservatively from the V1
+limits rather than from ordinary unescaped examples: JSON may expand each
+valid source byte to six bytes (`NUL` becomes `\u0000`). Six times the complete
+256 KiB issue-text allowance, 8 KiB top-level diagnostic, and two 256-byte
+version fields, plus a maximum 256-byte layer on every issue and 64 KiB of
+structural/identity allowance, remains below 2 MiB. A compile-time assertion
+keeps that calculation below the configured stream limit.
+
+The NATS server/account `max_payload` must therefore be at least 2 MiB
+(`2097152`). The embedded test broker, Docker Compose environment, and Minikube
+manifest set that value explicitly. Deployments using an external NATS server
+must enforce the same prerequisite; a stream limit cannot override a smaller
+server/account payload ceiling.
 
 ## Provisioning and runtime ownership
 
