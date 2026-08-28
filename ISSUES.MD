@@ -10,6 +10,12 @@ The sequence is intentionally structured around three principles:
 
 The order below is the recommended default execution path. Some documentation, corpus, and asset-packaging work can proceed in parallel where dependencies allow.
 
+### Current dependency checkpoint
+
+After completion of #44, the **next actionable issue is #48**. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+
+An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
+
 ## Issue implementation and closing workflow
 
 Each GitHub issue should be implemented on its own issue branch.
@@ -168,7 +174,7 @@ Freeze that stage workers cannot finalize whole-document validity or choose the 
 
 **Acceptance:** A written ownership table leaves no state mutation shared by unrelated roles without an explicit CAS/idempotency contract.
 
-**Dependency:** Regression corpus and baseline should be established first.
+**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44; **#48 is the current next actionable issue.**
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/48
 
@@ -533,6 +539,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/78
 
 Complete the positive/negative corpus, cross-check official/reference validation, record release/digests, and produce the first accepted normalized Peppol result set.
 
+**Blocked:** Do not implement until #37, #38, #64, and #66–#78 have supplied the real pinned Peppol release assets, validator/runtime stage, official/reference evidence, and complete positive/negative corpus. An empty, guessed, placeholder, or automatically blessed baseline does not satisfy this issue.
+
 **Acceptance:** `TODO-PEPPOL` cannot complete until the full Peppol corpus matches committed expectations.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/45
@@ -660,6 +668,6 @@ Optional SBDH/envelope validation
 
 - Issues #64 and #73 are closely related and should be implemented as one coordinated Peppol-stage integration effort, while preserving both acceptance contracts.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
-- Issue #44 is the safety rail for the validation split and should be in place before major service decomposition begins.
-- Issue #45 is the safety rail for declaring the first Peppol release supported.
+- Issue #44 is the safety rail for the validation split and is now in place; #48 is therefore the next dependency-unblocked issue.
+- Issue #45 is the safety rail for declaring the first Peppol release supported and remains blocked until its real Peppol prerequisites are complete.
 - Issue #82 is intentionally last because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
