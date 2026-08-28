@@ -1,6 +1,6 @@
 # Validation-split service boundaries and state ownership
 
-**Status:** Normative architecture contract  
+**Status:** Normative architecture contract
 **Applies to:** `TODO-VALIDATION-SPLIT-001` and every later validation-split change
 
 This document freezes decision and mutation ownership for the asynchronous
