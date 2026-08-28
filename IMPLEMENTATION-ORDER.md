@@ -16,13 +16,13 @@ The implementation sequence is dependency-driven:
 regression safety net
         |
         v
-freeze current monolithic behaviour
+freeze monolithic semantic oracle + equivalence gate
         |
         v
 split validation stages asynchronously
         |
         v
-prove semantic equivalence
+continuously prove semantic equivalence
         |
         v
 implement Peppol rule engine
@@ -31,8 +31,17 @@ implement Peppol rule engine
 integrate Peppol as an asynchronous stage
         |
         v
+freeze verified Peppol release baseline
+        |
+        v
 production / Kubernetes / final compliance gates
 ```
+
+### Current dependency checkpoint
+
+Issues #41, #42, #43 and #44 have established the local/hosted regression infrastructure and the frozen monolithic semantic oracle. **The next actionable issue is #48.**
+
+Issue #45 is deliberately **blocked/deferred**. It must not be implemented merely because it is the next open regression issue numerically. A valid #45 baseline requires the real pinned Peppol release assets, validator, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative corpus. Required predecessors include #37, #38, #64 and #66–#78. An empty, guessed, placeholder, or automatically blessed baseline is invalid by design.
 
 The completed historical issues `#3` through `#31` are retained as project history and must not be reopened merely to reproduce their work.
 
@@ -318,23 +327,31 @@ Pull requests and pushes to `main` must fail when deterministic validation behav
 
 ---
 
-## Step A10 — Capture the monolithic baseline
+## Step A10 — GitHub Minikube/Kubernetes regression gate
 
-### Issue #44 — `TODO-REGRESSION-013` — PART 1
+### Issue #43 — `TODO-REGRESSION-012`
 
-Run the completed regression corpus against the existing monolithic validation worker and preserve the normalized accepted baseline.
+**Run the same Minikube-oriented semantic regression lifecycle on GitHub-hosted Linux.**
 
-**Do not close issue #44 yet.**
+This establishes that local and hosted Kubernetes runs use the same semantic runner and evidence path.
 
-It remains open until the split implementation is complete and the same corpus produces semantically identical results.
+---
 
-This baseline is the safety barrier before changing validation topology.
+## Step A11 — Freeze monolithic baseline and equivalence oracle
+
+### Issue #44 — `TODO-REGRESSION-013`
+
+Freeze the accepted monolithic semantic result sets and install a strict comparison gate that fails when candidate results differ in fixture identity, final outcomes, ordered stage outcomes, or exact normalized rule IDs.
+
+Issue #44 is complete and closed. It is **not** a future second implementation step. Its frozen baseline and equivalence command remain standing acceptance dependencies throughout the validation split. If future split-stage work changes a standards outcome unexpectedly, fix the split rather than automatically updating the accepted baseline.
+
+This baseline/equivalence gate is the safety barrier before changing validation topology.
 
 ---
 
 # 4. Phase B — Split the validation stages
 
-Only begin the architecture split after Phase A has produced a trustworthy baseline.
+Only begin the architecture split after Phase A has produced a trustworthy baseline and continuously enforced equivalence gate.
 
 The intended architecture is:
 
@@ -380,6 +397,8 @@ The orchestrator alone advances the plan and finalizes the document.
 ### Issue #48 — `TODO-VALIDATION-SPLIT-001`
 
 Freeze service boundaries and state ownership.
+
+**Current status:** this is the next actionable issue after the completed #44 regression/equivalence foundation.
 
 ---
 
@@ -528,15 +547,11 @@ Benchmark each isolated stage and establish initial scaling/resource baselines.
 
 ---
 
-# 5. Phase C — Prove that the split did not change validation semantics
+# 5. Phase C — Continuously enforce pre/post semantic equivalence
 
-## Step C1
+The equivalence gate from closed issue #44 remains active throughout Phase B and all later validation-topology changes.
 
-### Issue #44 — `TODO-REGRESSION-013` — PART 2
-
-Run exactly the same regression manifest against the split-stage architecture.
-
-Require semantic equivalence with the monolithic baseline:
+Every split-stage candidate must be checked against the same frozen monolithic baseline and require:
 
 ```text
 same fixture
@@ -548,9 +563,9 @@ same expected standards rule IDs
 
 Architecture-specific volatile values such as timing, pod names, JetStream sequences and trace IDs are excluded from semantic comparison.
 
-Only close issue #44 after the equivalence gate passes.
+If a split-stage change produces an unexpected standards difference, the implementation must be corrected. Do not automatically update the accepted baseline to match new behavior.
 
-If the split changes an unexpected standards outcome, fix the split. Do not automatically update the accepted baseline to match the new behaviour.
+The asynchronous durability invariants that semantic equivalence alone cannot prove remain mandatory under #62 and the final distributed gate #65.
 
 ---
 
@@ -735,6 +750,8 @@ The objective is to avoid validating only the internal consistency of our own ge
 
 Freeze the first accepted normalized Peppol release baseline.
 
+**Blocked until prerequisites exist:** #45 must not begin until #37, #38, #64 and #66–#78 have produced a real pinned Peppol validator/runtime, release assets, complete positive/negative corpus, and official/reference cross-check evidence. Do not create an empty or guessed baseline and do not derive expected results merely from the implementation being tested.
+
 Do not declare Peppol conformity complete before this baseline is accepted.
 
 ---
@@ -759,23 +776,15 @@ Complete production packaging and the Peppol upgrade policy.
 
 ## Step G3
 
-### Issue #43 — `TODO-REGRESSION-012`
-
-Add the GitHub Minikube/Kubernetes topology regression gate.
-
-The same semantic regression logic used locally must run in GitHub.
-
----
-
-## Step G4
-
 ### Issue #65 — `TODO-VALIDATION-SPLIT-018`
 
 Run the final distributed validation gate, including scale-to-zero and durable asynchronous-stage behaviour.
 
+The already-completed #43 GitHub Minikube/Kubernetes gate supplies the hosted Kubernetes execution infrastructure and must remain green; it is not a future implementation step in this phase.
+
 ---
 
-## Step G5
+## Step G4
 
 ### Issue #81 — `TODO-PEPPOL-016`
 
@@ -843,7 +852,8 @@ REGRESSION FOUNDATION
  -> #40
  -> #41
  -> #42
- -> #44 PART 1: freeze monolithic baseline
+ -> #43
+ -> #44: freeze monolithic semantic oracle + install equivalence gate
 
 
 VALIDATION SPLIT
@@ -864,7 +874,9 @@ VALIDATION SPLIT
  -> #61
  -> #62
  -> #63
- -> #44 PART 2: prove equivalence and close #44
+ -> #65 final distributed gate
+
+#44 equivalence remains a standing gate throughout; do not reopen it as a second implementation step.
 
 
 PEPPOL ENGINE + GENERATOR
@@ -893,15 +905,13 @@ PEPPOL REGRESSION EVIDENCE
 #76
  -> #77
  -> #78
- -> #45
+ -> #45  [blocked until all prerequisites above are real and verified]
 
 
-PRODUCTION / FINAL GATES
+PRODUCTION / FINAL PEPPOL GATES
 
 #79
  -> #80
- -> #43
- -> #65
  -> #81
 
 
