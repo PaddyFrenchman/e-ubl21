@@ -228,6 +228,9 @@ func (result StageResult) Validate() error {
 		if result.Reason != StageReasonNone {
 			return errors.New("passed stage result cannot have an operational reason")
 		}
+		if hasStandardsFailure(result.Issues) {
+			return errors.New("passed stage result cannot contain standards-failure evidence")
+		}
 	case StageOutcomeStandardsInvalid:
 		if result.Reason != StageReasonNone {
 			return errors.New("standards-invalid stage result cannot have an operational reason")
@@ -297,6 +300,9 @@ func (result *StageResult) UnmarshalJSON(data []byte) error {
 	if err := preflightStageContractVersion("result", data); err != nil {
 		return err
 	}
+	if err := preflightStageResultIssues(data); err != nil {
+		return err
+	}
 	type wire StageResult
 	var decoded wire
 	if err := strictStageJSON(data, &decoded); err != nil {
@@ -307,6 +313,29 @@ func (result *StageResult) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*result = candidate
+	return nil
+}
+
+// preflightStageResultIssues prevents the version 1 stage contract from
+// inheriting ValidationIssue's legacy persistence/HTTP compatibility decoder.
+// In particular, kind is mandatory and nested unknown fields fail closed.
+func preflightStageResultIssues(data []byte) error {
+	var envelope struct {
+		Issues []json.RawMessage `json:"issues"`
+	}
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		return fmt.Errorf("decode stage result issue envelope: %w", err)
+	}
+	type stageIssueWire ValidationIssue
+	for index, raw := range envelope.Issues {
+		var issue stageIssueWire
+		if err := strictStageJSON(raw, &issue); err != nil {
+			return fmt.Errorf("decode stage result issue %d: %w", index, err)
+		}
+		if issue.Kind == "" {
+			return fmt.Errorf("decode stage result issue %d: kind is required by contract version %d", index, StageContractVersion)
+		}
+	}
 	return nil
 }
 

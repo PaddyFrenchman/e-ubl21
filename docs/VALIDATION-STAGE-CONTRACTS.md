@@ -112,7 +112,9 @@ The version 1 operational reasons are:
 
 Diagnostic detail is kept out of this low-cardinality enum. Operational
 results cannot contain standards issues. Passed and standards-invalid results
-cannot carry an operational reason.
+cannot carry an operational reason. A passed result may retain
+`successful-report` evidence, but it cannot contain `failed-assert` or
+`xsd-report` failure evidence.
 
 ## Deterministic message identity
 
@@ -163,8 +165,11 @@ Version 1 applies these byte/count bounds before publication or acceptance:
 | Message | 8 KiB |
 | Per-issue diagnostic | 4 KiB |
 
-Every text field must be valid UTF-8. Each issue must use a recognized issue
-kind and its `layer` must equal the result's stage. The bounds preserve the
+Every text field must be valid UTF-8. Each issue must explicitly include a
+recognized `kind`, may contain no unknown fields, and its `layer` must equal
+the result's stage. The version 1 decoder does not apply the legacy
+`ValidationIssue` missing-kind upgrade used by older persistence/HTTP data.
+The bounds preserve the
 existing XSD diagnostic and EN 16931 SVRL limits while preventing a durable
 queue message from becoming an unbounded diagnostic container.
 

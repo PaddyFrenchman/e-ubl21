@@ -160,6 +160,31 @@ func TestStageContractV1RejectsUnknownVersionsAndFields(t *testing.T) {
 	if err := json.Unmarshal([]byte(unknownResultField), &decodedResult); err == nil || !strings.Contains(err.Error(), "unknown field") {
 		t.Fatalf("result with worker-internal field error = %v", err)
 	}
+
+	standardsResult := validStandardsInvalidStageResult(t, request)
+	standardsJSON, err := json.Marshal(standardsResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+	nestedUnknownField := strings.Replace(string(standardsJSON), `"message":"failed"`, `"message":"failed","workerState":"internal"`, 1)
+	if err := json.Unmarshal([]byte(nestedUnknownField), &decodedResult); err == nil || !strings.Contains(err.Error(), "unknown field") {
+		t.Fatalf("result with nested worker-internal field error = %v", err)
+	}
+	xsdRequest := validStageRequestAtOrdinal(t, 1)
+	startedAt := time.Date(2026, 8, 28, 18, 0, 1, 0, time.UTC)
+	xsdIssue := queue.ValidationIssue{Kind: queue.ValidationIssueXSDReport, Layer: xsdRequest.Stage, Severity: "error", Message: "schema failed"}
+	xsdResult, err := queue.NewStageResult(xsdRequest, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, []queue.ValidationIssue{xsdIssue}, "", startedAt, startedAt.Add(time.Second), time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	xsdJSON, err := json.Marshal(xsdResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacyIssueWithoutKind := strings.Replace(string(xsdJSON), `"kind":"xsd-report",`, "", 1)
+	if err := json.Unmarshal([]byte(legacyIssueWithoutKind), &decodedResult); err == nil || !strings.Contains(err.Error(), "kind is required") {
+		t.Fatalf("XSD result with legacy missing-kind issue error = %v", err)
+	}
 }
 
 func TestStageRequestValidationRejectsIdentityDrift(t *testing.T) {
@@ -220,6 +245,16 @@ func TestStageResultOutcomeAndReasonSemantics(t *testing.T) {
 	if _, err := queue.NewStageResult(request, queue.StageOutcomePassed, queue.StageReasonTimeout, nil, "", startedAt, completedAt, time.Second); err == nil {
 		t.Fatal("passed result with operational reason was accepted")
 	}
+	for _, kind := range []queue.ValidationIssueKind{queue.ValidationIssueFailedAssert, queue.ValidationIssueXSDReport} {
+		failure := queue.ValidationIssue{Kind: kind, Layer: request.Stage, Severity: "error", Message: "failed"}
+		if _, err := queue.NewStageResult(request, queue.StageOutcomePassed, queue.StageReasonNone, []queue.ValidationIssue{failure}, "", startedAt, completedAt, time.Second); err == nil {
+			t.Fatalf("passed result with %q evidence was accepted", kind)
+		}
+	}
+	report := queue.ValidationIssue{Kind: queue.ValidationIssueSuccessfulReport, Layer: request.Stage, Severity: "warning", Message: "advisory"}
+	if _, err := queue.NewStageResult(request, queue.StageOutcomePassed, queue.StageReasonNone, []queue.ValidationIssue{report}, "", startedAt, completedAt, time.Second); err != nil {
+		t.Fatalf("passed result with successful-report evidence: %v", err)
+	}
 	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, nil, "", startedAt, completedAt, time.Second); err == nil {
 		t.Fatal("standards-invalid result without evidence was accepted")
 	}
@@ -268,13 +303,17 @@ func TestStageResultDiagnosticBounds(t *testing.T) {
 }
 
 func validStageRequest(t *testing.T) queue.StageRequest {
+	return validStageRequestAtOrdinal(t, 2)
+}
+
+func validStageRequestAtOrdinal(t *testing.T, ordinal uint32) queue.StageRequest {
 	t.Helper()
 	createdAt := time.Date(2026, 8, 28, 18, 0, 0, 0, time.UTC)
 	execution, err := queue.NewValidationExecution(testInitialIntent(t, strings.Repeat("2", 32), testFrozenPlan(), createdAt.Add(-time.Hour)))
 	if err != nil {
 		t.Fatal(err)
 	}
-	request, err := queue.NewStageRequest(execution, 2, 1, createdAt)
+	request, err := queue.NewStageRequest(execution, ordinal, 1, createdAt)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,6 +324,20 @@ func validOperationalStageResult(t *testing.T, request queue.StageRequest, reaso
 	t.Helper()
 	startedAt := time.Date(2026, 8, 28, 18, 0, 1, 0, time.UTC)
 	result, err := queue.NewStageResult(request, queue.StageOutcomeOperationalFailure, reason, nil, "bounded worker detail", startedAt, startedAt.Add(time.Second), time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return result
+}
+
+func validStandardsInvalidStageResult(t *testing.T, request queue.StageRequest) queue.StageResult {
+	t.Helper()
+	startedAt := time.Date(2026, 8, 28, 18, 0, 1, 0, time.UTC)
+	issues := []queue.ValidationIssue{{
+		Kind: queue.ValidationIssueFailedAssert, Layer: request.Stage,
+		Severity: "error", Message: "failed",
+	}}
+	result, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, issues, "", startedAt, startedAt.Add(time.Second), time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
