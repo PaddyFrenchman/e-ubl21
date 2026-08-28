@@ -17,6 +17,8 @@ metadata:
   name: e-ubl21-api
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: e-ubl21

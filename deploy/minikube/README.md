@@ -12,7 +12,9 @@ The base targets a single-node local cluster and uses host networking with
 non-conflicting NATS/API/worker ports. This avoids broken ClusterIP forwarding
 in rootless Podman Minikube while preserving separate Kubernetes Deployments,
 namespace isolation, probes, events, logs, and rollout behavior. It is not a
-production networking model and must not be reused as one.
+production networking model and must not be reused as one. The application
+Deployments use the `Recreate` strategy because two generations cannot reserve
+the same host ports concurrently on the single node.
 
 Run the complete lifecycle from the repository root:
 
