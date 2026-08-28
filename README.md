@@ -159,6 +159,9 @@ fail-closed decoding, outcome semantics, and evidence bounds are frozen in
 The independently retained namespace-derived JetStream resources and their
 deployer/runtime ownership boundary are defined in
 [`docs/VALIDATION-STAGE-TOPOLOGY.md`](docs/VALIDATION-STAGE-TOPOLOGY.md).
+The orchestrator-owned CAS state, immutable attempt evidence, plan transitions,
+and terminal execution outcomes are defined in
+[`docs/VALIDATION-ORCHESTRATOR.md`](docs/VALIDATION-ORCHESTRATOR.md).
 
 ## HTTP API
 

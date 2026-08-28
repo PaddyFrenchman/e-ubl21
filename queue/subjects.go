@@ -32,6 +32,7 @@ const (
 	defaultResultsStreamName              = "UBL_VALIDATION_RESULTS_BY_UPLOAD"
 	legacyUploadsBucketName               = "UBL_UPLOADS"
 	defaultValidationExecutionsBucketName = "UBL_VALIDATION_EXECUTIONS"
+	defaultValidationEvidenceBucketName   = "UBL_VALIDATION_STAGE_EVIDENCE"
 	legacyUploadContentBucketName         = "UBL_UPLOAD_CONTENT"
 	legacyDocumentSubjectPrefix           = "ubl.documents."
 	legacyResultsSubject                  = "ubl.validation.results"
@@ -314,6 +315,16 @@ func (n Namespace) ValidationExecutionsBucketName() string {
 		return defaultValidationExecutionsBucketName
 	}
 	return n.resourcePrefix() + "_VALIDATION_EXECUTIONS"
+}
+
+// ValidationStageEvidenceBucketName is the namespace-scoped KV bucket
+// containing immutable complete StageResult evidence, one entry per logical
+// stage attempt.
+func (n Namespace) ValidationStageEvidenceBucketName() string {
+	if n == DefaultNamespace {
+		return defaultValidationEvidenceBucketName
+	}
+	return n.resourcePrefix() + "_VALIDATION_STAGE_EVIDENCE"
 }
 
 // UploadContentBucketName is the JetStream KV bucket, within this

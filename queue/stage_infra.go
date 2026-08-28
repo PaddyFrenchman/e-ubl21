@@ -2,11 +2,13 @@ package queue
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 	"time"
 
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -159,6 +161,52 @@ func (c *Client) StageResultConsumer(ctx context.Context, stage ValidationLayer)
 		return nil, fmt.Errorf("open %s result consumer: %w", stage, err)
 	}
 	return consumer, nil
+}
+
+// PublishStageRequest publishes one orchestrator-authorized attempt to the
+// exact stage queue using its deterministic request ID for broker deduplication.
+func (c *Client) PublishStageRequest(ctx context.Context, request StageRequest) error {
+	if err := request.Validate(); err != nil {
+		return err
+	}
+	names, err := c.Namespace.StageQueue(request.Stage)
+	if err != nil {
+		return err
+	}
+	payload, err := json.Marshal(request)
+	if err != nil {
+		return fmt.Errorf("marshal stage request %s: %w", request.RequestID, err)
+	}
+	message := nats.NewMsg(names.RequestSubject)
+	message.Data = payload
+	message.Header.Set(nats.MsgIdHdr, request.RequestID)
+	if _, err := c.JS.PublishMsg(ctx, message); err != nil {
+		return fmt.Errorf("publish stage request %s: %w", request.RequestID, err)
+	}
+	return nil
+}
+
+// PublishStageResult publishes immutable worker evidence to the exact result
+// queue using its deterministic result ID for broker deduplication.
+func (c *Client) PublishStageResult(ctx context.Context, result StageResult) error {
+	if err := result.Validate(); err != nil {
+		return err
+	}
+	names, err := c.Namespace.StageQueue(result.Stage)
+	if err != nil {
+		return err
+	}
+	payload, err := json.Marshal(result)
+	if err != nil {
+		return fmt.Errorf("marshal stage result %s: %w", result.ResultID, err)
+	}
+	message := nats.NewMsg(names.ResultSubject)
+	message.Data = payload
+	message.Header.Set(nats.MsgIdHdr, result.ResultID)
+	if _, err := c.JS.PublishMsg(ctx, message); err != nil {
+		return fmt.Errorf("publish stage result %s: %w", result.ResultID, err)
+	}
+	return nil
 }
 
 func validateStageQueueInfraConfig(config StageQueueInfraConfig) error {

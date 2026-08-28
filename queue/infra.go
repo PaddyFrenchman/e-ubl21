@@ -24,6 +24,10 @@ const uploadMetadataMaxValueSize = 64 << 10
 // Stage evidence is introduced separately and raw XML never belongs here.
 const validationExecutionMaxValueSize = 64 << 10
 
+// A complete valid StageResult can approach the normative 2 MiB result-stream
+// ceiling. Attempt evidence is stored separately from compact execution state.
+const validationEvidenceMaxValueSize = 2 << 20
+
 // InfraConfig controls deployer-owned JetStream storage limits. A zero
 // UploadContentMaxBytes leaves the Object Store unlimited; raw-content expiry
 // is coordinated by the application after validation rather than by the
@@ -121,15 +125,26 @@ func (c *Client) ProvisionValidationExecutionInfra(ctx context.Context) error {
 	bucketName := c.Namespace.ValidationExecutionsBucketName()
 	kv, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
 		Bucket:       bucketName,
-		Description:  "Durable validation execution generations and their immutable ordered plans, keyed by upload id, validation id and generation.",
+		Description:  "Durable validation execution generations, immutable ordered plans and compact CAS orchestration state.",
 		Storage:      jetstream.FileStorage,
 		MaxValueSize: validationExecutionMaxValueSize,
 	})
 	if err != nil {
 		return fmt.Errorf("provision %s KV bucket: %w", bucketName, err)
 	}
+	evidenceBucketName := c.Namespace.ValidationStageEvidenceBucketName()
+	evidenceKV, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
+		Bucket:       evidenceBucketName,
+		Description:  "Immutable complete stage-attempt evidence keyed by execution identity, stage ordinal and attempt.",
+		Storage:      jetstream.FileStorage,
+		MaxValueSize: validationEvidenceMaxValueSize,
+	})
+	if err != nil {
+		return fmt.Errorf("provision %s KV bucket: %w", evidenceBucketName, err)
+	}
 	c.handlesMu.Lock()
 	c.cachedValidationExecutionsKV = kv
+	c.cachedValidationEvidenceKV = evidenceKV
 	c.handlesMu.Unlock()
 	return nil
 }
@@ -137,6 +152,9 @@ func (c *Client) ProvisionValidationExecutionInfra(ctx context.Context) error {
 // VerifyValidationExecutionInfra performs a read-only compatibility check and
 // caches the verified runtime handle.
 func (c *Client) VerifyValidationExecutionInfra(ctx context.Context) error {
-	_, err := c.validationExecutionsBucket(ctx)
+	if _, err := c.validationExecutionsBucket(ctx); err != nil {
+		return err
+	}
+	_, err := c.validationEvidenceBucket(ctx)
 	return err
 }

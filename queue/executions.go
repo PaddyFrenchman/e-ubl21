@@ -100,6 +100,7 @@ type ValidationExecution struct {
 	Plan             FrozenValidationPlan          `json:"plan"`
 	RevalidationOf   *ValidationExecutionReference `json:"revalidationOf,omitempty"`
 	CreatedAt        string                        `json:"createdAt"`
+	Orchestration    ValidationOrchestrationState  `json:"orchestration"`
 }
 
 // NewValidationExecution creates generation 1 from a durable command. Initial
@@ -120,6 +121,7 @@ func NewValidationExecution(intent ValidationExecutionIntent) (ValidationExecuti
 		RequestedProfile: intent.RequestedProfile, Plan: cloneFrozenValidationPlan(intent.Plan),
 		RevalidationOf: cloneValidationExecutionReference(intent.RevalidationOf),
 		CreatedAt:      intent.CreatedAt.UTC().Format(time.RFC3339Nano),
+		Orchestration:  newPendingOrchestrationState(intent.CreatedAt),
 	}
 	if err := execution.Validate(); err != nil {
 		return ValidationExecution{}, err
@@ -147,6 +149,7 @@ func NextValidationGeneration(previous ValidationExecution, replayIntentID strin
 	next.RevalidationOf = nil
 	next.Plan = cloneFrozenValidationPlan(previous.Plan)
 	next.CreatedAt = createdAt.UTC().Format(time.RFC3339Nano)
+	next.Orchestration = newPendingOrchestrationState(createdAt)
 	return next, nil
 }
 
@@ -214,6 +217,9 @@ func (execution ValidationExecution) Validate() error {
 	}
 	if err := execution.Plan.validate(); err != nil {
 		return err
+	}
+	if err := execution.Orchestration.validate(execution); err != nil {
+		return fmt.Errorf("validation orchestration state: %w", err)
 	}
 	return nil
 }
@@ -357,7 +363,7 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 			entry, getErr := kv.Get(ctx, validationExecutionKey(execution.UploadID, execution.ValidationID, execution.Generation))
 			if getErr == nil {
 				var existing ValidationExecution
-				if decodeErr := json.Unmarshal(entry.Value(), &existing); decodeErr == nil && reflect.DeepEqual(existing, execution) {
+				if decodeErr := json.Unmarshal(entry.Value(), &existing); decodeErr == nil && sameValidationExecutionIdentity(existing, execution) {
 					return entry.Revision(), nil
 				}
 			}

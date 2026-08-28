@@ -35,6 +35,7 @@ type Client struct {
 	handlesMu                    sync.RWMutex
 	cachedUploadsKV              jetstream.KeyValue
 	cachedValidationExecutionsKV jetstream.KeyValue
+	cachedValidationEvidenceKV   jetstream.KeyValue
 	cachedUploadContentStore     jetstream.ObjectStore
 }
 

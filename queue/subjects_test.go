@@ -24,6 +24,9 @@ func TestDefaultNamespacePreservesLegacyNames(t *testing.T) {
 	if got, want := ns.ValidationExecutionsBucketName(), "UBL_VALIDATION_EXECUTIONS"; got != want {
 		t.Errorf("ValidationExecutionsBucketName() = %q, want %q", got, want)
 	}
+	if got, want := ns.ValidationStageEvidenceBucketName(), "UBL_VALIDATION_STAGE_EVIDENCE"; got != want {
+		t.Errorf("ValidationStageEvidenceBucketName() = %q, want %q", got, want)
+	}
 	if got, want := ns.DocumentSubject("Invoice"), "ubl.documents.Invoice"; got != want {
 		t.Errorf("DocumentSubject(%q) = %q, want %q", "Invoice", got, want)
 	}
@@ -77,6 +80,9 @@ func TestNamespaceDerivesNamesFromExample(t *testing.T) {
 	}
 	if got, want := ns.ValidationExecutionsBucketName(), "EUBL21_PROD_VALIDATION_EXECUTIONS"; got != want {
 		t.Errorf("ValidationExecutionsBucketName() = %q, want %q", got, want)
+	}
+	if got, want := ns.ValidationStageEvidenceBucketName(), "EUBL21_PROD_VALIDATION_STAGE_EVIDENCE"; got != want {
+		t.Errorf("ValidationStageEvidenceBucketName() = %q, want %q", got, want)
 	}
 }
 
@@ -218,6 +224,9 @@ func TestExplicitNamespacesCannotDeriveDefaultPhysicalNames(t *testing.T) {
 		}
 		if got, want := ns.ValidationExecutionsBucketName(), queue.DefaultNamespace.ValidationExecutionsBucketName(); got == want {
 			t.Errorf("namespace %q derived default executions bucket %q", raw, got)
+		}
+		if got, want := ns.ValidationStageEvidenceBucketName(), queue.DefaultNamespace.ValidationStageEvidenceBucketName(); got == want {
+			t.Errorf("namespace %q derived default stage-evidence bucket %q", raw, got)
 		}
 		if got, want := ns.UploadContentBucketName(), queue.DefaultNamespace.UploadContentBucketName(); got == want {
 			t.Errorf("namespace %q derived default content bucket %q", raw, got)

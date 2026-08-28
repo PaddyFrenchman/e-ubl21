@@ -445,6 +445,10 @@ stage operational-failure
 
 No validator service contains code that directly invokes or publishes work to a later validation stage.
 
+The normative durable state, evidence, transition, consumer-ACK and rollout
+boundary contract is
+[`docs/VALIDATION-ORCHESTRATOR.md`](docs/VALIDATION-ORCHESTRATOR.md).
+
 ---
 
 # TODO-VALIDATION-SPLIT-006 — Make orchestrator transitions crash-safe and idempotent

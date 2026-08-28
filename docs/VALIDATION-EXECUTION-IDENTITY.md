@@ -50,9 +50,12 @@ bucket under:
 ```
 
 The upload prefix permits bounded, namespace-local lookup of every execution
-associated with an upload. Creation uses the KV create operation, never put or
-update, so an existing generation cannot be replaced. Retrieval validates both
-the record and its agreement with the physical key.
+associated with an upload. Creation uses the KV create operation, never put, so
+an existing generation cannot be replaced. The immutable identity and plan
+fields never change. The orchestrator-owned compact state projection added by
+`TODO-VALIDATION-SPLIT-005` is the sole mutable portion and advances only by KV
+compare-and-swap. Retrieval validates both the record and its agreement with
+the physical key.
 
 ## Idempotent lineage creation
 
@@ -120,17 +123,19 @@ same immutable upload to be evaluated against a newer standards release.
 
 The orchestrator is the logical creator of these records under the ownership
 contract in [`VALIDATION-SPLIT-OWNERSHIP.md`](VALIDATION-SPLIT-OWNERSHIP.md).
-This issue adds the durable model, validation, namespace isolation, and
-create/read/list primitives. The later orchestrator issue activates record
-creation in the runtime; the StageRequest/StageResult issue carries the same
-identity tuple over the wire. Until that cutover, the existing monolithic
-upload/worker path and its public response remain unchanged.
+This issue adds the durable identity model, validation, namespace isolation,
+and create/read/list primitives. `TODO-VALIDATION-SPLIT-005` adds the
+orchestrator state machine and CAS projection; StageRequest/StageResult carries
+the same identity tuple over the wire. Until the later runtime migration
+cutover, the existing monolithic upload/worker path and its public response
+remain unchanged.
 
-The execution bucket is provisioned only through the deployer-owned
+The execution and immutable stage-evidence buckets are provisioned only through
+the deployer-owned
 `ProvisionValidationExecutionInfra` operation. Runtime access performs the
 read-only `VerifyValidationExecutionInfra` compatibility check; the legacy
 runtime `EnsureInfra` path deliberately does not create, update, or open the
-new bucket.
+new buckets.
 
 The 256-byte plan and stage identifier bounds were added to schema V1 before
 execution records or stage messages were activated in a deployed runtime.
