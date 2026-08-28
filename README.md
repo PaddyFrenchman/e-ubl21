@@ -153,6 +153,10 @@ Validation orchestrator
 
 Each stage will consume a durable `StageRequest`, publish a durable `StageResult`, and scale independently. The orchestrator alone will own the validation plan and final document status.
 
+The shared version 1 wire models, deterministic per-attempt message IDs,
+fail-closed decoding, outcome semantics, and evidence bounds are frozen in
+[`docs/VALIDATION-STAGE-CONTRACTS.md`](docs/VALIDATION-STAGE-CONTRACTS.md).
+
 ## HTTP API
 
 The current public API is intentionally small and document-oriented.

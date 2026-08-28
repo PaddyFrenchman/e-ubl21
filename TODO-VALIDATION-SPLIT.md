@@ -359,6 +359,10 @@ Create stable queue contracts shared by all validator services.
 
 All stage processes can exchange requests/results without importing worker-internal implementation types.
 
+The normative versioning, identity, outcome, diagnostic-bound and
+compatibility contract is
+[`docs/VALIDATION-STAGE-CONTRACTS.md`](docs/VALIDATION-STAGE-CONTRACTS.md).
+
 ---
 
 # TODO-VALIDATION-SPLIT-004 — Create namespace-derived stage queue topology
