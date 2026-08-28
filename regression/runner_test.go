@@ -102,6 +102,9 @@ func TestRunCorpusWritesFailuresAndReturnsError(t *testing.T) {
 	if err == nil || summary.Failed != 1 {
 		t.Fatalf("summary=%+v error=%v", summary, err)
 	}
+	if !strings.Contains(err.Error(), "ubl21.invoice.runner") {
+		t.Fatalf("error does not name failed fixture: %v", err)
+	}
 	for _, name := range []string{"results.jsonl", "run-map.jsonl", "summary.json", "junit.xml"} {
 		if _, err := os.Stat(filepath.Join(output, name)); err != nil {
 			t.Errorf("missing %s: %v", name, err)

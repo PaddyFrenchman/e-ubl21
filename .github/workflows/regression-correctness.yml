@@ -1,0 +1,65 @@
+name: Correctness regression gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: correctness-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  correctness-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Run deterministic correctness regression
+        run: make regression-correctness
+      - name: Publish regression test summary
+        if: always()
+        shell: bash
+        run: |
+          shopt -s nullglob
+          {
+            echo "## Correctness regression"
+            for summary in regression-results/correctness/*/*/summary.json; do
+              corpus="$(basename "$(dirname "$summary")")"
+              echo "### $corpus"
+              echo '```json'
+              cat "$summary"
+              echo '```'
+              results="$(dirname "$summary")/results.jsonl"
+              failures="$(grep '"result":"fail"' "$results" || true)"
+              if [[ -n "$failures" ]]; then
+                echo "Failed fixture IDs:"
+                sed -E 's/.*"fixtureId":"([^"]+)".*/- `\1`/' <<<"$failures"
+              else
+                echo "All fixtures passed."
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: correctness-regression-${{ github.sha }}
+          path: regression-results/correctness/
+          if-no-files-found: warn
+          retention-days: 14

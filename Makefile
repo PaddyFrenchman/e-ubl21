@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image benchmark-en16931 regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image benchmark-en16931 regression-correctness regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -18,6 +18,12 @@ test-en16931-image:
 # count when collecting release evidence, for example BENCHTIME=10x.
 benchmark-en16931:
 	./devsetup/benchmark-en16931.sh
+
+# Regenerate and verify both tracked corpora, then run them through the real
+# authenticated API/worker topology with all required runtimes available.
+regression-correctness:
+	ARTIFACT_DIR="$(ARTIFACT_DIR)" \
+	./devsetup/regression-correctness.sh
 
 # Build and load the candidate image, deploy the current distributed topology,
 # run the existing semantic regression runner, collect diagnostics, and remove

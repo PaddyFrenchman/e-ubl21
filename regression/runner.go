@@ -150,7 +150,13 @@ func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
 		return Summary{}, err
 	}
 	if summary.Failed > 0 {
-		return summary, fmt.Errorf("regression mismatches: %d of %d fixtures failed", summary.Failed, summary.Total)
+		failed := make([]string, 0, summary.Failed)
+		for _, result := range results {
+			if result.Result == "fail" {
+				failed = append(failed, result.FixtureID)
+			}
+		}
+		return summary, fmt.Errorf("regression mismatches: %d of %d fixtures failed: %s", summary.Failed, summary.Total, strings.Join(failed, ", "))
 	}
 	return summary, nil
 }

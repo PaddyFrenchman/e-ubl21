@@ -271,6 +271,14 @@ diagnostics below `regression-results/minikube/`, and removes the disposable
 namespace. See [`deploy/minikube/README.md`](deploy/minikube/README.md) for
 prerequisites and overrides.
 
+The non-Kubernetes correctness gate is available locally as
+`make regression-correctness` and runs automatically for pull requests and
+pushes to `main`. It regenerates and byte-compares both tracked corpora, runs
+the authenticated API/worker topology with the pinned validation runtime,
+executes both manifests, and retains normalized results, JUnit, logs, metrics,
+and evidence on success or failure. GitHub's job summary lists any failed
+fixture IDs directly.
+
 See [`TODO-REGRESSION-CORPUS.md`](TODO-REGRESSION-CORPUS.md) and [`regression/README.md`](regression/README.md).
 
 ## Running the project
