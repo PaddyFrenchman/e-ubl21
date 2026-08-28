@@ -42,3 +42,16 @@ func TestParseNamedEvidenceSources(t *testing.T) {
 		}
 	}
 }
+
+func TestRegressionEvidenceCommandExposesKubernetesExecutables(t *testing.T) {
+	root := NewRootCmd(viper.New(), &bytes.Buffer{}, &bytes.Buffer{})
+	command, _, err := root.Find([]string{"regression", "collect-evidence"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"kubectl-executable", "minikube-executable"} {
+		if command.Flags().Lookup(name) == nil {
+			t.Errorf("missing --%s", name)
+		}
+	}
+}

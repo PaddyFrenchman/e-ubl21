@@ -11,7 +11,7 @@ import (
 )
 
 func newRegressionEvidenceCmd(cfg *Config) *cobra.Command {
-	var outputDir, manifest, token, namespace, selector, imageDigest, startedAt string
+	var outputDir, manifest, token, namespace, selector, imageDigest, startedAt, kubectlExecutable, minikubeExecutable string
 	var logs, metrics []string
 	var collectNATS, collectKubernetes bool
 	var sourceTimeout time.Duration
@@ -46,6 +46,7 @@ func newRegressionEvidenceCmd(cfg *Config) *cobra.Command {
 				LogFiles: logFiles, MetricsEndpoints: metricEndpoints,
 				NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace, CollectNATS: collectNATS,
 				CollectKubernetes: collectKubernetes, KubernetesNamespace: strings.TrimSpace(namespace), KubernetesSelector: selector,
+				KubectlExecutable: kubectlExecutable, MinikubeExecutable: minikubeExecutable,
 				JavaExecutable: cfg.WorkerJavaExecutable, DockerImageDigest: imageDigest,
 				StartedAt: started, EndedAt: time.Now().UTC(), SourceTimeout: sourceTimeout,
 			})
@@ -68,6 +69,8 @@ func newRegressionEvidenceCmd(cfg *Config) *cobra.Command {
 	command.Flags().BoolVar(&collectKubernetes, "kubernetes", false, "Capture Kubernetes events, pod state, and bounded container logs")
 	command.Flags().StringVar(&namespace, "kubernetes-namespace", "", "Kubernetes namespace (empty captures selected pods/events across namespaces)")
 	command.Flags().StringVar(&selector, "kubernetes-selector", "app.kubernetes.io/part-of=e-ubl21", "Label selector for service pods")
+	command.Flags().StringVar(&kubectlExecutable, "kubectl-executable", "", "kubectl executable or compatible wrapper")
+	command.Flags().StringVar(&minikubeExecutable, "minikube-executable", "", "Minikube executable used for version evidence")
 	command.Flags().StringVar(&imageDigest, "image-digest", "", "Tested Docker image digest (or EUBL21_IMAGE_DIGEST)")
 	command.Flags().StringVar(&startedAt, "started-at", "", "Regression start time in RFC3339; collection time is used when omitted")
 	command.Flags().DurationVar(&sourceTimeout, "source-timeout", 15*time.Second, "Maximum time for each remote endpoint or diagnostic command")

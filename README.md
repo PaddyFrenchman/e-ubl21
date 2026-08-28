@@ -263,6 +263,14 @@ environment metadata, and optional Kubernetes events/pod logs beside those
 normalized files. See [`regression/README.md`](regression/README.md) for the
 artifact layout and source flags.
 
+Run the same semantic regression path through the real local Kubernetes
+topology with `make regression-minikube`. It builds and loads the candidate
+image into a dedicated Minikube profile, deploys namespace-isolated NATS plus
+the API and worker, waits for readiness, retains normalized results and
+diagnostics below `regression-results/minikube/`, and removes the disposable
+namespace. See [`deploy/minikube/README.md`](deploy/minikube/README.md) for
+prerequisites and overrides.
+
 See [`TODO-REGRESSION-CORPUS.md`](TODO-REGRESSION-CORPUS.md) and [`regression/README.md`](regression/README.md).
 
 ## Running the project
