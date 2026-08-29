@@ -23,7 +23,7 @@ func (machine *Machine) ReconcilePendingDispatches(ctx context.Context) (Dispatc
 	if err := machine.validate(); err != nil {
 		return report, err
 	}
-	pending, err := machine.Queue.ValidationExecutionsPendingDispatch(ctx)
+	pending, err := machine.Queue.ValidationExecutionsRequiringDispatch(ctx)
 	if err != nil {
 		return report, err
 	}

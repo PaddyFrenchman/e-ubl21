@@ -491,8 +491,9 @@ Killing the orchestrator at every transition boundary cannot lose work, skip a s
 
 ## Implemented contract
 
-The normative durable outbox, CAS publication marker, duplicate-tolerance, and
-startup/periodic reconciliation behavior is specified in
+The normative durable outbox, CAS publication marker, permanent evidence
+convergence, duplicate-tolerance, and startup/periodic reconciliation behavior
+is specified in
 [`docs/VALIDATION-ORCHESTRATOR.md`](docs/VALIDATION-ORCHESTRATOR.md).
 
 ---

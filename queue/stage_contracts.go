@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -107,6 +108,23 @@ type StageResult struct {
 	StartedAt       string                 `json:"startedAt"`
 	CompletedAt     string                 `json:"completedAt"`
 	DurationMS      int64                  `json:"durationMs"`
+}
+
+// SemanticallyEqualStageResults compares the durable meaning of two results
+// for the same logical request while excluding per-execution timing. A worker
+// may recompute an old duplicate request after the broker deduplication window;
+// equivalent evidence must converge on the first permanent evidence slot even
+// though its observed timestamps and duration necessarily differ.
+func SemanticallyEqualStageResults(left, right StageResult) bool {
+	left.StartedAt, left.CompletedAt, left.DurationMS = "", "", 0
+	right.StartedAt, right.CompletedAt, right.DurationMS = "", "", 0
+	if len(left.Issues) == 0 {
+		left.Issues = nil
+	}
+	if len(right.Issues) == 0 {
+		right.Issues = nil
+	}
+	return reflect.DeepEqual(left, right)
 }
 
 // NewStageRequest derives a request from one frozen execution generation.

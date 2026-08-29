@@ -227,7 +227,7 @@ func (c *Client) CreateValidationStageEvidence(ctx context.Context, result Stage
 		entry, getErr := kv.Get(ctx, key)
 		if getErr == nil {
 			var existing StageResult
-			if decodeErr := json.Unmarshal(entry.Value(), &existing); decodeErr == nil && reflect.DeepEqual(existing, result) {
+			if decodeErr := json.Unmarshal(entry.Value(), &existing); decodeErr == nil && SemanticallyEqualStageResults(existing, result) {
 				return entry.Revision(), nil
 			}
 		}

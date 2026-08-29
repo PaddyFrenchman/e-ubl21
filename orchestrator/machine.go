@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
@@ -141,7 +140,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 			if err != nil {
 				return queue.VersionedValidationExecution{}, fmt.Errorf("load evidence for an already accepted stage attempt: %w", err)
 			}
-			if !reflect.DeepEqual(evidence, result) {
+			if !queue.SemanticallyEqualStageResults(evidence, result) {
 				return queue.VersionedValidationExecution{}, errors.New("conflicting result for an already accepted stage attempt")
 			}
 			return machine.EnsureDispatch(ctx, current)

@@ -94,11 +94,13 @@ request published -> crash before published marker -> reconciler republishes
 the same deterministic request ID -> broker or worker duplicate tolerance
 ```
 
-`ReconcilePendingDispatches` scans all execution generations for pending
-outbox intents. `RunDispatchReconciler` performs an immediate startup scan and
-periodic scans until shutdown. Multiple orchestrator replicas may reconcile at
-the same time: the deterministic `Nats-Msg-Id` suppresses ordinary duplicate
-publishes and execution CAS converges the durable marker on one winner.
+`ReconcilePendingDispatches` scans all execution generations both for plain
+`pending` records stranded before first-stage authorization and for queued
+requests with pending outbox intents. `RunDispatchReconciler` performs an
+immediate startup scan and periodic scans until shutdown. Multiple orchestrator
+replicas may reconcile at the same time: the deterministic `Nats-Msg-Id`
+suppresses ordinary near-term duplicate publishes and execution CAS converges
+the durable marker on one winner.
 
 If a StageResult arrives while its request still says `pending`, the result is
 itself durable proof that publication occurred. Accepting the result records
@@ -106,6 +108,16 @@ the attempt's publication evidence while atomically creating either the next
 pending attempt/stage intent or one terminal execution state. Duplicate
 requests may therefore repeat work, but their deterministic StageResult is
 accepted once; conflicting evidence is rejected.
+
+The broker's message-ID window is only an optimization. A delayed duplicate
+request may be executed again after that window expires. Its result retains the
+same deterministic result ID, and application-level evidence comparison
+excludes only independently observed start/completion timestamps and duration.
+Semantically equivalent results therefore converge on the first permanent
+evidence value and one CAS transition. Different outcomes, reasons, findings,
+or diagnostics conflict and fail closed. This keeps stage workers independent
+of orchestrator-owned state while making duplicate request delivery harmless
+to durable validation state.
 
 `HandleStageResultMessage` is the durable consumer boundary. It ACKs only after
 the evidence create, execution CAS, and any next-stage publication succeed.

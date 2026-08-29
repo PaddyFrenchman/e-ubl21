@@ -506,11 +506,11 @@ func (c *Client) ValidationExecutionsForUpload(ctx context.Context, uploadID str
 	return executions, nil
 }
 
-// ValidationExecutionsPendingDispatch lists every queued execution whose
-// current authorized StageRequest still has a durable pending outbox intent.
-// The caller may publish each request independently; deterministic request IDs
-// and CAS publication markers make concurrent scans harmless.
-func (c *Client) ValidationExecutionsPendingDispatch(ctx context.Context) ([]VersionedValidationExecution, error) {
+// ValidationExecutionsRequiringDispatch lists every execution that either has
+// not authorized its first stage yet or has a durable pending outbox intent.
+// The caller may advance and publish each execution independently; CAS state
+// and deterministic request IDs make concurrent scans harmless.
+func (c *Client) ValidationExecutionsRequiringDispatch(ctx context.Context) ([]VersionedValidationExecution, error) {
 	kv, err := c.validationExecutionsBucket(ctx)
 	if err != nil {
 		return nil, err
@@ -538,12 +538,15 @@ func (c *Client) ValidationExecutionsPendingDispatch(ctx context.Context) ([]Ver
 		if key != validationExecutionKey(execution.UploadID, execution.ValidationID, execution.Generation) {
 			return nil, fmt.Errorf("stored validation execution identity does not match key %s", key)
 		}
-		if execution.Orchestration.Status != ExecutionStatusStageQueued {
+		if execution.Orchestration.Status == ExecutionStatusPending {
+			pending = append(pending, VersionedValidationExecution{Execution: execution, Revision: entry.Revision()})
 			continue
 		}
-		stage := execution.Orchestration.Stages[execution.Orchestration.CurrentStageOrdinal-1]
-		if stage.DispatchStatus == StageDispatchPending {
-			pending = append(pending, VersionedValidationExecution{Execution: execution, Revision: entry.Revision()})
+		if execution.Orchestration.Status == ExecutionStatusStageQueued {
+			stage := execution.Orchestration.Stages[execution.Orchestration.CurrentStageOrdinal-1]
+			if stage.DispatchStatus == StageDispatchPending {
+				pending = append(pending, VersionedValidationExecution{Execution: execution, Revision: entry.Revision()})
+			}
 		}
 	}
 	if err := ctx.Err(); err != nil {

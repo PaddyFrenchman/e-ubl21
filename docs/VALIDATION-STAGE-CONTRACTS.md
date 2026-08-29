@@ -158,6 +158,15 @@ tampering or identity drift. Stream deduplication is an optimization; the
 orchestrator's durable compare-and-swap acceptance remains authoritative after
 the broker duplicate window expires.
 
+The application-level duplicate-request contract is tied to that permanent
+attempt-evidence slot. Recomputing one request may change `startedAt`,
+`completedAt`, and `durationMs`; those observations do not change its semantic
+evidence. If request/result identity, outcome, reason, findings, and diagnostic
+remain identical, the later result is an idempotent duplicate and the first
+complete payload remains permanent. Any difference in those semantic fields is
+conflicting evidence and fails closed. Correctness therefore does not depend on
+the configured JetStream duplicate window.
+
 ## Time and diagnostic bounds
 
 All timestamps are non-zero canonical UTC RFC 3339 values. `durationMs` is a

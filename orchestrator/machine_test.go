@@ -358,6 +358,30 @@ func TestReconcilerRepairsCrashAfterIntentBeforePublish(t *testing.T) {
 	}
 }
 
+func TestReconcilerAuthorizesFirstStageForPlainPendingExecution(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	execution, err := queue.NewValidationExecution(testIntent(t, testPlan()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.CreateValidationExecution(ctx, execution); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := machine.ReconcilePendingDispatches(ctx)
+	if err != nil || report.Scanned != 1 || report.Reconciled != 1 || report.Errors != 0 {
+		t.Fatalf("plain-pending reconcile report = %+v, %v", report, err)
+	}
+	stored, err := client.GetValidationExecution(ctx, execution.UploadID, execution.ValidationID, execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Orchestration.Status != queue.ExecutionStatusStageQueued || stored.Orchestration.CurrentStageOrdinal != 1 || stored.Orchestration.Stages[0].DispatchStatus != queue.StageDispatchPublished {
+		t.Fatalf("plain-pending execution was not dispatched: %+v", stored.Orchestration)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+}
+
 func TestReconcilerRepairsAmbiguousPublishWithoutPermanentDuplicate(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	ambiguousAck := errors.New("publisher lost acknowledgement")
@@ -599,6 +623,62 @@ func TestConcurrentDuplicateResultsConvergeWithoutRedelivery(t *testing.T) {
 	}
 	if len(stored.Orchestration.Stages) != 2 || len(stored.Orchestration.Stages[0].Attempts) != 1 || stored.Orchestration.CurrentStageOrdinal != 2 {
 		t.Fatalf("concurrent duplicate result state = %+v", stored.Orchestration)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+}
+
+func TestDuplicateRequestAfterBrokerWindowConvergesOnPermanentEvidence(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	firstResult := resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)
+	advanced, err := machine.HandleStageResult(ctx, firstResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	names, err := client.Namespace.StageQueue(queue.ValidationLayerUBL21XSD)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stream, err := client.JS.Stream(ctx, names.RequestStream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	config := info.Config
+	config.Duplicates = 100 * time.Millisecond
+	if _, err := client.JS.UpdateStream(ctx, config); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(200 * time.Millisecond)
+	if err := client.PublishStageRequest(ctx, request); err != nil {
+		t.Fatal(err)
+	}
+	lateDuplicate := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	if lateDuplicate.RequestID != request.RequestID {
+		t.Fatalf("late duplicate request id = %q, want %q", lateDuplicate.RequestID, request.RequestID)
+	}
+	time.Sleep(time.Millisecond)
+	duplicateResult := resultFor(t, lateDuplicate, queue.StageOutcomePassed, queue.StageReasonNone)
+	if duplicateResult.StartedAt == firstResult.StartedAt && duplicateResult.CompletedAt == firstResult.CompletedAt {
+		t.Fatal("duplicate result did not carry independently observed timing")
+	}
+	converged, err := machine.HandleStageResult(ctx, duplicateResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if converged.Revision != advanced.Revision || len(converged.Execution.Orchestration.Stages[0].Attempts) != 1 || converged.Execution.Orchestration.CurrentStageOrdinal != 2 {
+		t.Fatalf("late duplicate changed logical state: advanced=%+v converged=%+v", advanced, converged)
+	}
+	storedEvidence, err := client.GetValidationStageEvidence(ctx, firstResult.UploadID, firstResult.ValidationID, firstResult.Generation, firstResult.StageOrdinal, firstResult.Attempt)
+	if err != nil || !reflect.DeepEqual(storedEvidence, firstResult) {
+		t.Fatalf("late duplicate replaced permanent evidence: %+v, %v", storedEvidence, err)
 	}
 	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }

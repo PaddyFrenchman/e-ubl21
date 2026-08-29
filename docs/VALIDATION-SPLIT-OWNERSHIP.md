@@ -137,7 +137,7 @@ at each boundary without relying on an in-memory transaction.
 | Orchestrator receives validation-start, then crashes before creating the execution | The message remains unacknowledged and redelivery safely retries creation. |
 | Orchestrator creates execution/plan, then crashes before recording dispatch intent | CAS inspection finds the execution without an issued first-stage transition and records it once. |
 | Orchestrator records dispatch intent, then crashes before publishing the stage request | The transition reconciler publishes the pending deterministic request. |
-| Orchestrator publishes a stage request, then crashes before marking it sent or ACKing input | Reconciliation may republish; deterministic identity and worker idempotency make the duplicate harmless. |
+| Orchestrator publishes a stage request, then crashes before marking it sent or ACKing input | Reconciliation may republish; deterministic identity and permanent semantic evidence convergence make the duplicate harmless even after the broker deduplication window. |
 | Worker crashes before or during content read/validation | It publishes no evidence; request redelivery retries under the stage policy. |
 | Worker validates, then crashes before publishing its result | Request redelivery may recompute the stage and publishes the same logical result. |
 | Worker publishes an attempt result, then crashes before ACKing the request | It may publish again with the same attempt-result ID. The orchestrator accepts at most one immutable result for that attempt. |

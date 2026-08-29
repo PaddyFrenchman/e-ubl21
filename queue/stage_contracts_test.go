@@ -74,6 +74,15 @@ func TestStageContractV1RoundTripAndDeterministicIDs(t *testing.T) {
 	if duplicateResult.ResultID != result.ResultID || duplicateResult.RequestID != result.RequestID {
 		t.Fatalf("redelivery result identity changed: %+v / %+v", result, duplicateResult)
 	}
+	if !queue.SemanticallyEqualStageResults(result, duplicateResult) {
+		t.Fatalf("equivalent recomputation did not converge: %+v / %+v", result, duplicateResult)
+	}
+	conflictingResult := duplicateResult
+	conflictingResult.Issues = append([]queue.ValidationIssue(nil), duplicateResult.Issues...)
+	conflictingResult.Issues[0].Rule = "BR-02"
+	if queue.SemanticallyEqualStageResults(result, conflictingResult) {
+		t.Fatal("different standards findings were treated as equivalent evidence")
+	}
 	resultJSON, err := json.Marshal(result)
 	if err != nil {
 		t.Fatal(err)
