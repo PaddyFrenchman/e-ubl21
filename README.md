@@ -98,11 +98,20 @@ A validator/runtime failure is **not** a standards-invalid document. Operational
 
 ## Current runtime architecture
 
-The same Go binary currently provides separate API and worker process roles:
+The transitional deployment uses separate API and combined-worker roles from
+the same binary:
 
 ```text
 e-ubl21 serve
 e-ubl21 worker
+```
+
+The validation-split work also exposes independent stage roles without yet
+switching the deployment migration barrier:
+
+```text
+e-ubl21 worker-xsd
+e-ubl21 worker-en16931
 ```
 
 They communicate through NATS JetStream.
@@ -165,6 +174,9 @@ and terminal execution outcomes are defined in
 The implemented independent UBL 2.1 XSD process, its durable ACK ordering and
 its operational boundaries are documented in
 [`docs/XSD-WORKER.md`](docs/XSD-WORKER.md).
+The independently scalable EN 16931 process, prerequisite-evidence gate, and
+pinned Saxon boundary are documented in
+[`docs/EN16931-WORKER.md`](docs/EN16931-WORKER.md).
 
 ## HTTP API
 
@@ -374,6 +386,20 @@ It publishes durable XSD `StageResult` messages and can continue while the EN
 worker is stopped. See [`docs/XSD-WORKER.md`](docs/XSD-WORKER.md) for its
 ownership, retry, shutdown, and rollout contract.
 
+### Run the independent EN 16931 stage worker
+
+After the validation-stage and execution/evidence infrastructure has been
+provisioned, run only the EN 16931 consumer with:
+
+```bash
+go run . worker-en16931 \
+  --nats-url nats://localhost:4222
+```
+
+The command verifies passing XSD evidence before invoking the pinned Saxon
+runtime. EN work remains durable while this role is scaled to zero. See
+[`docs/EN16931-WORKER.md`](docs/EN16931-WORKER.md).
+
 ### Command help
 
 ```bash
@@ -381,6 +407,7 @@ go run . --help
 go run . serve --help
 go run . worker --help
 go run . worker-xsd --help
+go run . worker-en16931 --help
 go run . dead-letter --help
 go run . maintenance --help
 ```
@@ -398,6 +425,7 @@ Examples:
 --worker-concurrency        -> EUBL21_WORKER_CONCURRENCY
 --worker-validation-timeout -> EUBL21_WORKER_VALIDATION_TIMEOUT
 --worker-xsd-timeout         -> EUBL21_WORKER_XSD_TIMEOUT
+--worker-en16931-timeout     -> EUBL21_WORKER_EN16931_TIMEOUT
 ```
 
 Major configuration groups include:
@@ -560,6 +588,8 @@ For deeper detail, start with:
 - [`TODO-VALIDATION-SPLIT.md`](TODO-VALIDATION-SPLIT.md) — target asynchronous stage architecture.
 - [`docs/VALIDATION-SPLIT-OWNERSHIP.md`](docs/VALIDATION-SPLIT-OWNERSHIP.md) — normative service boundaries, state ownership, and crash recovery for the validation split.
 - [`docs/VALIDATION-EXECUTION-IDENTITY.md`](docs/VALIDATION-EXECUTION-IDENTITY.md) — durable upload/execution identity, replay generations, and frozen validation plans.
+- [`docs/XSD-WORKER.md`](docs/XSD-WORKER.md) — independent UBL 2.1 XSD worker contract.
+- [`docs/EN16931-WORKER.md`](docs/EN16931-WORKER.md) — independent EN 16931 worker and prerequisite-evidence contract.
 - [`TODO-PEPPOL.md`](TODO-PEPPOL.md) — Peppol BIS Billing validation roadmap.
 - [`docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md`](docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md) — broader e-invoicing platform direction.
 - [`docs/EN16931-VALIDATION-CONTRACT.md`](docs/EN16931-VALIDATION-CONTRACT.md) — EN validity semantics.

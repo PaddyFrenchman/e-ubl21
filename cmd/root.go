@@ -59,6 +59,17 @@ type Config struct {
 	XSDWorkerConcurrency           int
 	XSDWorkerPrefetch              int
 	XSDWorkerProgressInterval      time.Duration
+	ENWorkerMetricsAddr            string
+	ENWorkerValidationTimeout      time.Duration
+	ENWorkerConcurrency            int
+	ENWorkerPrefetch               int
+	ENWorkerProgressInterval       time.Duration
+	ENWorkerJavaExecutable         string
+	ENWorkerSaxonJARPath           string
+	ENWorkerXMLResolverJARPath     string
+	ENWorkerSaxonConfigurationPath string
+	ENWorkerXSLTPath               string
+	ENWorkerSaxonStartupTimeout    time.Duration
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -131,6 +142,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newServeCmd(cfg))
 	rootCmd.AddCommand(newWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newXSDWorkerCmd(v, cfg))
+	rootCmd.AddCommand(newEN16931WorkerCmd(v, cfg))
 	rootCmd.AddCommand(newDeadLetterCmd(cfg))
 	rootCmd.AddCommand(newMaintenanceCmd(cfg))
 	rootCmd.AddCommand(newRegressionCmd(cfg))
@@ -186,6 +198,13 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-xsd-concurrency", 1)
 	v.SetDefault("worker-xsd-prefetch", 1)
 	v.SetDefault("worker-xsd-progress-interval", 20*time.Second)
+	v.SetDefault("worker-en16931-metrics-addr", ":9093")
+	v.SetDefault("worker-en16931-timeout", 30*time.Second)
+	v.SetDefault("worker-en16931-concurrency", 1)
+	v.SetDefault("worker-en16931-prefetch", 1)
+	v.SetDefault("worker-en16931-progress-interval", 20*time.Second)
+	v.SetDefault("worker-en16931-java-executable", "java")
+	v.SetDefault("worker-en16931-saxon-startup-timeout", 30*time.Second)
 	v.SetEnvPrefix("EUBL21")
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
@@ -253,6 +272,17 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.XSDWorkerConcurrency = v.GetInt("worker-xsd-concurrency")
 	cfg.XSDWorkerPrefetch = v.GetInt("worker-xsd-prefetch")
 	cfg.XSDWorkerProgressInterval = v.GetDuration("worker-xsd-progress-interval")
+	cfg.ENWorkerMetricsAddr = v.GetString("worker-en16931-metrics-addr")
+	cfg.ENWorkerValidationTimeout = v.GetDuration("worker-en16931-timeout")
+	cfg.ENWorkerConcurrency = v.GetInt("worker-en16931-concurrency")
+	cfg.ENWorkerPrefetch = v.GetInt("worker-en16931-prefetch")
+	cfg.ENWorkerProgressInterval = v.GetDuration("worker-en16931-progress-interval")
+	cfg.ENWorkerJavaExecutable = v.GetString("worker-en16931-java-executable")
+	cfg.ENWorkerSaxonJARPath = v.GetString("worker-en16931-saxon-jar-path")
+	cfg.ENWorkerXMLResolverJARPath = v.GetString("worker-en16931-xmlresolver-jar-path")
+	cfg.ENWorkerSaxonConfigurationPath = v.GetString("worker-en16931-saxon-configuration-path")
+	cfg.ENWorkerXSLTPath = v.GetString("worker-en16931-runtime-xslt-path")
+	cfg.ENWorkerSaxonStartupTimeout = v.GetDuration("worker-en16931-saxon-startup-timeout")
 
 	return nil
 }

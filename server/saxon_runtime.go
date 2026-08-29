@@ -37,19 +37,36 @@ type saxonRuntimeConfig struct {
 }
 
 func resolveSaxonRuntimeConfig(cfg WorkerConfig) saxonRuntimeConfig {
+	return resolveSaxonRuntimeOverrides(saxonRuntimeOverrides{
+		javaExecutable: cfg.JavaExecutable, saxonJARPath: cfg.SaxonJARPath,
+		xmlResolverJARPath: cfg.XMLResolverJARPath, configurationPath: cfg.SaxonConfigurationPath,
+		xsltPath: cfg.EN16931XSLTPath, startupTimeout: cfg.SaxonStartupTimeout,
+	})
+}
+
+type saxonRuntimeOverrides struct {
+	javaExecutable     string
+	saxonJARPath       string
+	xmlResolverJARPath string
+	configurationPath  string
+	xsltPath           string
+	startupTimeout     time.Duration
+}
+
+func resolveSaxonRuntimeOverrides(overrides saxonRuntimeOverrides) saxonRuntimeConfig {
 	runtime := validationassets.Saxon()
 	profile := validationassets.EN16931()
 	resolved := saxonRuntimeConfig{
-		javaExecutable:      cfg.JavaExecutable,
-		saxonJARPath:        cfg.SaxonJARPath,
-		xmlResolverJARPath:  cfg.XMLResolverJARPath,
-		configurationPath:   cfg.SaxonConfigurationPath,
-		xsltPath:            cfg.EN16931XSLTPath,
+		javaExecutable:      overrides.javaExecutable,
+		saxonJARPath:        overrides.saxonJARPath,
+		xmlResolverJARPath:  overrides.xmlResolverJARPath,
+		configurationPath:   overrides.configurationPath,
+		xsltPath:            overrides.xsltPath,
 		saxonJARSHA256:      runtime.SaxonJARSHA256,
 		xmlResolverSHA256:   runtime.XMLResolverSHA256,
 		configurationSHA256: runtime.ConfigurationSHA256,
 		xsltSHA256:          profile.XSLTSHA256,
-		startupTimeout:      cfg.SaxonStartupTimeout,
+		startupTimeout:      overrides.startupTimeout,
 	}
 	if resolved.javaExecutable == "" {
 		resolved.javaExecutable = "java"

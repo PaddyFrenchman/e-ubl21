@@ -121,6 +121,44 @@ func TestXSDWorkerStartsAndStopsOnContextCancellation(t *testing.T) {
 	}
 }
 
+func TestEN16931WorkerStartsAndStopsOnContextCancellation(t *testing.T) {
+	previous := runEN16931Worker
+	t.Cleanup(func() { runEN16931Worker = previous })
+	started := make(chan server.EN16931WorkerConfig, 1)
+	runEN16931Worker = func(ctx context.Context, cfg server.EN16931WorkerConfig) error {
+		started <- cfg
+		<-ctx.Done()
+		return nil
+	}
+	cfg := &Config{
+		ENWorkerMetricsAddr: ":9193", ENWorkerValidationTimeout: 7 * time.Second,
+		ENWorkerConcurrency: 3, ENWorkerPrefetch: 4, ENWorkerProgressInterval: 5 * time.Second,
+		ENWorkerJavaExecutable: "/java", ENWorkerSaxonJARPath: "/saxon.jar",
+		ENWorkerXMLResolverJARPath: "/resolver.jar", ENWorkerSaxonConfigurationPath: "/saxon.xml",
+		ENWorkerXSLTPath: "/en.xslt", ENWorkerSaxonStartupTimeout: 6 * time.Second,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- en16931Worker(ctx, cfg) }()
+	select {
+	case received := <-started:
+		if received.MetricsAddr != cfg.ENWorkerMetricsAddr || received.ValidationTimeout != 7*time.Second || received.Concurrency != 3 || received.Prefetch != 4 || received.ProgressInterval != 5*time.Second || received.JavaExecutable != "/java" || received.SaxonJARPath != "/saxon.jar" || received.XMLResolverJARPath != "/resolver.jar" || received.SaxonConfigurationPath != "/saxon.xml" || received.EN16931XSLTPath != "/en.xslt" || received.SaxonStartupTimeout != 6*time.Second {
+			t.Fatalf("worker-en16931 config = %+v", received)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("worker-en16931 runner was not called")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("worker-en16931 did not stop")
+	}
+}
+
 func TestNewHTTPServerAppliesResourceLimits(t *testing.T) {
 	cfg := &Config{
 		HTTPReadHeaderTimeout: 2 * time.Second,

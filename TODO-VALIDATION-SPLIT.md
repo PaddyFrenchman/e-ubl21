@@ -529,6 +529,8 @@ The XSD service can run with the EN worker completely stopped and accumulate suc
 
 # TODO-VALIDATION-SPLIT-008 — Extract EN 16931 validation into `worker-en16931`
 
+**Implementation contract:** [`docs/EN16931-WORKER.md`](docs/EN16931-WORKER.md)
+
 ## Goal
 
 Make EN 16931 semantic validation an independent service.
@@ -543,7 +545,9 @@ Make EN 16931 semantic validation an independent service.
 - ACK only after result publication is durable.
 - Preserve bounded SVRL/issues/diagnostics.
 - Preserve cancellation and Java process termination.
-- Add EN-specific retries/DLQ.
+- Publish typed operational-failure evidence for orchestrator-authorized EN
+  retries. Stage-specific broker delivery counters, DLQ publication, and
+  operator replay are owned by `TODO-VALIDATION-SPLIT-010`.
 - Reject stale requests whose validation generation/plan no longer matches durable state.
 
 ## Acceptance criteria

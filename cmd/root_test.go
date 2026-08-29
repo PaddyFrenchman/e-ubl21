@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -18,7 +19,7 @@ func TestRootCommandBuildsAndPrintsHelp(t *testing.T) {
 	if err := root.Execute(); err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) || !bytes.Contains(stdout.Bytes(), []byte("worker-xsd")) || !bytes.Contains(stdout.Bytes(), []byte("dead-letter")) || !bytes.Contains(stdout.Bytes(), []byte("maintenance")) || !bytes.Contains(stdout.Bytes(), []byte("regression")) {
+	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) || !bytes.Contains(stdout.Bytes(), []byte("worker-xsd")) || !bytes.Contains(stdout.Bytes(), []byte("worker-en16931")) || !bytes.Contains(stdout.Bytes(), []byte("dead-letter")) || !bytes.Contains(stdout.Bytes(), []byte("maintenance")) || !bytes.Contains(stdout.Bytes(), []byte("regression")) {
 		t.Fatalf("help missing subcommands: %s", stdout.String())
 	}
 }
@@ -46,6 +47,45 @@ func TestXSDWorkerCommandExposesOnlyXSDRuntimeControls(t *testing.T) {
 	}
 	if command.Flags().Lookup("worker-en16931-validation-timeout") != nil || command.Flags().Lookup("worker-java-executable") != nil {
 		t.Fatal("worker-xsd exposes EN 16931 runtime controls")
+	}
+}
+
+func TestEN16931WorkerCommandExposesOnlySemanticRuntimeControls(t *testing.T) {
+	command := newEN16931WorkerCmd(viper.New(), &Config{})
+	for _, name := range []string{
+		"worker-en16931-metrics-addr", "worker-en16931-timeout", "worker-en16931-concurrency",
+		"worker-en16931-prefetch", "worker-en16931-progress-interval", "worker-en16931-java-executable",
+		"worker-en16931-saxon-jar-path", "worker-en16931-xmlresolver-jar-path",
+		"worker-en16931-saxon-configuration-path", "worker-en16931-runtime-xslt-path",
+		"worker-en16931-saxon-startup-timeout",
+	} {
+		if command.Flags().Lookup(name) == nil {
+			t.Fatalf("worker-en16931 flag %q is missing", name)
+		}
+	}
+	if command.Flags().Lookup("worker-xsd-timeout") != nil {
+		t.Fatal("worker-en16931 exposes XSD runtime controls")
+	}
+}
+
+func TestEN16931WorkerFlagsDoNotRebindTransitionalWorkerConfiguration(t *testing.T) {
+	v := viper.New()
+	root := NewRootCmd(v, &bytes.Buffer{}, &bytes.Buffer{})
+	var transitional *cobra.Command
+	for _, command := range root.Commands() {
+		if command.Name() == "worker" {
+			transitional = command
+			break
+		}
+	}
+	if transitional == nil {
+		t.Fatal("transitional worker command is missing")
+	}
+	if err := transitional.Flags().Set("worker-en16931-xslt-path", "/transitional/en.xslt"); err != nil {
+		t.Fatal(err)
+	}
+	if got := v.GetString("worker-en16931-xslt-path"); got != "/transitional/en.xslt" {
+		t.Fatalf("transitional EN XSLT flag was rebound by split worker: %q", got)
 	}
 }
 
@@ -103,6 +143,9 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	}
 	if cfg.XSDWorkerMetricsAddr != ":9092" || cfg.XSDWorkerValidationTimeout != 30*time.Second || cfg.XSDWorkerConcurrency != 1 || cfg.XSDWorkerPrefetch != 1 || cfg.XSDWorkerProgressInterval != 20*time.Second {
 		t.Fatalf("default worker-xsd config = metrics %q timeout %s concurrency %d prefetch %d progress %s", cfg.XSDWorkerMetricsAddr, cfg.XSDWorkerValidationTimeout, cfg.XSDWorkerConcurrency, cfg.XSDWorkerPrefetch, cfg.XSDWorkerProgressInterval)
+	}
+	if cfg.ENWorkerMetricsAddr != ":9093" || cfg.ENWorkerValidationTimeout != 30*time.Second || cfg.ENWorkerConcurrency != 1 || cfg.ENWorkerPrefetch != 1 || cfg.ENWorkerProgressInterval != 20*time.Second || cfg.ENWorkerJavaExecutable != "java" || cfg.ENWorkerSaxonStartupTimeout != 30*time.Second {
+		t.Fatalf("default worker-en16931 config = %+v", cfg)
 	}
 }
 
@@ -174,6 +217,29 @@ func TestLoadConfigReadsXSDWorkerSettings(t *testing.T) {
 	}
 	if cfg.XSDWorkerMetricsAddr != ":9292" || cfg.XSDWorkerValidationTimeout != 9*time.Second || cfg.XSDWorkerConcurrency != 5 || cfg.XSDWorkerPrefetch != 6 || cfg.XSDWorkerProgressInterval != 7*time.Second {
 		t.Fatalf("worker-xsd settings = %+v", cfg)
+	}
+}
+
+func TestLoadConfigReadsEN16931WorkerSettings(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	t.Setenv("EUBL21_WORKER_EN16931_METRICS_ADDR", ":9393")
+	t.Setenv("EUBL21_WORKER_EN16931_TIMEOUT", "11s")
+	t.Setenv("EUBL21_WORKER_EN16931_CONCURRENCY", "5")
+	t.Setenv("EUBL21_WORKER_EN16931_PREFETCH", "6")
+	t.Setenv("EUBL21_WORKER_EN16931_PROGRESS_INTERVAL", "7s")
+	t.Setenv("EUBL21_WORKER_EN16931_JAVA_EXECUTABLE", "/test/java")
+	t.Setenv("EUBL21_WORKER_EN16931_SAXON_JAR_PATH", "/test/saxon.jar")
+	t.Setenv("EUBL21_WORKER_EN16931_XMLRESOLVER_JAR_PATH", "/test/resolver.jar")
+	t.Setenv("EUBL21_WORKER_EN16931_SAXON_CONFIGURATION_PATH", "/test/saxon.xml")
+	t.Setenv("EUBL21_WORKER_EN16931_RUNTIME_XSLT_PATH", "/test/en.xslt")
+	t.Setenv("EUBL21_WORKER_EN16931_SAXON_STARTUP_TIMEOUT", "8s")
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.ENWorkerMetricsAddr != ":9393" || cfg.ENWorkerValidationTimeout != 11*time.Second || cfg.ENWorkerConcurrency != 5 || cfg.ENWorkerPrefetch != 6 || cfg.ENWorkerProgressInterval != 7*time.Second || cfg.ENWorkerJavaExecutable != "/test/java" || cfg.ENWorkerSaxonJARPath != "/test/saxon.jar" || cfg.ENWorkerXMLResolverJARPath != "/test/resolver.jar" || cfg.ENWorkerSaxonConfigurationPath != "/test/saxon.xml" || cfg.ENWorkerXSLTPath != "/test/en.xslt" || cfg.ENWorkerSaxonStartupTimeout != 8*time.Second {
+		t.Fatalf("worker-en16931 settings = %+v", cfg)
 	}
 }
 

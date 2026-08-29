@@ -1,0 +1,472 @@
+package server
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/PaddyFrenchman/e-ubl21/queue"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
+)
+
+const (
+	defaultENWorkerValidationTimeout = 30 * time.Second
+	defaultENWorkerConcurrency       = 1
+	defaultENWorkerPrefetch          = 1
+	defaultENWorkerProgressInterval  = 20 * time.Second
+	enWorkerNAKDelay                 = time.Second
+)
+
+var errENStageRequestStale = errors.New("stale EN 16931 stage request")
+
+// EN16931WorkerConfig configures the independently deployable EN 16931 stage
+// worker. Broker topology is provisioner-owned; this runtime verifies only the
+// resources it uses and never mutates execution state.
+type EN16931WorkerConfig struct {
+	NATSURL                string
+	NATSOptions            []nats.Option
+	QueueNamespace         queue.Namespace
+	MetricsAddr            string
+	ValidationTimeout      time.Duration
+	Concurrency            int
+	Prefetch               int
+	ProgressInterval       time.Duration
+	JavaExecutable         string
+	SaxonJARPath           string
+	XMLResolverJARPath     string
+	SaxonConfigurationPath string
+	EN16931XSLTPath        string
+	SaxonStartupTimeout    time.Duration
+	Logger                 *slog.Logger
+
+	queueClient   *queue.Client
+	validator     EN16931Validator
+	verifyRuntime func(context.Context, saxonRuntimeConfig) error
+	now           func() time.Time
+}
+
+type enWorkerSettings struct {
+	validationTimeout time.Duration
+	concurrency       int
+	prefetch          int
+	progressInterval  time.Duration
+}
+
+func resolveENWorkerSettings(cfg EN16931WorkerConfig) enWorkerSettings {
+	settings := enWorkerSettings{
+		validationTimeout: cfg.ValidationTimeout,
+		concurrency:       cfg.Concurrency,
+		prefetch:          cfg.Prefetch,
+		progressInterval:  cfg.ProgressInterval,
+	}
+	if settings.validationTimeout <= 0 {
+		settings.validationTimeout = defaultENWorkerValidationTimeout
+	}
+	if settings.concurrency <= 0 {
+		settings.concurrency = defaultENWorkerConcurrency
+	}
+	if settings.prefetch <= 0 {
+		settings.prefetch = defaultENWorkerPrefetch
+	}
+	if settings.progressInterval <= 0 {
+		settings.progressInterval = defaultENWorkerProgressInterval
+	}
+	return settings
+}
+
+func validateENWorkerCapacity(settings enWorkerSettings, delivery queue.StageDeliveryConfig) error {
+	if settings.concurrency+settings.prefetch > delivery.MaxAckPending {
+		return fmt.Errorf("worker-en16931 concurrency + prefetch (%d) exceeds provisioned EN 16931 request MaxAckPending (%d)", settings.concurrency+settings.prefetch, delivery.MaxAckPending)
+	}
+	if settings.progressInterval >= delivery.AckWait {
+		return fmt.Errorf("worker-en16931 progress interval (%s) must be shorter than provisioned EN 16931 request AckWait (%s)", settings.progressInterval, delivery.AckWait)
+	}
+	return nil
+}
+
+// RunEN16931Worker consumes only EN 16931 StageRequests until ctx is canceled.
+func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
+	settings := resolveENWorkerSettings(cfg)
+	logger := cfg.Logger
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	client := cfg.queueClient
+	ownedClient := false
+	var err error
+	if client == nil {
+		client, err = queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+		if err != nil {
+			return fmt.Errorf("worker-en16931 connect to NATS: %w", err)
+		}
+		ownedClient = true
+	}
+	if ownedClient {
+		defer client.Close()
+	}
+
+	requestDelivery, err := client.VerifyStageWorkerInfra(ctx, queue.ValidationLayerEN16931)
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
+		return fmt.Errorf("worker-en16931 verify stage worker infrastructure: %w", err)
+	}
+	if err := validateENWorkerCapacity(settings, requestDelivery); err != nil {
+		return err
+	}
+	if err := client.VerifyUploadContentInfra(ctx); err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
+		return fmt.Errorf("worker-en16931 verify upload content infrastructure: %w", err)
+	}
+	if err := client.VerifyValidationExecutionInfra(ctx); err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
+		return fmt.Errorf("worker-en16931 verify validation execution infrastructure: %w", err)
+	}
+
+	validator := cfg.validator
+	if validator == nil {
+		runtime := resolveSaxonRuntimeOverrides(saxonRuntimeOverrides{
+			javaExecutable: cfg.JavaExecutable, saxonJARPath: cfg.SaxonJARPath,
+			xmlResolverJARPath: cfg.XMLResolverJARPath, configurationPath: cfg.SaxonConfigurationPath,
+			xsltPath: cfg.EN16931XSLTPath, startupTimeout: cfg.SaxonStartupTimeout,
+		})
+		verifyRuntime := cfg.verifyRuntime
+		if verifyRuntime == nil {
+			verifyRuntime = ensureSaxonRuntime
+		}
+		if err := verifyRuntime(ctx, runtime); err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
+			return fmt.Errorf("worker-en16931 verify Saxon runtime: %w", err)
+		}
+		logValidationRuntimeVersions(logger)
+		validator = newSaxonEN16931Validator(runtime, settings.validationTimeout)
+	}
+	now := cfg.now
+	if now == nil {
+		now = time.Now
+	}
+
+	consumer, err := client.StageRequestConsumer(ctx, queue.ValidationLayerEN16931)
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
+		return fmt.Errorf("worker-en16931 open request consumer: %w", err)
+	}
+
+	var metricsServer *http.Server
+	if cfg.MetricsAddr != "" {
+		metricsServer = &http.Server{Addr: cfg.MetricsAddr, Handler: workerMetricsMux(client)}
+		go func() {
+			if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				logger.Error("worker-en16931 metrics server error", "error", err)
+			}
+		}()
+		defer func() {
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			_ = metricsServer.Shutdown(shutdownCtx)
+		}()
+	}
+
+	worker := &enStageWorker{
+		queue: client, validator: validator, timeout: settings.validationTimeout,
+		logger: logger, now: now, publishResult: client.PublishStageResult, nakDelay: enWorkerNAKDelay,
+	}
+	localCapacity := settings.concurrency + settings.prefetch
+	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
+		return fmt.Errorf("worker-en16931 start pulling requests: %w", err)
+	}
+	defer messages.Stop()
+
+	jobs := make(chan queuedDocumentJob, settings.prefetch)
+	var workers sync.WaitGroup
+	for range settings.concurrency {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			for job := range jobs {
+				worker.process(ctx, job.msg, job.stopProgress)
+			}
+		}()
+	}
+
+	logger.Info("worker-en16931 started",
+		"queueNamespace", nonEmpty(cfg.QueueNamespace.String(), "(default)"),
+		"stage", queue.ValidationLayerEN16931, "rulesetVersion", validationassets.EN16931().Version,
+		"concurrency", settings.concurrency, "prefetch", settings.prefetch,
+		"validationTimeout", settings.validationTimeout,
+	)
+	pullDone := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			messages.Stop()
+		case <-pullDone:
+		}
+	}()
+	for {
+		message, nextErr := messages.Next()
+		if nextErr != nil {
+			if ctx.Err() != nil {
+				break
+			}
+			close(pullDone)
+			close(jobs)
+			workers.Wait()
+			return fmt.Errorf("worker-en16931 pull request: %w", nextErr)
+		}
+		job := newQueuedDocumentJob(message, settings.progressInterval)
+		select {
+		case jobs <- job:
+		case <-ctx.Done():
+			job.stopProgress()
+			_ = message.NakWithDelay(enWorkerNAKDelay)
+		}
+		if ctx.Err() != nil {
+			break
+		}
+	}
+	close(pullDone)
+	close(jobs)
+	workers.Wait()
+	logger.Info("worker-en16931 shutting down")
+	return nil
+}
+
+type enStageWorker struct {
+	queue         *queue.Client
+	validator     EN16931Validator
+	timeout       time.Duration
+	logger        *slog.Logger
+	now           func() time.Time
+	publishResult func(context.Context, queue.StageResult) error
+	nakDelay      time.Duration
+}
+
+func (worker *enStageWorker) process(ctx context.Context, message jetstream.Msg, stopProgress func()) {
+	if stopProgress != nil {
+		defer stopProgress()
+	}
+	if err := worker.handle(ctx, message); err != nil {
+		worker.logger.Error("worker-en16931 request failed", "error", err)
+	}
+}
+
+func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) error {
+	if ctx.Err() != nil {
+		worker.nak(message)
+		return nil
+	}
+	var request queue.StageRequest
+	if err := request.UnmarshalJSON(message.Data()); err != nil {
+		_ = message.Term()
+		return fmt.Errorf("terminate malformed EN 16931 stage request: %w", err)
+	}
+	if request.Stage != queue.ValidationLayerEN16931 {
+		_ = message.Term()
+		return fmt.Errorf("terminate non-EN request on EN 16931 consumer: stage %q", request.Stage)
+	}
+	if err := worker.authorize(ctx, request); err != nil {
+		if errors.Is(err, errENStageRequestStale) {
+			_ = message.Term()
+			return fmt.Errorf("terminate rejected EN 16931 stage request: %w", err)
+		}
+		worker.nak(message)
+		return fmt.Errorf("verify EN 16931 stage authorization: %w", err)
+	}
+
+	startedAt := worker.now().UTC()
+	attemptCtx, cancelAttempt := context.WithTimeout(ctx, worker.timeout)
+	defer cancelAttempt()
+	outcome := queue.StageOutcomePassed
+	reason := queue.StageReasonNone
+	var issues []queue.ValidationIssue
+	diagnostic := ""
+
+	if request.RulesetVersion != validationassets.EN16931().Version {
+		outcome = queue.StageOutcomeOperationalFailure
+		reason = queue.StageReasonRuntimeUnavailable
+		diagnostic = fmt.Sprintf("worker-en16931 supports ruleset %s, request requires %s", validationassets.EN16931().Version, request.RulesetVersion)
+	} else if !requiresEN16931(request.DocumentType) {
+		outcome = queue.StageOutcomeOperationalFailure
+		reason = queue.StageReasonRuntimeUnavailable
+		diagnostic = fmt.Sprintf("worker-en16931 does not support document type %s", request.DocumentType)
+	} else {
+		var validationResult queue.ValidationStageResult
+		validationErr := worker.withContent(attemptCtx, request.UploadID, func(reader io.Reader) error {
+			var err error
+			validationResult, err = worker.validator.Validate(attemptCtx, reader)
+			return err
+		})
+		if validationErr != nil {
+			if ctx.Err() != nil {
+				worker.nak(message)
+				return nil
+			}
+			outcome = queue.StageOutcomeOperationalFailure
+			reason = enStageOperationalReason(validationErr)
+			diagnostic = boundedStageText(validationErr.Error(), queue.MaxStageDiagnosticBytes)
+		} else if validationResult.Layer != queue.ValidationLayerEN16931 || validationResult.Version != request.RulesetVersion {
+			outcome = queue.StageOutcomeOperationalFailure
+			reason = queue.StageReasonMalformedOutput
+			diagnostic = boundedStageText(fmt.Sprintf("EN 16931 validator returned layer %q version %q", validationResult.Layer, validationResult.Version), queue.MaxStageDiagnosticBytes)
+		} else if validationResult.Valid == enIssuesContainStandardsFailure(validationResult.Issues) {
+			outcome = queue.StageOutcomeOperationalFailure
+			reason = queue.StageReasonMalformedOutput
+			diagnostic = "EN 16931 validator validity does not match its failed-assert evidence"
+		} else {
+			issues = append([]queue.ValidationIssue(nil), validationResult.Issues...)
+			if !validationResult.Valid {
+				outcome = queue.StageOutcomeStandardsInvalid
+			}
+		}
+	}
+
+	completedAt := worker.now().UTC()
+	duration := completedAt.Sub(startedAt)
+	if duration < 0 {
+		duration = 0
+	}
+	result, err := queue.NewStageResult(request, outcome, reason, issues, diagnostic, startedAt, completedAt, duration)
+	if err != nil {
+		worker.nak(message)
+		return fmt.Errorf("build EN 16931 stage result: %w", err)
+	}
+	if err := worker.publishResult(ctx, result); err != nil {
+		worker.nak(message)
+		return fmt.Errorf("publish EN 16931 stage result %s: %w", result.ResultID, err)
+	}
+	if err := message.Ack(); err != nil {
+		return fmt.Errorf("ack EN 16931 stage request %s: %w", request.RequestID, err)
+	}
+	return nil
+}
+
+func (worker *enStageWorker) authorize(ctx context.Context, request queue.StageRequest) error {
+	execution, err := worker.queue.GetValidationExecution(ctx, request.UploadID, request.ValidationID, request.Generation)
+	if err != nil {
+		if errors.Is(err, queue.ErrValidationExecutionNotFound) {
+			return fmt.Errorf("%w: execution generation does not exist", errENStageRequestStale)
+		}
+		return err
+	}
+	if request.DocumentType != execution.DocumentType || request.Plan != execution.Plan.ID || request.PlanVersion != execution.Plan.Version ||
+		request.StageOrdinal == 0 || int(request.StageOrdinal) > len(execution.Plan.Stages) {
+		return fmt.Errorf("%w: request identity does not match durable execution", errENStageRequestStale)
+	}
+	planStage := execution.Plan.Stages[request.StageOrdinal-1]
+	if planStage.ID != request.Stage || planStage.RulesetVersion != request.RulesetVersion {
+		return fmt.Errorf("%w: request does not match frozen plan stage", errENStageRequestStale)
+	}
+	state := execution.Orchestration
+	if state.Status != queue.ExecutionStatusStageQueued || state.CurrentStageOrdinal != request.StageOrdinal || len(state.Stages) != int(request.StageOrdinal) {
+		return fmt.Errorf("%w: request is not the current queued stage", errENStageRequestStale)
+	}
+	current := state.Stages[request.StageOrdinal-1]
+	if current.Stage != request.Stage || current.AuthorizedAttempt != request.Attempt || current.RequestID != request.RequestID {
+		return fmt.Errorf("%w: request is not the currently authorized attempt", errENStageRequestStale)
+	}
+
+	xsdPassed := false
+	for index := 0; index < int(request.StageOrdinal)-1; index++ {
+		prerequisite := state.Stages[index]
+		if prerequisite.TerminalOutcome != queue.StageOutcomePassed || len(prerequisite.Attempts) == 0 {
+			return fmt.Errorf("%w: prerequisite stage %d has no passing terminal outcome", errENStageRequestStale, index+1)
+		}
+		if prerequisite.Stage == queue.ValidationLayerUBL21XSD {
+			xsdPassed = true
+		}
+		accepted := prerequisite.Attempts[len(prerequisite.Attempts)-1]
+		evidence, err := worker.queue.GetValidationStageEvidence(ctx, request.UploadID, request.ValidationID, request.Generation, prerequisite.Ordinal, accepted.Attempt)
+		if err != nil {
+			return fmt.Errorf("load prerequisite stage %d evidence: %w", prerequisite.Ordinal, err)
+		}
+		if err := evidence.Validate(); err != nil {
+			return fmt.Errorf("validate prerequisite stage %d evidence: %w", prerequisite.Ordinal, err)
+		}
+		if evidence.ResultID != accepted.ResultID || evidence.Outcome != queue.StageOutcomePassed || evidence.Stage != prerequisite.Stage {
+			return fmt.Errorf("%w: prerequisite stage %d evidence does not match execution state", errENStageRequestStale, prerequisite.Ordinal)
+		}
+	}
+	if !xsdPassed {
+		return fmt.Errorf("%w: no passing UBL 2.1 XSD prerequisite evidence", errENStageRequestStale)
+	}
+	return nil
+}
+
+func (worker *enStageWorker) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {
+	content, err := worker.queue.OpenUploadContent(ctx, uploadID)
+	if err != nil {
+		return fmt.Errorf("%w: open upload content: %w", errValidationContentStream, err)
+	}
+	validationErr := validate(content)
+	streamErr := content.Error()
+	closeErr := content.Close()
+	if streamErr == nil {
+		streamErr = closeErr
+	}
+	if streamErr != nil {
+		contentErr := fmt.Errorf("%w: stream upload content: %w", errValidationContentStream, streamErr)
+		if validationErr != nil {
+			return errors.Join(validationErr, contentErr)
+		}
+		return contentErr
+	}
+	return validationErr
+}
+
+func (worker *enStageWorker) nak(message jetstream.Msg) {
+	delay := worker.nakDelay
+	if delay <= 0 {
+		delay = enWorkerNAKDelay
+	}
+	_ = message.NakWithDelay(delay)
+}
+
+func enStageOperationalReason(err error) queue.StageOperationalReason {
+	switch {
+	case errors.Is(err, context.DeadlineExceeded):
+		return queue.StageReasonTimeout
+	case errors.Is(err, context.Canceled):
+		return queue.StageReasonCancelled
+	case errors.Is(err, errValidationContentStream), errors.Is(err, errEN16931RuntimeInput), errors.Is(err, queue.ErrRecordNotFound):
+		return queue.StageReasonContentUnavailable
+	case errors.Is(err, errEN16931RuntimeAsset):
+		return queue.StageReasonRuntimeUnavailable
+	case errors.Is(err, errEN16931SVRLOutputLimit):
+		return queue.StageReasonResourceLimit
+	case errors.Is(err, errEN16931RuntimeSVRL):
+		return queue.StageReasonMalformedOutput
+	default:
+		return queue.StageReasonRuntimeFailure
+	}
+}
+
+func enIssuesContainStandardsFailure(issues []queue.ValidationIssue) bool {
+	for _, issue := range issues {
+		if issue.Kind == queue.ValidationIssueFailedAssert {
+			return true
+		}
+	}
+	return false
+}

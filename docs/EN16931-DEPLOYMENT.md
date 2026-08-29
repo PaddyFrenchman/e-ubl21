@@ -72,6 +72,11 @@ must not consume the same durable queue concurrently.
 
 ## Worker validation settings
 
+The table below describes the transitional combined `worker`. The independent
+semantic role uses the equivalent `worker-en16931`-prefixed flags documented in
+[`EN16931-WORKER.md`](EN16931-WORKER.md), while retaining the same pinned asset
+and no-network runtime contract.
+
 Every setting is available as the shown CLI flag or as its `EUBL21_`
 environment equivalent.
 
