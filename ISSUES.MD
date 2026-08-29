@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #51, the **next actionable issue is #52 — TODO-VALIDATION-SPLIT-005 — Implement validation orchestrator state machine**. Issues #48, #49, #50, and #51 are complete. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+After completion of #52, the **next actionable issue is #53 — TODO-VALIDATION-SPLIT-006 — Make orchestrator transitions crash-safe and idempotent**. Issues #48, #49, #50, #51, and #52 are complete. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
