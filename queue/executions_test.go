@@ -289,6 +289,7 @@ func TestValidationExecutionRecordRoundTripAndValidation(t *testing.T) {
 		name   string
 		mutate func(*queue.ValidationExecution)
 	}{
+		{"legacy schema", func(e *queue.ValidationExecution) { e.SchemaVersion-- }},
 		{"schema", func(e *queue.ValidationExecution) { e.SchemaVersion++ }},
 		{"validation id", func(e *queue.ValidationExecution) { e.ValidationID = "bad" }},
 		{"creation intent id", func(e *queue.ValidationExecution) { e.CreationIntentID = "bad" }},

@@ -15,16 +15,19 @@ import (
 )
 
 // Machine advances exact validation execution generations under JetStream KV
-// compare-and-swap. Crash-window outbox reconciliation is deliberately added
-// by TODO-VALIDATION-SPLIT-006; deterministic publication already makes an
-// explicit EnsureDispatch retry harmless.
+// compare-and-swap and drains their durable StageRequest outbox intents.
 type Machine struct {
-	Queue *queue.Client
-	Now   func() time.Time
+	Queue               *queue.Client
+	Now                 func() time.Time
+	PublishStageRequest func(context.Context, queue.StageRequest) error
 }
 
 func New(client *queue.Client) *Machine {
-	return &Machine{Queue: client, Now: time.Now}
+	machine := &Machine{Queue: client, Now: time.Now}
+	if client != nil {
+		machine.PublishStageRequest = client.PublishStageRequest
+	}
+	return machine
 }
 
 // Start creates (or loads after command redelivery) a generation and ensures
@@ -57,7 +60,12 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 	if err := machine.validate(); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
-	execution := cloneExecution(current.Execution)
+	latest, err := machine.Queue.GetValidationExecutionVersion(ctx, current.Execution.UploadID, current.Execution.ValidationID, current.Execution.Generation)
+	if err != nil {
+		return queue.VersionedValidationExecution{}, err
+	}
+	current = latest
+	execution := cloneExecution(latest.Execution)
 	if err := machine.validatePlanTopology(execution); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
@@ -72,27 +80,29 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 			Stages: []queue.ValidationStageState{{
 				Stage: execution.Plan.Stages[0].ID, Ordinal: 1,
 				AuthorizedAttempt: 1, RequestID: request.RequestID, RequestCreatedAt: request.CreatedAt,
+				DispatchStatus: queue.StageDispatchPending,
 			}},
 			UpdatedAt: machine.now().UTC().Format(time.RFC3339Nano),
 		}
 		revision, err := machine.Queue.UpdateValidationExecutionState(ctx, current, execution)
 		if err != nil {
+			if errors.Is(err, queue.ErrValidationExecutionConflict) {
+				return machine.EnsureDispatch(ctx, current)
+			}
 			return queue.VersionedValidationExecution{}, err
 		}
 		current = queue.VersionedValidationExecution{Execution: execution, Revision: revision}
-		if err := machine.Queue.PublishStageRequest(ctx, request); err != nil {
-			return current, err
-		}
-		return current, nil
+		return machine.dispatchPending(ctx, current, request)
 	case queue.ExecutionStatusStageQueued:
+		stage := execution.Orchestration.Stages[execution.Orchestration.CurrentStageOrdinal-1]
+		if stage.DispatchStatus == queue.StageDispatchPublished {
+			return current, nil
+		}
 		request, err := machine.currentRequest(execution)
 		if err != nil {
 			return queue.VersionedValidationExecution{}, err
 		}
-		if err := machine.Queue.PublishStageRequest(ctx, request); err != nil {
-			return current, err
-		}
-		return current, nil
+		return machine.dispatchPending(ctx, current, request)
 	case queue.ExecutionStatusValid, queue.ExecutionStatusInvalid, queue.ExecutionStatusProcessingFailed:
 		return current, nil
 	default:
@@ -151,11 +161,17 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 
 	next := cloneExecution(current.Execution)
 	nextStage := &next.Orchestration.Stages[stageIndex]
+	now := machine.now()
+	dispatchedAt := stageState.DispatchedAt
+	if stageState.DispatchStatus == queue.StageDispatchPending {
+		dispatchedAt = now.UTC().Format(time.RFC3339Nano)
+		nextStage.DispatchStatus = queue.StageDispatchPublished
+		nextStage.DispatchedAt = dispatchedAt
+	}
 	nextStage.Attempts = append(nextStage.Attempts, queue.ValidationStageAttempt{
 		Attempt: result.Attempt, RequestID: result.RequestID, ResultID: result.ResultID,
-		Outcome: result.Outcome, Reason: result.Reason,
+		DispatchedAt: dispatchedAt, Outcome: result.Outcome, Reason: result.Reason,
 	})
-	now := machine.now()
 	next.Orchestration.UpdatedAt = now.UTC().Format(time.RFC3339Nano)
 	var request *queue.StageRequest
 	switch result.Outcome {
@@ -174,6 +190,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 			next.Orchestration.CurrentStageOrdinal = nextOrdinal
 			next.Orchestration.Stages = append(next.Orchestration.Stages, queue.ValidationStageState{
 				Stage: created.Stage, Ordinal: created.StageOrdinal, AuthorizedAttempt: 1, RequestID: created.RequestID, RequestCreatedAt: created.CreatedAt,
+				DispatchStatus: queue.StageDispatchPending,
 			})
 			request = &created
 		}
@@ -195,6 +212,8 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 			nextStage.AuthorizedAttempt = nextAttempt
 			nextStage.RequestID = created.RequestID
 			nextStage.RequestCreatedAt = created.CreatedAt
+			nextStage.DispatchStatus = queue.StageDispatchPending
+			nextStage.DispatchedAt = ""
 			request = &created
 		}
 	default:
@@ -202,15 +221,57 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 	}
 	revision, err := machine.Queue.UpdateValidationExecutionState(ctx, current, next)
 	if err != nil {
+		if errors.Is(err, queue.ErrValidationExecutionConflict) {
+			return machine.HandleStageResult(ctx, result)
+		}
 		return queue.VersionedValidationExecution{}, err
 	}
 	updated := queue.VersionedValidationExecution{Execution: next, Revision: revision}
 	if request != nil {
-		if err := machine.Queue.PublishStageRequest(ctx, *request); err != nil {
-			return updated, err
-		}
+		return machine.EnsureDispatch(ctx, updated)
 	}
 	return updated, nil
+}
+
+// dispatchPending publishes one exact durable outbox intent, then records the
+// broker acknowledgement under CAS. A conflict means another replica either
+// marked the same request or advanced the execution; reloading converges on
+// that winner without rewriting history.
+func (machine *Machine) dispatchPending(ctx context.Context, current queue.VersionedValidationExecution, request queue.StageRequest) (queue.VersionedValidationExecution, error) {
+	if err := machine.PublishStageRequest(ctx, request); err != nil {
+		return current, err
+	}
+	for {
+		next := cloneExecution(current.Execution)
+		stageIndex := int(next.Orchestration.CurrentStageOrdinal - 1)
+		stage := &next.Orchestration.Stages[stageIndex]
+		if stage.RequestID != request.RequestID || stage.DispatchStatus != queue.StageDispatchPending {
+			return machine.EnsureDispatch(ctx, current)
+		}
+		now := machine.now()
+		stage.DispatchStatus = queue.StageDispatchPublished
+		stage.DispatchedAt = now.UTC().Format(time.RFC3339Nano)
+		next.Orchestration.UpdatedAt = stage.DispatchedAt
+		revision, err := machine.Queue.UpdateValidationExecutionState(ctx, current, next)
+		if err == nil {
+			return queue.VersionedValidationExecution{Execution: next, Revision: revision}, nil
+		}
+		if !errors.Is(err, queue.ErrValidationExecutionConflict) {
+			return current, err
+		}
+		latest, getErr := machine.Queue.GetValidationExecutionVersion(ctx, current.Execution.UploadID, current.Execution.ValidationID, current.Execution.Generation)
+		if getErr != nil {
+			return current, getErr
+		}
+		if latest.Execution.Orchestration.Status != queue.ExecutionStatusStageQueued {
+			return latest, nil
+		}
+		latestStage := latest.Execution.Orchestration.Stages[latest.Execution.Orchestration.CurrentStageOrdinal-1]
+		if latestStage.RequestID != request.RequestID || latestStage.DispatchStatus == queue.StageDispatchPublished {
+			return machine.EnsureDispatch(ctx, latest)
+		}
+		current = latest
+	}
 }
 
 // HandleStageResultMessage is the durable-consumer boundary: malformed or
@@ -253,6 +314,9 @@ func (machine *Machine) validate() error {
 	}
 	if machine.Now == nil {
 		return errors.New("orchestrator clock is required")
+	}
+	if machine.PublishStageRequest == nil {
+		return errors.New("orchestrator stage request publisher is required")
 	}
 	return nil
 }

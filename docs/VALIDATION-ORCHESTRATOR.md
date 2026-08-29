@@ -1,6 +1,7 @@
 # Durable validation orchestrator state machine
 
-**Status:** Normative state-machine contract for `TODO-VALIDATION-SPLIT-005`
+**Status:** Normative state-machine and durable-dispatch contract for
+`TODO-VALIDATION-SPLIT-005` and `TODO-VALIDATION-SPLIT-006`
 
 The `orchestrator.Machine` is the only component that selects a stage from a
 frozen `ValidationExecution.Plan`, authorizes logical attempts, accepts stage
@@ -19,6 +20,8 @@ The compact projection records:
 - lifecycle status and current frozen-plan ordinal;
 - the deterministic request ID, original request timestamp, and authorized
   attempt for each reached stage;
+- a `pending` or `published` durable outbox marker and the broker-acknowledged
+  publication time for the current authorized request;
 - immutable result IDs and outcome classifications for accepted attempts;
 - exactly one terminal stage outcome where applicable;
 - update and terminal-finalization timestamps.
@@ -32,10 +35,12 @@ valid result to approach the queue contract's 2 MiB ceiling.
 ## Transitions
 
 Starting an execution creates or idempotently loads the deterministic lineage,
-then authorizes ordinal 1, attempt 1:
+then authorizes ordinal 1, attempt 1 with a pending dispatch intent:
 
 ```text
-pending -> stage-queued(ordinal=1, attempt=1)
+pending -> stage-queued(ordinal=1, attempt=1, dispatch=pending)
+        -> publish deterministic StageRequest
+        -> stage-queued(ordinal=1, attempt=1, dispatch=published)
 ```
 
 `stage-queued` deliberately covers queued, worker-running, and pending-result
@@ -73,6 +78,35 @@ redelivery remains the same attempt; only the orchestrator increments the
 logical attempt number. Duplicate delivery of already accepted identical
 evidence is a no-op and cannot advance the plan twice.
 
+## Crash-safe dispatch and reconciliation
+
+Request authorization and request publication are intentionally separate
+durable steps. The execution CAS first records the exact request as `pending`.
+Only then may an orchestrator publish it. After JetStream acknowledges the
+publish, a second CAS records `published` and `dispatchedAt`.
+
+This ordering closes both unavoidable crash windows:
+
+```text
+pending intent persisted -> crash -> reconciler publishes request
+
+request published -> crash before published marker -> reconciler republishes
+the same deterministic request ID -> broker or worker duplicate tolerance
+```
+
+`ReconcilePendingDispatches` scans all execution generations for pending
+outbox intents. `RunDispatchReconciler` performs an immediate startup scan and
+periodic scans until shutdown. Multiple orchestrator replicas may reconcile at
+the same time: the deterministic `Nats-Msg-Id` suppresses ordinary duplicate
+publishes and execution CAS converges the durable marker on one winner.
+
+If a StageResult arrives while its request still says `pending`, the result is
+itself durable proof that publication occurred. Accepting the result records
+the attempt's publication evidence while atomically creating either the next
+pending attempt/stage intent or one terminal execution state. Duplicate
+requests may therefore repeat work, but their deterministic StageResult is
+accepted once; conflicting evidence is rejected.
+
 `HandleStageResultMessage` is the durable consumer boundary. It ACKs only after
 the evidence create, execution CAS, and any next-stage publication succeed.
 Malformed, stale, out-of-order, plan-drifted, or unauthorized results remain
@@ -84,11 +118,10 @@ This issue supplies and tests the state machine without switching the existing
 API or monolithic worker to it. Worker extraction and the migration barrier are
 later validation-split issues.
 
-The state transition is persisted before its request is published. An explicit
-`EnsureDispatch` can safely republish the exact stored request, including its
-original timestamp, using the deterministic message ID. A durable transition
-outbox and automatic crash-window reconciliation belong to
-`TODO-VALIDATION-SPLIT-006` (#53).
+The state transition is persisted before its request is published.
+`EnsureDispatch` drains one exact stored intent, while the reconciler repairs
+pending intents left by a stopped replica. Both retain the original request
+timestamp and deterministic message ID.
 
 Terminal `valid`, `invalid`, and `processing-failed` are authoritative execution
 outcomes. Publishing the canonical public `ValidationResult` is deliberately

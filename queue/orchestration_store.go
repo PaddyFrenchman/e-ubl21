@@ -31,9 +31,6 @@ func (c *Client) UpdateValidationExecutionState(ctx context.Context, current Ver
 	if !sameValidationExecutionIdentity(current.Execution, next) {
 		return 0, errors.New("validation execution CAS cannot change immutable identity, frozen plan, or retry policy")
 	}
-	if err := validateOrchestrationTransition(current.Execution, next); err != nil {
-		return 0, fmt.Errorf("validation execution CAS transition: %w", err)
-	}
 	kv, err := c.validationExecutionsBucket(ctx)
 	if err != nil {
 		return 0, err
@@ -52,6 +49,9 @@ func (c *Client) UpdateValidationExecutionState(ctx context.Context, current Ver
 	}
 	if !reflect.DeepEqual(stored, current.Execution) {
 		return 0, fmt.Errorf("%w: supplied current record does not match durable revision", ErrValidationExecutionConflict)
+	}
+	if err := validateOrchestrationTransition(current.Execution, next); err != nil {
+		return 0, fmt.Errorf("validation execution CAS transition: %w", err)
 	}
 	payload, err := json.Marshal(next)
 	if err != nil {
@@ -82,15 +82,45 @@ func validateOrchestrationTransition(current, next ValidationExecution) error {
 	case ExecutionStatusValid, ExecutionStatusInvalid, ExecutionStatusProcessingFailed:
 		return errors.New("terminal orchestration state has no successor")
 	case ExecutionStatusPending:
-		if next.Orchestration.Status != ExecutionStatusStageQueued || len(next.Orchestration.Stages) != 1 || len(next.Orchestration.Stages[0].Attempts) != 0 || next.Orchestration.Stages[0].AuthorizedAttempt != 1 {
+		if next.Orchestration.Status != ExecutionStatusStageQueued || len(next.Orchestration.Stages) != 1 || len(next.Orchestration.Stages[0].Attempts) != 0 ||
+			next.Orchestration.Stages[0].AuthorizedAttempt != 1 || next.Orchestration.Stages[0].DispatchStatus != StageDispatchPending {
 			return errors.New("pending orchestration may only dispatch the first stage attempt")
 		}
 		return nil
 	case ExecutionStatusStageQueued:
+		if isDispatchPublicationTransition(current, next) {
+			return nil
+		}
 		return validateQueuedOrchestrationTransition(current, next)
 	default:
 		return fmt.Errorf("unsupported current orchestration status %q", current.Orchestration.Status)
 	}
+}
+
+func isDispatchPublicationTransition(current, next ValidationExecution) bool {
+	if current.Orchestration.Status != ExecutionStatusStageQueued || next.Orchestration.Status != ExecutionStatusStageQueued ||
+		current.Orchestration.CurrentStageOrdinal != next.Orchestration.CurrentStageOrdinal ||
+		len(current.Orchestration.Stages) != len(next.Orchestration.Stages) || len(current.Orchestration.Stages) == 0 ||
+		current.Orchestration.FinalizedAt != next.Orchestration.FinalizedAt {
+		return false
+	}
+	last := len(current.Orchestration.Stages) - 1
+	for index := 0; index < last; index++ {
+		if !reflect.DeepEqual(current.Orchestration.Stages[index], next.Orchestration.Stages[index]) {
+			return false
+		}
+	}
+	before := current.Orchestration.Stages[last]
+	after := next.Orchestration.Stages[last]
+	before.DispatchStatus = ""
+	before.DispatchedAt = ""
+	after.DispatchStatus = ""
+	after.DispatchedAt = ""
+	return reflect.DeepEqual(before, after) &&
+		current.Orchestration.Stages[last].DispatchStatus == StageDispatchPending &&
+		current.Orchestration.Stages[last].DispatchedAt == "" &&
+		next.Orchestration.Stages[last].DispatchStatus == StageDispatchPublished &&
+		next.Orchestration.Stages[last].DispatchedAt != ""
 }
 
 func validateQueuedOrchestrationTransition(current, next ValidationExecution) error {
@@ -123,6 +153,13 @@ func validateQueuedOrchestrationTransition(current, next ValidationExecution) er
 	if accepted.Attempt != currentStage.AuthorizedAttempt || accepted.RequestID != currentStage.RequestID {
 		return errors.New("successor did not accept the currently authorized stage attempt")
 	}
+	if currentStage.DispatchStatus == StageDispatchPending {
+		if accepted.DispatchedAt == "" {
+			return errors.New("accepted stage result must prove its request was published")
+		}
+	} else if accepted.DispatchedAt != currentStage.DispatchedAt {
+		return errors.New("accepted stage result cannot rewrite published dispatch evidence")
+	}
 
 	if len(nextStages) == len(currentStages)+1 {
 		if next.Orchestration.Status != ExecutionStatusStageQueued || accepted.Outcome != StageOutcomePassed ||
@@ -131,7 +168,7 @@ func validateQueuedOrchestrationTransition(current, next ValidationExecution) er
 			return errors.New("only a passing attempt may dispatch the next frozen-plan stage")
 		}
 		newStage := nextStages[len(nextStages)-1]
-		if newStage.AuthorizedAttempt != 1 || len(newStage.Attempts) != 0 || newStage.TerminalOutcome != "" {
+		if newStage.AuthorizedAttempt != 1 || len(newStage.Attempts) != 0 || newStage.TerminalOutcome != "" || newStage.DispatchStatus != StageDispatchPending {
 			return errors.New("newly dispatched plan stage must begin at attempt 1 without evidence")
 		}
 		return nil
@@ -140,7 +177,8 @@ func validateQueuedOrchestrationTransition(current, next ValidationExecution) er
 	switch next.Orchestration.Status {
 	case ExecutionStatusStageQueued:
 		if accepted.Outcome != StageOutcomeOperationalFailure || accepted.Attempt >= current.RetryPolicy.MaxAttempts ||
-			nextStage.TerminalOutcome != "" || nextStage.AuthorizedAttempt != currentStage.AuthorizedAttempt+1 {
+			nextStage.TerminalOutcome != "" || nextStage.AuthorizedAttempt != currentStage.AuthorizedAttempt+1 ||
+			nextStage.DispatchStatus != StageDispatchPending || nextStage.DispatchedAt != "" {
 			return errors.New("queued stage may continue only with an authorized retry after operational failure")
 		}
 		return nil

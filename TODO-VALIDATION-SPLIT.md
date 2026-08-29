@@ -489,6 +489,12 @@ Required mechanisms:
 
 Killing the orchestrator at every transition boundary cannot lose work, skip a stage, execute a later stage prematurely, or create two permanent final results.
 
+## Implemented contract
+
+The normative durable outbox, CAS publication marker, duplicate-tolerance, and
+startup/periodic reconciliation behavior is specified in
+[`docs/VALIDATION-ORCHESTRATOR.md`](docs/VALIDATION-ORCHESTRATOR.md).
+
 ---
 
 # TODO-VALIDATION-SPLIT-007 — Extract XSD validation into `worker-xsd`

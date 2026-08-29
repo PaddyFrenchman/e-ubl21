@@ -18,27 +18,40 @@ const (
 	ExecutionStatusProcessingFailed ValidationExecutionStatus = "processing-failed"
 )
 
+// ValidationStageDispatchStatus is the durable outbox state for one
+// authorized StageRequest. Pending is committed before publication; published
+// is recorded only after JetStream acknowledges the deterministic request.
+type ValidationStageDispatchStatus string
+
+const (
+	StageDispatchPending   ValidationStageDispatchStatus = "pending"
+	StageDispatchPublished ValidationStageDispatchStatus = "published"
+)
+
 // ValidationStageAttempt records the immutable identity and classification of
 // accepted attempt evidence. The complete StageResult is stored separately so
 // bounded diagnostics cannot overflow the compact execution-state record.
 type ValidationStageAttempt struct {
-	Attempt   uint32                 `json:"attempt"`
-	RequestID string                 `json:"requestId"`
-	ResultID  string                 `json:"resultId"`
-	Outcome   StageOutcome           `json:"outcome"`
-	Reason    StageOperationalReason `json:"reason,omitempty"`
+	Attempt      uint32                 `json:"attempt"`
+	RequestID    string                 `json:"requestId"`
+	ResultID     string                 `json:"resultId"`
+	DispatchedAt string                 `json:"dispatchedAt"`
+	Outcome      StageOutcome           `json:"outcome"`
+	Reason       StageOperationalReason `json:"reason,omitempty"`
 }
 
 // ValidationStageState is the orchestrator projection for one frozen plan
 // ordinal. AuthorizedAttempt is the only attempt a worker may currently run.
 type ValidationStageState struct {
-	Stage             ValidationLayer          `json:"stage"`
-	Ordinal           uint32                   `json:"ordinal"`
-	AuthorizedAttempt uint32                   `json:"authorizedAttempt"`
-	RequestID         string                   `json:"requestId"`
-	RequestCreatedAt  string                   `json:"requestCreatedAt"`
-	Attempts          []ValidationStageAttempt `json:"attempts,omitempty"`
-	TerminalOutcome   StageOutcome             `json:"terminalOutcome,omitempty"`
+	Stage             ValidationLayer               `json:"stage"`
+	Ordinal           uint32                        `json:"ordinal"`
+	AuthorizedAttempt uint32                        `json:"authorizedAttempt"`
+	RequestID         string                        `json:"requestId"`
+	RequestCreatedAt  string                        `json:"requestCreatedAt"`
+	DispatchStatus    ValidationStageDispatchStatus `json:"dispatchStatus"`
+	DispatchedAt      string                        `json:"dispatchedAt,omitempty"`
+	Attempts          []ValidationStageAttempt      `json:"attempts,omitempty"`
+	TerminalOutcome   StageOutcome                  `json:"terminalOutcome,omitempty"`
 }
 
 // ValidationOrchestrationState is the mutable, CAS-protected projection kept
@@ -90,6 +103,18 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 		if _, err := parseCanonicalStageTime("orchestration requestCreatedAt", stageState.RequestCreatedAt); err != nil {
 			return fmt.Errorf("orchestration stage %d: %w", index+1, err)
 		}
+		switch stageState.DispatchStatus {
+		case StageDispatchPending:
+			if stageState.DispatchedAt != "" {
+				return fmt.Errorf("orchestration stage %d pending dispatch has a publication time", index+1)
+			}
+		case StageDispatchPublished:
+			if _, err := parseCanonicalStageTime("orchestration dispatchedAt", stageState.DispatchedAt); err != nil {
+				return fmt.Errorf("orchestration stage %d: %w", index+1, err)
+			}
+		default:
+			return fmt.Errorf("orchestration stage %d has invalid dispatch status %q", index+1, stageState.DispatchStatus)
+		}
 		for attemptIndex, attempt := range stageState.Attempts {
 			wantAttempt := uint32(attemptIndex + 1)
 			if attempt.Attempt != wantAttempt {
@@ -101,6 +126,9 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 			wantResultID := stageMessageID("e-ubl21/stage-result", wantAttemptRequestID)
 			if attempt.RequestID != wantAttemptRequestID || attempt.ResultID != wantResultID {
 				return fmt.Errorf("orchestration stage %d attempt %d has invalid evidence identity", index+1, attempt.Attempt)
+			}
+			if _, err := parseCanonicalStageTime("orchestration attempt dispatchedAt", attempt.DispatchedAt); err != nil {
+				return fmt.Errorf("orchestration stage %d attempt %d: %w", index+1, attempt.Attempt, err)
 			}
 			switch attempt.Outcome {
 			case StageOutcomePassed, StageOutcomeStandardsInvalid:
@@ -127,10 +155,17 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 			}
 			continue
 		}
+		if stageState.DispatchStatus != StageDispatchPublished {
+			return fmt.Errorf("terminal stage %d must have a published request", index+1)
+		}
 		if len(stageState.Attempts) == 0 || stageState.AuthorizedAttempt != uint32(len(stageState.Attempts)) {
 			return fmt.Errorf("terminal stage %d must end on its last authorized attempt", index+1)
 		}
-		if got := stageState.Attempts[len(stageState.Attempts)-1].Outcome; got != stageState.TerminalOutcome {
+		lastAttempt := stageState.Attempts[len(stageState.Attempts)-1]
+		if lastAttempt.DispatchedAt != stageState.DispatchedAt {
+			return fmt.Errorf("terminal stage %d publication evidence does not match its final attempt", index+1)
+		}
+		if got := lastAttempt.Outcome; got != stageState.TerminalOutcome {
 			return fmt.Errorf("terminal stage %d outcome %q does not match final attempt %q", index+1, stageState.TerminalOutcome, got)
 		}
 		if index < len(state.Stages)-1 && stageState.TerminalOutcome != StageOutcomePassed {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -247,6 +248,12 @@ func TestPersistenceRejectsLatestRevisionHistoryRewrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	rewrittenDispatch := cloneExecutionForTest(started.Execution)
+	rewrittenDispatch.Orchestration.Stages[0].DispatchedAt = time.Date(2026, 8, 28, 22, 0, 0, 0, time.UTC).Format(time.RFC3339Nano)
+	rewrittenDispatch.Orchestration.UpdatedAt = rewrittenDispatch.Orchestration.Stages[0].DispatchedAt
+	if _, err := client.UpdateValidationExecutionState(ctx, started, rewrittenDispatch); err == nil {
+		t.Fatal("latest revision rewrote immutable dispatch publication evidence")
+	}
 	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
 	retrying, err := machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomeOperationalFailure, queue.StageReasonTimeout))
 	if err != nil {
@@ -267,6 +274,16 @@ func TestPersistenceRejectsLatestRevisionHistoryRewrite(t *testing.T) {
 	if _, err := client.UpdateValidationExecutionState(ctx, terminal, terminal.Execution); err == nil || !strings.Contains(err.Error(), "no successor") {
 		t.Fatalf("terminal successor error = %v, want terminal rejection", err)
 	}
+}
+
+func cloneExecutionForTest(execution queue.ValidationExecution) queue.ValidationExecution {
+	cloned := execution
+	cloned.Plan.Stages = append([]queue.FrozenValidationStage(nil), execution.Plan.Stages...)
+	cloned.Orchestration.Stages = append([]queue.ValidationStageState(nil), execution.Orchestration.Stages...)
+	for index := range cloned.Orchestration.Stages {
+		cloned.Orchestration.Stages[index].Attempts = append([]queue.ValidationStageAttempt(nil), execution.Orchestration.Stages[index].Attempts...)
+	}
+	return cloned
 }
 
 func TestStaleExecutionRevisionCannotOverwriteWinningTransition(t *testing.T) {
@@ -304,6 +321,340 @@ func TestRedeliveredStartLoadsAdvancedExecutionWithoutResettingIt(t *testing.T) 
 		t.Fatalf("redelivered start reset or changed execution: advanced=%+v redelivered=%+v", advanced, redelivered)
 	}
 	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+}
+
+func TestReconcilerRepairsCrashAfterIntentBeforePublish(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	publicationFailure := errors.New("crash before publish")
+	machine.PublishStageRequest = func(context.Context, queue.StageRequest) error {
+		return publicationFailure
+	}
+	state, err := machine.Start(ctx, testIntent(t, testPlan()))
+	if !errors.Is(err, publicationFailure) {
+		t.Fatalf("start error = %v, want %v", err, publicationFailure)
+	}
+	stage := state.Execution.Orchestration.Stages[0]
+	if stage.DispatchStatus != queue.StageDispatchPending || stage.DispatchedAt != "" {
+		t.Fatalf("durable pre-publication intent = %+v", stage)
+	}
+	assertNoRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+
+	machine.PublishStageRequest = client.PublishStageRequest
+	report, err := machine.ReconcilePendingDispatches(ctx)
+	if err != nil || report.Scanned != 1 || report.Reconciled != 1 || report.Errors != 0 {
+		t.Fatalf("reconcile report = %+v, %v", report, err)
+	}
+	repaired, err := client.GetValidationExecutionVersion(ctx, state.Execution.UploadID, state.Execution.ValidationID, state.Execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stage = repaired.Execution.Orchestration.Stages[0]
+	if stage.DispatchStatus != queue.StageDispatchPublished || stage.DispatchedAt == "" {
+		t.Fatalf("reconciled dispatch = %+v", stage)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	if request.RequestID != stage.RequestID {
+		t.Fatalf("reconciled request id = %q, want %q", request.RequestID, stage.RequestID)
+	}
+}
+
+func TestReconcilerRepairsAmbiguousPublishWithoutPermanentDuplicate(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	ambiguousAck := errors.New("publisher lost acknowledgement")
+	machine.PublishStageRequest = func(ctx context.Context, request queue.StageRequest) error {
+		if err := client.PublishStageRequest(ctx, request); err != nil {
+			return err
+		}
+		return ambiguousAck
+	}
+	state, err := machine.Start(ctx, testIntent(t, testPlan()))
+	if !errors.Is(err, ambiguousAck) {
+		t.Fatalf("start error = %v, want %v", err, ambiguousAck)
+	}
+	if state.Execution.Orchestration.Stages[0].DispatchStatus != queue.StageDispatchPending {
+		t.Fatalf("ambiguous publication did not retain pending intent: %+v", state.Execution.Orchestration)
+	}
+
+	machine.PublishStageRequest = client.PublishStageRequest
+	if _, err := machine.ReconcilePendingDispatches(ctx); err != nil {
+		t.Fatal(err)
+	}
+	names, err := client.Namespace.StageQueue(queue.ValidationLayerUBL21XSD)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stream, err := client.JS.Stream(ctx, names.RequestStream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.State.Msgs != 1 {
+		t.Fatalf("ambiguous publication retained %d request messages, want 1", info.State.Msgs)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+}
+
+func TestResultProvesPendingDispatchAndAdvancesAfterAmbiguousAck(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	machine.PublishStageRequest = func(ctx context.Context, request queue.StageRequest) error {
+		if err := client.PublishStageRequest(ctx, request); err != nil {
+			return err
+		}
+		return errors.New("crash after broker acknowledgement")
+	}
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err == nil {
+		t.Fatal("ambiguous initial publication unexpectedly succeeded")
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	machine.PublishStageRequest = client.PublishStageRequest
+	state, err := machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone))
+	if err != nil {
+		t.Fatal(err)
+	}
+	first := state.Execution.Orchestration.Stages[0]
+	if first.DispatchStatus != queue.StageDispatchPublished || first.DispatchedAt == "" || first.Attempts[0].DispatchedAt != first.DispatchedAt {
+		t.Fatalf("result did not prove pending dispatch: %+v", first)
+	}
+	if state.Execution.Orchestration.CurrentStageOrdinal != 2 || state.Execution.Orchestration.Stages[1].DispatchStatus != queue.StageDispatchPublished {
+		t.Fatalf("result did not safely dispatch next stage: %+v", state.Execution.Orchestration)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+}
+
+func TestReconcilerRepairsCrashAfterResultStateBeforeNextPublish(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	result := resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)
+	publicationFailure := errors.New("crash before next-stage publish")
+	machine.PublishStageRequest = func(context.Context, queue.StageRequest) error { return publicationFailure }
+	state, err := machine.HandleStageResult(ctx, result)
+	if !errors.Is(err, publicationFailure) {
+		t.Fatalf("stage transition error = %v, want %v", err, publicationFailure)
+	}
+	if state.Execution.Orchestration.CurrentStageOrdinal != 2 || state.Execution.Orchestration.Stages[1].DispatchStatus != queue.StageDispatchPending {
+		t.Fatalf("durable next-stage intent = %+v", state.Execution.Orchestration)
+	}
+	storedEvidence, err := client.GetValidationStageEvidence(ctx, result.UploadID, result.ValidationID, result.Generation, result.StageOrdinal, result.Attempt)
+	if err != nil || !reflect.DeepEqual(storedEvidence, result) {
+		t.Fatalf("durable evidence = %+v, %v; want %+v", storedEvidence, err, result)
+	}
+	assertNoRequest(t, ctx, client, queue.ValidationLayerEN16931)
+
+	restarted := orchestrator.New(client)
+	restarted.Now = machine.Now
+	report, err := restarted.ReconcilePendingDispatches(ctx)
+	if err != nil || report.Reconciled != 1 {
+		t.Fatalf("restart reconciliation = %+v, %v", report, err)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+}
+
+func TestRedeliveredResultRepairsAmbiguousNextPublishWithoutAdvancingTwice(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	result := resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)
+	ambiguousAck := errors.New("crash after next-stage broker acknowledgement")
+	machine.PublishStageRequest = func(ctx context.Context, request queue.StageRequest) error {
+		if err := client.PublishStageRequest(ctx, request); err != nil {
+			return err
+		}
+		return ambiguousAck
+	}
+	first, err := machine.HandleStageResult(ctx, result)
+	if !errors.Is(err, ambiguousAck) {
+		t.Fatalf("stage transition error = %v, want %v", err, ambiguousAck)
+	}
+	if len(first.Execution.Orchestration.Stages) != 2 || first.Execution.Orchestration.Stages[1].DispatchStatus != queue.StageDispatchPending {
+		t.Fatalf("ambiguous next dispatch state = %+v", first.Execution.Orchestration)
+	}
+
+	machine.PublishStageRequest = client.PublishStageRequest
+	redelivered, err := machine.HandleStageResult(ctx, result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(redelivered.Execution.Orchestration.Stages) != 2 || len(redelivered.Execution.Orchestration.Stages[0].Attempts) != 1 || redelivered.Execution.Orchestration.Stages[1].DispatchStatus != queue.StageDispatchPublished {
+		t.Fatalf("redelivered result changed logical transition: %+v", redelivered.Execution.Orchestration)
+	}
+	names, err := client.Namespace.StageQueue(queue.ValidationLayerEN16931)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stream, err := client.JS.Stream(ctx, names.RequestStream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.State.Msgs != 1 {
+		t.Fatalf("ambiguous next-stage publication retained %d messages, want 1", info.State.Msgs)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+}
+
+func TestPrecreatedEvidenceConvergesAfterCrashBeforeStateCAS(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	result := resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)
+	if _, err := client.CreateValidationStageEvidence(ctx, result); err != nil {
+		t.Fatal(err)
+	}
+	state, err := machine.HandleStageResult(ctx, result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state.Execution.Orchestration.CurrentStageOrdinal != 2 || len(state.Execution.Orchestration.Stages[0].Attempts) != 1 {
+		t.Fatalf("precreated evidence transition = %+v", state.Execution.Orchestration)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+}
+
+func TestConcurrentReconcilersConvergeOnOnePublishedIntent(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	machine.PublishStageRequest = func(context.Context, queue.StageRequest) error { return errors.New("offline") }
+	state, err := machine.Start(ctx, testIntent(t, testPlan()))
+	if err == nil {
+		t.Fatal("offline start unexpectedly succeeded")
+	}
+
+	const replicas = 8
+	start := make(chan struct{})
+	errorsSeen := make(chan error, replicas)
+	var group sync.WaitGroup
+	for range replicas {
+		group.Add(1)
+		go func() {
+			defer group.Done()
+			<-start
+			replica := orchestrator.New(client)
+			replica.Now = func() time.Time { return time.Date(2026, 8, 28, 21, 0, 0, 0, time.UTC) }
+			if _, err := replica.ReconcilePendingDispatches(context.Background()); err != nil {
+				errorsSeen <- err
+			}
+		}()
+	}
+	close(start)
+	group.Wait()
+	close(errorsSeen)
+	for err := range errorsSeen {
+		t.Errorf("concurrent reconciliation: %v", err)
+	}
+	stored, err := client.GetValidationExecution(ctx, state.Execution.UploadID, state.Execution.ValidationID, state.Execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Orchestration.Stages[0].DispatchStatus != queue.StageDispatchPublished {
+		t.Fatalf("concurrent reconciliation state = %+v", stored.Orchestration)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+}
+
+func TestConcurrentDuplicateResultsConvergeWithoutRedelivery(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	result := resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)
+
+	const replicas = 8
+	start := make(chan struct{})
+	errorsSeen := make(chan error, replicas)
+	var group sync.WaitGroup
+	for range replicas {
+		group.Add(1)
+		go func() {
+			defer group.Done()
+			<-start
+			replica := orchestrator.New(client)
+			replica.Now = func() time.Time { return time.Date(2026, 8, 28, 21, 30, 0, 0, time.UTC) }
+			if _, err := replica.HandleStageResult(context.Background(), result); err != nil {
+				errorsSeen <- err
+			}
+		}()
+	}
+	close(start)
+	group.Wait()
+	close(errorsSeen)
+	for err := range errorsSeen {
+		t.Errorf("concurrent duplicate result: %v", err)
+	}
+	stored, err := client.GetValidationExecution(ctx, result.UploadID, result.ValidationID, result.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored.Orchestration.Stages) != 2 || len(stored.Orchestration.Stages[0].Attempts) != 1 || stored.Orchestration.CurrentStageOrdinal != 2 {
+		t.Fatalf("concurrent duplicate result state = %+v", stored.Orchestration)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+}
+
+func TestDuplicateFinalResultCannotCreateSecondTerminalTransition(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	plan := testPlan()
+	plan.Stages = plan.Stages[:1]
+	if _, err := machine.Start(ctx, testIntent(t, plan)); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	result := resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)
+	first, err := machine.HandleStageResult(ctx, result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := machine.HandleStageResult(ctx, result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.Revision != second.Revision || second.Execution.Orchestration.Status != queue.ExecutionStatusValid {
+		t.Fatalf("duplicate terminal result changed state: first=%+v second=%+v", first, second)
+	}
+}
+
+func TestDispatchReconcilerRunsImmediatelyAndContinuesUntilCanceled(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	machine.PublishStageRequest = func(context.Context, queue.StageRequest) error { return errors.New("offline") }
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err == nil {
+		t.Fatal("offline start unexpectedly succeeded")
+	}
+	machine.PublishStageRequest = client.PublishStageRequest
+	reconcileCtx, cancel := context.WithCancel(context.Background())
+	observed := make(chan orchestrator.DispatchReconcileReport, 1)
+	done := make(chan error, 1)
+	go func() {
+		done <- machine.RunDispatchReconciler(reconcileCtx, time.Hour, func(report orchestrator.DispatchReconcileReport, err error) {
+			if err == nil {
+				observed <- report
+				cancel()
+			}
+		})
+	}()
+	select {
+	case report := <-observed:
+		if report.Scanned != 1 || report.Reconciled != 1 || report.Errors != 0 {
+			t.Fatalf("automatic reconcile report = %+v", report)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("automatic reconciler did not run immediately")
+	}
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	_ = takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
 }
 
 func newMachine(t *testing.T) (*orchestrator.Machine, *queue.Client, context.Context) {

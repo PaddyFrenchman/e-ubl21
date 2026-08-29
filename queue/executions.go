@@ -18,7 +18,7 @@ import (
 
 // ValidationExecutionSchemaVersion is the current durable-record schema.
 // It is independent of the versioned StageRequest/StageResult wire contract.
-const ValidationExecutionSchemaVersion uint32 = 1
+const ValidationExecutionSchemaVersion uint32 = 2
 
 const (
 	DefaultValidationRetryPolicyID             = "bounded-attempts"
@@ -504,6 +504,62 @@ func (c *Client) ValidationExecutionsForUpload(ctx context.Context, uploadID str
 		return executions[i].ValidationID < executions[j].ValidationID
 	})
 	return executions, nil
+}
+
+// ValidationExecutionsPendingDispatch lists every queued execution whose
+// current authorized StageRequest still has a durable pending outbox intent.
+// The caller may publish each request independently; deterministic request IDs
+// and CAS publication markers make concurrent scans harmless.
+func (c *Client) ValidationExecutionsPendingDispatch(ctx context.Context) ([]VersionedValidationExecution, error) {
+	kv, err := c.validationExecutionsBucket(ctx)
+	if err != nil {
+		return nil, err
+	}
+	keys, err := kv.Keys(ctx)
+	if err != nil {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("list validation executions pending dispatch: %w", err)
+	}
+	pending := make([]VersionedValidationExecution, 0)
+	for _, key := range keys {
+		entry, getErr := kv.Get(ctx, key)
+		if getErr != nil {
+			return nil, fmt.Errorf("get validation execution key %s for dispatch reconciliation: %w", key, getErr)
+		}
+		var execution ValidationExecution
+		if err := json.Unmarshal(entry.Value(), &execution); err != nil {
+			return nil, fmt.Errorf("decode validation execution key %s for dispatch reconciliation: %w", key, err)
+		}
+		if err := execution.Validate(); err != nil {
+			return nil, fmt.Errorf("validate stored execution key %s for dispatch reconciliation: %w", key, err)
+		}
+		if key != validationExecutionKey(execution.UploadID, execution.ValidationID, execution.Generation) {
+			return nil, fmt.Errorf("stored validation execution identity does not match key %s", key)
+		}
+		if execution.Orchestration.Status != ExecutionStatusStageQueued {
+			continue
+		}
+		stage := execution.Orchestration.Stages[execution.Orchestration.CurrentStageOrdinal-1]
+		if stage.DispatchStatus == StageDispatchPending {
+			pending = append(pending, VersionedValidationExecution{Execution: execution, Revision: entry.Revision()})
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("list validation executions pending dispatch: %w", err)
+	}
+	sort.Slice(pending, func(i, j int) bool {
+		left, right := pending[i].Execution, pending[j].Execution
+		if left.UploadID != right.UploadID {
+			return left.UploadID < right.UploadID
+		}
+		if left.ValidationID != right.ValidationID {
+			return left.ValidationID < right.ValidationID
+		}
+		return left.Generation < right.Generation
+	})
+	return pending, nil
 }
 
 func validationExecutionKey(uploadID, validationID string, generation uint64) string {
