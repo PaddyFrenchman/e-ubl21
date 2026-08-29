@@ -281,6 +281,9 @@ func TestValidationExecutionRecordRoundTripAndValidation(t *testing.T) {
 	if !reflect.DeepEqual(decoded, execution) {
 		t.Fatalf("round trip = %+v, want %+v", decoded, execution)
 	}
+	if execution.RetryPolicy != queue.DefaultFrozenValidationRetryPolicy() {
+		t.Fatalf("default retry policy = %+v, want %+v", execution.RetryPolicy, queue.DefaultFrozenValidationRetryPolicy())
+	}
 
 	tests := []struct {
 		name   string
@@ -294,8 +297,8 @@ func TestValidationExecutionRecordRoundTripAndValidation(t *testing.T) {
 		{"generation", func(e *queue.ValidationExecution) { e.Generation = 0 }},
 		{"initial generation", func(e *queue.ValidationExecution) { e.Generation = 2 }},
 		{"profile", func(e *queue.ValidationExecution) { e.RequestedProfile = "unknown" }},
-		{"retry policy id", func(e *queue.ValidationExecution) { e.RetryPolicy.ID = "Bad Policy" }},
-		{"retry policy version", func(e *queue.ValidationExecution) { e.RetryPolicy.Version = "" }},
+		{"unknown retry policy id", func(e *queue.ValidationExecution) { e.RetryPolicy.ID = "some-future-policy" }},
+		{"unknown retry policy version", func(e *queue.ValidationExecution) { e.RetryPolicy.Version = "99" }},
 		{"retry policy zero attempts", func(e *queue.ValidationExecution) { e.RetryPolicy.MaxAttempts = 0 }},
 		{"retry policy excessive attempts", func(e *queue.ValidationExecution) { e.RetryPolicy.MaxAttempts = queue.MaxValidationStageAttempts + 1 }},
 		{"created at", func(e *queue.ValidationExecution) { e.CreatedAt = "yesterday" }},

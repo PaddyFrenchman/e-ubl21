@@ -40,7 +40,10 @@ const (
 	ValidationTriggerRevalidation ValidationExecutionTrigger = "revalidation"
 )
 
-// ValidationStageRequirement freezes whether a plan stage is mandatory.
+// ValidationStageRequirement records plan-construction intent. Once a stage is
+// included in a frozen execution plan, its result is authoritative regardless
+// of this value; optional stages must be omitted by plan construction when
+// they should not affect the execution outcome.
 type ValidationStageRequirement string
 
 const (
@@ -258,11 +261,11 @@ func (execution ValidationExecution) Validate() error {
 }
 
 func (policy FrozenValidationRetryPolicy) validate() error {
-	if !validationPlanTokenPattern.MatchString(policy.ID) {
-		return fmt.Errorf("invalid validation retry policy id %q", policy.ID)
+	if policy.ID != DefaultValidationRetryPolicyID {
+		return fmt.Errorf("unsupported validation retry policy %q", policy.ID)
 	}
-	if err := validateStageVersion("validation retry policy version", policy.Version); err != nil {
-		return err
+	if policy.Version != DefaultValidationRetryPolicyVersion {
+		return fmt.Errorf("unsupported validation retry policy %q version %q", policy.ID, policy.Version)
 	}
 	if policy.MaxAttempts == 0 || policy.MaxAttempts > MaxValidationStageAttempts {
 		return fmt.Errorf("validation retry policy max attempts must be between 1 and %d", MaxValidationStageAttempts)

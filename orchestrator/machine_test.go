@@ -73,6 +73,24 @@ func TestMachineStopsOnStandardsInvalidWithoutQueueingLaterStage(t *testing.T) {
 	assertNoRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }
 
+func TestOptionalFrozenStageIsAuthoritativeOnceIncluded(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	plan := testPlan()
+	plan.Stages[0].Requirement = queue.ValidationStageOptional
+	if _, err := machine.Start(ctx, testIntent(t, plan)); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	state, err := machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state.Execution.Orchestration.Status != queue.ExecutionStatusInvalid {
+		t.Fatalf("optional included stage status = %q, want %q", state.Execution.Orchestration.Status, queue.ExecutionStatusInvalid)
+	}
+	assertNoRequest(t, ctx, client, queue.ValidationLayerEN16931)
+}
+
 func TestMachineRetriesOperationalFailureAndFailsOnlyAfterExhaustion(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	if _, err := machine.Start(ctx, testIntent(t, testPlan(), 2)); err != nil {
