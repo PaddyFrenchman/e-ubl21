@@ -54,6 +54,52 @@ func (machine *Machine) Start(ctx context.Context, intent queue.ValidationExecut
 	return machine.EnsureDispatch(ctx, current)
 }
 
+// ReplayStage authorizes an exhausted operational stage in a new generation,
+// carrying only verified passing prerequisite evidence. The old generation
+// and its permanent processing-failed result remain immutable.
+func (machine *Machine) ReplayStage(ctx context.Context, dead queue.StageDeadLetter) (queue.VersionedValidationExecution, error) {
+	if err := machine.validate(); err != nil {
+		return queue.VersionedValidationExecution{}, err
+	}
+	stored, err := machine.Queue.GetStageDeadLetter(ctx, dead.Stage, dead.DeadLetterID)
+	if err != nil {
+		return queue.VersionedValidationExecution{}, err
+	}
+	if stored != dead {
+		return queue.VersionedValidationExecution{}, errors.New("stage replay dead letter does not match the permanent broker record")
+	}
+	previous, err := machine.Queue.GetValidationExecution(ctx, dead.UploadID, dead.ValidationID, dead.Generation)
+	if err != nil {
+		return queue.VersionedValidationExecution{}, err
+	}
+	replayAt, err := time.Parse(time.RFC3339Nano, previous.Orchestration.FinalResultPublishedAt)
+	if err != nil {
+		return queue.VersionedValidationExecution{}, fmt.Errorf("parse failed generation final-result publication time: %w", err)
+	}
+	next, err := queue.NextFailedStageReplayGeneration(previous, dead, replayAt)
+	if err != nil {
+		return queue.VersionedValidationExecution{}, err
+	}
+	if err := machine.validatePlanTopology(next); err != nil {
+		return queue.VersionedValidationExecution{}, err
+	}
+	if _, err := machine.Queue.CreateValidationExecution(ctx, next); err != nil {
+		return queue.VersionedValidationExecution{}, err
+	}
+	current, err := machine.Queue.GetValidationExecutionVersion(ctx, next.UploadID, next.ValidationID, next.Generation)
+	if err != nil {
+		return queue.VersionedValidationExecution{}, err
+	}
+	current, err = machine.EnsureDispatch(ctx, current)
+	if err != nil {
+		return current, err
+	}
+	if err := machine.Queue.DeleteStageDeadLetter(ctx, dead.Stage, dead.DeadLetterID); err != nil {
+		return current, fmt.Errorf("delete replayed stage dead letter %s: %w", dead.DeadLetterID, err)
+	}
+	return current, nil
+}
+
 // EnsureDispatch authorizes the first stage from pending state or republishes
 // the deterministic request for an already queued state. It never skips or
 // selects a stage outside the frozen plan.
@@ -200,7 +246,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 		next.Orchestration.Status = queue.ExecutionStatusInvalid
 		next.Orchestration.FinalizedAt = now.UTC().Format(time.RFC3339Nano)
 	case queue.StageOutcomeOperationalFailure:
-		if result.Attempt >= current.Execution.RetryPolicy.MaxAttempts {
+		if result.Attempt >= current.Execution.RetryPolicy.MaxAttemptsFor(result.Stage) {
 			nextStage.TerminalOutcome = result.Outcome
 			next.Orchestration.Status = queue.ExecutionStatusProcessingFailed
 			next.Orchestration.FinalizedAt = now.UTC().Format(time.RFC3339Nano)

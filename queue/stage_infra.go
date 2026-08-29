@@ -25,8 +25,9 @@ const (
 	stageRequestWorstCaseSerializedBytes = maxStageJSONByteExpansion*(2*MaxStageVersionBytes) + MaxStagePlanIDBytes + MaxStageIDBytes + 128 + 4<<10
 	stageResultWorstCaseSerializedBytes  = maxStageJSONByteExpansion*(MaxStageIssueTextBytes+MaxStageDiagnosticBytes+2*MaxStageVersionBytes) +
 		MaxStageIssues*(MaxStageIDBytes+128) + 64<<10
-	stageResultMaxMessageSize int32 = 2 << 20
-	stageConsumerMaxDeliver         = -1
+	stageResultMaxMessageSize     int32 = 2 << 20
+	stageDeadLetterMaxMessageSize int32 = 32 << 10
+	stageConsumerMaxDeliver             = -1
 )
 
 // Compile-time proof that each configured stream ceiling covers its
@@ -44,14 +45,15 @@ type StageDeliveryConfig struct {
 }
 
 // StageQueueConfig defines retention and delivery limits for one stage's
-// request and result queues. A zero MaxAge retains unacknowledged work without
-// a time limit; positive values are explicit operator storage policies.
+// request, result, and operational dead-letter queues. A zero MaxAge retains
+// work without a time limit; positive values are explicit storage policies.
 type StageQueueConfig struct {
-	Stage           ValidationLayer
-	RequestMaxAge   time.Duration
-	ResultMaxAge    time.Duration
-	RequestDelivery StageDeliveryConfig
-	ResultDelivery  StageDeliveryConfig
+	Stage            ValidationLayer
+	RequestMaxAge    time.Duration
+	ResultMaxAge     time.Duration
+	DeadLetterMaxAge time.Duration
+	RequestDelivery  StageDeliveryConfig
+	ResultDelivery   StageDeliveryConfig
 }
 
 // StageQueueInfraConfig is the deployer-owned desired topology. Stages are a
@@ -107,6 +109,9 @@ func (c *Client) ProvisionStageQueueInfra(ctx context.Context, config StageQueue
 		if _, err := c.JS.CreateOrUpdateConsumer(ctx, names.ResultStream, stageResultConsumerConfig(names, stage)); err != nil {
 			return fmt.Errorf("provision %s result consumer: %w", stage.Stage, err)
 		}
+		if _, err := c.JS.CreateOrUpdateStream(ctx, stageDeadLetterStreamConfig(names, stage)); err != nil {
+			return fmt.Errorf("provision %s dead-letter stream: %w", stage.Stage, err)
+		}
 	}
 	return nil
 }
@@ -131,6 +136,9 @@ func (c *Client) VerifyStageQueueInfra(ctx context.Context, config StageQueueInf
 		if err := c.verifyStageConsumer(ctx, names.ResultStream, stageResultConsumerConfig(names, stage)); err != nil {
 			return fmt.Errorf("verify %s result consumer: %w", stage.Stage, err)
 		}
+		if err := c.verifyStageStream(ctx, stageDeadLetterStreamConfig(names, stage)); err != nil {
+			return fmt.Errorf("verify %s dead-letter stream: %w", stage.Stage, err)
+		}
 	}
 	return nil
 }
@@ -154,6 +162,10 @@ func (c *Client) VerifyStageWorkerInfra(ctx context.Context, stage ValidationLay
 	resultExpected := stageResultStreamConfig(names, StageQueueConfig{Stage: stage})
 	if err := c.verifyStageWorkerStream(ctx, resultExpected); err != nil {
 		return StageDeliveryConfig{}, fmt.Errorf("verify %s result stream: %w", stage, err)
+	}
+	deadLetterExpected := stageDeadLetterStreamConfig(names, StageQueueConfig{Stage: stage})
+	if err := c.verifyStageWorkerStream(ctx, deadLetterExpected); err != nil {
+		return StageDeliveryConfig{}, fmt.Errorf("verify %s dead-letter stream: %w", stage, err)
 	}
 	delivery, err := c.verifyStageWorkerRequestConsumer(ctx, stage, names)
 	if err != nil {
@@ -249,7 +261,7 @@ func validateStageQueueInfraConfig(config StageQueueInfraConfig) error {
 			return fmt.Errorf("stage queue config duplicates stage %q", stage.Stage)
 		}
 		seen[stage.Stage] = struct{}{}
-		if stage.RequestMaxAge < 0 || stage.ResultMaxAge < 0 {
+		if stage.RequestMaxAge < 0 || stage.ResultMaxAge < 0 || stage.DeadLetterMaxAge < 0 {
 			return fmt.Errorf("stage queue %q max age must be non-negative", stage.Stage)
 		}
 		if err := validateStageDeliveryConfig("request", stage.Stage, stage.RequestDelivery); err != nil {
@@ -288,6 +300,15 @@ func stageResultStreamConfig(names StageQueueNames, config StageQueueConfig) jet
 	}
 }
 
+func stageDeadLetterStreamConfig(names StageQueueNames, config StageQueueConfig) jetstream.StreamConfig {
+	return jetstream.StreamConfig{
+		Name: names.DeadLetterStream, Description: "Permanent exhausted validation stage attempts for " + string(config.Stage) + ".",
+		Subjects: []string{names.DeadLetterFilterSubject}, Retention: jetstream.LimitsPolicy,
+		Storage: jetstream.FileStorage, MaxAge: config.DeadLetterMaxAge, MaxMsgSize: stageDeadLetterMaxMessageSize,
+		Discard: jetstream.DiscardNew, DiscardNewPerSubject: true, MaxMsgsPerSubject: 1,
+	}
+}
+
 func stageRequestConsumerConfig(names StageQueueNames, config StageQueueConfig) jetstream.ConsumerConfig {
 	return stageConsumerConfig(names.RequestConsumer, names.RequestSubject, "Stage worker pool for "+string(config.Stage)+" requests.", config.RequestDelivery)
 }
@@ -315,7 +336,8 @@ func (c *Client) verifyStageStream(ctx context.Context, expected jetstream.Strea
 		return err
 	}
 	actual := info.Config
-	if !reflect.DeepEqual(actual.Subjects, expected.Subjects) || actual.Retention != expected.Retention || actual.Storage != expected.Storage || actual.MaxAge != expected.MaxAge || actual.MaxMsgSize != expected.MaxMsgSize {
+	limitsMismatch := expected.DiscardNewPerSubject && (actual.Discard != expected.Discard || !actual.DiscardNewPerSubject || actual.MaxMsgsPerSubject != expected.MaxMsgsPerSubject)
+	if !reflect.DeepEqual(actual.Subjects, expected.Subjects) || actual.Retention != expected.Retention || actual.Storage != expected.Storage || actual.MaxAge != expected.MaxAge || actual.MaxMsgSize != expected.MaxMsgSize || limitsMismatch {
 		return fmt.Errorf("incompatible stream %s: subjects=%v retention=%v storage=%v maxAge=%s maxMsgSize=%d", actual.Name, actual.Subjects, actual.Retention, actual.Storage, actual.MaxAge, actual.MaxMsgSize)
 	}
 	return nil
@@ -331,7 +353,8 @@ func (c *Client) verifyStageWorkerStream(ctx context.Context, expected jetstream
 		return err
 	}
 	actual := info.Config
-	if !reflect.DeepEqual(actual.Subjects, expected.Subjects) || actual.Retention != expected.Retention || actual.Storage != expected.Storage || actual.MaxMsgSize != expected.MaxMsgSize {
+	limitsMismatch := expected.DiscardNewPerSubject && (actual.Discard != expected.Discard || !actual.DiscardNewPerSubject || actual.MaxMsgsPerSubject != expected.MaxMsgsPerSubject)
+	if !reflect.DeepEqual(actual.Subjects, expected.Subjects) || actual.Retention != expected.Retention || actual.Storage != expected.Storage || actual.MaxMsgSize != expected.MaxMsgSize || limitsMismatch {
 		return fmt.Errorf("incompatible stream %s: subjects=%v retention=%v storage=%v maxAge=%s maxMsgSize=%d", actual.Name, actual.Subjects, actual.Retention, actual.Storage, actual.MaxAge, actual.MaxMsgSize)
 	}
 	return nil

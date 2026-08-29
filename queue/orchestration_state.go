@@ -51,18 +51,31 @@ type ValidationStageAttempt struct {
 	Reason       StageOperationalReason `json:"reason,omitempty"`
 }
 
+// ValidationStageEvidenceReference carries a passing prerequisite from an
+// earlier immutable generation into a failed-stage replay. The evidence is
+// referenced, never copied or reinterpreted.
+type ValidationStageEvidenceReference struct {
+	ValidationID string `json:"validationId"`
+	Generation   uint64 `json:"generation"`
+	StageOrdinal uint32 `json:"stageOrdinal"`
+	Attempt      uint32 `json:"attempt"`
+	RequestID    string `json:"requestId"`
+	ResultID     string `json:"resultId"`
+}
+
 // ValidationStageState is the orchestrator projection for one frozen plan
 // ordinal. AuthorizedAttempt is the only attempt a worker may currently run.
 type ValidationStageState struct {
-	Stage             ValidationLayer               `json:"stage"`
-	Ordinal           uint32                        `json:"ordinal"`
-	AuthorizedAttempt uint32                        `json:"authorizedAttempt"`
-	RequestID         string                        `json:"requestId"`
-	RequestCreatedAt  string                        `json:"requestCreatedAt"`
-	DispatchStatus    ValidationStageDispatchStatus `json:"dispatchStatus"`
-	DispatchedAt      string                        `json:"dispatchedAt,omitempty"`
-	Attempts          []ValidationStageAttempt      `json:"attempts,omitempty"`
-	TerminalOutcome   StageOutcome                  `json:"terminalOutcome,omitempty"`
+	Stage             ValidationLayer                   `json:"stage"`
+	Ordinal           uint32                            `json:"ordinal"`
+	AuthorizedAttempt uint32                            `json:"authorizedAttempt"`
+	RequestID         string                            `json:"requestId"`
+	RequestCreatedAt  string                            `json:"requestCreatedAt"`
+	DispatchStatus    ValidationStageDispatchStatus     `json:"dispatchStatus"`
+	DispatchedAt      string                            `json:"dispatchedAt,omitempty"`
+	Attempts          []ValidationStageAttempt          `json:"attempts,omitempty"`
+	TerminalOutcome   StageOutcome                      `json:"terminalOutcome,omitempty"`
+	InheritedEvidence *ValidationStageEvidenceReference `json:"inheritedEvidence,omitempty"`
 }
 
 // ValidationOrchestrationState is the mutable, CAS-protected projection kept
@@ -102,10 +115,29 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 		if stageState.Ordinal != planStage.Ordinal || stageState.Stage != planStage.ID {
 			return fmt.Errorf("orchestration stage %d does not match frozen plan ordinal", index+1)
 		}
+		if stageState.InheritedEvidence != nil {
+			reference := stageState.InheritedEvidence
+			if index == len(state.Stages)-1 || stageState.TerminalOutcome != StageOutcomePassed ||
+				stageState.AuthorizedAttempt != 0 || stageState.RequestID != "" || stageState.RequestCreatedAt != "" ||
+				stageState.DispatchStatus != "" || stageState.DispatchedAt != "" || len(stageState.Attempts) != 0 {
+				return fmt.Errorf("inherited orchestration stage %d must be a completed passing prerequisite", index+1)
+			}
+			if reference.ValidationID != execution.ValidationID || reference.Generation == 0 || reference.Generation >= execution.Generation ||
+				reference.StageOrdinal != stageState.Ordinal || reference.Attempt == 0 {
+				return fmt.Errorf("inherited orchestration stage %d has invalid evidence reference", index+1)
+			}
+			wantRequestID := stageRequestID(StageContractVersion, execution.ValidationID, execution.UploadID, execution.DocumentType,
+				execution.Plan.ID, execution.Plan.Version, reference.Generation, planStage.ID, planStage.Ordinal,
+				planStage.RulesetVersion, reference.Attempt)
+			if reference.RequestID != wantRequestID || reference.ResultID != stageMessageID("e-ubl21/stage-result", wantRequestID) {
+				return fmt.Errorf("inherited orchestration stage %d has inconsistent evidence identity", index+1)
+			}
+			continue
+		}
 		if stageState.AuthorizedAttempt == 0 {
 			return fmt.Errorf("orchestration stage %d has no authorized attempt", index+1)
 		}
-		if stageState.AuthorizedAttempt > execution.RetryPolicy.MaxAttempts {
+		if stageState.AuthorizedAttempt > execution.RetryPolicy.MaxAttemptsFor(stageState.Stage) {
 			return fmt.Errorf("orchestration stage %d authorized attempt exceeds the frozen retry policy", index+1)
 		}
 		wantRequestID := stageRequestID(StageContractVersion, execution.ValidationID, execution.UploadID, execution.DocumentType,
@@ -213,7 +245,8 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 		if len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt == "" || state.Stages[len(state.Stages)-1].TerminalOutcome != StageOutcomeOperationalFailure {
 			return errors.New("processing-failed orchestration state requires exhausted operational evidence")
 		}
-		if state.Stages[len(state.Stages)-1].AuthorizedAttempt != execution.RetryPolicy.MaxAttempts {
+		terminal := state.Stages[len(state.Stages)-1]
+		if terminal.AuthorizedAttempt != execution.RetryPolicy.MaxAttemptsFor(terminal.Stage) {
 			return errors.New("processing-failed orchestration state has not exhausted the frozen retry policy")
 		}
 	default:

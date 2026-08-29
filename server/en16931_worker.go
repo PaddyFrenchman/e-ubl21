@@ -186,7 +186,7 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 
 	worker := &enStageWorker{
 		queue: client, validator: validator, timeout: settings.validationTimeout,
-		logger: logger, now: now, publishResult: client.PublishStageResult, nakDelay: enWorkerNAKDelay,
+		logger: logger, now: now, publishResult: client.PublishStageResult, publishDeadLetter: client.PublishStageDeadLetter, nakDelay: enWorkerNAKDelay,
 	}
 	localCapacity := settings.concurrency + settings.prefetch
 	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
@@ -254,13 +254,14 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 }
 
 type enStageWorker struct {
-	queue         *queue.Client
-	validator     EN16931Validator
-	timeout       time.Duration
-	logger        *slog.Logger
-	now           func() time.Time
-	publishResult func(context.Context, queue.StageResult) error
-	nakDelay      time.Duration
+	queue             *queue.Client
+	validator         EN16931Validator
+	timeout           time.Duration
+	logger            *slog.Logger
+	now               func() time.Time
+	publishResult     func(context.Context, queue.StageResult) error
+	publishDeadLetter func(context.Context, queue.StageDeadLetter) error
+	nakDelay          time.Duration
 }
 
 func (worker *enStageWorker) process(ctx context.Context, message jetstream.Msg, stopProgress func()) {
@@ -286,7 +287,8 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 		_ = message.Term()
 		return fmt.Errorf("terminate non-EN request on EN 16931 consumer: stage %q", request.Stage)
 	}
-	if err := worker.authorize(ctx, request); err != nil {
+	execution, err := worker.authorize(ctx, request)
+	if err != nil {
 		if errors.Is(err, errENStageRequestStale) {
 			_ = message.Term()
 			return fmt.Errorf("terminate rejected EN 16931 stage request: %w", err)
@@ -356,6 +358,30 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 		worker.nak(message)
 		return fmt.Errorf("build EN 16931 stage result: %w", err)
 	}
+	if outcome == queue.StageOutcomeOperationalFailure && request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
+		metadata, metadataErr := message.Metadata()
+		if metadataErr != nil {
+			worker.nak(message)
+			return fmt.Errorf("read EN 16931 stage request delivery count: %w", metadataErr)
+		}
+		dead, deadErr := queue.NewStageDeadLetter(result, metadata.NumDelivered, completedAt)
+		if deadErr != nil {
+			worker.nak(message)
+			return fmt.Errorf("build EN 16931 stage dead letter: %w", deadErr)
+		}
+		publishDeadLetter := worker.publishDeadLetter
+		if publishDeadLetter == nil && worker.queue != nil {
+			publishDeadLetter = worker.queue.PublishStageDeadLetter
+		}
+		if publishDeadLetter == nil {
+			worker.nak(message)
+			return errors.New("publish EN 16931 stage dead letter: publisher is required")
+		}
+		if err := publishDeadLetter(ctx, dead); err != nil {
+			worker.nak(message)
+			return fmt.Errorf("publish EN 16931 stage dead letter %s: %w", dead.DeadLetterID, err)
+		}
+	}
 	if err := worker.publishResult(ctx, result); err != nil {
 		worker.nak(message)
 		return fmt.Errorf("publish EN 16931 stage result %s: %w", result.ResultID, err)
@@ -366,56 +392,73 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 	return nil
 }
 
-func (worker *enStageWorker) authorize(ctx context.Context, request queue.StageRequest) error {
+func (worker *enStageWorker) authorize(ctx context.Context, request queue.StageRequest) (queue.ValidationExecution, error) {
 	execution, err := worker.queue.GetValidationExecution(ctx, request.UploadID, request.ValidationID, request.Generation)
 	if err != nil {
 		if errors.Is(err, queue.ErrValidationExecutionNotFound) {
-			return fmt.Errorf("%w: execution generation does not exist", errENStageRequestStale)
+			return queue.ValidationExecution{}, fmt.Errorf("%w: execution generation does not exist", errENStageRequestStale)
 		}
-		return err
+		return queue.ValidationExecution{}, err
 	}
 	if request.DocumentType != execution.DocumentType || request.Plan != execution.Plan.ID || request.PlanVersion != execution.Plan.Version ||
 		request.StageOrdinal == 0 || int(request.StageOrdinal) > len(execution.Plan.Stages) {
-		return fmt.Errorf("%w: request identity does not match durable execution", errENStageRequestStale)
+		return queue.ValidationExecution{}, fmt.Errorf("%w: request identity does not match durable execution", errENStageRequestStale)
 	}
 	planStage := execution.Plan.Stages[request.StageOrdinal-1]
 	if planStage.ID != request.Stage || planStage.RulesetVersion != request.RulesetVersion {
-		return fmt.Errorf("%w: request does not match frozen plan stage", errENStageRequestStale)
+		return queue.ValidationExecution{}, fmt.Errorf("%w: request does not match frozen plan stage", errENStageRequestStale)
 	}
 	state := execution.Orchestration
 	if state.Status != queue.ExecutionStatusStageQueued || state.CurrentStageOrdinal != request.StageOrdinal || len(state.Stages) != int(request.StageOrdinal) {
-		return fmt.Errorf("%w: request is not the current queued stage", errENStageRequestStale)
+		return queue.ValidationExecution{}, fmt.Errorf("%w: request is not the current queued stage", errENStageRequestStale)
 	}
 	current := state.Stages[request.StageOrdinal-1]
 	if current.Stage != request.Stage || current.AuthorizedAttempt != request.Attempt || current.RequestID != request.RequestID {
-		return fmt.Errorf("%w: request is not the currently authorized attempt", errENStageRequestStale)
+		return queue.ValidationExecution{}, fmt.Errorf("%w: request is not the currently authorized attempt", errENStageRequestStale)
 	}
 
 	xsdPassed := false
 	for index := 0; index < int(request.StageOrdinal)-1; index++ {
 		prerequisite := state.Stages[index]
-		if prerequisite.TerminalOutcome != queue.StageOutcomePassed || len(prerequisite.Attempts) == 0 {
-			return fmt.Errorf("%w: prerequisite stage %d has no passing terminal outcome", errENStageRequestStale, index+1)
+		if prerequisite.TerminalOutcome != queue.StageOutcomePassed || (len(prerequisite.Attempts) == 0 && prerequisite.InheritedEvidence == nil) {
+			return queue.ValidationExecution{}, fmt.Errorf("%w: prerequisite stage %d has no passing terminal outcome", errENStageRequestStale, index+1)
 		}
 		if prerequisite.Stage == queue.ValidationLayerUBL21XSD {
 			xsdPassed = true
 		}
-		accepted := prerequisite.Attempts[len(prerequisite.Attempts)-1]
-		evidence, err := worker.queue.GetValidationStageEvidence(ctx, request.UploadID, request.ValidationID, request.Generation, prerequisite.Ordinal, accepted.Attempt)
+		var evidence queue.StageResult
+		if prerequisite.InheritedEvidence != nil {
+			reference := prerequisite.InheritedEvidence
+			evidence, err = worker.queue.GetValidationStageEvidence(ctx, request.UploadID, reference.ValidationID, reference.Generation, reference.StageOrdinal, reference.Attempt)
+		} else {
+			accepted := prerequisite.Attempts[len(prerequisite.Attempts)-1]
+			evidence, err = worker.queue.GetValidationStageEvidence(ctx, request.UploadID, request.ValidationID, request.Generation, prerequisite.Ordinal, accepted.Attempt)
+		}
 		if err != nil {
-			return fmt.Errorf("load prerequisite stage %d evidence: %w", prerequisite.Ordinal, err)
+			return queue.ValidationExecution{}, fmt.Errorf("load prerequisite stage %d evidence: %w", prerequisite.Ordinal, err)
 		}
 		if err := evidence.Validate(); err != nil {
-			return fmt.Errorf("validate prerequisite stage %d evidence: %w", prerequisite.Ordinal, err)
+			return queue.ValidationExecution{}, fmt.Errorf("validate prerequisite stage %d evidence: %w", prerequisite.Ordinal, err)
 		}
-		if evidence.ResultID != accepted.ResultID || evidence.Outcome != queue.StageOutcomePassed || evidence.Stage != prerequisite.Stage {
-			return fmt.Errorf("%w: prerequisite stage %d evidence does not match execution state", errENStageRequestStale, prerequisite.Ordinal)
+		if evidence.Outcome != queue.StageOutcomePassed || evidence.Stage != prerequisite.Stage || evidence.StageOrdinal != prerequisite.Ordinal || evidence.RulesetVersion != execution.Plan.Stages[index].RulesetVersion {
+			return queue.ValidationExecution{}, fmt.Errorf("%w: prerequisite stage %d evidence does not match execution state", errENStageRequestStale, prerequisite.Ordinal)
+		}
+		if prerequisite.InheritedEvidence != nil {
+			reference := prerequisite.InheritedEvidence
+			if evidence.ValidationID != reference.ValidationID || evidence.Generation != reference.Generation || evidence.Attempt != reference.Attempt || evidence.RequestID != reference.RequestID || evidence.ResultID != reference.ResultID {
+				return queue.ValidationExecution{}, fmt.Errorf("%w: inherited prerequisite stage %d evidence does not match reference", errENStageRequestStale, prerequisite.Ordinal)
+			}
+		} else {
+			accepted := prerequisite.Attempts[len(prerequisite.Attempts)-1]
+			if evidence.ResultID != accepted.ResultID || evidence.RequestID != accepted.RequestID || evidence.Attempt != accepted.Attempt {
+				return queue.ValidationExecution{}, fmt.Errorf("%w: prerequisite stage %d evidence does not match accepted attempt", errENStageRequestStale, prerequisite.Ordinal)
+			}
 		}
 	}
 	if !xsdPassed {
-		return fmt.Errorf("%w: no passing UBL 2.1 XSD prerequisite evidence", errENStageRequestStale)
+		return queue.ValidationExecution{}, fmt.Errorf("%w: no passing UBL 2.1 XSD prerequisite evidence", errENStageRequestStale)
 	}
-	return nil
+	return execution, nil
 }
 
 func (worker *enStageWorker) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {

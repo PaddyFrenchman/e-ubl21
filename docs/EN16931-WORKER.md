@@ -63,8 +63,8 @@ validator defects from becoming an endless request-redelivery loop.
 An operational result is immutable evidence for one EN attempt. The
 orchestrator applies the frozen attempt budget and may authorize another EN
 attempt without rerunning XSD. Stage delivery counters, DLQ publication, and
-operator replay remain owned by `TODO-VALIDATION-SPLIT-010` (#57); this command
-does not create a competing retry/replay contract.
+operator replay are implemented by `TODO-VALIDATION-SPLIT-010` (#57) under
+[`STAGE-RETRY-DLQ.md`](STAGE-RETRY-DLQ.md).
 
 ## Startup and scaling
 

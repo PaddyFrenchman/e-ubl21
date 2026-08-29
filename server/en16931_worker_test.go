@@ -257,6 +257,16 @@ func TestENWorkerOperationalResultsRetryWithoutRerunningXSD(t *testing.T) {
 				t.Fatal(err)
 			}
 			secondResult := fetchENWorkerResult(t, ctx, client)
+			deadDepth, depthErr := client.StageDeadLetterDepth(ctx, queue.ValidationLayerEN16931)
+			if depthErr != nil {
+				t.Fatal(depthErr)
+			}
+			if test.secondPass && deadDepth != 0 {
+				t.Fatalf("passing retry created %d EN dead letters", deadDepth)
+			}
+			if !test.secondPass && deadDepth != 1 {
+				t.Fatalf("exhausted retry created %d EN dead letters, want 1", deadDepth)
+			}
 			terminal, err := machine.HandleStageResult(ctx, secondResult)
 			if err != nil {
 				t.Fatal(err)

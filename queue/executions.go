@@ -73,9 +73,33 @@ type FrozenValidationPlan struct {
 // FrozenValidationRetryPolicy makes operational-failure exhaustion a durable
 // execution decision rather than a process-local orchestrator setting.
 type FrozenValidationRetryPolicy struct {
-	ID          string `json:"id"`
-	Version     string `json:"version"`
-	MaxAttempts uint32 `json:"maxAttempts"`
+	ID                   string `json:"id"`
+	Version              string `json:"version"`
+	MaxAttempts          uint32 `json:"maxAttempts"`
+	XSDMaxAttempts       uint32 `json:"xsdMaxAttempts,omitempty"`
+	EN16931MaxAttempts   uint32 `json:"en16931MaxAttempts,omitempty"`
+	PeppolBISMaxAttempts uint32 `json:"peppolBisMaxAttempts,omitempty"`
+}
+
+// MaxAttemptsFor returns the frozen operational-attempt budget for one stage.
+// A zero stage override inherits MaxAttempts, preserving older execution
+// records while allowing every deployed stage to be tuned independently.
+func (policy FrozenValidationRetryPolicy) MaxAttemptsFor(stage ValidationLayer) uint32 {
+	switch stage {
+	case ValidationLayerUBL21XSD:
+		if policy.XSDMaxAttempts != 0 {
+			return policy.XSDMaxAttempts
+		}
+	case ValidationLayerEN16931:
+		if policy.EN16931MaxAttempts != 0 {
+			return policy.EN16931MaxAttempts
+		}
+	case ValidationLayerPeppolBISBilling:
+		if policy.PeppolBISMaxAttempts != 0 {
+			return policy.PeppolBISMaxAttempts
+		}
+	}
+	return policy.MaxAttempts
 }
 
 // DefaultFrozenValidationRetryPolicy returns the immutable policy selected
@@ -128,6 +152,7 @@ type ValidationExecution struct {
 	Plan             FrozenValidationPlan          `json:"plan"`
 	RetryPolicy      FrozenValidationRetryPolicy   `json:"retryPolicy"`
 	RevalidationOf   *ValidationExecutionReference `json:"revalidationOf,omitempty"`
+	ReplayOf         *ValidationExecutionReference `json:"replayOf,omitempty"`
 	CreatedAt        string                        `json:"createdAt"`
 	Orchestration    ValidationOrchestrationState  `json:"orchestration"`
 }
@@ -153,6 +178,7 @@ func NewValidationExecution(intent ValidationExecutionIntent) (ValidationExecuti
 		UploadID: intent.UploadID, DocumentType: intent.DocumentType, Generation: 1, Trigger: intent.Trigger,
 		RequestedProfile: intent.RequestedProfile, Plan: cloneFrozenValidationPlan(intent.Plan), RetryPolicy: retryPolicy,
 		RevalidationOf: cloneValidationExecutionReference(intent.RevalidationOf),
+		ReplayOf:       nil,
 		CreatedAt:      intent.CreatedAt.UTC().Format(time.RFC3339Nano),
 		Orchestration:  newPendingOrchestrationState(intent.CreatedAt),
 	}
@@ -180,9 +206,83 @@ func NextValidationGeneration(previous ValidationExecution, replayIntentID strin
 	next.Trigger = ValidationTriggerReplay
 	next.CreationIntentID = replayIntentID
 	next.RevalidationOf = nil
+	next.ReplayOf = &ValidationExecutionReference{ValidationID: previous.ValidationID, Generation: previous.Generation}
 	next.Plan = cloneFrozenValidationPlan(previous.Plan)
 	next.CreatedAt = createdAt.UTC().Format(time.RFC3339Nano)
 	next.Orchestration = newPendingOrchestrationState(createdAt)
+	return next, nil
+}
+
+// NextFailedStageReplayGeneration appends an operational replay that begins
+// at the exhausted stage. Earlier passing stages are represented by exact
+// immutable evidence references, so replay cannot bypass or rerun them.
+func NextFailedStageReplayGeneration(previous ValidationExecution, dead StageDeadLetter, createdAt time.Time) (ValidationExecution, error) {
+	if err := previous.Validate(); err != nil {
+		return ValidationExecution{}, fmt.Errorf("previous validation execution: %w", err)
+	}
+	if err := dead.Validate(); err != nil {
+		return ValidationExecution{}, err
+	}
+	state := previous.Orchestration
+	if state.Status != ExecutionStatusProcessingFailed || state.FinalResultStatus != FinalResultPublished {
+		return ValidationExecution{}, errors.New("failed-stage replay requires a finalized processing-failed generation")
+	}
+	failedIndex := int(state.CurrentStageOrdinal - 1)
+	if failedIndex < 0 || failedIndex >= len(state.Stages) {
+		return ValidationExecution{}, errors.New("processing-failed generation has no failed stage")
+	}
+	failed := state.Stages[failedIndex]
+	if failed.InheritedEvidence != nil || len(failed.Attempts) == 0 {
+		return ValidationExecution{}, errors.New("processing-failed generation has no local terminal attempt")
+	}
+	accepted := failed.Attempts[len(failed.Attempts)-1]
+	if dead.UploadID != previous.UploadID || dead.ValidationID != previous.ValidationID || dead.Generation != previous.Generation ||
+		dead.Stage != failed.Stage || dead.StageOrdinal != failed.Ordinal || dead.Attempt != accepted.Attempt ||
+		dead.RequestID != accepted.RequestID || dead.ResultID != accepted.ResultID || dead.Reason != accepted.Reason {
+		return ValidationExecution{}, errors.New("stage dead letter does not match the failed execution")
+	}
+	next, err := NextValidationGeneration(previous, dead.DeadLetterID, createdAt)
+	if err != nil {
+		return ValidationExecution{}, err
+	}
+	request, err := NewStageRequest(next, failed.Ordinal, 1, createdAt)
+	if err != nil {
+		return ValidationExecution{}, err
+	}
+	stages := make([]ValidationStageState, 0, failedIndex+1)
+	for index := 0; index < failedIndex; index++ {
+		prior := state.Stages[index]
+		if prior.TerminalOutcome != StageOutcomePassed {
+			return ValidationExecution{}, fmt.Errorf("failed-stage replay prerequisite %d did not pass", index+1)
+		}
+		var reference ValidationStageEvidenceReference
+		if prior.InheritedEvidence != nil {
+			reference = *prior.InheritedEvidence
+		} else {
+			if len(prior.Attempts) == 0 {
+				return ValidationExecution{}, fmt.Errorf("failed-stage replay prerequisite %d has no evidence", index+1)
+			}
+			priorAccepted := prior.Attempts[len(prior.Attempts)-1]
+			reference = ValidationStageEvidenceReference{
+				ValidationID: previous.ValidationID, Generation: previous.Generation, StageOrdinal: prior.Ordinal,
+				Attempt: priorAccepted.Attempt, RequestID: priorAccepted.RequestID, ResultID: priorAccepted.ResultID,
+			}
+		}
+		stages = append(stages, ValidationStageState{
+			Stage: prior.Stage, Ordinal: prior.Ordinal, TerminalOutcome: StageOutcomePassed, InheritedEvidence: &reference,
+		})
+	}
+	stages = append(stages, ValidationStageState{
+		Stage: request.Stage, Ordinal: request.StageOrdinal, AuthorizedAttempt: 1,
+		RequestID: request.RequestID, RequestCreatedAt: request.CreatedAt, DispatchStatus: StageDispatchPending,
+	})
+	next.Orchestration = ValidationOrchestrationState{
+		Status: ExecutionStatusStageQueued, CurrentStageOrdinal: failed.Ordinal, Stages: stages,
+		UpdatedAt: canonicalStageTime(createdAt),
+	}
+	if err := next.Validate(); err != nil {
+		return ValidationExecution{}, err
+	}
 	return next, nil
 }
 
@@ -212,7 +312,7 @@ func (execution ValidationExecution) Validate() error {
 		if execution.Generation != 1 {
 			return fmt.Errorf("validation trigger %q requires generation 1", execution.Trigger)
 		}
-		if execution.RevalidationOf != nil {
+		if execution.RevalidationOf != nil || execution.ReplayOf != nil {
 			return errors.New("initial validation cannot reference a prior execution")
 		}
 		if want := deterministicValidationID(ValidationTriggerInitial, execution.UploadID, execution.CreationIntentID); execution.ValidationID != want {
@@ -225,6 +325,9 @@ func (execution ValidationExecution) Validate() error {
 		if err := execution.RevalidationOf.validate(); err != nil {
 			return fmt.Errorf("revalidation predecessor: %w", err)
 		}
+		if execution.ReplayOf != nil {
+			return errors.New("revalidation cannot reference a replay predecessor")
+		}
 		if want := deterministicValidationID(ValidationTriggerRevalidation, execution.UploadID, execution.CreationIntentID); execution.ValidationID != want {
 			return fmt.Errorf("revalidation id %q does not match deterministic id %q", execution.ValidationID, want)
 		}
@@ -234,6 +337,12 @@ func (execution ValidationExecution) Validate() error {
 		}
 		if execution.RevalidationOf != nil {
 			return errors.New("replay generation cannot change revalidation predecessor")
+		}
+		if err := execution.ReplayOf.validate(); err != nil {
+			return fmt.Errorf("replay predecessor: %w", err)
+		}
+		if execution.ReplayOf.ValidationID != execution.ValidationID || execution.ReplayOf.Generation+1 != execution.Generation {
+			return errors.New("replay predecessor must be the immediately preceding generation")
 		}
 	default:
 		return fmt.Errorf("invalid validation execution trigger %q", execution.Trigger)
@@ -269,6 +378,15 @@ func (policy FrozenValidationRetryPolicy) validate() error {
 	}
 	if policy.MaxAttempts == 0 || policy.MaxAttempts > MaxValidationStageAttempts {
 		return fmt.Errorf("validation retry policy max attempts must be between 1 and %d", MaxValidationStageAttempts)
+	}
+	for stage, attempts := range map[ValidationLayer]uint32{
+		ValidationLayerUBL21XSD:         policy.XSDMaxAttempts,
+		ValidationLayerEN16931:          policy.EN16931MaxAttempts,
+		ValidationLayerPeppolBISBilling: policy.PeppolBISMaxAttempts,
+	} {
+		if attempts > MaxValidationStageAttempts {
+			return fmt.Errorf("validation retry policy %s max attempts must be between 1 and %d when set", stage, MaxValidationStageAttempts)
+		}
 	}
 	return nil
 }
@@ -378,6 +496,26 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 		if previous.UploadID != execution.UploadID || previous.ValidationID != execution.ValidationID || previous.DocumentType != execution.DocumentType ||
 			previous.RequestedProfile != execution.RequestedProfile || !reflect.DeepEqual(previous.Plan, execution.Plan) || previous.RetryPolicy != execution.RetryPolicy {
 			return 0, fmt.Errorf("create validation execution %s generation %d: replay lineage changed immutable identity, profile, plan, or retry policy", execution.ValidationID, execution.Generation)
+		}
+		if execution.ReplayOf == nil || execution.ReplayOf.ValidationID != previous.ValidationID || execution.ReplayOf.Generation != previous.Generation {
+			return 0, fmt.Errorf("create validation execution %s generation %d: replay predecessor does not match generation %d", execution.ValidationID, execution.Generation, previous.Generation)
+		}
+		for index, stage := range execution.Orchestration.Stages {
+			if stage.InheritedEvidence == nil {
+				continue
+			}
+			reference := stage.InheritedEvidence
+			evidence, evidenceErr := c.GetValidationStageEvidence(ctx, execution.UploadID, reference.ValidationID, reference.Generation, reference.StageOrdinal, reference.Attempt)
+			if evidenceErr != nil {
+				return 0, fmt.Errorf("create validation execution %s generation %d: load inherited prerequisite %d: %w", execution.ValidationID, execution.Generation, index+1, evidenceErr)
+			}
+			planStage := execution.Plan.Stages[index]
+			if evidence.UploadID != execution.UploadID || evidence.ValidationID != reference.ValidationID || evidence.Generation != reference.Generation ||
+				evidence.StageOrdinal != stage.Ordinal || evidence.Stage != stage.Stage || evidence.RulesetVersion != planStage.RulesetVersion ||
+				evidence.Attempt != reference.Attempt || evidence.RequestID != reference.RequestID || evidence.ResultID != reference.ResultID ||
+				evidence.Outcome != StageOutcomePassed {
+				return 0, fmt.Errorf("create validation execution %s generation %d: inherited prerequisite %d does not match permanent passing evidence", execution.ValidationID, execution.Generation, index+1)
+			}
 		}
 	} else if execution.Trigger == ValidationTriggerRevalidation {
 		reference := execution.RevalidationOf

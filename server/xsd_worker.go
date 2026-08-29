@@ -173,7 +173,7 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 	worker := &xsdStageWorker{
 		queue: client, catalog: catalog, validate: validate, timeout: settings.validationTimeout,
 		progressInterval: settings.progressInterval, logger: logger, now: now,
-		publishResult: client.PublishStageResult, nakDelay: xsdWorkerNAKDelay,
+		publishResult: client.PublishStageResult, publishDeadLetter: client.PublishStageDeadLetter, nakDelay: xsdWorkerNAKDelay,
 	}
 	localCapacity := settings.concurrency + settings.prefetch
 	messages, err := consumer.Messages(jetstream.PullMaxMessages(localCapacity))
@@ -243,15 +243,16 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 }
 
 type xsdStageWorker struct {
-	queue            *queue.Client
-	catalog          *validationCatalog
-	validate         xsdStreamValidator
-	timeout          time.Duration
-	progressInterval time.Duration
-	logger           *slog.Logger
-	now              func() time.Time
-	publishResult    func(context.Context, queue.StageResult) error
-	nakDelay         time.Duration
+	queue             *queue.Client
+	catalog           *validationCatalog
+	validate          xsdStreamValidator
+	timeout           time.Duration
+	progressInterval  time.Duration
+	logger            *slog.Logger
+	now               func() time.Time
+	publishResult     func(context.Context, queue.StageResult) error
+	publishDeadLetter func(context.Context, queue.StageDeadLetter) error
+	nakDelay          time.Duration
 }
 
 func (worker *xsdStageWorker) process(ctx context.Context, message jetstream.Msg, stopProgress func()) {
@@ -276,6 +277,15 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 	if request.Stage != queue.ValidationLayerUBL21XSD {
 		_ = message.Term()
 		return fmt.Errorf("terminate non-XSD request on XSD consumer: stage %q", request.Stage)
+	}
+	execution, err := worker.authorize(ctx, request)
+	if err != nil {
+		if errors.Is(err, errXSDStageRequestStale) {
+			_ = message.Term()
+			return fmt.Errorf("terminate rejected XSD stage request: %w", err)
+		}
+		worker.nak(message)
+		return fmt.Errorf("verify XSD stage authorization: %w", err)
 	}
 
 	startedAt := worker.now().UTC()
@@ -326,6 +336,30 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		worker.nak(message)
 		return fmt.Errorf("build XSD stage result: %w", err)
 	}
+	if outcome == queue.StageOutcomeOperationalFailure && request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
+		metadata, metadataErr := message.Metadata()
+		if metadataErr != nil {
+			worker.nak(message)
+			return fmt.Errorf("read XSD stage request delivery count: %w", metadataErr)
+		}
+		dead, deadErr := queue.NewStageDeadLetter(result, metadata.NumDelivered, completedAt)
+		if deadErr != nil {
+			worker.nak(message)
+			return fmt.Errorf("build XSD stage dead letter: %w", deadErr)
+		}
+		publishDeadLetter := worker.publishDeadLetter
+		if publishDeadLetter == nil && worker.queue != nil {
+			publishDeadLetter = worker.queue.PublishStageDeadLetter
+		}
+		if publishDeadLetter == nil {
+			worker.nak(message)
+			return errors.New("publish XSD stage dead letter: publisher is required")
+		}
+		if err := publishDeadLetter(ctx, dead); err != nil {
+			worker.nak(message)
+			return fmt.Errorf("publish XSD stage dead letter %s: %w", dead.DeadLetterID, err)
+		}
+	}
 	if err := worker.publishResult(ctx, result); err != nil {
 		worker.nak(message)
 		return fmt.Errorf("publish XSD stage result %s: %w", result.ResultID, err)
@@ -334,6 +368,35 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		return fmt.Errorf("ack XSD stage request %s: %w", request.RequestID, err)
 	}
 	return nil
+}
+
+var errXSDStageRequestStale = errors.New("stale XSD stage request")
+
+func (worker *xsdStageWorker) authorize(ctx context.Context, request queue.StageRequest) (queue.ValidationExecution, error) {
+	execution, err := worker.queue.GetValidationExecution(ctx, request.UploadID, request.ValidationID, request.Generation)
+	if err != nil {
+		if errors.Is(err, queue.ErrValidationExecutionNotFound) {
+			return queue.ValidationExecution{}, fmt.Errorf("%w: execution generation does not exist", errXSDStageRequestStale)
+		}
+		return queue.ValidationExecution{}, err
+	}
+	if request.DocumentType != execution.DocumentType || request.Plan != execution.Plan.ID || request.PlanVersion != execution.Plan.Version ||
+		request.StageOrdinal == 0 || int(request.StageOrdinal) > len(execution.Plan.Stages) {
+		return queue.ValidationExecution{}, fmt.Errorf("%w: request identity does not match durable execution", errXSDStageRequestStale)
+	}
+	planStage := execution.Plan.Stages[request.StageOrdinal-1]
+	if planStage.ID != request.Stage || planStage.RulesetVersion != request.RulesetVersion {
+		return queue.ValidationExecution{}, fmt.Errorf("%w: request does not match frozen plan stage", errXSDStageRequestStale)
+	}
+	state := execution.Orchestration
+	if state.Status != queue.ExecutionStatusStageQueued || state.CurrentStageOrdinal != request.StageOrdinal || len(state.Stages) != int(request.StageOrdinal) {
+		return queue.ValidationExecution{}, fmt.Errorf("%w: request is not the current queued stage", errXSDStageRequestStale)
+	}
+	current := state.Stages[request.StageOrdinal-1]
+	if current.Stage != request.Stage || current.AuthorizedAttempt != request.Attempt || current.RequestID != request.RequestID {
+		return queue.ValidationExecution{}, fmt.Errorf("%w: request is not the currently authorized attempt", errXSDStageRequestStale)
+	}
+	return execution, nil
 }
 
 func (worker *xsdStageWorker) nak(message jetstream.Msg) {

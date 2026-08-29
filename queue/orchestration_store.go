@@ -205,7 +205,7 @@ func validateQueuedOrchestrationTransition(current, next ValidationExecution) er
 
 	switch next.Orchestration.Status {
 	case ExecutionStatusStageQueued:
-		if accepted.Outcome != StageOutcomeOperationalFailure || accepted.Attempt >= current.RetryPolicy.MaxAttempts ||
+		if accepted.Outcome != StageOutcomeOperationalFailure || accepted.Attempt >= current.RetryPolicy.MaxAttemptsFor(currentStage.Stage) ||
 			nextStage.TerminalOutcome != "" || nextStage.AuthorizedAttempt != currentStage.AuthorizedAttempt+1 ||
 			nextStage.DispatchStatus != StageDispatchPending || nextStage.DispatchedAt != "" {
 			return errors.New("queued stage may continue only with an authorized retry after operational failure")
@@ -220,7 +220,7 @@ func validateQueuedOrchestrationTransition(current, next ValidationExecution) er
 			return errors.New("invalid execution must succeed from standards-invalid evidence")
 		}
 	case ExecutionStatusProcessingFailed:
-		if accepted.Outcome != StageOutcomeOperationalFailure || accepted.Attempt < current.RetryPolicy.MaxAttempts || nextStage.TerminalOutcome != StageOutcomeOperationalFailure {
+		if accepted.Outcome != StageOutcomeOperationalFailure || accepted.Attempt < current.RetryPolicy.MaxAttemptsFor(currentStage.Stage) || nextStage.TerminalOutcome != StageOutcomeOperationalFailure {
 			return errors.New("processing-failed execution requires exhausted operational attempts")
 		}
 	default:

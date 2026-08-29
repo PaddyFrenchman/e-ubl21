@@ -67,15 +67,18 @@ const DefaultNamespace = Namespace("")
 type Namespace string
 
 // StageQueueNames is the complete namespace-derived physical topology for
-// one logical validation stage. Request and result streams are separate so
-// their consumers, retention and scaling can never overlap accidentally.
+// one logical validation stage. Request, result, and dead-letter streams are
+// separate so their ownership, retention and scaling cannot overlap.
 type StageQueueNames struct {
-	RequestSubject  string
-	ResultSubject   string
-	RequestStream   string
-	ResultStream    string
-	RequestConsumer string
-	ResultConsumer  string
+	RequestSubject          string
+	ResultSubject           string
+	DeadLetterSubjectPrefix string
+	DeadLetterFilterSubject string
+	RequestStream           string
+	ResultStream            string
+	DeadLetterStream        string
+	RequestConsumer         string
+	ResultConsumer          string
 }
 
 // namespacePattern restricts a non-default Namespace's raw value to one or
@@ -254,12 +257,15 @@ func (n Namespace) StageQueue(stage ValidationLayer) (StageQueueNames, error) {
 	}
 	resourceToken := strings.ToUpper(token)
 	return StageQueueNames{
-		RequestSubject:  subjectPrefix + ".validation.request." + token,
-		ResultSubject:   subjectPrefix + ".validation.result." + token,
-		RequestStream:   resourcePrefix + "_VALIDATION_REQUEST_" + resourceToken,
-		ResultStream:    resourcePrefix + "_VALIDATION_RESULT_" + resourceToken,
-		RequestConsumer: resourcePrefix + "_VALIDATION_" + resourceToken + "_WORKER",
-		ResultConsumer:  resourcePrefix + "_VALIDATION_" + resourceToken + "_ORCHESTRATOR",
+		RequestSubject:          subjectPrefix + ".validation.request." + token,
+		ResultSubject:           subjectPrefix + ".validation.result." + token,
+		DeadLetterSubjectPrefix: subjectPrefix + ".validation.dead_letter." + token + ".",
+		DeadLetterFilterSubject: subjectPrefix + ".validation.dead_letter." + token + ".*",
+		RequestStream:           resourcePrefix + "_VALIDATION_REQUEST_" + resourceToken,
+		ResultStream:            resourcePrefix + "_VALIDATION_RESULT_" + resourceToken,
+		DeadLetterStream:        resourcePrefix + "_VALIDATION_DEAD_LETTER_" + resourceToken,
+		RequestConsumer:         resourcePrefix + "_VALIDATION_" + resourceToken + "_WORKER",
+		ResultConsumer:          resourcePrefix + "_VALIDATION_" + resourceToken + "_ORCHESTRATOR",
 	}, nil
 }
 

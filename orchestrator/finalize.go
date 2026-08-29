@@ -93,23 +93,42 @@ func (machine *Machine) buildValidationResult(ctx context.Context, execution que
 	}
 	stages := make(queue.ValidationStages, 0, len(state.Stages))
 	for index, stage := range state.Stages {
-		if stage.TerminalOutcome == "" || len(stage.Attempts) == 0 {
+		if stage.TerminalOutcome == "" || (len(stage.Attempts) == 0 && stage.InheritedEvidence == nil) {
 			return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d has no accepted terminal evidence", index+1)
 		}
-		accepted := stage.Attempts[len(stage.Attempts)-1]
-		evidence, err := machine.Queue.GetValidationStageEvidence(ctx, execution.UploadID, execution.ValidationID, execution.Generation, stage.Ordinal, accepted.Attempt)
+		var evidence queue.StageResult
+		var err error
+		if stage.InheritedEvidence != nil {
+			reference := stage.InheritedEvidence
+			evidence, err = machine.Queue.GetValidationStageEvidence(ctx, execution.UploadID, reference.ValidationID, reference.Generation, reference.StageOrdinal, reference.Attempt)
+		} else {
+			accepted := stage.Attempts[len(stage.Attempts)-1]
+			evidence, err = machine.Queue.GetValidationStageEvidence(ctx, execution.UploadID, execution.ValidationID, execution.Generation, stage.Ordinal, accepted.Attempt)
+		}
 		if err != nil {
 			return queue.ValidationResult{}, fmt.Errorf("load terminal validation stage %d evidence: %w", index+1, err)
 		}
 		if err := evidence.Validate(); err != nil {
 			return queue.ValidationResult{}, fmt.Errorf("validate terminal validation stage %d evidence: %w", index+1, err)
 		}
-		if err := resultMatchesExecution(evidence, execution); err != nil {
-			return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d: %w", index+1, err)
+		planStage := execution.Plan.Stages[index]
+		if evidence.UploadID != execution.UploadID || evidence.Stage != planStage.ID || evidence.StageOrdinal != planStage.Ordinal || evidence.RulesetVersion != planStage.RulesetVersion || evidence.Outcome != stage.TerminalOutcome {
+			return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d evidence does not match frozen plan", index+1)
 		}
-		if evidence.ResultID != accepted.ResultID || evidence.RequestID != accepted.RequestID || evidence.Attempt != accepted.Attempt ||
-			evidence.Outcome != accepted.Outcome || evidence.Reason != accepted.Reason || evidence.Outcome != stage.TerminalOutcome {
-			return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d evidence does not match orchestration state", index+1)
+		if stage.InheritedEvidence != nil {
+			reference := stage.InheritedEvidence
+			if evidence.ValidationID != reference.ValidationID || evidence.Generation != reference.Generation || evidence.RequestID != reference.RequestID || evidence.ResultID != reference.ResultID || evidence.Attempt != reference.Attempt || evidence.Outcome != queue.StageOutcomePassed {
+				return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d inherited evidence does not match orchestration state", index+1)
+			}
+		} else {
+			accepted := stage.Attempts[len(stage.Attempts)-1]
+			if err := resultMatchesExecution(evidence, execution); err != nil {
+				return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d: %w", index+1, err)
+			}
+			if evidence.ResultID != accepted.ResultID || evidence.RequestID != accepted.RequestID || evidence.Attempt != accepted.Attempt ||
+				evidence.Outcome != accepted.Outcome || evidence.Reason != accepted.Reason {
+				return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d evidence does not match orchestration state", index+1)
+			}
 		}
 		stages = append(stages, queue.ValidationStageResult{
 			Layer: evidence.Stage, Version: evidence.RulesetVersion, Valid: evidence.Outcome == queue.StageOutcomePassed,

@@ -39,13 +39,13 @@ Publication failure NAKs the request for delivery retry. An operational
 `StageResult` is durable attempt evidence; the orchestrator applies the frozen
 XSD attempt budget and either authorizes the next XSD attempt or records
 `processing-failed` when exhausted. The stage-specific DLQ stream, delivery
-counter persistence, and operator replay command are deliberately introduced
-by `TODO-VALIDATION-SPLIT-010` (#57), which owns those shared policies. This
-worker does not invent a competing replay contract.
+counter persistence, and operator replay command are implemented by
+`TODO-VALIDATION-SPLIT-010` (#57) under
+[`STAGE-RETRY-DLQ.md`](STAGE-RETRY-DLQ.md).
 
 Malformed or physically misrouted messages are terminated because they cannot
-be valid authorized XSD attempts. Their broker-level quarantine/audit record is
-also part of #57.
+be valid authorized XSD attempts. They do not enter the operational stage DLQ,
+which requires an exact authorized attempt and valid operational evidence.
 
 ## Startup and shutdown
 

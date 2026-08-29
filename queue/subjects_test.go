@@ -294,24 +294,30 @@ func TestNamespaceDerivesIndependentStageQueueNames(t *testing.T) {
 			name: "default XSD", namespace: queue.DefaultNamespace, stage: queue.ValidationLayerUBL21XSD,
 			want: queue.StageQueueNames{
 				RequestSubject: "ubl.validation.request.xsd", ResultSubject: "ubl.validation.result.xsd",
+				DeadLetterSubjectPrefix: "ubl.validation.dead_letter.xsd.", DeadLetterFilterSubject: "ubl.validation.dead_letter.xsd.*",
 				RequestStream: "UBL_VALIDATION_REQUEST_XSD", ResultStream: "UBL_VALIDATION_RESULT_XSD",
-				RequestConsumer: "UBL_VALIDATION_XSD_WORKER", ResultConsumer: "UBL_VALIDATION_XSD_ORCHESTRATOR",
+				DeadLetterStream: "UBL_VALIDATION_DEAD_LETTER_XSD",
+				RequestConsumer:  "UBL_VALIDATION_XSD_WORKER", ResultConsumer: "UBL_VALIDATION_XSD_ORCHESTRATOR",
 			},
 		},
 		{
 			name: "namespaced EN", namespace: queue.MustNamespace("eubl21.prod"), stage: queue.ValidationLayerEN16931,
 			want: queue.StageQueueNames{
 				RequestSubject: "eubl21.prod.validation.request.en16931", ResultSubject: "eubl21.prod.validation.result.en16931",
+				DeadLetterSubjectPrefix: "eubl21.prod.validation.dead_letter.en16931.", DeadLetterFilterSubject: "eubl21.prod.validation.dead_letter.en16931.*",
 				RequestStream: "EUBL21_PROD_VALIDATION_REQUEST_EN16931", ResultStream: "EUBL21_PROD_VALIDATION_RESULT_EN16931",
-				RequestConsumer: "EUBL21_PROD_VALIDATION_EN16931_WORKER", ResultConsumer: "EUBL21_PROD_VALIDATION_EN16931_ORCHESTRATOR",
+				DeadLetterStream: "EUBL21_PROD_VALIDATION_DEAD_LETTER_EN16931",
+				RequestConsumer:  "EUBL21_PROD_VALIDATION_EN16931_WORKER", ResultConsumer: "EUBL21_PROD_VALIDATION_EN16931_ORCHESTRATOR",
 			},
 		},
 		{
 			name: "reserved Peppol", namespace: queue.MustNamespace("eubl21.dev"), stage: queue.ValidationLayerPeppolBISBilling,
 			want: queue.StageQueueNames{
 				RequestSubject: "eubl21.dev.validation.request.peppol", ResultSubject: "eubl21.dev.validation.result.peppol",
+				DeadLetterSubjectPrefix: "eubl21.dev.validation.dead_letter.peppol.", DeadLetterFilterSubject: "eubl21.dev.validation.dead_letter.peppol.*",
 				RequestStream: "EUBL21_DEV_VALIDATION_REQUEST_PEPPOL", ResultStream: "EUBL21_DEV_VALIDATION_RESULT_PEPPOL",
-				RequestConsumer: "EUBL21_DEV_VALIDATION_PEPPOL_WORKER", ResultConsumer: "EUBL21_DEV_VALIDATION_PEPPOL_ORCHESTRATOR",
+				DeadLetterStream: "EUBL21_DEV_VALIDATION_DEAD_LETTER_PEPPOL",
+				RequestConsumer:  "EUBL21_DEV_VALIDATION_PEPPOL_WORKER", ResultConsumer: "EUBL21_DEV_VALIDATION_PEPPOL_ORCHESTRATOR",
 			},
 		},
 	}

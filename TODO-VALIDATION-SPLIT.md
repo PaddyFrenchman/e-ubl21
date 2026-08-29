@@ -585,6 +585,8 @@ and migration boundary are documented in
 
 # TODO-VALIDATION-SPLIT-010 — Implement independent stage retry and DLQ policies
 
+**Implementation contract:** [`docs/STAGE-RETRY-DLQ.md`](docs/STAGE-RETRY-DLQ.md)
+
 ## Goal
 
 Make failures attributable and recoverable per stage.
@@ -597,12 +599,20 @@ Make failures attributable and recoverable per stage.
 - Store stage, ruleset version, attempt count and reason in DLQ entries.
 - Add operator replay for a failed stage without re-uploading content.
 - Decide whether replay resumes from failed stage or creates a new complete validation generation.
-- Default recommendation: same-generation operational replay resumes the failed stage; explicit standards/profile revalidation creates a new validation generation.
+- Operational replay appends a generation in the same validation lineage and
+  resumes the failed stage using immutable prerequisite-evidence references.
+  Reopening a terminal generation is forbidden because its #56 final result is
+  permanent. Explicit standards/profile revalidation creates a new lineage.
 - Prevent replay from bypassing prerequisite evidence.
 
 ## Acceptance criteria
 
 An EN runtime outage does not consume XSD retry budget, and replaying EN failure does not rerun XSD unless policy explicitly requests a new validation generation.
+
+The implemented frozen per-stage budgets, permanent stage DLQ topology and
+contract, publish-before-ACK crash ordering, and prerequisite-preserving replay
+generation are documented in
+[`docs/STAGE-RETRY-DLQ.md`](docs/STAGE-RETRY-DLQ.md).
 
 ---
 

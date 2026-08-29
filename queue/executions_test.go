@@ -302,6 +302,12 @@ func TestValidationExecutionRecordRoundTripAndValidation(t *testing.T) {
 		{"unknown retry policy version", func(e *queue.ValidationExecution) { e.RetryPolicy.Version = "99" }},
 		{"retry policy zero attempts", func(e *queue.ValidationExecution) { e.RetryPolicy.MaxAttempts = 0 }},
 		{"retry policy excessive attempts", func(e *queue.ValidationExecution) { e.RetryPolicy.MaxAttempts = queue.MaxValidationStageAttempts + 1 }},
+		{"retry policy excessive XSD attempts", func(e *queue.ValidationExecution) {
+			e.RetryPolicy.XSDMaxAttempts = queue.MaxValidationStageAttempts + 1
+		}},
+		{"retry policy excessive EN attempts", func(e *queue.ValidationExecution) {
+			e.RetryPolicy.EN16931MaxAttempts = queue.MaxValidationStageAttempts + 1
+		}},
 		{"created at", func(e *queue.ValidationExecution) { e.CreatedAt = "yesterday" }},
 		{"zero created at", func(e *queue.ValidationExecution) { e.CreatedAt = time.Time{}.Format(time.RFC3339Nano) }},
 		{"plan id", func(e *queue.ValidationExecution) { e.Plan.ID = "Bad Plan" }},

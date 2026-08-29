@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/PaddyFrenchman/e-ubl21/orchestrator"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/spf13/cobra"
 )
@@ -26,6 +27,32 @@ func newDeadLetterCmd(cfg *Config) *cobra.Command {
 				return err
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "requeued %s\n", args[0])
+			return nil
+		},
+	})
+	deadLetter.AddCommand(&cobra.Command{
+		Use:   "stage-retry STAGE DEAD_LETTER_ID",
+		Short: "Replay one exhausted validation stage without rerunning passing prerequisites",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			stage := queue.ValidationLayer(args[0])
+			if _, err := cfg.QueueNamespace.StageQueue(stage); err != nil {
+				return err
+			}
+			q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+			if err != nil {
+				return err
+			}
+			defer q.Close()
+			dead, err := q.GetStageDeadLetter(cmd.Context(), stage, args[1])
+			if err != nil {
+				return err
+			}
+			replayed, err := orchestrator.New(q).ReplayStage(cmd.Context(), dead)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "replayed %s generation %d stage %s\n", replayed.Execution.ValidationID, replayed.Execution.Generation, stage)
 			return nil
 		},
 	})

@@ -61,10 +61,7 @@ func TestXSDWorkerClassifiesStandardsAndOperationalFailures(t *testing.T) {
 
 	t.Run("content unavailable", func(t *testing.T) {
 		client, ctx := newXSDWorkerTestClient(t)
-		request := newXSDWorkerTestRequest(t)
-		if err := client.PublishStageRequest(ctx, request); err != nil {
-			t.Fatal(err)
-		}
+		publishXSDWorkerTestRequestWithoutContent(t, ctx, client)
 		message := fetchXSDWorkerRequest(t, ctx, client)
 		worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error {
 			t.Fatal("validator ran without upload content")
@@ -307,6 +304,26 @@ func TestXSDWorkerOperationalResultsDriveIndependentRetryAndExhaustion(t *testin
 				t.Fatal(err)
 			}
 			secondResult := fetchXSDWorkerResult(t, ctx, client)
+			deadDepth, depthErr := client.StageDeadLetterDepth(ctx, queue.ValidationLayerUBL21XSD)
+			if depthErr != nil {
+				t.Fatal(depthErr)
+			}
+			if test.secondPass && deadDepth != 0 {
+				t.Fatalf("passing retry created %d XSD dead letters", deadDepth)
+			}
+			if !test.secondPass {
+				if deadDepth != 1 {
+					t.Fatalf("exhausted retry created %d XSD dead letters, want 1", deadDepth)
+				}
+				dead, deadErr := queue.NewStageDeadLetter(secondResult, 1, time.Now().UTC())
+				if deadErr != nil {
+					t.Fatal(deadErr)
+				}
+				stored, getErr := client.GetStageDeadLetter(ctx, queue.ValidationLayerUBL21XSD, dead.DeadLetterID)
+				if getErr != nil || stored.Attempt != 2 || stored.Reason != queue.StageReasonRuntimeFailure || stored.RulesetVersion != secondResult.RulesetVersion {
+					t.Fatalf("stored XSD dead letter = %+v, %v", stored, getErr)
+				}
+			}
 			terminal, err := machine.HandleStageResult(ctx, secondResult)
 			if err != nil {
 				t.Fatal(err)
@@ -424,6 +441,9 @@ func newXSDWorkerTestClientWithConfig(t *testing.T, config queue.StageQueueInfra
 	if err := client.ProvisionStageQueueInfra(ctx, config); err != nil {
 		t.Fatal(err)
 	}
+	if err := client.ProvisionValidationExecutionInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
 	return client, ctx
 }
 
@@ -451,19 +471,21 @@ func testXSDCatalog() *validationCatalog {
 
 func publishXSDWorkerTestRequest(t *testing.T, ctx context.Context, client *queue.Client, content []byte) queue.StageRequest {
 	t.Helper()
-	request := newXSDWorkerTestRequest(t)
+	request := startXSDWorkerTestRequest(t, ctx, client)
 	if err := client.PutUploadContent(ctx, request.UploadID, content); err != nil {
-		t.Fatal(err)
-	}
-	if err := client.PublishStageRequest(ctx, request); err != nil {
 		t.Fatal(err)
 	}
 	return request
 }
 
-func newXSDWorkerTestRequest(t *testing.T) queue.StageRequest {
+func publishXSDWorkerTestRequestWithoutContent(t *testing.T, ctx context.Context, client *queue.Client) queue.StageRequest {
 	t.Helper()
-	execution, err := queue.NewValidationExecution(queue.ValidationExecutionIntent{
+	return startXSDWorkerTestRequest(t, ctx, client)
+}
+
+func startXSDWorkerTestRequest(t *testing.T, ctx context.Context, client *queue.Client) queue.StageRequest {
+	t.Helper()
+	started, err := orchestrator.New(client).Start(ctx, queue.ValidationExecutionIntent{
 		IntentID: testXSDWorkerID(t), UploadID: testXSDWorkerID(t), DocumentType: "Invoice",
 		Trigger: queue.ValidationTriggerInitial, RequestedProfile: queue.ValidationProfileUBL21,
 		Plan: xsdWorkerTestPlan(false), CreatedAt: time.Now().UTC(),
@@ -471,7 +493,11 @@ func newXSDWorkerTestRequest(t *testing.T) queue.StageRequest {
 	if err != nil {
 		t.Fatal(err)
 	}
-	request, err := queue.NewStageRequest(execution, 1, 1, time.Now().UTC())
+	createdAt, err := time.Parse(time.RFC3339Nano, started.Execution.Orchestration.Stages[0].RequestCreatedAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request, err := queue.NewStageRequest(started.Execution, 1, 1, createdAt)
 	if err != nil {
 		t.Fatal(err)
 	}

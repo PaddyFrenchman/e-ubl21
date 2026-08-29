@@ -20,10 +20,12 @@ func TestStageQueueProvisioningCreatesIndependentDurableTopology(t *testing.T) {
 	config := queue.DefaultStageQueueInfraConfig()
 	config.Stages[0].RequestMaxAge = time.Hour
 	config.Stages[0].ResultMaxAge = 2 * time.Hour
+	config.Stages[0].DeadLetterMaxAge = 24 * time.Hour
 	config.Stages[0].RequestDelivery = queue.StageDeliveryConfig{AckWait: 45 * time.Second, MaxAckPending: 11}
 	config.Stages[0].ResultDelivery = queue.StageDeliveryConfig{AckWait: 15 * time.Second, MaxAckPending: 101}
 	config.Stages[1].RequestMaxAge = 3 * time.Hour
 	config.Stages[1].ResultMaxAge = 4 * time.Hour
+	config.Stages[1].DeadLetterMaxAge = 48 * time.Hour
 	config.Stages[1].RequestDelivery = queue.StageDeliveryConfig{AckWait: 90 * time.Second, MaxAckPending: 7}
 	config.Stages[1].ResultDelivery = queue.StageDeliveryConfig{AckWait: 30 * time.Second, MaxAckPending: 202}
 
@@ -89,6 +91,18 @@ func TestStageQueueProvisioningCreatesIndependentDurableTopology(t *testing.T) {
 		}
 		if resultConsumerInfo.Config.FilterSubject != names.ResultSubject || resultConsumerInfo.Config.AckWait != stage.ResultDelivery.AckWait || resultConsumerInfo.Config.MaxAckPending != stage.ResultDelivery.MaxAckPending || resultConsumerInfo.Config.MaxDeliver != -1 {
 			t.Fatalf("%s result consumer config = %+v", stage.Stage, resultConsumerInfo.Config)
+		}
+		deadLetterStream, err := client.JS.Stream(ctx, names.DeadLetterStream)
+		if err != nil {
+			t.Fatal(err)
+		}
+		deadLetterInfo, err := deadLetterStream.Info(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(deadLetterInfo.Config.Subjects, []string{names.DeadLetterFilterSubject}) || deadLetterInfo.Config.Retention != jetstream.LimitsPolicy ||
+			deadLetterInfo.Config.Storage != jetstream.FileStorage || deadLetterInfo.Config.MaxAge != stage.DeadLetterMaxAge || deadLetterInfo.Config.MaxMsgsPerSubject != 1 || !deadLetterInfo.Config.DiscardNewPerSubject {
+			t.Fatalf("%s dead-letter stream config = %+v", stage.Stage, deadLetterInfo.Config)
 		}
 	}
 }
@@ -323,6 +337,7 @@ func TestStageQueueConfigValidation(t *testing.T) {
 		{"duplicate stage", func(config *queue.StageQueueInfraConfig) { config.Stages[1].Stage = config.Stages[0].Stage }},
 		{"negative request age", func(config *queue.StageQueueInfraConfig) { config.Stages[0].RequestMaxAge = -time.Second }},
 		{"negative result age", func(config *queue.StageQueueInfraConfig) { config.Stages[0].ResultMaxAge = -time.Second }},
+		{"negative dead-letter age", func(config *queue.StageQueueInfraConfig) { config.Stages[0].DeadLetterMaxAge = -time.Second }},
 		{"zero request ack wait", func(config *queue.StageQueueInfraConfig) { config.Stages[0].RequestDelivery.AckWait = 0 }},
 		{"zero result ack wait", func(config *queue.StageQueueInfraConfig) { config.Stages[0].ResultDelivery.AckWait = 0 }},
 		{"zero request pending", func(config *queue.StageQueueInfraConfig) { config.Stages[0].RequestDelivery.MaxAckPending = 0 }},

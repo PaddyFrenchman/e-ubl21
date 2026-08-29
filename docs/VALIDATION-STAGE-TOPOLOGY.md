@@ -9,6 +9,10 @@ the ownership boundaries in
 versioned payloads in
 [`VALIDATION-STAGE-CONTRACTS.md`](VALIDATION-STAGE-CONTRACTS.md).
 
+Issue #57 extends each stage topology with an independently retained permanent
+operational dead-letter stream described in
+[`STAGE-RETRY-DLQ.md`](STAGE-RETRY-DLQ.md).
+
 This issue provisions infrastructure only. It does not activate an
 orchestrator, dispatch a stage, or replace the current monolithic worker.
 
@@ -17,17 +21,18 @@ orchestrator, dispatch a stage, or replace the current monolithic worker.
 `Namespace.StageQueue(stage)` is the single derivation point for every stage
 subject, stream, and durable consumer. For the default namespace:
 
-| Stage | Request subject | Result subject |
-| --- | --- | --- |
-| UBL 2.1 XSD | `ubl.validation.request.xsd` | `ubl.validation.result.xsd` |
-| EN 16931 | `ubl.validation.request.en16931` | `ubl.validation.result.en16931` |
-| Reserved Peppol Billing | `ubl.validation.request.peppol` | `ubl.validation.result.peppol` |
+| Stage | Request subject | Result subject | DLQ subject filter |
+| --- | --- | --- | --- |
+| UBL 2.1 XSD | `ubl.validation.request.xsd` | `ubl.validation.result.xsd` | `ubl.validation.dead_letter.xsd.*` |
+| EN 16931 | `ubl.validation.request.en16931` | `ubl.validation.result.en16931` | `ubl.validation.dead_letter.en16931.*` |
+| Reserved Peppol Billing | `ubl.validation.request.peppol` | `ubl.validation.result.peppol` | `ubl.validation.dead_letter.peppol.*` |
 
 For `EUBL21_QUEUE_NAMESPACE=eubl21.prod`, the EN subjects become:
 
 ```text
 eubl21.prod.validation.request.en16931
 eubl21.prod.validation.result.en16931
+eubl21.prod.validation.dead_letter.en16931.*
 ```
 
 The matching default-namespace XSD resources illustrate the physical naming
@@ -39,6 +44,8 @@ request consumer: UBL_VALIDATION_XSD_WORKER
 
 result stream:    UBL_VALIDATION_RESULT_XSD
 result consumer:  UBL_VALIDATION_XSD_ORCHESTRATOR
+
+dead-letter stream: UBL_VALIDATION_DEAD_LETTER_XSD
 ```
 
 An explicit namespace prepends its normalized resource prefix, for example
@@ -53,11 +60,12 @@ it before dialing NATS. Direct conversions therefore cannot bypass the
 character-set or reserved-name checks and create a client whose resources
 collide with the default deployment.
 
-Each stream has exactly one non-wildcard subject. Consequently an XSD worker
-cannot consume EN or Peppol traffic through a broad filter, and namespaces
-cannot cross-consume. Replicas of one logical worker role share that stage's
-derived durable request consumer. Orchestrator replicas similarly share the
-derived result consumer for that stage.
+Each request/result stream has exactly one non-wildcard subject, while each
+DLQ wildcard is confined to one stage's deterministic entry subjects.
+Consequently an XSD worker cannot consume EN or Peppol traffic through a broad
+filter, and namespaces cannot cross-consume. Replicas of one logical worker
+role share that stage's derived durable request consumer. Orchestrator replicas
+similarly share the derived result consumer for that stage.
 
 ## Retention and delivery
 
@@ -67,8 +75,8 @@ Every request and result stream uses:
 - work-queue retention;
 - explicit acknowledgement;
 - deliver-all and instant replay policies;
-- unlimited broker redelivery for the same logical attempt until the later
-  stage retry/DLQ policy is implemented.
+- unlimited broker redelivery for the same logical attempt; logical bounded
+  retry and exhausted-attempt DLQ publication are application-level #57 state.
 
 An ACK removes a message only after its owning consumer has durably completed
 the corresponding transition. With no worker or orchestrator replica running,
@@ -81,6 +89,7 @@ direction:
 ```text
 request MaxAge, AckWait, MaxAckPending
 result  MaxAge, AckWait, MaxAckPending
+DLQ     MaxAge
 ```
 
 The initial default is a 60-second `AckWait` and 64 outstanding messages for
@@ -102,6 +111,11 @@ version fields, plus a maximum 256-byte layer on every issue and 64 KiB of
 structural/identity allowance, remains below 2 MiB. A compile-time assertion
 keeps that calculation below the configured stream limit.
 
+DLQ streams use limits retention, file storage, a 32 KiB message ceiling, and
+one permanent message per deterministic dead-letter subject. `DiscardNew` per
+subject prevents replacement after the broker's message-ID deduplication
+window expires.
+
 The NATS server/account `max_payload` must therefore be at least 2 MiB
 (`2097152`). The embedded test broker, Docker Compose environment, and Minikube
 manifest set that value explicitly. Deployments using an external NATS server
@@ -122,9 +136,9 @@ update streams or consumers. This preserves #48's rule that application
 services verify infrastructure compatibility but do not reconfigure it.
 
 Stage workers use `VerifyStageWorkerInfra` for role-scoped startup checks. It
-verifies the fixed request stream/consumer contract and the result stream used
-for publication, while accepting provisioner-selected retention and returning
-the actual request consumer `AckWait` and `MaxAckPending`. It never opens or
+verifies the fixed request stream/consumer contract plus the result and DLQ
+streams used for publication, while accepting provisioner-selected retention
+and returning the actual request consumer `AckWait` and `MaxAckPending`. It never opens or
 verifies the orchestrator-owned result consumer, whose delivery tuning is
 irrelevant to worker readiness.
 

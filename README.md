@@ -477,7 +477,14 @@ For example:
 
 ```bash
 e-ubl21 dead-letter retry UPLOAD_ID
+
+e-ubl21 dead-letter stage-retry en16931 DEAD_LETTER_ID
 ```
+
+Split-stage retries have independent frozen budgets and permanent stage DLQ
+records. Stage replay creates a new generation at the failed stage while
+reusing verified immutable prerequisite evidence, so replaying EN does not
+rerun XSD. See [`docs/STAGE-RETRY-DLQ.md`](docs/STAGE-RETRY-DLQ.md).
 
 ## Raw XML retention
 

@@ -121,6 +121,84 @@ func TestMachineRetriesOperationalFailureAndFailsOnlyAfterExhaustion(t *testing.
 	assertNoRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }
 
+func TestENFailureUsesIndependentBudgetAndReplayCarriesXSDPrerequisite(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	intent := testIntent(t, testPlan())
+	intent.RetryPolicy.MaxAttempts = 3
+	intent.RetryPolicy.XSDMaxAttempts = 2
+	intent.RetryPolicy.EN16931MaxAttempts = 1
+	started, err := machine.Start(ctx, intent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	xsdRequest := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	if _, err := machine.HandleStageResult(ctx, resultFor(t, xsdRequest, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+		t.Fatal(err)
+	}
+	enRequest := takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+	enFailure := resultFor(t, enRequest, queue.StageOutcomeOperationalFailure, queue.StageReasonRuntimeUnavailable)
+	dead, err := queue.NewStageDeadLetter(enFailure, 1, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PublishStageDeadLetter(ctx, dead); err != nil {
+		t.Fatal(err)
+	}
+	failed, err := machine.HandleStageResult(ctx, enFailure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if failed.Execution.Orchestration.Status != queue.ExecutionStatusProcessingFailed ||
+		len(failed.Execution.Orchestration.Stages[0].Attempts) != 1 || len(failed.Execution.Orchestration.Stages[1].Attempts) != 1 {
+		t.Fatalf("independent stage attempts = %+v", failed.Execution.Orchestration)
+	}
+
+	publishStageRequest := machine.PublishStageRequest
+	machine.PublishStageRequest = func(context.Context, queue.StageRequest) error {
+		return errors.New("replay request broker unavailable")
+	}
+	if _, err := machine.ReplayStage(ctx, dead); err == nil {
+		t.Fatal("replay succeeded despite request publication failure")
+	}
+	if depth, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayerEN16931); err != nil || depth != 1 {
+		t.Fatalf("failed replay removed EN dead letter: depth=%d err=%v", depth, err)
+	}
+	machine.PublishStageRequest = publishStageRequest
+	replayed, err := machine.ReplayStage(ctx, dead)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if replayed.Execution.Generation != started.Execution.Generation+1 || replayed.Execution.Orchestration.CurrentStageOrdinal != 2 {
+		t.Fatalf("replay execution = %+v", replayed.Execution)
+	}
+	inherited := replayed.Execution.Orchestration.Stages[0]
+	if inherited.InheritedEvidence == nil || inherited.TerminalOutcome != queue.StageOutcomePassed || len(inherited.Attempts) != 0 {
+		t.Fatalf("inherited XSD prerequisite = %+v", inherited)
+	}
+	assertNoRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	replayEN := takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+	if replayEN.Generation != replayed.Execution.Generation || replayEN.Attempt != 1 {
+		t.Fatalf("replayed EN request = %+v", replayEN)
+	}
+	completed, err := machine.HandleStageResult(ctx, resultFor(t, replayEN, queue.StageOutcomePassed, queue.StageReasonNone))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completed.Execution.Orchestration.Status != queue.ExecutionStatusValid {
+		t.Fatalf("replayed terminal state = %+v", completed.Execution.Orchestration)
+	}
+	result, err := client.GetValidationExecutionResult(ctx, completed.Execution.ValidationID, completed.Execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.ValidationStages) != 2 || result.ValidationStages[0].Layer != queue.ValidationLayerUBL21XSD || !result.ValidationStages[0].Valid || result.ValidationStages[1].Layer != queue.ValidationLayerEN16931 || !result.ValidationStages[1].Valid {
+		t.Fatalf("replayed final result = %+v", result)
+	}
+	if depth, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayerEN16931); err != nil || depth != 0 {
+		t.Fatalf("EN dead-letter depth after replay = %d, %v", depth, err)
+	}
+}
+
 func TestMachineRejectsOutOfOrderAndPlanDrift(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	state, err := machine.Start(ctx, testIntent(t, testPlan()))
