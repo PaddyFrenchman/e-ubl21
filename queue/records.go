@@ -261,6 +261,14 @@ func (c *Client) OpenUploadContent(ctx context.Context, id string) (UploadConten
 	return content, nil
 }
 
+// VerifyUploadContentInfra performs a read-only runtime check that the shared
+// immutable XML Object Store exists and can be opened. Stage workers use this
+// at startup instead of provisioning or mutating infrastructure.
+func (c *Client) VerifyUploadContentInfra(ctx context.Context) error {
+	_, err := c.uploadContentStore(ctx)
+	return err
+}
+
 // DeleteUploadContent removes a partially persisted upload object. Missing
 // objects are treated as already cleaned up.
 func (c *Client) DeleteUploadContent(ctx context.Context, id string) error {

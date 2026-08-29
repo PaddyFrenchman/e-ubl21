@@ -162,6 +162,9 @@ deployer/runtime ownership boundary are defined in
 The orchestrator-owned CAS state, immutable attempt evidence, plan transitions,
 and terminal execution outcomes are defined in
 [`docs/VALIDATION-ORCHESTRATOR.md`](docs/VALIDATION-ORCHESTRATOR.md).
+The implemented independent UBL 2.1 XSD process, its durable ACK ordering and
+its operational boundaries are documented in
+[`docs/XSD-WORKER.md`](docs/XSD-WORKER.md).
 
 ## HTTP API
 
@@ -357,12 +360,27 @@ go run . worker \
 
 The worker requires its validation runtime configuration to be valid before it begins consuming work. See the EN 16931 deployment guide for controlled local paths and production defaults.
 
+### Run the independent XSD stage worker
+
+After the validation-stage topology has been provisioned, run only the UBL 2.1
+XSD consumer with:
+
+```bash
+go run . worker-xsd \
+  --nats-url nats://localhost:4222
+```
+
+It publishes durable XSD `StageResult` messages and can continue while the EN
+worker is stopped. See [`docs/XSD-WORKER.md`](docs/XSD-WORKER.md) for its
+ownership, retry, shutdown, and rollout contract.
+
 ### Command help
 
 ```bash
 go run . --help
 go run . serve --help
 go run . worker --help
+go run . worker-xsd --help
 go run . dead-letter --help
 go run . maintenance --help
 ```
@@ -379,6 +397,7 @@ Examples:
 --oauth-hmac-secret         -> EUBL21_OAUTH_HMAC_SECRET
 --worker-concurrency        -> EUBL21_WORKER_CONCURRENCY
 --worker-validation-timeout -> EUBL21_WORKER_VALIDATION_TIMEOUT
+--worker-xsd-timeout         -> EUBL21_WORKER_XSD_TIMEOUT
 ```
 
 Major configuration groups include:

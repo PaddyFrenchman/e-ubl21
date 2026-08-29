@@ -500,6 +500,8 @@ is specified in
 
 # TODO-VALIDATION-SPLIT-007 — Extract XSD validation into `worker-xsd`
 
+**Implementation contract:** [`docs/XSD-WORKER.md`](docs/XSD-WORKER.md)
+
 ## Goal
 
 Make UBL 2.1 XSD validation an independent service.

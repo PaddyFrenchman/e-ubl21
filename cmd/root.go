@@ -54,6 +54,11 @@ type Config struct {
 	WorkerSaxonConfigurationPath   string
 	WorkerEN16931XSLTPath          string
 	WorkerSaxonStartupTimeout      time.Duration
+	XSDWorkerMetricsAddr           string
+	XSDWorkerValidationTimeout     time.Duration
+	XSDWorkerConcurrency           int
+	XSDWorkerPrefetch              int
+	XSDWorkerProgressInterval      time.Duration
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -125,6 +130,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 
 	rootCmd.AddCommand(newServeCmd(cfg))
 	rootCmd.AddCommand(newWorkerCmd(v, cfg))
+	rootCmd.AddCommand(newXSDWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newDeadLetterCmd(cfg))
 	rootCmd.AddCommand(newMaintenanceCmd(cfg))
 	rootCmd.AddCommand(newRegressionCmd(cfg))
@@ -175,6 +181,11 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-max-ack-pending", 0)
 	v.SetDefault("worker-java-executable", "java")
 	v.SetDefault("worker-saxon-startup-timeout", 30*time.Second)
+	v.SetDefault("worker-xsd-metrics-addr", ":9092")
+	v.SetDefault("worker-xsd-timeout", 30*time.Second)
+	v.SetDefault("worker-xsd-concurrency", 1)
+	v.SetDefault("worker-xsd-prefetch", 1)
+	v.SetDefault("worker-xsd-progress-interval", 20*time.Second)
 	v.SetEnvPrefix("EUBL21")
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
@@ -237,6 +248,11 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.WorkerSaxonConfigurationPath = v.GetString("worker-saxon-configuration-path")
 	cfg.WorkerEN16931XSLTPath = v.GetString("worker-en16931-xslt-path")
 	cfg.WorkerSaxonStartupTimeout = v.GetDuration("worker-saxon-startup-timeout")
+	cfg.XSDWorkerMetricsAddr = v.GetString("worker-xsd-metrics-addr")
+	cfg.XSDWorkerValidationTimeout = v.GetDuration("worker-xsd-timeout")
+	cfg.XSDWorkerConcurrency = v.GetInt("worker-xsd-concurrency")
+	cfg.XSDWorkerPrefetch = v.GetInt("worker-xsd-prefetch")
+	cfg.XSDWorkerProgressInterval = v.GetDuration("worker-xsd-progress-interval")
 
 	return nil
 }

@@ -18,7 +18,7 @@ func TestRootCommandBuildsAndPrintsHelp(t *testing.T) {
 	if err := root.Execute(); err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) || !bytes.Contains(stdout.Bytes(), []byte("dead-letter")) || !bytes.Contains(stdout.Bytes(), []byte("maintenance")) || !bytes.Contains(stdout.Bytes(), []byte("regression")) {
+	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) || !bytes.Contains(stdout.Bytes(), []byte("worker-xsd")) || !bytes.Contains(stdout.Bytes(), []byte("dead-letter")) || !bytes.Contains(stdout.Bytes(), []byte("maintenance")) || !bytes.Contains(stdout.Bytes(), []byte("regression")) {
 		t.Fatalf("help missing subcommands: %s", stdout.String())
 	}
 }
@@ -34,6 +34,18 @@ func TestWorkerCommandMakesEN16931MandatoryAndDescribesOverallTimeout(t *testing
 	}
 	if worker.Flags().Lookup("worker-xsd-validation-timeout") == nil || worker.Flags().Lookup("worker-en16931-validation-timeout") == nil {
 		t.Fatal("worker does not expose both stage-specific validation timeouts")
+	}
+}
+
+func TestXSDWorkerCommandExposesOnlyXSDRuntimeControls(t *testing.T) {
+	command := newXSDWorkerCmd(viper.New(), &Config{})
+	for _, name := range []string{"worker-xsd-metrics-addr", "worker-xsd-timeout", "worker-xsd-concurrency", "worker-xsd-prefetch", "worker-xsd-progress-interval"} {
+		if command.Flags().Lookup(name) == nil {
+			t.Fatalf("worker-xsd flag %q is missing", name)
+		}
+	}
+	if command.Flags().Lookup("worker-en16931-validation-timeout") != nil || command.Flags().Lookup("worker-java-executable") != nil {
+		t.Fatal("worker-xsd exposes EN 16931 runtime controls")
 	}
 }
 
@@ -89,6 +101,9 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	if cfg.WorkerValidationTimeout != 30*time.Second || cfg.WorkerXSDValidationTimeout != 0 || cfg.WorkerEN16931ValidationTimeout != 0 {
 		t.Fatalf("default worker validation timeouts = overall %s XSD %s EN %s", cfg.WorkerValidationTimeout, cfg.WorkerXSDValidationTimeout, cfg.WorkerEN16931ValidationTimeout)
 	}
+	if cfg.XSDWorkerMetricsAddr != ":9092" || cfg.XSDWorkerValidationTimeout != 30*time.Second || cfg.XSDWorkerConcurrency != 1 || cfg.XSDWorkerPrefetch != 1 || cfg.XSDWorkerProgressInterval != 20*time.Second {
+		t.Fatalf("default worker-xsd config = metrics %q timeout %s concurrency %d prefetch %d progress %s", cfg.XSDWorkerMetricsAddr, cfg.XSDWorkerValidationTimeout, cfg.XSDWorkerConcurrency, cfg.XSDWorkerPrefetch, cfg.XSDWorkerProgressInterval)
+	}
 }
 
 func TestLoadConfigReadsQueueNamespaceFromEnvironment(t *testing.T) {
@@ -142,6 +157,23 @@ func TestLoadConfigReadsWorkerValidationTimeout(t *testing.T) {
 	}
 	if cfg.WorkerJavaExecutable != "/test/java" || cfg.WorkerSaxonStartupTimeout != 4*time.Second {
 		t.Fatalf("worker EN 16931 runtime config = java %q, startup timeout %s", cfg.WorkerJavaExecutable, cfg.WorkerSaxonStartupTimeout)
+	}
+}
+
+func TestLoadConfigReadsXSDWorkerSettings(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	t.Setenv("EUBL21_WORKER_XSD_METRICS_ADDR", ":9292")
+	t.Setenv("EUBL21_WORKER_XSD_TIMEOUT", "9s")
+	t.Setenv("EUBL21_WORKER_XSD_CONCURRENCY", "5")
+	t.Setenv("EUBL21_WORKER_XSD_PREFETCH", "6")
+	t.Setenv("EUBL21_WORKER_XSD_PROGRESS_INTERVAL", "7s")
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.XSDWorkerMetricsAddr != ":9292" || cfg.XSDWorkerValidationTimeout != 9*time.Second || cfg.XSDWorkerConcurrency != 5 || cfg.XSDWorkerPrefetch != 6 || cfg.XSDWorkerProgressInterval != 7*time.Second {
+		t.Fatalf("worker-xsd settings = %+v", cfg)
 	}
 }
 

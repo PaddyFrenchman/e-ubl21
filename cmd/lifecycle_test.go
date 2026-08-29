@@ -86,6 +86,41 @@ func TestWorkerStartsAndStopsOnContextCancellation(t *testing.T) {
 	}
 }
 
+func TestXSDWorkerStartsAndStopsOnContextCancellation(t *testing.T) {
+	previous := runXSDWorker
+	t.Cleanup(func() { runXSDWorker = previous })
+	started := make(chan server.XSDWorkerConfig, 1)
+	runXSDWorker = func(ctx context.Context, cfg server.XSDWorkerConfig) error {
+		started <- cfg
+		<-ctx.Done()
+		return nil
+	}
+	cfg := &Config{
+		XSDWorkerMetricsAddr: ":9192", XSDWorkerValidationTimeout: 7 * time.Second,
+		XSDWorkerConcurrency: 3, XSDWorkerPrefetch: 4, XSDWorkerProgressInterval: 5 * time.Second,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- xsdWorker(ctx, cfg) }()
+	select {
+	case received := <-started:
+		if received.MetricsAddr != cfg.XSDWorkerMetricsAddr || received.ValidationTimeout != cfg.XSDWorkerValidationTimeout || received.Concurrency != 3 || received.Prefetch != 4 || received.ProgressInterval != 5*time.Second {
+			t.Fatalf("worker-xsd config = %+v", received)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("worker-xsd runner was not called")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("worker-xsd did not stop")
+	}
+}
+
 func TestNewHTTPServerAppliesResourceLimits(t *testing.T) {
 	cfg := &Config{
 		HTTPReadHeaderTimeout: 2 * time.Second,
