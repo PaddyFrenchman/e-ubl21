@@ -516,7 +516,9 @@ Make UBL 2.1 XSD validation an independent service.
 - Publish a durable XSD StageResult.
 - ACK the XSD request only after result publication is durable.
 - Preserve timeout/cancellation/resource bounds.
-- Add XSD-specific retry/DLQ handling.
+- Publish typed operational-failure evidence for orchestrator-authorized XSD
+  retries. Stage-specific broker delivery counters, DLQ publication, and
+  operator replay are owned by `TODO-VALIDATION-SPLIT-010`.
 - Add worker lifecycle and redelivery tests.
 
 ## Acceptance criteria

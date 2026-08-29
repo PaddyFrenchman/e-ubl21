@@ -121,6 +121,13 @@ open an already-provisioned durable consumer. Those methods never create or
 update streams or consumers. This preserves #48's rule that application
 services verify infrastructure compatibility but do not reconfigure it.
 
+Stage workers use `VerifyStageWorkerInfra` for role-scoped startup checks. It
+verifies the fixed request stream/consumer contract and the result stream used
+for publication, while accepting provisioner-selected retention and returning
+the actual request consumer `AckWait` and `MaxAckPending`. It never opens or
+verifies the orchestrator-owned result consumer, whose delivery tuning is
+irrelevant to worker readiness.
+
 ## Migration safety
 
 Stage resources have new names and are provisioned through a separate entry

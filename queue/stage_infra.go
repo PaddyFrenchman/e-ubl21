@@ -135,6 +135,33 @@ func (c *Client) VerifyStageQueueInfra(ctx context.Context, config StageQueueInf
 	return nil
 }
 
+// VerifyStageWorkerInfra performs read-only verification of the resources one
+// stage worker uses or depends on: its request stream and durable consumer,
+// plus the result stream it publishes to. Retention and delivery capacity are
+// provisioner choices, so this method validates the fixed wire topology and
+// returns the request consumer's actual delivery settings to the worker. It
+// deliberately does not open or validate the orchestrator-owned result
+// consumer.
+func (c *Client) VerifyStageWorkerInfra(ctx context.Context, stage ValidationLayer) (StageDeliveryConfig, error) {
+	names, err := c.Namespace.StageQueue(stage)
+	if err != nil {
+		return StageDeliveryConfig{}, err
+	}
+	requestExpected := stageRequestStreamConfig(names, StageQueueConfig{Stage: stage})
+	if err := c.verifyStageWorkerStream(ctx, requestExpected); err != nil {
+		return StageDeliveryConfig{}, fmt.Errorf("verify %s request stream: %w", stage, err)
+	}
+	resultExpected := stageResultStreamConfig(names, StageQueueConfig{Stage: stage})
+	if err := c.verifyStageWorkerStream(ctx, resultExpected); err != nil {
+		return StageDeliveryConfig{}, fmt.Errorf("verify %s result stream: %w", stage, err)
+	}
+	delivery, err := c.verifyStageWorkerRequestConsumer(ctx, stage, names)
+	if err != nil {
+		return StageDeliveryConfig{}, fmt.Errorf("verify %s request consumer: %w", stage, err)
+	}
+	return delivery, nil
+}
+
 // StageRequestConsumer opens the already-provisioned durable worker consumer.
 // It cannot create or update broker infrastructure.
 func (c *Client) StageRequestConsumer(ctx context.Context, stage ValidationLayer) (jetstream.Consumer, error) {
@@ -292,6 +319,43 @@ func (c *Client) verifyStageStream(ctx context.Context, expected jetstream.Strea
 		return fmt.Errorf("incompatible stream %s: subjects=%v retention=%v storage=%v maxAge=%s maxMsgSize=%d", actual.Name, actual.Subjects, actual.Retention, actual.Storage, actual.MaxAge, actual.MaxMsgSize)
 	}
 	return nil
+}
+
+func (c *Client) verifyStageWorkerStream(ctx context.Context, expected jetstream.StreamConfig) error {
+	stream, err := c.JS.Stream(ctx, expected.Name)
+	if err != nil {
+		return err
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		return err
+	}
+	actual := info.Config
+	if !reflect.DeepEqual(actual.Subjects, expected.Subjects) || actual.Retention != expected.Retention || actual.Storage != expected.Storage || actual.MaxMsgSize != expected.MaxMsgSize {
+		return fmt.Errorf("incompatible stream %s: subjects=%v retention=%v storage=%v maxAge=%s maxMsgSize=%d", actual.Name, actual.Subjects, actual.Retention, actual.Storage, actual.MaxAge, actual.MaxMsgSize)
+	}
+	return nil
+}
+
+func (c *Client) verifyStageWorkerRequestConsumer(ctx context.Context, stage ValidationLayer, names StageQueueNames) (StageDeliveryConfig, error) {
+	consumer, err := c.JS.Consumer(ctx, names.RequestStream, names.RequestConsumer)
+	if err != nil {
+		return StageDeliveryConfig{}, err
+	}
+	info, err := consumer.Info(ctx)
+	if err != nil {
+		return StageDeliveryConfig{}, err
+	}
+	actual := info.Config
+	delivery := StageDeliveryConfig{AckWait: actual.AckWait, MaxAckPending: actual.MaxAckPending}
+	if err := validateStageDeliveryConfig("request", stage, delivery); err != nil {
+		return StageDeliveryConfig{}, err
+	}
+	expected := stageRequestConsumerConfig(names, StageQueueConfig{Stage: stage, RequestDelivery: delivery})
+	if actual.Durable != expected.Durable || actual.FilterSubject != expected.FilterSubject || actual.DeliverPolicy != expected.DeliverPolicy || actual.AckPolicy != expected.AckPolicy || actual.MaxDeliver != expected.MaxDeliver || actual.ReplayPolicy != expected.ReplayPolicy {
+		return StageDeliveryConfig{}, fmt.Errorf("incompatible consumer %s on %s: filter=%q AckWait=%s MaxDeliver=%d MaxAckPending=%d", actual.Durable, names.RequestStream, actual.FilterSubject, actual.AckWait, actual.MaxDeliver, actual.MaxAckPending)
+	}
+	return delivery, nil
 }
 
 func (c *Client) verifyStageConsumer(ctx context.Context, stream string, expected jetstream.ConsumerConfig) error {

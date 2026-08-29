@@ -110,6 +110,7 @@ func TestXSDWorkerShutdownCancelsValidationAndRedeliversRequest(t *testing.T) {
 	publishXSDWorkerTestRequest(t, ctx, client, []byte("<Invoice/>"))
 	started := make(chan struct{})
 	workerCtx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 	done := make(chan error, 1)
 	go func() {
 		done <- RunXSDWorker(workerCtx, XSDWorkerConfig{
@@ -139,6 +140,44 @@ func TestXSDWorkerShutdownCancelsValidationAndRedeliversRequest(t *testing.T) {
 	redelivered := fetchXSDWorkerRequest(t, ctx, client)
 	if err := redelivered.Ack(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestXSDWorkerStartsWithActualNonDefaultRequestConsumerSettings(t *testing.T) {
+	config := queue.DefaultStageQueueInfraConfig()
+	for index := range config.Stages {
+		if config.Stages[index].Stage != queue.ValidationLayerUBL21XSD {
+			continue
+		}
+		config.Stages[index].RequestDelivery = queue.StageDeliveryConfig{AckWait: 90 * time.Second, MaxAckPending: 20}
+		config.Stages[index].ResultDelivery = queue.StageDeliveryConfig{AckWait: 120 * time.Second, MaxAckPending: 40}
+	}
+	client, ctx := newXSDWorkerTestClientWithConfig(t, config)
+	publishXSDWorkerTestRequest(t, ctx, client, []byte("<Invoice/>"))
+
+	workerCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- RunXSDWorker(workerCtx, XSDWorkerConfig{
+			queueClient: client, catalog: testXSDCatalog(), MetricsAddr: "",
+			ValidationTimeout: 3 * time.Second, Concurrency: 10, Prefetch: 10,
+			ProgressInterval: 80 * time.Second,
+			xsdValidate:      func(context.Context, string, io.Reader, time.Duration) error { return nil },
+			Logger:           slog.New(slog.NewTextHandler(io.Discard, nil)),
+		})
+	}()
+	result := fetchXSDWorkerResult(t, ctx, client)
+	if result.Outcome != queue.StageOutcomePassed {
+		t.Fatalf("XSD result = %+v", result)
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("worker-xsd did not stop")
 	}
 }
 
@@ -308,10 +347,23 @@ func TestXSDWorkerSettingsRespectProvisionedConsumerBounds(t *testing.T) {
 		t.Fatalf("default XSD worker settings = %+v", settings)
 	}
 
-	if _, err := resolveXSDWorkerSettings(XSDWorkerConfig{Concurrency: 64, Prefetch: 1}); err == nil || !strings.Contains(err.Error(), "MaxAckPending") {
+	delivery := queue.StageDeliveryConfig{AckWait: 90 * time.Second, MaxAckPending: 20}
+	settings, err = resolveXSDWorkerSettings(XSDWorkerConfig{Concurrency: 10, Prefetch: 10, ProgressInterval: 80 * time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateXSDWorkerCapacity(settings, delivery); err != nil {
+		t.Fatalf("actual provisioned settings rejected: %v", err)
+	}
+	settings.concurrency = 20
+	settings.prefetch = 1
+	if err := validateXSDWorkerCapacity(settings, delivery); err == nil || !strings.Contains(err.Error(), "MaxAckPending") {
 		t.Fatalf("capacity validation error = %v", err)
 	}
-	if _, err := resolveXSDWorkerSettings(XSDWorkerConfig{ProgressInterval: time.Minute}); err == nil || !strings.Contains(err.Error(), "AckWait") {
+	settings.concurrency = 1
+	settings.prefetch = 1
+	settings.progressInterval = 90 * time.Second
+	if err := validateXSDWorkerCapacity(settings, delivery); err == nil || !strings.Contains(err.Error(), "AckWait") {
 		t.Fatalf("progress validation error = %v", err)
 	}
 }
@@ -327,6 +379,10 @@ func TestXSDWorkerTreatsContentReadFailureAsOperationalEvenWithSchemaDiagnostics
 }
 
 func newXSDWorkerTestClient(t *testing.T) (*queue.Client, context.Context) {
+	return newXSDWorkerTestClientWithConfig(t, queue.DefaultStageQueueInfraConfig())
+}
+
+func newXSDWorkerTestClientWithConfig(t *testing.T, config queue.StageQueueInfraConfig) (*queue.Client, context.Context) {
 	t.Helper()
 	server := queuetest.StartServer(t)
 	client, err := queue.ConnectWithOptions(server.URL, queue.MustNamespace("workerxsd"), server.Options...)
@@ -339,7 +395,7 @@ func newXSDWorkerTestClient(t *testing.T) (*queue.Client, context.Context) {
 	if err := client.EnsureInfra(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if err := client.ProvisionStageQueueInfra(ctx, queue.DefaultStageQueueInfraConfig()); err != nil {
+	if err := client.ProvisionStageQueueInfra(ctx, config); err != nil {
 		t.Fatal(err)
 	}
 	return client, ctx

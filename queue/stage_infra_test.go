@@ -33,6 +33,13 @@ func TestStageQueueProvisioningCreatesIndependentDurableTopology(t *testing.T) {
 	if err := client.VerifyStageQueueInfra(ctx, config); err != nil {
 		t.Fatal(err)
 	}
+	workerDelivery, err := client.VerifyStageWorkerInfra(ctx, queue.ValidationLayerUBL21XSD)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if workerDelivery != config.Stages[0].RequestDelivery {
+		t.Fatalf("XSD worker request delivery = %+v, want %+v", workerDelivery, config.Stages[0].RequestDelivery)
+	}
 	for _, stage := range config.Stages {
 		names, err := client.Namespace.StageQueue(stage.Stage)
 		if err != nil {
@@ -124,6 +131,36 @@ func TestStageQueuesRetainWorkAcrossScaleToZeroAndIsolateStageAndNamespace(t *te
 	assertOneStageMessage(t, ctx, runtimeDev, queue.ValidationLayerEN16931, devEN.RequestSubject, `{"stage":"dev-en"}`)
 	assertOneStageMessage(t, ctx, prod, queue.ValidationLayerUBL21XSD, prodXSD.RequestSubject, `{"stage":"prod-xsd"}`)
 	assertOneStageResult(t, ctx, runtimeDev, queue.ValidationLayerUBL21XSD, devXSD.ResultSubject, `{"outcome":"passed"}`)
+}
+
+func TestStageWorkerVerificationDoesNotRequireOrchestratorResultConsumer(t *testing.T) {
+	server := queuetest.StartServer(t)
+	client := connectStageInfraClient(t, server, queue.MustNamespace("workerrole"))
+	ctx := context.Background()
+	stage := queue.DefaultStageQueueInfraConfig().Stages[0]
+	stage.RequestDelivery = queue.StageDeliveryConfig{AckWait: 90 * time.Second, MaxAckPending: 20}
+	stage.ResultDelivery = queue.StageDeliveryConfig{AckWait: 120 * time.Second, MaxAckPending: 40}
+	if err := client.ProvisionStageQueueInfra(ctx, queue.StageQueueInfraConfig{Stages: []queue.StageQueueConfig{stage}}); err != nil {
+		t.Fatal(err)
+	}
+	names, err := client.Namespace.StageQueue(queue.ValidationLayerUBL21XSD)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resultStream, err := client.JS.Stream(ctx, names.ResultStream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := resultStream.DeleteConsumer(ctx, names.ResultConsumer); err != nil {
+		t.Fatal(err)
+	}
+	delivery, err := client.VerifyStageWorkerInfra(ctx, queue.ValidationLayerUBL21XSD)
+	if err != nil {
+		t.Fatalf("worker verification depended on orchestrator result consumer: %v", err)
+	}
+	if delivery != stage.RequestDelivery {
+		t.Fatalf("worker request delivery = %+v, want %+v", delivery, stage.RequestDelivery)
+	}
 }
 
 func TestStageRequestStreamRejectsNonCompactPayload(t *testing.T) {

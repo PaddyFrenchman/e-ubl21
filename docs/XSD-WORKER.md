@@ -50,14 +50,17 @@ also part of #57.
 ## Startup and shutdown
 
 Infrastructure is provisioner-owned. On startup the worker performs read-only
-compatibility checks for only the XSD request/result resources and the upload
-Object Store, loads the embedded schema catalog, and verifies `xmllint` before
-it begins pulling work. It fails readiness rather than creating or modifying
-broker resources.
+compatibility checks for the XSD request stream and worker consumer, the result
+stream it publishes to, and the upload Object Store. It deliberately does not
+open or verify the orchestrator-owned XSD result consumer, so that consumer's
+delivery tuning cannot affect worker readiness. The worker loads the embedded
+schema catalog and verifies `xmllint` before it begins pulling work. It fails
+readiness rather than creating or modifying broker resources.
 
 Active and locally prefetched deliveries receive progress acknowledgements.
-Concurrency plus prefetch must fit the provisioned XSD consumer's
-`MaxAckPending`, and the progress interval must be shorter than its `AckWait`.
+The worker reads the actual provisioned request consumer's `MaxAckPending` and
+`AckWait` at startup. Concurrency plus prefetch must fit that `MaxAckPending`,
+and the progress interval must be shorter than that `AckWait`.
 On SIGINT/SIGTERM the command stops pulling, cancels active Object Store reads
 and `xmllint` subprocesses, NAKs interrupted work, drains the local worker pool,
 and shuts down its metrics server.

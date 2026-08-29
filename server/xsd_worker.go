@@ -53,7 +53,6 @@ type xsdWorkerSettings struct {
 	concurrency       int
 	prefetch          int
 	progressInterval  time.Duration
-	maxAckPending     int
 }
 
 func resolveXSDWorkerSettings(cfg XSDWorkerConfig) (xsdWorkerSettings, error) {
@@ -75,18 +74,17 @@ func resolveXSDWorkerSettings(cfg XSDWorkerConfig) (xsdWorkerSettings, error) {
 	if settings.progressInterval <= 0 {
 		settings.progressInterval = defaultXSDWorkerProgressInterval
 	}
-	stageConfig, err := xsdStageQueueConfig()
-	if err != nil {
-		return xsdWorkerSettings{}, err
-	}
-	settings.maxAckPending = stageConfig.RequestDelivery.MaxAckPending
-	if settings.concurrency+settings.prefetch > settings.maxAckPending {
-		return xsdWorkerSettings{}, fmt.Errorf("worker-xsd concurrency + prefetch (%d) exceeds provisioned XSD MaxAckPending (%d)", settings.concurrency+settings.prefetch, settings.maxAckPending)
-	}
-	if settings.progressInterval >= stageConfig.RequestDelivery.AckWait {
-		return xsdWorkerSettings{}, fmt.Errorf("worker-xsd progress interval (%s) must be shorter than provisioned XSD AckWait (%s)", settings.progressInterval, stageConfig.RequestDelivery.AckWait)
-	}
 	return settings, nil
+}
+
+func validateXSDWorkerCapacity(settings xsdWorkerSettings, delivery queue.StageDeliveryConfig) error {
+	if settings.concurrency+settings.prefetch > delivery.MaxAckPending {
+		return fmt.Errorf("worker-xsd concurrency + prefetch (%d) exceeds provisioned XSD request MaxAckPending (%d)", settings.concurrency+settings.prefetch, delivery.MaxAckPending)
+	}
+	if settings.progressInterval >= delivery.AckWait {
+		return fmt.Errorf("worker-xsd progress interval (%s) must be shorter than provisioned XSD request AckWait (%s)", settings.progressInterval, delivery.AckWait)
+	}
+	return nil
 }
 
 // RunXSDWorker consumes only UBL 2.1 XSD StageRequests until ctx is canceled.
@@ -113,12 +111,15 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 		defer client.Close()
 	}
 
-	stageConfig, _ := xsdStageQueueConfig()
-	if err := client.VerifyStageQueueInfra(ctx, queue.StageQueueInfraConfig{Stages: []queue.StageQueueConfig{stageConfig}}); err != nil {
+	requestDelivery, err := client.VerifyStageWorkerInfra(ctx, queue.ValidationLayerUBL21XSD)
+	if err != nil {
 		if ctx.Err() != nil {
 			return nil
 		}
-		return fmt.Errorf("worker-xsd verify stage queue infrastructure: %w", err)
+		return fmt.Errorf("worker-xsd verify XSD worker infrastructure: %w", err)
+	}
+	if err := validateXSDWorkerCapacity(settings, requestDelivery); err != nil {
+		return err
 	}
 	if err := client.VerifyUploadContentInfra(ctx); err != nil {
 		if ctx.Err() != nil {
@@ -396,13 +397,4 @@ func boundedStageText(value string, maximum int) string {
 		limit--
 	}
 	return value[:limit] + suffix
-}
-
-func xsdStageQueueConfig() (queue.StageQueueConfig, error) {
-	for _, stage := range queue.DefaultStageQueueInfraConfig().Stages {
-		if stage.Stage == queue.ValidationLayerUBL21XSD {
-			return stage, nil
-		}
-	}
-	return queue.StageQueueConfig{}, errors.New("default stage topology does not define UBL 2.1 XSD")
 }
