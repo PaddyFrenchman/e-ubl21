@@ -54,6 +54,12 @@ verdicts. External diagnostics are normalized to valid UTF-8 and bounded before
 publication. SVRL parsing already enforces issue count, per-field, aggregate
 text, and output-size limits.
 
+Warning/warn `failed-assert` entries are preserved as advisory evidence in a
+`passed` result. Fatal, error, empty, or unknown failed-assert severities are
+standards failures. Structurally invalid normalized issue evidence is published
+as `operational-failure`/`malformed-output` and ACKed, preventing deterministic
+validator defects from becoming an endless request-redelivery loop.
+
 An operational result is immutable evidence for one EN attempt. The
 orchestrator applies the frozen attempt budget and may authorize another EN
 attempt without rerunning XSD. Stage delivery counters, DLQ publication, and

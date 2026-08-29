@@ -67,6 +67,30 @@ func TestENWorkerPreservesStandardsInvalidEvidence(t *testing.T) {
 	}
 }
 
+func TestENWorkerPreservesWarningFailedAssertInPassedResult(t *testing.T) {
+	client, ctx := newENWorkerTestClient(t)
+	_, request := authorizeENWorkerRequest(t, ctx, client, []byte("<Invoice/>"))
+	message := fetchENWorkerRequest(t, ctx, client)
+	issue := queue.ValidationIssue{
+		Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931,
+		Rule: "BR-DEC-01", Severity: "warning", Location: "/Invoice", Test: "cbc:ID", Message: "advisory",
+	}
+	worker := newTestENStageWorker(client, en16931ValidatorFunc(func(context.Context, io.Reader) (queue.ValidationStageResult, error) {
+		return queue.ValidationStageResult{
+			Layer: queue.ValidationLayerEN16931, Version: validationassets.EN16931().Version,
+			Valid: true, Issues: []queue.ValidationIssue{issue},
+		}, nil
+	}))
+	if err := worker.handle(ctx, message); err != nil {
+		t.Fatal(err)
+	}
+	result := fetchENWorkerResult(t, ctx, client)
+	if result.RequestID != request.RequestID || result.Outcome != queue.StageOutcomePassed || result.Reason != queue.StageReasonNone || len(result.Issues) != 1 || result.Issues[0] != issue {
+		t.Fatalf("passed warning result = %+v", result)
+	}
+	assertENWorkerRequestMessages(t, ctx, client, 0)
+}
+
 func TestENWorkerRejectsInconsistentValidatorEvidenceWithoutRedeliveryLoop(t *testing.T) {
 	for _, test := range []struct {
 		name   string
@@ -95,6 +119,42 @@ func TestENWorkerRejectsInconsistentValidatorEvidenceWithoutRedeliveryLoop(t *te
 			result := fetchENWorkerResult(t, ctx, client)
 			if result.Outcome != queue.StageOutcomeOperationalFailure || result.Reason != queue.StageReasonMalformedOutput || result.Diagnostic == "" {
 				t.Fatalf("inconsistent evidence result = %+v", result)
+			}
+			assertENWorkerRequestMessages(t, ctx, client, 0)
+		})
+	}
+}
+
+func TestENWorkerTerminatesMalformedNormalizedIssueEvidence(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		issue queue.ValidationIssue
+	}{
+		{
+			name:  "missing severity",
+			issue: queue.ValidationIssue{Kind: queue.ValidationIssueSuccessfulReport, Layer: queue.ValidationLayerEN16931, Message: "advisory"},
+		},
+		{
+			name:  "missing message",
+			issue: queue.ValidationIssue{Kind: queue.ValidationIssueSuccessfulReport, Layer: queue.ValidationLayerEN16931, Severity: "info"},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			client, ctx := newENWorkerTestClient(t)
+			_, _ = authorizeENWorkerRequest(t, ctx, client, []byte("<Invoice/>"))
+			message := fetchENWorkerRequest(t, ctx, client)
+			worker := newTestENStageWorker(client, en16931ValidatorFunc(func(context.Context, io.Reader) (queue.ValidationStageResult, error) {
+				return queue.ValidationStageResult{
+					Layer: queue.ValidationLayerEN16931, Version: validationassets.EN16931().Version,
+					Valid: true, Issues: []queue.ValidationIssue{test.issue},
+				}, nil
+			}))
+			if err := worker.handle(ctx, message); err != nil {
+				t.Fatal(err)
+			}
+			result := fetchENWorkerResult(t, ctx, client)
+			if result.Outcome != queue.StageOutcomeOperationalFailure || result.Reason != queue.StageReasonMalformedOutput || len(result.Issues) != 0 || !strings.Contains(result.Diagnostic, "malformed normalized issue evidence") {
+				t.Fatalf("malformed issue result = %+v", result)
 			}
 			assertENWorkerRequestMessages(t, ctx, client, 0)
 		})

@@ -268,6 +268,16 @@ func TestStageResultOutcomeAndReasonSemantics(t *testing.T) {
 	if _, err := queue.NewStageResult(request, queue.StageOutcomePassed, queue.StageReasonNone, []queue.ValidationIssue{report}, "", startedAt, completedAt, time.Second); err != nil {
 		t.Fatalf("passed result with successful-report evidence: %v", err)
 	}
+	for _, severity := range []string{"warning", "warn", " WARNING "} {
+		warning := queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: request.Stage, Severity: severity, Message: "advisory failure"}
+		result, err := queue.NewStageResult(request, queue.StageOutcomePassed, queue.StageReasonNone, []queue.ValidationIssue{warning}, "", startedAt, completedAt, time.Second)
+		if err != nil {
+			t.Fatalf("passed result with %q failed-assert evidence: %v", severity, err)
+		}
+		if len(result.Issues) != 1 || result.Issues[0] != warning {
+			t.Fatalf("passed result did not preserve %q failed-assert evidence: %+v", severity, result.Issues)
+		}
+	}
 	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, nil, "", startedAt, completedAt, time.Second); err == nil {
 		t.Fatal("standards-invalid result without evidence was accepted")
 	}
@@ -283,6 +293,28 @@ func TestStageResultOutcomeAndReasonSemantics(t *testing.T) {
 	}
 	if _, err := queue.NewStageResult(request, queue.StageOutcomePassed, queue.StageReasonNone, nil, "", startedAt, completedAt, -time.Millisecond); err == nil {
 		t.Fatal("negative duration was accepted")
+	}
+}
+
+func TestStageIssuesContainStandardsFailureSeverityPolicy(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		issue   queue.ValidationIssue
+		failure bool
+	}{
+		{name: "EN warning", issue: queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931, Severity: "warning"}},
+		{name: "EN warn", issue: queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931, Severity: "warn"}},
+		{name: "EN fatal", issue: queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931, Severity: "fatal"}, failure: true},
+		{name: "EN error", issue: queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931, Severity: "error"}, failure: true},
+		{name: "EN unknown", issue: queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931, Severity: "unknown"}, failure: true},
+		{name: "XSD warning failed assert", issue: queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerUBL21XSD, Severity: "warning"}, failure: true},
+		{name: "XSD report", issue: queue.ValidationIssue{Kind: queue.ValidationIssueXSDReport, Layer: queue.ValidationLayerUBL21XSD, Severity: "error"}, failure: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := queue.StageIssuesContainStandardsFailure([]queue.ValidationIssue{test.issue}); got != test.failure {
+				t.Fatalf("StageIssuesContainStandardsFailure() = %t, want %t", got, test.failure)
+			}
+		})
 	}
 }
 

@@ -126,8 +126,10 @@ The version 1 operational reasons are:
 Diagnostic detail is kept out of this low-cardinality enum. Operational
 results cannot contain standards issues. Passed and standards-invalid results
 cannot carry an operational reason. A passed result may retain
-`successful-report` evidence, but it cannot contain `failed-assert` or
-`xsd-report` failure evidence.
+`successful-report` evidence and non-invalidating EN 16931 `failed-assert`
+evidence whose severity is `warning` or `warn`. XSD reports and EN failed
+assertions with fatal, error, empty, or unknown severity are standards-failure
+evidence and cannot appear in a passed result.
 
 ## Deterministic message identity
 

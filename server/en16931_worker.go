@@ -330,7 +330,11 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 			outcome = queue.StageOutcomeOperationalFailure
 			reason = queue.StageReasonMalformedOutput
 			diagnostic = boundedStageText(fmt.Sprintf("EN 16931 validator returned layer %q version %q", validationResult.Layer, validationResult.Version), queue.MaxStageDiagnosticBytes)
-		} else if validationResult.Valid == enIssuesContainStandardsFailure(validationResult.Issues) {
+		} else if err := queue.ValidateStageIssues(queue.ValidationLayerEN16931, validationResult.Issues); err != nil {
+			outcome = queue.StageOutcomeOperationalFailure
+			reason = queue.StageReasonMalformedOutput
+			diagnostic = boundedStageText("EN 16931 validator returned malformed normalized issue evidence: "+err.Error(), queue.MaxStageDiagnosticBytes)
+		} else if validationResult.Valid == queue.StageIssuesContainStandardsFailure(validationResult.Issues) {
 			outcome = queue.StageOutcomeOperationalFailure
 			reason = queue.StageReasonMalformedOutput
 			diagnostic = "EN 16931 validator validity does not match its failed-assert evidence"
@@ -460,13 +464,4 @@ func enStageOperationalReason(err error) queue.StageOperationalReason {
 	default:
 		return queue.StageReasonRuntimeFailure
 	}
-}
-
-func enIssuesContainStandardsFailure(issues []queue.ValidationIssue) bool {
-	for _, issue := range issues {
-		if issue.Kind == queue.ValidationIssueFailedAssert {
-			return true
-		}
-	}
-	return false
 }

@@ -240,7 +240,7 @@ func (result StageResult) Validate() error {
 	if !utf8.ValidString(result.Diagnostic) || len(result.Diagnostic) > MaxStageDiagnosticBytes {
 		return fmt.Errorf("stage result diagnostic exceeds %d bytes or is not UTF-8", MaxStageDiagnosticBytes)
 	}
-	if err := validateStageIssues(result.Stage, result.Issues); err != nil {
+	if err := ValidateStageIssues(result.Stage, result.Issues); err != nil {
 		return err
 	}
 	switch result.Outcome {
@@ -248,14 +248,14 @@ func (result StageResult) Validate() error {
 		if result.Reason != StageReasonNone {
 			return errors.New("passed stage result cannot have an operational reason")
 		}
-		if hasStandardsFailure(result.Issues) {
+		if StageIssuesContainStandardsFailure(result.Issues) {
 			return errors.New("passed stage result cannot contain standards-failure evidence")
 		}
 	case StageOutcomeStandardsInvalid:
 		if result.Reason != StageReasonNone {
 			return errors.New("standards-invalid stage result cannot have an operational reason")
 		}
-		if !hasStandardsFailure(result.Issues) && strings.TrimSpace(result.Diagnostic) == "" {
+		if !StageIssuesContainStandardsFailure(result.Issues) && strings.TrimSpace(result.Diagnostic) == "" {
 			return errors.New("standards-invalid stage result requires bounded standards evidence")
 		}
 	case StageOutcomeOperationalFailure:
@@ -441,7 +441,9 @@ func validateStageVersion(name, value string) error {
 	return nil
 }
 
-func validateStageIssues(stage ValidationLayer, issues []ValidationIssue) error {
+// ValidateStageIssues rejects malformed or unbounded normalized issue evidence
+// before it is used to construct a durable StageResult.
+func ValidateStageIssues(stage ValidationLayer, issues []ValidationIssue) error {
 	if len(issues) > MaxStageIssues {
 		return fmt.Errorf("stage result has %d issues, maximum is %d", len(issues), MaxStageIssues)
 	}
@@ -484,9 +486,22 @@ func validateStageIssues(stage ValidationLayer, issues []ValidationIssue) error 
 	return nil
 }
 
-func hasStandardsFailure(issues []ValidationIssue) bool {
+// StageIssuesContainStandardsFailure reports whether normalized evidence
+// invalidates a validation stage. XSD reports are failures. EN 16931 failed
+// assertions at warning/warn severity are retained advisory evidence; all
+// other failed-assert severities fail closed as standards failures.
+func StageIssuesContainStandardsFailure(issues []ValidationIssue) bool {
 	for _, issue := range issues {
-		if issue.Kind == ValidationIssueXSDReport || issue.Kind == ValidationIssueFailedAssert {
+		if issue.Kind == ValidationIssueXSDReport {
+			return true
+		}
+		if issue.Kind == ValidationIssueFailedAssert {
+			if issue.Layer == ValidationLayerEN16931 {
+				switch strings.ToLower(strings.TrimSpace(issue.Severity)) {
+				case "warning", "warn":
+					continue
+				}
+			}
 			return true
 		}
 	}
