@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
 	"github.com/PaddyFrenchman/e-ubl21/orchestrator"
@@ -375,6 +376,31 @@ func TestXSDWorkerTreatsContentReadFailureAsOperationalEvenWithSchemaDiagnostics
 	}
 	if reason := xsdStageOperationalReason(err); reason != queue.StageReasonContentUnavailable {
 		t.Fatalf("operational reason = %q, want %q", reason, queue.StageReasonContentUnavailable)
+	}
+}
+
+func TestBoundedStageTextSanitizesInvalidUTF8(t *testing.T) {
+	tests := []struct {
+		name    string
+		value   string
+		maximum int
+	}{
+		{name: "shorter than maximum", value: "xmllint \xff diagnostic", maximum: 64},
+		{name: "requires truncation", value: "prefix \xff" + strings.Repeat("x", 64), maximum: 26},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := boundedStageText(test.value, test.maximum)
+			if !utf8.ValidString(result) {
+				t.Fatalf("bounded diagnostic is not valid UTF-8: %q", result)
+			}
+			if len(result) > test.maximum {
+				t.Fatalf("bounded diagnostic has %d bytes, maximum %d: %q", len(result), test.maximum, result)
+			}
+			if !strings.Contains(result, "\uFFFD") {
+				t.Fatalf("bounded diagnostic did not replace invalid UTF-8: %q", result)
+			}
+		})
 	}
 }
 

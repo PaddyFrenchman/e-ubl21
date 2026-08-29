@@ -381,6 +381,7 @@ func xsdStageOperationalReason(err error) queue.StageOperationalReason {
 }
 
 func boundedStageText(value string, maximum int) string {
+	value = strings.ToValidUTF8(value, "\uFFFD")
 	value = strings.TrimSpace(value)
 	if maximum <= 0 {
 		return ""
