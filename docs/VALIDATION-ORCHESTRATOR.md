@@ -1,7 +1,8 @@
 # Durable validation orchestrator state machine
 
-**Status:** Normative state-machine and durable-dispatch contract for
-`TODO-VALIDATION-SPLIT-005` and `TODO-VALIDATION-SPLIT-006`
+**Status:** Normative state-machine, durable-dispatch, and final-result contract
+for `TODO-VALIDATION-SPLIT-005`, `TODO-VALIDATION-SPLIT-006`, and
+`TODO-VALIDATION-SPLIT-009`
 
 The `orchestrator.Machine` is the only component that selects a stage from a
 frozen `ValidationExecution.Plan`, authorizes logical attempts, accepts stage
@@ -124,20 +125,20 @@ the evidence create, execution CAS, and any next-stage publication succeed.
 Malformed, stale, out-of-order, plan-drifted, or unauthorized results remain
 unacknowledged.
 
-## Deliberate rollout boundaries
+## Final-result publication and reconciliation
 
-This issue supplies and tests the state machine without switching the existing
-API or monolithic worker to it. Worker extraction and the migration barrier are
-later validation-split issues.
+Terminal transitions persist a deterministic execution-scoped final-result
+outbox as `pending` in the same CAS that records `valid`, `invalid`, or
+`processing-failed`. The orchestrator then reloads every accepted terminal
+stage result from immutable evidence, validates it against the frozen plan,
+publishes the canonical result, reads the permanent slot back for equality, and
+CAS-marks the outbox `published`.
 
-The state transition is persisted before its request is published.
-`EnsureDispatch` drains one exact stored intent, while the reconciler repairs
-pending intents left by a stopped replica. Both retain the original request
-timestamp and deterministic message ID.
+`ReconcilePendingFinalResults` repairs both pending outboxes and terminal
+records created before the outbox field existed. One deterministic result ID
+per validation ID/generation gives replay generations independent permanent
+slots while preserving first-result permanence. See
+[`ORCHESTRATOR-FINAL-RESULTS.md`](ORCHESTRATOR-FINAL-RESULTS.md).
 
-Terminal `valid`, `invalid`, and `processing-failed` are authoritative execution
-outcomes. Publishing the canonical public `ValidationResult` is deliberately
-left to `TODO-VALIDATION-SPLIT-009` (#56), because the current permanent result
-subject is keyed only by upload ID and cannot safely represent multiple
-validation lineages and generations. Until that contract is adapted, no split
-stage result is exposed as a final API result.
+Activating the split roles in place of the existing combined worker remains the
+stop-and-drain migration owned by `TODO-VALIDATION-SPLIT-014` (#61).

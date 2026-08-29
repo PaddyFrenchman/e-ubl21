@@ -77,7 +77,7 @@ func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) err
 	resultsStreamName := c.Namespace.ResultsStreamName()
 	if _, err := c.JS.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
 		Name:                 resultsStreamName,
-		Description:          "UBL 2.1 validation results, durably unique by upload ID.",
+		Description:          "UBL 2.1 validation results, durably unique by result identity.",
 		Subjects:             []string{c.Namespace.ResultsFilterSubject()},
 		Retention:            jetstream.LimitsPolicy,
 		Storage:              jetstream.FileStorage,

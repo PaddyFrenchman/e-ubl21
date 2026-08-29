@@ -69,8 +69,8 @@ func (c *Client) UpdateValidationExecutionState(ctx context.Context, current Ver
 
 // validateOrchestrationTransition prevents a writer holding the latest KV
 // revision from rewriting accepted history. Each update may only dispatch the
-// first stage or accept exactly one result for the currently authorized
-// attempt. Terminal executions have no successor.
+// first stage, accept exactly one result for the currently authorized attempt,
+// or advance a terminal execution's final-result outbox.
 func validateOrchestrationTransition(current, next ValidationExecution) error {
 	currentUpdatedAt, _ := time.Parse(time.RFC3339Nano, current.Orchestration.UpdatedAt)
 	nextUpdatedAt, _ := time.Parse(time.RFC3339Nano, next.Orchestration.UpdatedAt)
@@ -80,6 +80,9 @@ func validateOrchestrationTransition(current, next ValidationExecution) error {
 
 	switch current.Orchestration.Status {
 	case ExecutionStatusValid, ExecutionStatusInvalid, ExecutionStatusProcessingFailed:
+		if isFinalResultTransition(current, next) {
+			return nil
+		}
 		return errors.New("terminal orchestration state has no successor")
 	case ExecutionStatusPending:
 		if next.Orchestration.Status != ExecutionStatusStageQueued || len(next.Orchestration.Stages) != 1 || len(next.Orchestration.Stages[0].Attempts) != 0 ||
@@ -94,6 +97,32 @@ func validateOrchestrationTransition(current, next ValidationExecution) error {
 		return validateQueuedOrchestrationTransition(current, next)
 	default:
 		return fmt.Errorf("unsupported current orchestration status %q", current.Orchestration.Status)
+	}
+}
+
+func isFinalResultTransition(current, next ValidationExecution) bool {
+	before := current.Orchestration
+	after := next.Orchestration
+	before.FinalResultStatus = ""
+	before.FinalResultID = ""
+	before.FinalResultPublishedAt = ""
+	after.FinalResultStatus = ""
+	after.FinalResultID = ""
+	after.FinalResultPublishedAt = ""
+	before.UpdatedAt = ""
+	after.UpdatedAt = ""
+	if !reflect.DeepEqual(before, after) || current.Orchestration.Status != next.Orchestration.Status {
+		return false
+	}
+	switch current.Orchestration.FinalResultStatus {
+	case "":
+		return current.Orchestration.FinalResultID == "" && current.Orchestration.FinalResultPublishedAt == "" &&
+			next.Orchestration.FinalResultStatus == FinalResultPending && next.Orchestration.FinalResultID != "" && next.Orchestration.FinalResultPublishedAt == ""
+	case FinalResultPending:
+		return current.Orchestration.FinalResultID == next.Orchestration.FinalResultID && current.Orchestration.FinalResultPublishedAt == "" &&
+			next.Orchestration.FinalResultStatus == FinalResultPublished && next.Orchestration.FinalResultPublishedAt == next.Orchestration.UpdatedAt
+	default:
+		return false
 	}
 }
 

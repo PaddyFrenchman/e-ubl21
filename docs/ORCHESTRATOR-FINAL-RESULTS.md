@@ -1,0 +1,66 @@
+# Orchestrator-owned final validation results
+
+**Status:** Implemented persistence contract for `TODO-VALIDATION-SPLIT-009`
+
+The validation orchestrator is the sole publisher of execution-scoped
+canonical `ValidationResult` records in the split architecture. Stage workers
+publish only `StageResult` evidence and cannot finalize document validity.
+
+## Durable finalization order
+
+For every terminal execution, the orchestrator performs these durable steps:
+
+1. create or confirm the complete immutable `StageResult` for the accepted
+   attempt;
+2. CAS the execution to `valid`, `invalid`, or `processing-failed` with a
+   deterministic `finalResultId` and `finalResultStatus=pending`;
+3. reload every terminal stage's permanent evidence and verify it against the
+   frozen plan and accepted attempt projection;
+4. build and validate the ordered canonical `ValidationResult`;
+5. publish it to its execution-scoped permanent result subject;
+6. read the permanent slot back and require semantic equality;
+7. CAS the outbox to `finalResultStatus=published` with a publication time.
+
+The result identity is deterministic from `validationId` plus `generation`.
+JetStream retains at most the first record on that result subject, so replay
+generations for one upload receive independent permanent slots while a delayed
+duplicate publication cannot replace an earlier result.
+
+## Outcome safety
+
+A `valid` result contains every stage in the frozen plan, in order, and every
+stage has persisted `passed` evidence. A standards failure contains the passed
+prefix plus the terminal `standards-invalid` stage. Exhausted operational work
+is published as `processing_failed` with an explicit
+`operational-failure` outcome and typed reason; it is never represented as a
+standards-invalid result.
+
+Intermediate evidence cannot be published because non-terminal execution
+states have no final-result outbox and `EnsureFinalResult` rejects them. The
+canonical payload carries the frozen plan entries, allowing its own validation
+to reject a partial `valid` result even outside the orchestrator.
+
+## Crash recovery and concurrency
+
+`ReconcilePendingFinalResults` scans terminal executions whose outbox is absent
+or pending. An absent marker is supported for terminal records written before
+this contract: reconciliation first claims the deterministic pending intent
+under CAS. A publication failure leaves the intent pending. If publication
+succeeded but its acknowledgement or final CAS was lost, a retry reads and
+compares the permanent first-result slot before marking the outbox published.
+
+Concurrent replicas may publish or reconcile the same execution. Permanent
+per-subject insertion, deterministic identity, read-back comparison, and CAS
+make identical work converge and conflicting content fail closed.
+
+Finalization never reads, rewrites, or deletes the Object Store XML. Existing
+raw-content retention and tombstone policy therefore remains unchanged.
+
+## Migration boundary
+
+The existing combined worker continues its legacy upload-scoped result path
+until the stop-and-drain migration in `TODO-VALIDATION-SPLIT-014` (#61). That
+legacy compatibility path is not an execution-scoped result and must not run
+against the same active validation generation as the split roles. Issue #61
+owns the deployment barrier and API projection cutover; this issue supplies the
+complete orchestrator-owned persistence contract needed by that migration.

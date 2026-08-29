@@ -16,15 +16,17 @@ import (
 // Machine advances exact validation execution generations under JetStream KV
 // compare-and-swap and drains their durable StageRequest outbox intents.
 type Machine struct {
-	Queue               *queue.Client
-	Now                 func() time.Time
-	PublishStageRequest func(context.Context, queue.StageRequest) error
+	Queue                   *queue.Client
+	Now                     func() time.Time
+	PublishStageRequest     func(context.Context, queue.StageRequest) error
+	PublishValidationResult func(context.Context, queue.ValidationResult) error
 }
 
 func New(client *queue.Client) *Machine {
 	machine := &Machine{Queue: client, Now: time.Now}
 	if client != nil {
 		machine.PublishStageRequest = client.PublishStageRequest
+		machine.PublishValidationResult = client.PublishResult
 	}
 	return machine
 }
@@ -103,7 +105,7 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 		}
 		return machine.dispatchPending(ctx, current, request)
 	case queue.ExecutionStatusValid, queue.ExecutionStatusInvalid, queue.ExecutionStatusProcessingFailed:
-		return current, nil
+		return machine.EnsureFinalResult(ctx, current)
 	default:
 		return queue.VersionedValidationExecution{}, fmt.Errorf("unsupported orchestration status %q", execution.Orchestration.Status)
 	}
@@ -218,6 +220,14 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 	default:
 		return queue.VersionedValidationExecution{}, fmt.Errorf("unsupported stage outcome %q", result.Outcome)
 	}
+	if next.Orchestration.Status == queue.ExecutionStatusValid || next.Orchestration.Status == queue.ExecutionStatusInvalid || next.Orchestration.Status == queue.ExecutionStatusProcessingFailed {
+		resultID, resultIDErr := queue.ValidationExecutionResultID(next.ValidationID, next.Generation)
+		if resultIDErr != nil {
+			return queue.VersionedValidationExecution{}, resultIDErr
+		}
+		next.Orchestration.FinalResultStatus = queue.FinalResultPending
+		next.Orchestration.FinalResultID = resultID
+	}
 	revision, err := machine.Queue.UpdateValidationExecutionState(ctx, current, next)
 	if err != nil {
 		if errors.Is(err, queue.ErrValidationExecutionConflict) {
@@ -229,7 +239,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 	if request != nil {
 		return machine.EnsureDispatch(ctx, updated)
 	}
-	return updated, nil
+	return machine.EnsureFinalResult(ctx, updated)
 }
 
 // dispatchPending publishes one exact durable outbox intent, then records the
@@ -316,6 +326,9 @@ func (machine *Machine) validate() error {
 	}
 	if machine.PublishStageRequest == nil {
 		return errors.New("orchestrator stage request publisher is required")
+	}
+	if machine.PublishValidationResult == nil {
+		return errors.New("orchestrator validation result publisher is required")
 	}
 	return nil
 }

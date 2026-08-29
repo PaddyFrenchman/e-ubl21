@@ -467,6 +467,9 @@ Important properties include:
 - retained failed content can be replayed with the CLI;
 - replay generation is persisted so retries remain idempotent across ambiguous failures;
 - duplicate/replayed messages cannot create multiple canonical final results;
+- split-orchestrator final results use one permanent slot per validation
+  lineage generation and are reconstructed only from persisted ordered stage
+  evidence;
 - worker shutdown cancels validator subprocesses and returns interrupted work for retry;
 - progress heartbeats protect prefetched/long-running work from premature redelivery.
 

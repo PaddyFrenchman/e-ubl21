@@ -576,6 +576,11 @@ Preserve the current permanent-result guarantee after stage workers stop owning 
 
 A final `valid` result exists only when every required stage in the frozen plan has a persisted `passed` result.
 
+The implemented execution-scoped identity, durable finalization outbox,
+evidence-derived payload, permanent publication/read-back check, reconciliation
+and migration boundary are documented in
+[`docs/ORCHESTRATOR-FINAL-RESULTS.md`](docs/ORCHESTRATOR-FINAL-RESULTS.md).
+
 ---
 
 # TODO-VALIDATION-SPLIT-010 — Implement independent stage retry and DLQ policies

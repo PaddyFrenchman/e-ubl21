@@ -565,6 +565,57 @@ func (c *Client) ValidationExecutionsRequiringDispatch(ctx context.Context) ([]V
 	return pending, nil
 }
 
+// ValidationExecutionsRequiringFinalResult lists terminal executions whose
+// permanent result outbox is absent (pre-#56 compatibility) or pending.
+func (c *Client) ValidationExecutionsRequiringFinalResult(ctx context.Context) ([]VersionedValidationExecution, error) {
+	kv, err := c.validationExecutionsBucket(ctx)
+	if err != nil {
+		return nil, err
+	}
+	keys, err := kv.Keys(ctx)
+	if err != nil {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("list validation executions pending final result: %w", err)
+	}
+	pending := make([]VersionedValidationExecution, 0)
+	for _, key := range keys {
+		entry, getErr := kv.Get(ctx, key)
+		if getErr != nil {
+			return nil, fmt.Errorf("get validation execution key %s for final-result reconciliation: %w", key, getErr)
+		}
+		var execution ValidationExecution
+		if err := json.Unmarshal(entry.Value(), &execution); err != nil {
+			return nil, fmt.Errorf("decode validation execution key %s for final-result reconciliation: %w", key, err)
+		}
+		if err := execution.Validate(); err != nil {
+			return nil, fmt.Errorf("validate stored execution key %s for final-result reconciliation: %w", key, err)
+		}
+		if key != validationExecutionKey(execution.UploadID, execution.ValidationID, execution.Generation) {
+			return nil, fmt.Errorf("stored validation execution identity does not match key %s", key)
+		}
+		terminal := execution.Orchestration.Status == ExecutionStatusValid || execution.Orchestration.Status == ExecutionStatusInvalid || execution.Orchestration.Status == ExecutionStatusProcessingFailed
+		if terminal && execution.Orchestration.FinalResultStatus != FinalResultPublished {
+			pending = append(pending, VersionedValidationExecution{Execution: execution, Revision: entry.Revision()})
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("list validation executions pending final result: %w", err)
+	}
+	sort.Slice(pending, func(i, j int) bool {
+		left, right := pending[i].Execution, pending[j].Execution
+		if left.UploadID != right.UploadID {
+			return left.UploadID < right.UploadID
+		}
+		if left.ValidationID != right.ValidationID {
+			return left.ValidationID < right.ValidationID
+		}
+		return left.Generation < right.Generation
+	})
+	return pending, nil
+}
+
 func validationExecutionKey(uploadID, validationID string, generation uint64) string {
 	return uploadID + "." + validationID + "." + strconv.FormatUint(generation, 10)
 }

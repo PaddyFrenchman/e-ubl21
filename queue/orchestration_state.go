@@ -28,6 +28,17 @@ const (
 	StageDispatchPublished ValidationStageDispatchStatus = "published"
 )
 
+// ValidationFinalResultStatus is the durable final-result outbox state for a
+// terminal validation execution. Pending is committed before publication;
+// published is recorded only after JetStream acknowledges the permanent
+// execution-scoped result.
+type ValidationFinalResultStatus string
+
+const (
+	FinalResultPending   ValidationFinalResultStatus = "pending"
+	FinalResultPublished ValidationFinalResultStatus = "published"
+)
+
 // ValidationStageAttempt records the immutable identity and classification of
 // accepted attempt evidence. The complete StageResult is stored separately so
 // bounded diagnostics cannot overflow the compact execution-state record.
@@ -57,11 +68,14 @@ type ValidationStageState struct {
 // ValidationOrchestrationState is the mutable, CAS-protected projection kept
 // beside an execution's immutable identity and frozen plan.
 type ValidationOrchestrationState struct {
-	Status              ValidationExecutionStatus `json:"status"`
-	CurrentStageOrdinal uint32                    `json:"currentStageOrdinal,omitempty"`
-	Stages              []ValidationStageState    `json:"stages,omitempty"`
-	UpdatedAt           string                    `json:"updatedAt"`
-	FinalizedAt         string                    `json:"finalizedAt,omitempty"`
+	Status                 ValidationExecutionStatus   `json:"status"`
+	CurrentStageOrdinal    uint32                      `json:"currentStageOrdinal,omitempty"`
+	Stages                 []ValidationStageState      `json:"stages,omitempty"`
+	UpdatedAt              string                      `json:"updatedAt"`
+	FinalizedAt            string                      `json:"finalizedAt,omitempty"`
+	FinalResultStatus      ValidationFinalResultStatus `json:"finalResultStatus,omitempty"`
+	FinalResultID          string                      `json:"finalResultId,omitempty"`
+	FinalResultPublishedAt string                      `json:"finalResultPublishedAt,omitempty"`
 }
 
 func newPendingOrchestrationState(at time.Time) ValidationOrchestrationState {
@@ -175,11 +189,11 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 
 	switch state.Status {
 	case ExecutionStatusPending:
-		if state.CurrentStageOrdinal != 0 || len(state.Stages) != 0 || state.FinalizedAt != "" {
+		if state.CurrentStageOrdinal != 0 || len(state.Stages) != 0 || state.FinalizedAt != "" || state.hasFinalResultState() {
 			return errors.New("pending orchestration state cannot contain stage or final state")
 		}
 	case ExecutionStatusStageQueued:
-		if len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt != "" || state.Stages[len(state.Stages)-1].TerminalOutcome != "" {
+		if len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt != "" || state.Stages[len(state.Stages)-1].TerminalOutcome != "" || state.hasFinalResultState() {
 			return errors.New("queued orchestration state does not identify exactly one current stage")
 		}
 	case ExecutionStatusValid:
@@ -204,6 +218,43 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 		}
 	default:
 		return fmt.Errorf("invalid validation orchestration status %q", state.Status)
+	}
+	if state.Status == ExecutionStatusValid || state.Status == ExecutionStatusInvalid || state.Status == ExecutionStatusProcessingFailed {
+		if err := state.validateFinalResultState(execution); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (state ValidationOrchestrationState) hasFinalResultState() bool {
+	return state.FinalResultStatus != "" || state.FinalResultID != "" || state.FinalResultPublishedAt != ""
+}
+
+func (state ValidationOrchestrationState) validateFinalResultState(execution ValidationExecution) error {
+	// Terminal records created before the #56 finalization outbox are accepted
+	// so reconciliation can durably claim and publish them.
+	if !state.hasFinalResultState() {
+		return nil
+	}
+	wantID, err := ValidationExecutionResultID(execution.ValidationID, execution.Generation)
+	if err != nil {
+		return err
+	}
+	if state.FinalResultID != wantID {
+		return fmt.Errorf("orchestration final result id %q does not match deterministic id %q", state.FinalResultID, wantID)
+	}
+	switch state.FinalResultStatus {
+	case FinalResultPending:
+		if state.FinalResultPublishedAt != "" {
+			return errors.New("pending final result cannot have a publication time")
+		}
+	case FinalResultPublished:
+		if _, err := parseCanonicalStageTime("orchestration finalResultPublishedAt", state.FinalResultPublishedAt); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("invalid orchestration final result status %q", state.FinalResultStatus)
 	}
 	return nil
 }

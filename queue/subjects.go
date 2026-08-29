@@ -13,6 +13,8 @@ const (
 	HeaderUploadID     = "Ubl-Upload-Id"
 	HeaderDocumentType = "Ubl-Document-Type"
 	HeaderReceivedAt   = "Ubl-Received-At"
+	HeaderValidationID = "Ubl-Validation-Id"
+	HeaderGeneration   = "Ubl-Validation-Generation"
 	// HeaderReplayMessageID identifies descriptors created by operator replay.
 	// Unlike Nats-Msg-Id it is retained for the worker's durable claim check.
 	HeaderReplayMessageID = "Ubl-Replay-Message-Id"
@@ -190,8 +192,9 @@ func (n Namespace) HasDocumentSubject(subject string) bool {
 }
 
 // ResultsSubject is the stable base of this namespace's validation-result
-// subject space. New results are published to ResultSubject(uploadID), not
-// directly to this base subject.
+// subject space. Results are published to ResultSubject(resultID), not
+// directly to this base subject. Legacy upload-scoped payloads use uploadID as
+// their result token during migration.
 func (n Namespace) ResultsSubject() string {
 	if n == DefaultNamespace {
 		return legacyResultsSubject
@@ -199,15 +202,15 @@ func (n Namespace) ResultsSubject() string {
 	return string(n) + ".validation.results"
 }
 
-// ResultSubject returns the unique subject used to publish one upload's
-// validation result. The per-upload token lets JetStream enforce a permanent
-// one-message-per-upload constraint independently of its time-scoped message
-// ID duplicate window.
-func (n Namespace) ResultSubject(uploadID string) string {
-	return n.ResultsSubject() + "." + uploadID
+// ResultSubject returns the unique subject used to publish one permanent
+// result. Legacy results use the upload ID token; execution-scoped results use
+// their deterministic ResultID. The single token lets JetStream enforce
+// permanent first-result insertion independently of message-ID deduplication.
+func (n Namespace) ResultSubject(resultID string) string {
+	return n.ResultsSubject() + "." + resultID
 }
 
-// ResultsFilterSubject matches every per-upload validation-result subject in
+// ResultsFilterSubject matches every permanent validation-result subject in
 // this namespace. Downstream consumers should use this filter rather than the
 // ResultsSubject base.
 func (n Namespace) ResultsFilterSubject() string {

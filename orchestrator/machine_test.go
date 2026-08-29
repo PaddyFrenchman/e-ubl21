@@ -747,6 +747,9 @@ func newMachine(t *testing.T) (*orchestrator.Machine, *queue.Client, context.Con
 	t.Cleanup(client.Close)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	t.Cleanup(cancel)
+	if err := client.EnsureInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if err := client.ProvisionValidationExecutionInfra(ctx); err != nil {
 		t.Fatal(err)
 	}

@@ -85,12 +85,15 @@ func (issue *ValidationIssue) UnmarshalJSON(data []byte) error {
 // ValidationStageResult records the outcome of one validation layer. Version
 // identifies the exact schema or semantic profile that produced the result.
 type ValidationStageResult struct {
-	Layer       ValidationLayer   `json:"layer"`
-	Version     string            `json:"version,omitempty"`
-	Valid       bool              `json:"valid"`
-	Issues      []ValidationIssue `json:"issues,omitempty"`
-	ValidatedAt string            `json:"validatedAt"`
-	DurationMS  int64             `json:"durationMs,omitempty"`
+	Layer       ValidationLayer        `json:"layer"`
+	Version     string                 `json:"version,omitempty"`
+	Valid       bool                   `json:"valid"`
+	Outcome     StageOutcome           `json:"outcome,omitempty"`
+	Reason      StageOperationalReason `json:"reason,omitempty"`
+	Issues      []ValidationIssue      `json:"issues,omitempty"`
+	Diagnostic  string                 `json:"diagnostic,omitempty"`
+	ValidatedAt string                 `json:"validatedAt"`
+	DurationMS  int64                  `json:"durationMs,omitempty"`
 }
 
 // ValidationStages is the ordered set of completed validation layers.
@@ -138,15 +141,24 @@ const (
 	StatusProcessingFailed ValidationStatus = "processing_failed"
 )
 
-// ValidationResult is the payload published to Namespace.ResultsSubject
-// once a document has been processed by the worker.
+// ValidationResult is the canonical terminal validation payload. ResultID,
+// ValidationID, and Generation identify orchestrator-owned execution results;
+// omitted execution fields retain decode compatibility with legacy
+// upload-scoped worker results during migration.
 type ValidationResult struct {
-	ID               string           `json:"id"`
-	DocumentType     string           `json:"documentType"`
-	Status           ValidationStatus `json:"status"`
-	Error            string           `json:"error,omitempty"`
-	ValidatedAt      string           `json:"validatedAt"`
-	ValidationStages ValidationStages `json:"validationStages,omitempty"`
+	ID               string                  `json:"id"`
+	ResultID         string                  `json:"resultId,omitempty"`
+	ValidationID     string                  `json:"validationId,omitempty"`
+	Generation       uint64                  `json:"generation,omitempty"`
+	Profile          ValidationProfile       `json:"profile,omitempty"`
+	Plan             string                  `json:"plan,omitempty"`
+	PlanVersion      string                  `json:"planVersion,omitempty"`
+	PlanStages       []FrozenValidationStage `json:"planStages,omitempty"`
+	DocumentType     string                  `json:"documentType"`
+	Status           ValidationStatus        `json:"status"`
+	Error            string                  `json:"error,omitempty"`
+	ValidatedAt      string                  `json:"validatedAt"`
+	ValidationStages ValidationStages        `json:"validationStages,omitempty"`
 }
 
 // JSErrCode 10077 is the server's stable "maximum messages per subject
@@ -154,30 +166,52 @@ type ValidationResult struct {
 // it, so keep the protocol value local and covered by the integration test.
 const jsErrCodeStreamMaxMsgsPerSubject jetstream.ErrorCode = 10077
 
-// PublishResult inserts result into this client's output results stream. Each
-// upload has a unique subject and the stream permanently retains at most its
-// first result. A duplicate insert is therefore success from this idempotent
-// API's perspective, even after the Nats-Msg-Id duplicate window has elapsed.
+// PublishResult inserts result into this client's output results stream.
+// Legacy payloads retain one permanent upload-scoped slot. Execution payloads
+// use ResultID for one permanent slot per validation lineage generation and
+// read the accepted value back so conflicting duplicates fail closed even
+// inside the Nats-Msg-Id deduplication window.
 func (c *Client) PublishResult(ctx context.Context, result ValidationResult) error {
 	if !ValidID(result.ID) {
 		return fmt.Errorf("invalid validation result upload id %q", result.ID)
+	}
+	resultToken := result.ID
+	messageID := result.ID + ":validation-result"
+	if result.ResultID != "" || result.ValidationID != "" || result.Generation != 0 {
+		if err := result.ValidateExecutionResult(); err != nil {
+			return err
+		}
+		resultToken = result.ResultID
+		messageID = result.ResultID
 	}
 	payload, err := json.Marshal(result)
 	if err != nil {
 		return fmt.Errorf("marshal validation result for %s: %w", result.ID, err)
 	}
-	msg := nats.NewMsg(c.Namespace.ResultSubject(result.ID))
+	msg := nats.NewMsg(c.Namespace.ResultSubject(resultToken))
 	msg.Data = payload
 	msg.Header.Set(HeaderUploadID, result.ID)
 	msg.Header.Set(HeaderDocumentType, result.DocumentType)
-	msg.Header.Set(nats.MsgIdHdr, result.ID+":validation-result")
+	msg.Header.Set(nats.MsgIdHdr, messageID)
+	if result.ValidationID != "" {
+		msg.Header.Set(HeaderValidationID, result.ValidationID)
+		msg.Header.Set(HeaderGeneration, fmt.Sprintf("%d", result.Generation))
+	}
 
 	if _, err := c.JS.PublishMsg(ctx, msg); err != nil {
 		var apiErr *jetstream.APIError
-		if errors.As(err, &apiErr) && apiErr.ErrorCode == jsErrCodeStreamMaxMsgsPerSubject {
-			return nil
+		if !errors.As(err, &apiErr) || apiErr.ErrorCode != jsErrCodeStreamMaxMsgsPerSubject {
+			return fmt.Errorf("publish validation result for %s: %w", result.ID, err)
 		}
-		return fmt.Errorf("publish validation result for %s: %w", result.ID, err)
+	}
+	if result.ValidationID != "" {
+		existing, err := c.GetValidationExecutionResult(ctx, result.ValidationID, result.Generation)
+		if err != nil {
+			return fmt.Errorf("inspect permanent validation result after publication: %w", err)
+		}
+		if !SemanticallyEqualValidationResults(existing, result) {
+			return fmt.Errorf("conflicting permanent validation result for %s", result.ResultID)
+		}
 	}
 	return nil
 }
