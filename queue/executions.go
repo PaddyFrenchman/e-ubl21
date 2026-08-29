@@ -20,6 +20,13 @@ import (
 // It is independent of the versioned StageRequest/StageResult wire contract.
 const ValidationExecutionSchemaVersion uint32 = 1
 
+const (
+	DefaultValidationRetryPolicyID             = "bounded-attempts"
+	DefaultValidationRetryPolicyVersion        = "1"
+	DefaultValidationMaxAttempts        uint32 = 3
+	MaxValidationStageAttempts          uint32 = 32
+)
+
 var validationPlanTokenPattern = regexp.MustCompile(`^[a-z0-9]+(?:[.-][a-z0-9]+)*$`)
 var validationDocumentTypePattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9]{0,127}$`)
 
@@ -60,6 +67,23 @@ type FrozenValidationPlan struct {
 	Stages  []FrozenValidationStage `json:"stages"`
 }
 
+// FrozenValidationRetryPolicy makes operational-failure exhaustion a durable
+// execution decision rather than a process-local orchestrator setting.
+type FrozenValidationRetryPolicy struct {
+	ID          string `json:"id"`
+	Version     string `json:"version"`
+	MaxAttempts uint32 `json:"maxAttempts"`
+}
+
+// DefaultFrozenValidationRetryPolicy returns the immutable policy selected
+// when an execution intent does not explicitly provide one.
+func DefaultFrozenValidationRetryPolicy() FrozenValidationRetryPolicy {
+	return FrozenValidationRetryPolicy{
+		ID: DefaultValidationRetryPolicyID, Version: DefaultValidationRetryPolicyVersion,
+		MaxAttempts: DefaultValidationMaxAttempts,
+	}
+}
+
 // ValidationExecutionReference identifies an existing generation without
 // relying on a mutable "latest" alias.
 type ValidationExecutionReference struct {
@@ -77,6 +101,7 @@ type ValidationExecutionIntent struct {
 	Trigger          ValidationExecutionTrigger
 	RequestedProfile ValidationProfile
 	Plan             FrozenValidationPlan
+	RetryPolicy      FrozenValidationRetryPolicy
 	RevalidationOf   *ValidationExecutionReference
 	CreatedAt        time.Time
 }
@@ -98,6 +123,7 @@ type ValidationExecution struct {
 	Trigger          ValidationExecutionTrigger    `json:"trigger"`
 	RequestedProfile ValidationProfile             `json:"requestedProfile"`
 	Plan             FrozenValidationPlan          `json:"plan"`
+	RetryPolicy      FrozenValidationRetryPolicy   `json:"retryPolicy"`
 	RevalidationOf   *ValidationExecutionReference `json:"revalidationOf,omitempty"`
 	CreatedAt        string                        `json:"createdAt"`
 	Orchestration    ValidationOrchestrationState  `json:"orchestration"`
@@ -115,10 +141,14 @@ func NewValidationExecution(intent ValidationExecutionIntent) (ValidationExecuti
 		return ValidationExecution{}, fmt.Errorf("invalid validation creation intent id %q", intent.IntentID)
 	}
 	validationID := deterministicValidationID(intent.Trigger, intent.UploadID, intent.IntentID)
+	retryPolicy := intent.RetryPolicy
+	if retryPolicy == (FrozenValidationRetryPolicy{}) {
+		retryPolicy = DefaultFrozenValidationRetryPolicy()
+	}
 	execution := ValidationExecution{
 		SchemaVersion: ValidationExecutionSchemaVersion, ValidationID: validationID, CreationIntentID: intent.IntentID,
 		UploadID: intent.UploadID, DocumentType: intent.DocumentType, Generation: 1, Trigger: intent.Trigger,
-		RequestedProfile: intent.RequestedProfile, Plan: cloneFrozenValidationPlan(intent.Plan),
+		RequestedProfile: intent.RequestedProfile, Plan: cloneFrozenValidationPlan(intent.Plan), RetryPolicy: retryPolicy,
 		RevalidationOf: cloneValidationExecutionReference(intent.RevalidationOf),
 		CreatedAt:      intent.CreatedAt.UTC().Format(time.RFC3339Nano),
 		Orchestration:  newPendingOrchestrationState(intent.CreatedAt),
@@ -218,8 +248,24 @@ func (execution ValidationExecution) Validate() error {
 	if err := execution.Plan.validate(); err != nil {
 		return err
 	}
+	if err := execution.RetryPolicy.validate(); err != nil {
+		return err
+	}
 	if err := execution.Orchestration.validate(execution); err != nil {
 		return fmt.Errorf("validation orchestration state: %w", err)
+	}
+	return nil
+}
+
+func (policy FrozenValidationRetryPolicy) validate() error {
+	if !validationPlanTokenPattern.MatchString(policy.ID) {
+		return fmt.Errorf("invalid validation retry policy id %q", policy.ID)
+	}
+	if err := validateStageVersion("validation retry policy version", policy.Version); err != nil {
+		return err
+	}
+	if policy.MaxAttempts == 0 || policy.MaxAttempts > MaxValidationStageAttempts {
+		return fmt.Errorf("validation retry policy max attempts must be between 1 and %d", MaxValidationStageAttempts)
 	}
 	return nil
 }
@@ -327,8 +373,8 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 			return 0, fmt.Errorf("validate previous execution %s generation %d: %w", execution.ValidationID, execution.Generation-1, err)
 		}
 		if previous.UploadID != execution.UploadID || previous.ValidationID != execution.ValidationID || previous.DocumentType != execution.DocumentType ||
-			previous.RequestedProfile != execution.RequestedProfile || !reflect.DeepEqual(previous.Plan, execution.Plan) {
-			return 0, fmt.Errorf("create validation execution %s generation %d: replay lineage changed immutable identity, profile, or plan", execution.ValidationID, execution.Generation)
+			previous.RequestedProfile != execution.RequestedProfile || !reflect.DeepEqual(previous.Plan, execution.Plan) || previous.RetryPolicy != execution.RetryPolicy {
+			return 0, fmt.Errorf("create validation execution %s generation %d: replay lineage changed immutable identity, profile, plan, or retry policy", execution.ValidationID, execution.Generation)
 		}
 	} else if execution.Trigger == ValidationTriggerRevalidation {
 		reference := execution.RevalidationOf
@@ -349,8 +395,8 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 		if previous.UploadID != execution.UploadID || previous.DocumentType != execution.DocumentType || previous.ValidationID != reference.ValidationID || previous.Generation != reference.Generation {
 			return 0, fmt.Errorf("create revalidation %s: predecessor identity or document type does not match", execution.ValidationID)
 		}
-		if previous.RequestedProfile == execution.RequestedProfile && reflect.DeepEqual(previous.Plan, execution.Plan) {
-			return 0, fmt.Errorf("create revalidation %s: requested profile and frozen plan are unchanged; use replay", execution.ValidationID)
+		if previous.RequestedProfile == execution.RequestedProfile && reflect.DeepEqual(previous.Plan, execution.Plan) && previous.RetryPolicy == execution.RetryPolicy {
+			return 0, fmt.Errorf("create revalidation %s: requested profile, frozen plan, and retry policy are unchanged; use replay", execution.ValidationID)
 		}
 	}
 	encoded, err := json.Marshal(execution)

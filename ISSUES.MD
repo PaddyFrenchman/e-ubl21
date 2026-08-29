@@ -216,7 +216,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/51
 
 **Goal:** Move sequencing and finalization out of validators.
 
-The orchestrator loads the frozen ValidationPlan, publishes first/next StageRequests, consumes StageResults, CAS-updates stage state, stops on standards failure, and alone publishes the final document result.
+The orchestrator loads the frozen ValidationPlan, publishes first/next StageRequests, consumes StageResults, CAS-updates stage state, stops on standards failure, and finalizes the authoritative execution outcome. Publishing the canonical external `ValidationResult` remains owned by #56.
 
 **Acceptance:** No validation worker directly invokes or queues a later stage.
 

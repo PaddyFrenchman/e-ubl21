@@ -7,26 +7,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-const DefaultMaxStageAttempts uint32 = 3
-
 // Machine advances exact validation execution generations under JetStream KV
 // compare-and-swap. Crash-window outbox reconciliation is deliberately added
 // by TODO-VALIDATION-SPLIT-006; deterministic publication already makes an
 // explicit EnsureDispatch retry harmless.
 type Machine struct {
-	Queue       *queue.Client
-	MaxAttempts uint32
-	Now         func() time.Time
+	Queue *queue.Client
+	Now   func() time.Time
 }
 
 func New(client *queue.Client) *Machine {
-	return &Machine{Queue: client, MaxAttempts: DefaultMaxStageAttempts, Now: time.Now}
+	return &Machine{Queue: client, Now: time.Now}
 }
 
 // Start creates (or loads after command redelivery) a generation and ensures
@@ -129,6 +127,13 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 			if accepted[result.Attempt-1].ResultID != result.ResultID {
 				return queue.VersionedValidationExecution{}, errors.New("conflicting result for an already accepted stage attempt")
 			}
+			evidence, err := machine.Queue.GetValidationStageEvidence(ctx, result.UploadID, result.ValidationID, result.Generation, result.StageOrdinal, result.Attempt)
+			if err != nil {
+				return queue.VersionedValidationExecution{}, fmt.Errorf("load evidence for an already accepted stage attempt: %w", err)
+			}
+			if !reflect.DeepEqual(evidence, result) {
+				return queue.VersionedValidationExecution{}, errors.New("conflicting result for an already accepted stage attempt")
+			}
 			return machine.EnsureDispatch(ctx, current)
 		}
 	}
@@ -177,7 +182,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 		next.Orchestration.Status = queue.ExecutionStatusInvalid
 		next.Orchestration.FinalizedAt = now.UTC().Format(time.RFC3339Nano)
 	case queue.StageOutcomeOperationalFailure:
-		if result.Attempt >= machine.MaxAttempts {
+		if result.Attempt >= current.Execution.RetryPolicy.MaxAttempts {
 			nextStage.TerminalOutcome = result.Outcome
 			next.Orchestration.Status = queue.ExecutionStatusProcessingFailed
 			next.Orchestration.FinalizedAt = now.UTC().Format(time.RFC3339Nano)
@@ -245,9 +250,6 @@ func (machine *Machine) currentRequest(execution queue.ValidationExecution) (que
 func (machine *Machine) validate() error {
 	if machine == nil || machine.Queue == nil {
 		return errors.New("orchestrator queue client is required")
-	}
-	if machine.MaxAttempts == 0 || machine.MaxAttempts > 32 {
-		return errors.New("orchestrator max attempts must be between 1 and 32")
 	}
 	if machine.Now == nil {
 		return errors.New("orchestrator clock is required")

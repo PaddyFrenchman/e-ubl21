@@ -78,6 +78,9 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 		if stageState.AuthorizedAttempt == 0 {
 			return fmt.Errorf("orchestration stage %d has no authorized attempt", index+1)
 		}
+		if stageState.AuthorizedAttempt > execution.RetryPolicy.MaxAttempts {
+			return fmt.Errorf("orchestration stage %d authorized attempt exceeds the frozen retry policy", index+1)
+		}
 		wantRequestID := stageRequestID(StageContractVersion, execution.ValidationID, execution.UploadID, execution.DocumentType,
 			execution.Plan.ID, execution.Plan.Version, execution.Generation, planStage.ID, planStage.Ordinal,
 			planStage.RulesetVersion, stageState.AuthorizedAttempt)
@@ -160,6 +163,9 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 	case ExecutionStatusProcessingFailed:
 		if len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt == "" || state.Stages[len(state.Stages)-1].TerminalOutcome != StageOutcomeOperationalFailure {
 			return errors.New("processing-failed orchestration state requires exhausted operational evidence")
+		}
+		if state.Stages[len(state.Stages)-1].AuthorizedAttempt != execution.RetryPolicy.MaxAttempts {
+			return errors.New("processing-failed orchestration state has not exhausted the frozen retry policy")
 		}
 	default:
 		return fmt.Errorf("invalid validation orchestration status %q", state.Status)

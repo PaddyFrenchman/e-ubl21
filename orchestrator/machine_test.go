@@ -3,6 +3,8 @@ package orchestrator_test
 import (
 	"context"
 	"errors"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,7 +15,7 @@ import (
 )
 
 func TestMachineAdvancesFrozenPlanAndFinalizesValid(t *testing.T) {
-	machine, client, ctx := newMachine(t, 3)
+	machine, client, ctx := newMachine(t)
 	state, err := machine.Start(ctx, testIntent(t, testPlan()))
 	if err != nil {
 		t.Fatal(err)
@@ -55,7 +57,7 @@ func TestMachineAdvancesFrozenPlanAndFinalizesValid(t *testing.T) {
 }
 
 func TestMachineStopsOnStandardsInvalidWithoutQueueingLaterStage(t *testing.T) {
-	machine, client, ctx := newMachine(t, 3)
+	machine, client, ctx := newMachine(t)
 	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
 		t.Fatal(err)
 	}
@@ -72,8 +74,8 @@ func TestMachineStopsOnStandardsInvalidWithoutQueueingLaterStage(t *testing.T) {
 }
 
 func TestMachineRetriesOperationalFailureAndFailsOnlyAfterExhaustion(t *testing.T) {
-	machine, client, ctx := newMachine(t, 2)
-	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan(), 2)); err != nil {
 		t.Fatal(err)
 	}
 	first := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
@@ -101,7 +103,7 @@ func TestMachineRetriesOperationalFailureAndFailsOnlyAfterExhaustion(t *testing.
 }
 
 func TestMachineRejectsOutOfOrderAndPlanDrift(t *testing.T) {
-	machine, client, ctx := newMachine(t, 3)
+	machine, client, ctx := newMachine(t)
 	state, err := machine.Start(ctx, testIntent(t, testPlan()))
 	if err != nil {
 		t.Fatal(err)
@@ -124,7 +126,7 @@ func TestMachineRejectsOutOfOrderAndPlanDrift(t *testing.T) {
 }
 
 func TestMachineRejectsFrozenStageWithoutQueueTopology(t *testing.T) {
-	machine, client, ctx := newMachine(t, 3)
+	machine, client, ctx := newMachine(t)
 	plan := testPlan()
 	plan.Stages = []queue.FrozenValidationStage{{ID: "future-stage", Ordinal: 1, Requirement: queue.ValidationStageRequired, RulesetVersion: "1"}}
 	intent := testIntent(t, plan)
@@ -141,7 +143,7 @@ func TestMachineRejectsFrozenStageWithoutQueueTopology(t *testing.T) {
 }
 
 func TestStageResultConsumerAcknowledgesOnlyAfterDurableTransition(t *testing.T) {
-	machine, client, ctx := newMachine(t, 3)
+	machine, client, ctx := newMachine(t)
 	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +180,7 @@ func TestStageResultConsumerAcknowledgesOnlyAfterDurableTransition(t *testing.T)
 }
 
 func TestDuplicateAcceptedResultDoesNotAdvanceTwice(t *testing.T) {
-	machine, client, ctx := newMachine(t, 3)
+	machine, client, ctx := newMachine(t)
 	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
 		t.Fatal(err)
 	}
@@ -198,8 +200,59 @@ func TestDuplicateAcceptedResultDoesNotAdvanceTwice(t *testing.T) {
 	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }
 
+func TestConflictingDuplicateResultIsRejectedAgainstPermanentEvidence(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	accepted := resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)
+	if _, err := machine.HandleStageResult(ctx, accepted); err != nil {
+		t.Fatal(err)
+	}
+	conflicting := resultFor(t, request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone)
+	if conflicting.ResultID != accepted.ResultID {
+		t.Fatalf("conflicting result id = %q, want deterministic %q", conflicting.ResultID, accepted.ResultID)
+	}
+	if _, err := machine.HandleStageResult(ctx, conflicting); err == nil {
+		t.Fatal("orchestrator accepted conflicting evidence as an identical duplicate")
+	}
+	stored, err := client.GetValidationStageEvidence(ctx, accepted.UploadID, accepted.ValidationID, accepted.Generation, accepted.StageOrdinal, accepted.Attempt)
+	if err != nil || !reflect.DeepEqual(stored, accepted) {
+		t.Fatalf("permanent evidence = %+v, %v; want %+v", stored, err, accepted)
+	}
+}
+
+func TestPersistenceRejectsLatestRevisionHistoryRewrite(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	started, err := machine.Start(ctx, testIntent(t, testPlan(), 2))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	retrying, err := machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomeOperationalFailure, queue.StageReasonTimeout))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rewritten := retrying.Execution
+	rewritten.Orchestration = started.Execution.Orchestration
+	rewritten.Orchestration.UpdatedAt = retrying.Execution.Orchestration.UpdatedAt
+	if _, err := client.UpdateValidationExecutionState(ctx, retrying, rewritten); err == nil || !strings.Contains(err.Error(), "append-only") {
+		t.Fatalf("latest revision history rewrite error = %v, want append-only rejection", err)
+	}
+
+	retryRequest := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	terminal, err := machine.HandleStageResult(ctx, resultFor(t, retryRequest, queue.StageOutcomeOperationalFailure, queue.StageReasonRuntimeFailure))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.UpdateValidationExecutionState(ctx, terminal, terminal.Execution); err == nil || !strings.Contains(err.Error(), "no successor") {
+		t.Fatalf("terminal successor error = %v, want terminal rejection", err)
+	}
+}
+
 func TestStaleExecutionRevisionCannotOverwriteWinningTransition(t *testing.T) {
-	machine, client, ctx := newMachine(t, 3)
+	machine, client, ctx := newMachine(t)
 	started, err := machine.Start(ctx, testIntent(t, testPlan()))
 	if err != nil {
 		t.Fatal(err)
@@ -215,7 +268,7 @@ func TestStaleExecutionRevisionCannotOverwriteWinningTransition(t *testing.T) {
 }
 
 func TestRedeliveredStartLoadsAdvancedExecutionWithoutResettingIt(t *testing.T) {
-	machine, client, ctx := newMachine(t, 3)
+	machine, client, ctx := newMachine(t)
 	intent := testIntent(t, testPlan())
 	if _, err := machine.Start(ctx, intent); err != nil {
 		t.Fatal(err)
@@ -235,7 +288,7 @@ func TestRedeliveredStartLoadsAdvancedExecutionWithoutResettingIt(t *testing.T) 
 	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }
 
-func newMachine(t *testing.T, maxAttempts uint32) (*orchestrator.Machine, *queue.Client, context.Context) {
+func newMachine(t *testing.T) (*orchestrator.Machine, *queue.Client, context.Context) {
 	t.Helper()
 	server := queuetest.StartServer(t)
 	client, err := queue.ConnectWithOptions(server.URL, queue.MustNamespace("orchestrator"), server.Options...)
@@ -252,7 +305,6 @@ func newMachine(t *testing.T, maxAttempts uint32) (*orchestrator.Machine, *queue
 		t.Fatal(err)
 	}
 	machine := orchestrator.New(client)
-	machine.MaxAttempts = maxAttempts
 	clock := time.Date(2026, 8, 28, 20, 0, 0, 0, time.UTC)
 	machine.Now = func() time.Time {
 		clock = clock.Add(time.Millisecond)
@@ -261,12 +313,16 @@ func newMachine(t *testing.T, maxAttempts uint32) (*orchestrator.Machine, *queue
 	return machine, client, ctx
 }
 
-func testIntent(t *testing.T, plan queue.FrozenValidationPlan) queue.ValidationExecutionIntent {
+func testIntent(t *testing.T, plan queue.FrozenValidationPlan, maxAttempts ...uint32) queue.ValidationExecutionIntent {
 	t.Helper()
+	retryPolicy := queue.DefaultFrozenValidationRetryPolicy()
+	if len(maxAttempts) != 0 {
+		retryPolicy.MaxAttempts = maxAttempts[0]
+	}
 	return queue.ValidationExecutionIntent{
 		IntentID: newID(t), UploadID: newID(t), DocumentType: "Invoice",
 		Trigger: queue.ValidationTriggerInitial, RequestedProfile: queue.ValidationProfileUBL21EN16931,
-		Plan: plan, CreatedAt: time.Date(2026, 8, 28, 19, 0, 0, 0, time.UTC),
+		Plan: plan, RetryPolicy: retryPolicy, CreatedAt: time.Date(2026, 8, 28, 19, 0, 0, 0, time.UTC),
 	}
 }
 
