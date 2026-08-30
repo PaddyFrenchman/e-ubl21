@@ -49,6 +49,7 @@ func (machine *Machine) Start(ctx context.Context, intent queue.ValidationExecut
 	}
 	ctx, span := startExecutionSpan(ctx, "orchestrator.start", execution)
 	defer span.End()
+	execution.Orchestration.InitialDispatchTrace = observability.CaptureTrace(ctx)
 	if _, err := machine.Queue.CreateValidationExecution(ctx, execution); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
@@ -120,6 +121,7 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 	}
 	switch execution.Orchestration.Status {
 	case queue.ExecutionStatusPending:
+		ctx = observability.RestoreTrace(ctx, execution.Orchestration.InitialDispatchTrace)
 		request, err := queue.NewStageRequest(execution, 1, 1, machine.now())
 		if err != nil {
 			return queue.VersionedValidationExecution{}, err
@@ -435,6 +437,10 @@ func resultMatchesExecution(result queue.StageResult, execution queue.Validation
 
 func cloneExecution(execution queue.ValidationExecution) queue.ValidationExecution {
 	cloned := execution
+	if execution.Orchestration.InitialDispatchTrace != nil {
+		traceCarrier := *execution.Orchestration.InitialDispatchTrace
+		cloned.Orchestration.InitialDispatchTrace = &traceCarrier
+	}
 	if execution.Orchestration.FinalResultTrace != nil {
 		traceCarrier := *execution.Orchestration.FinalResultTrace
 		cloned.Orchestration.FinalResultTrace = &traceCarrier

@@ -86,8 +86,13 @@ func validateOrchestrationTransition(current, next ValidationExecution) error {
 		return errors.New("terminal orchestration state has no successor")
 	case ExecutionStatusPending:
 		if next.Orchestration.Status != ExecutionStatusStageQueued || len(next.Orchestration.Stages) != 1 || len(next.Orchestration.Stages[0].Attempts) != 0 ||
-			next.Orchestration.Stages[0].AuthorizedAttempt != 1 || next.Orchestration.Stages[0].DispatchStatus != StageDispatchPending {
+			next.Orchestration.Stages[0].AuthorizedAttempt != 1 || next.Orchestration.Stages[0].DispatchStatus != StageDispatchPending ||
+			next.Orchestration.InitialDispatchTrace != nil {
 			return errors.New("pending orchestration may only dispatch the first stage attempt")
+		}
+		if current.Orchestration.InitialDispatchTrace != nil &&
+			!reflect.DeepEqual(current.Orchestration.InitialDispatchTrace, next.Orchestration.Stages[0].DispatchTrace) {
+			return errors.New("first stage dispatch must preserve the pending execution trace")
 		}
 		return nil
 	case ExecutionStatusStageQueued:

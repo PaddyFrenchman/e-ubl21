@@ -85,6 +85,7 @@ type ValidationStageState struct {
 // beside an execution's immutable identity and frozen plan.
 type ValidationOrchestrationState struct {
 	Status                 ValidationExecutionStatus   `json:"status"`
+	InitialDispatchTrace   *observability.TraceCarrier `json:"initialDispatchTrace,omitempty"`
 	CurrentStageOrdinal    uint32                      `json:"currentStageOrdinal,omitempty"`
 	Stages                 []ValidationStageState      `json:"stages,omitempty"`
 	UpdatedAt              string                      `json:"updatedAt"`
@@ -109,6 +110,11 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 	if state.FinalizedAt != "" {
 		if _, err := parseCanonicalStageTime("orchestration finalizedAt", state.FinalizedAt); err != nil {
 			return err
+		}
+	}
+	if state.InitialDispatchTrace != nil {
+		if err := state.InitialDispatchTrace.Validate(); err != nil {
+			return fmt.Errorf("orchestration initial dispatch trace: %w", err)
 		}
 	}
 	if len(state.Stages) > len(execution.Plan.Stages) {
@@ -234,11 +240,11 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 			return errors.New("pending orchestration state cannot contain stage or final state")
 		}
 	case ExecutionStatusStageQueued:
-		if len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt != "" || state.Stages[len(state.Stages)-1].TerminalOutcome != "" || state.hasFinalResultState() {
+		if state.InitialDispatchTrace != nil || len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt != "" || state.Stages[len(state.Stages)-1].TerminalOutcome != "" || state.hasFinalResultState() {
 			return errors.New("queued orchestration state does not identify exactly one current stage")
 		}
 	case ExecutionStatusValid:
-		if len(state.Stages) != len(execution.Plan.Stages) || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt == "" {
+		if state.InitialDispatchTrace != nil || len(state.Stages) != len(execution.Plan.Stages) || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt == "" {
 			return errors.New("valid orchestration state requires every frozen-plan stage and a finalization time")
 		}
 		for _, stage := range state.Stages {
@@ -247,11 +253,11 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 			}
 		}
 	case ExecutionStatusInvalid:
-		if len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt == "" || state.Stages[len(state.Stages)-1].TerminalOutcome != StageOutcomeStandardsInvalid {
+		if state.InitialDispatchTrace != nil || len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt == "" || state.Stages[len(state.Stages)-1].TerminalOutcome != StageOutcomeStandardsInvalid {
 			return errors.New("invalid orchestration state requires terminal standards-invalid evidence")
 		}
 	case ExecutionStatusProcessingFailed:
-		if len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt == "" || state.Stages[len(state.Stages)-1].TerminalOutcome != StageOutcomeOperationalFailure {
+		if state.InitialDispatchTrace != nil || len(state.Stages) == 0 || state.CurrentStageOrdinal != uint32(len(state.Stages)) || state.FinalizedAt == "" || state.Stages[len(state.Stages)-1].TerminalOutcome != StageOutcomeOperationalFailure {
 			return errors.New("processing-failed orchestration state requires exhausted operational evidence")
 		}
 		terminal := state.Stages[len(state.Stages)-1]

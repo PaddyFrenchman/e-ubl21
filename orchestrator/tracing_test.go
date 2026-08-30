@@ -133,6 +133,47 @@ func TestPendingStageDispatchReconciliationRestoresDurableTrace(t *testing.T) {
 	}
 }
 
+func TestPendingExecutionReconciliationRestoresInitialDispatchTrace(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	traceID := trace.TraceID{6, 0, 6, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	execution, err := queue.NewValidationExecution(testIntent(t, testPlan()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// This is the exact durable state left when Start creates the execution and
+	// the process exits before its first EnsureDispatch call.
+	execution.Orchestration.InitialDispatchTrace = observability.CaptureTrace(contextWithTraceID(ctx, traceID))
+	if _, err := client.CreateValidationExecution(ctx, execution); err != nil {
+		t.Fatal(err)
+	}
+
+	restarted := orchestrator.New(client)
+	restarted.Now = machine.Now
+	if report, err := restarted.ReconcilePendingDispatches(context.Background()); err != nil || report.Reconciled != 1 {
+		t.Fatalf("pending execution reconciliation = %+v, %v", report, err)
+	}
+	consumer, err := client.StageRequestConsumer(ctx, queue.ValidationLayerUBL21XSD)
+	if err != nil {
+		t.Fatal(err)
+	}
+	message := fetchTraceMessage(t, ctx, consumer)
+	assertRecoveredTraceID(t, message, traceID)
+	if err := message.Ack(); err != nil {
+		t.Fatal(err)
+	}
+
+	stored, err := client.GetValidationExecution(ctx, execution.UploadID, execution.ValidationID, execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Orchestration.InitialDispatchTrace != nil {
+		t.Fatal("initial dispatch trace was not cleared when the first stage outbox was created")
+	}
+	if len(stored.Orchestration.Stages) != 1 || stored.Orchestration.Stages[0].DispatchTrace == nil {
+		t.Fatalf("initial trace was not transferred to first stage outbox: %+v", stored.Orchestration)
+	}
+}
+
 func TestPendingFinalResultReconciliationRestoresDurableTrace(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	plan := testPlan()

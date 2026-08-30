@@ -22,9 +22,11 @@ data. Invalid remote context is ignored. JetStream retains headers across
 redelivery, and every republish injects the active context.
 
 Crash-safe outbox intents also persist a validated, bounded carrier containing
-only `traceparent` and optional `tracestate`. Upload enqueue, stage dispatch,
-and final-result reconciliation restore that carrier before publication, so a
-process restart does not begin an unrelated trace. These fields remain
+only `traceparent` and optional `tracestate`. Upload enqueue, pending execution,
+stage dispatch, and final-result reconciliation restore that carrier before
+publication, so a process restart does not begin an unrelated trace. The
+pending execution carrier is atomically transferred to the first stage outbox
+and cleared when that outbox is created. These fields remain
 operational metadata: they are not validation evidence and do not contribute
 to deterministic upload, request, result, or execution identity.
 
