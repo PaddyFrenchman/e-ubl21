@@ -17,6 +17,11 @@ import (
 )
 
 var (
+	stageServiceDurationBuckets = []float64{.01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10, 20, 30, 60}
+	stageQueueAgeBuckets        = []float64{.01, .05, .1, .25, .5, 1, 2.5, 5, 10, 30, 60, 120, 300, 600, 1800, 3600}
+)
+
+var (
 	httpRequestsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "e_ubl21_http_requests_total",
 		Help: "Total HTTP requests handled, labeled by method, route pattern and status code.",
@@ -70,7 +75,7 @@ var (
 	validationStageDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "e_ubl21_validation_stage_duration_seconds",
 		Help:    "Validation stage execution duration in seconds, labeled by bounded stage values.",
-		Buckets: prometheus.DefBuckets,
+		Buckets: stageServiceDurationBuckets,
 	}, []string{"stage"})
 	en16931IssuesTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "e_ubl21_en16931_issues_total",
@@ -121,10 +126,10 @@ var (
 		Name: "e_ubl21_validation_stage_requests_total", Help: "Completed split-stage requests by bounded stage and outcome.",
 	}, []string{"stage", "outcome"})
 	stageQueueWait = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "e_ubl21_validation_stage_queue_wait_seconds", Help: "Time from durable request creation until worker processing starts.", Buckets: prometheus.DefBuckets,
+		Name: "e_ubl21_validation_stage_queue_wait_seconds", Help: "Time from durable request creation until first worker handling.", Buckets: stageQueueAgeBuckets,
 	}, []string{"stage"})
 	stageRequestAge = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "e_ubl21_validation_stage_request_age_seconds", Help: "Age of a stage request when observed by a worker.", Buckets: prometheus.DefBuckets,
+		Name: "e_ubl21_validation_stage_request_age_seconds", Help: "Age of a stage request on every broker delivery observed by a worker.", Buckets: stageQueueAgeBuckets,
 	}, []string{"stage"})
 	stageInFlight = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "e_ubl21_validation_stage_inflight", Help: "Stage requests currently being handled.",

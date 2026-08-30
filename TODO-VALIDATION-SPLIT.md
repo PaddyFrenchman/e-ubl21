@@ -654,7 +654,10 @@ Rules:
 - no upload ID as metric label;
 - no rule ID as high-cardinality metric label;
 - structured logs may include upload/validation ID for correlation;
-- use a correlation/trace ID across API, orchestrator and every stage event.
+- retain stable upload, validation, generation, and request identity in
+  structured stage logs for correlation; distributed trace-context propagation
+  across API, orchestrator, and stage events is implemented by
+  `TODO-VALIDATION-SPLIT-013` (#60).
 
 ## Acceptance criteria
 

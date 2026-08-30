@@ -37,19 +37,29 @@ func init() {
 
 func beginStageObservation(request queue.StageRequest, message jetstream.Msg, started time.Time) func() {
 	stage := string(request.Stage)
+	var deliveries uint64
+	if metadata, err := message.Metadata(); err == nil {
+		deliveries = metadata.NumDelivered
+	}
 	if created, err := time.Parse(time.RFC3339Nano, request.CreatedAt); err == nil {
 		age := started.Sub(created).Seconds()
-		if age < 0 {
-			age = 0
-		}
-		stageQueueWait.WithLabelValues(stage).Observe(age)
-		stageRequestAge.WithLabelValues(stage).Observe(age)
+		recordStageRequestTiming(stage, age, deliveries)
 	}
-	if metadata, err := message.Metadata(); err == nil && metadata.NumDelivered > 1 {
+	if deliveries > 1 {
 		stageRedeliveriesTotal.WithLabelValues(stage).Inc()
 	}
 	stageInFlight.WithLabelValues(stage).Inc()
 	return func() { stageInFlight.WithLabelValues(stage).Dec() }
+}
+
+func recordStageRequestTiming(stage string, age float64, deliveries uint64) {
+	if age < 0 {
+		age = 0
+	}
+	stageRequestAge.WithLabelValues(stage).Observe(age)
+	if deliveries == 1 {
+		stageQueueWait.WithLabelValues(stage).Observe(age)
+	}
 }
 
 func recordSplitStageExecution(result queue.StageResult) {
