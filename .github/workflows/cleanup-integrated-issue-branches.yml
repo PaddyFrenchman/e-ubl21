@@ -1,0 +1,72 @@
+name: Cleanup integrated issue branches
+
+on:
+  push:
+    branches:
+      - main
+  issues:
+    types:
+      - closed
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main history
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Delete closed issue branches already contained in main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch origin --prune main '+refs/heads/issue/*:refs/remotes/origin/issue/*'
+
+          deleted=0
+          skipped=0
+
+          mapfile -t branches < <(
+            git for-each-ref \
+              --format='%(refname:strip=3)' \
+              refs/remotes/origin/issue/ \
+              | sort
+          )
+
+          for branch in "${branches[@]}"; do
+            if [[ ! "$branch" =~ ^issue/([0-9]+)-.+$ ]]; then
+              echo "skip $branch: does not match issue/<number>-<name>"
+              skipped=$((skipped + 1))
+              continue
+            fi
+
+            issue_number="${BASH_REMATCH[1]}"
+            state="$(gh api "repos/${REPOSITORY}/issues/${issue_number}" --jq '.state')"
+            state_reason="$(gh api "repos/${REPOSITORY}/issues/${issue_number}" --jq '.state_reason // ""')"
+
+            if [[ "$state" != "closed" || "$state_reason" != "completed" ]]; then
+              echo "skip $branch: issue #$issue_number is state=$state reason=${state_reason:-none}"
+              skipped=$((skipped + 1))
+              continue
+            fi
+
+            if ! git merge-base --is-ancestor "refs/remotes/origin/$branch" refs/remotes/origin/main; then
+              echo "skip $branch: branch tip is not contained in main"
+              skipped=$((skipped + 1))
+              continue
+            fi
+
+            echo "delete $branch: issue #$issue_number is completed and branch is contained in main"
+            git push origin --delete "$branch"
+            deleted=$((deleted + 1))
+          done
+
+          echo "deleted=$deleted skipped=$skipped"
