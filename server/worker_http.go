@@ -23,6 +23,14 @@ func workerMetricsMux(q *queue.Client) http.Handler {
 		if depth, err := q.DeadLetterDepth(r.Context()); err == nil {
 			workerDeadLetterDepth.Set(float64(depth))
 		}
+		for _, stage := range []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931, queue.ValidationLayerPeppolBISBilling} {
+			if depth, err := q.StageDeadLetterDepth(r.Context(), stage); err == nil {
+				stageDLQDepth.WithLabelValues(string(stage)).Set(float64(depth))
+			}
+			if depth, err := q.StageRequestQueueDepth(r.Context(), stage); err == nil {
+				stageQueueDepth.WithLabelValues(string(stage)).Set(float64(depth))
+			}
+		}
 		metrics.ServeHTTP(w, r)
 	})
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {

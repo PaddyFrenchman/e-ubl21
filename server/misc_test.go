@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -72,6 +73,21 @@ func TestWorkerMetricsMuxHealthStates(t *testing.T) {
 		h.ServeHTTP(res, httptest.NewRequest(http.MethodGet, path, nil))
 		if res.Code != want {
 			t.Errorf("%s status = %d", path, res.Code)
+		}
+	}
+	metrics := httptest.NewRecorder()
+	h.ServeHTTP(metrics, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	for _, name := range []string{
+		"e_ubl21_validation_stage_requests_total", "e_ubl21_validation_stage_duration_seconds",
+		"e_ubl21_validation_stage_queue_wait_seconds", "e_ubl21_validation_stage_request_age_seconds",
+		"e_ubl21_validation_stage_inflight", "e_ubl21_validation_stage_retries_total",
+		"e_ubl21_validation_stage_dlq_depth", "e_ubl21_validation_stage_queue_depth",
+		"e_ubl21_validation_stage_redeliveries_total", "e_ubl21_validation_stage_runtime_errors_total",
+		"e_ubl21_validation_stage_startup_errors_total", "e_ubl21_validation_stage_result_publication_latency_seconds",
+		"e_ubl21_orchestrator_transition_duration_seconds", "e_ubl21_orchestrator_result_publication_latency_seconds",
+	} {
+		if !strings.Contains(metrics.Body.String(), name) {
+			t.Errorf("metrics output missing %s", name)
 		}
 	}
 	q.Close()

@@ -504,9 +504,14 @@ The API and worker expose structured logs and Prometheus metrics covering areas 
 - EN issue severity;
 - bounded validator/runtime failure classes;
 - terminal processing failures and dead-letter depth;
-- worker queue and processing behavior.
+- per-stage queue wait, request age, service time, throughput, in-flight work,
+  retry/redelivery, queue/DLQ depth, publication latency, and orchestrator
+  transition latency.
 
 High-cardinality identifiers such as upload IDs and rule IDs are deliberately not used as Prometheus labels.
+
+See [`docs/STAGE-TELEMETRY.md`](docs/STAGE-TELEMETRY.md) for the bounded metric
+contract and guidance for distinguishing validator latency from queue backlog.
 
 The worker exposes its own `/metrics` and `/healthz` endpoint on the configured metrics address, default `:9091`.
 

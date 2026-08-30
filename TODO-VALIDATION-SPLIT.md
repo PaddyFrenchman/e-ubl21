@@ -618,6 +618,8 @@ generation are documented in
 
 # TODO-VALIDATION-SPLIT-011 — Add per-stage telemetry and queue-delay measurement
 
+**Implementation contract:** [`docs/STAGE-TELEMETRY.md`](docs/STAGE-TELEMETRY.md)
+
 ## Goal
 
 Make scaling decisions measurable instead of inferred from aggregate worker CPU.
@@ -669,6 +671,11 @@ validator pool is undersized and documents are waiting in queue
 ```
 
 without inspecting application internals.
+
+The split workers expose bounded per-stage service, queue-wait, request-age,
+in-flight, retry, redelivery, runtime/startup error, publication-latency, queue
+depth, and DLQ depth series. The orchestrator exposes transition and canonical
+result-publication latency. Throughput is derived from the request counter rate.
 
 ---
 

@@ -1,0 +1,83 @@
+package server
+
+import (
+	"log/slog"
+	"time"
+
+	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go/jetstream"
+)
+
+func init() {
+	stages := []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931, queue.ValidationLayerPeppolBISBilling}
+	outcomes := []queue.StageOutcome{queue.StageOutcomePassed, queue.StageOutcomeStandardsInvalid, queue.StageOutcomeOperationalFailure}
+	reasons := []queue.StageOperationalReason{queue.StageReasonTimeout, queue.StageReasonCancelled, queue.StageReasonRuntimeUnavailable, queue.StageReasonRuntimeFailure, queue.StageReasonContentUnavailable, queue.StageReasonResourceLimit, queue.StageReasonMalformedOutput}
+	for _, stage := range stages {
+		stageName := string(stage)
+		stageInFlight.WithLabelValues(stageName).Set(0)
+		stageDLQDepth.WithLabelValues(stageName).Set(0)
+		stageQueueDepth.WithLabelValues(stageName).Set(0)
+		stageRedeliveriesTotal.WithLabelValues(stageName).Add(0)
+		validationStageDuration.WithLabelValues(stageName)
+		stageQueueWait.WithLabelValues(stageName)
+		stageRequestAge.WithLabelValues(stageName)
+		for _, outcome := range outcomes {
+			stageRequestsTotal.WithLabelValues(stageName, string(outcome)).Add(0)
+			stageResultPublicationLatency.WithLabelValues(stageName, string(outcome))
+		}
+		for _, reason := range reasons {
+			stageRetriesTotal.WithLabelValues(stageName, string(reason)).Add(0)
+			stageRuntimeErrorsTotal.WithLabelValues(stageName, string(reason)).Add(0)
+		}
+		for _, component := range []string{"queue", "content_store", "execution_store", "assets", "runtime"} {
+			stageStartupErrorsTotal.WithLabelValues(stageName, component).Add(0)
+		}
+	}
+}
+
+func beginStageObservation(request queue.StageRequest, message jetstream.Msg, started time.Time) func() {
+	stage := string(request.Stage)
+	if created, err := time.Parse(time.RFC3339Nano, request.CreatedAt); err == nil {
+		age := started.Sub(created).Seconds()
+		if age < 0 {
+			age = 0
+		}
+		stageQueueWait.WithLabelValues(stage).Observe(age)
+		stageRequestAge.WithLabelValues(stage).Observe(age)
+	}
+	if metadata, err := message.Metadata(); err == nil && metadata.NumDelivered > 1 {
+		stageRedeliveriesTotal.WithLabelValues(stage).Inc()
+	}
+	stageInFlight.WithLabelValues(stage).Inc()
+	return func() { stageInFlight.WithLabelValues(stage).Dec() }
+}
+
+func recordSplitStageExecution(result queue.StageResult) {
+	stage := string(result.Stage)
+	validationStageDuration.WithLabelValues(stage).Observe(float64(result.DurationMS) / 1000)
+	if result.Outcome == queue.StageOutcomeOperationalFailure {
+		reason := string(result.Reason)
+		stageRuntimeErrorsTotal.WithLabelValues(stage, reason).Inc()
+	}
+}
+
+func recordSplitStagePublished(result queue.StageResult, maxAttempts uint32) {
+	stage, outcome := string(result.Stage), string(result.Outcome)
+	stageRequestsTotal.WithLabelValues(stage, outcome).Inc()
+	if result.Outcome == queue.StageOutcomeOperationalFailure && result.Attempt < maxAttempts {
+		stageRetriesTotal.WithLabelValues(stage, string(result.Reason)).Inc()
+	}
+}
+
+func observeStageResultPublication(stage queue.ValidationLayer, outcome queue.StageOutcome, started time.Time) {
+	stageResultPublicationLatency.WithLabelValues(string(stage), string(outcome)).Observe(time.Since(started).Seconds())
+}
+
+func logSplitStageResult(logger *slog.Logger, result queue.StageResult, recovered bool) {
+	logger.Info("validation stage request completed",
+		"upload_id", result.UploadID, "validation_id", result.ValidationID,
+		"generation", result.Generation, "request_id", result.RequestID,
+		"stage", result.Stage, "attempt", result.Attempt, "outcome", result.Outcome,
+		"reason", result.Reason, "duration_ms", result.DurationMS, "recovered_from_dlq", recovered,
+	)
+}

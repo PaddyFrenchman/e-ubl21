@@ -55,9 +55,12 @@ func (machine *Machine) EnsureFinalResult(ctx context.Context, current queue.Ver
 	if err != nil {
 		return current, err
 	}
+	publishStarted := time.Now()
 	if err := machine.PublishValidationResult(ctx, result); err != nil {
+		orchestratorResultPublicationLatency.Observe(time.Since(publishStarted).Seconds())
 		return current, fmt.Errorf("publish validation result %s: %w", result.ResultID, err)
 	}
+	orchestratorResultPublicationLatency.Observe(time.Since(publishStarted).Seconds())
 
 	for {
 		latest, getErr := machine.Queue.GetValidationExecutionVersion(ctx, current.Execution.UploadID, current.Execution.ValidationID, current.Execution.Generation)

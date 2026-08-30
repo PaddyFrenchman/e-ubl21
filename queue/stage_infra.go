@@ -143,6 +143,23 @@ func (c *Client) VerifyStageQueueInfra(ctx context.Context, config StageQueueInf
 	return nil
 }
 
+// StageRequestQueueDepth reports retained request messages for one stage.
+func (c *Client) StageRequestQueueDepth(ctx context.Context, stage ValidationLayer) (uint64, error) {
+	names, err := c.Namespace.StageQueue(stage)
+	if err != nil {
+		return 0, err
+	}
+	stream, err := c.JS.Stream(ctx, names.RequestStream)
+	if err != nil {
+		return 0, err
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return info.State.Msgs, nil
+}
+
 // VerifyStageWorkerInfra performs read-only verification of the resources one
 // stage worker uses or depends on: its request stream and durable consumer,
 // plus the result stream it publishes to. Retention and delivery capacity are

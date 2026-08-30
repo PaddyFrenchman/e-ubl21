@@ -157,6 +157,8 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 // immutable evidence, CAS-updates stage state, and publishes only the next
 // request selected by the frozen plan. Terminal outcomes publish no later work.
 func (machine *Machine) HandleStageResult(ctx context.Context, result queue.StageResult) (queue.VersionedValidationExecution, error) {
+	transitionStarted := time.Now()
+	defer observeOrchestratorTransition("handle_stage_result", result.Stage, transitionStarted)
 	if err := machine.validate(); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
@@ -289,6 +291,8 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 // marked the same request or advanced the execution; reloading converges on
 // that winner without rewriting history.
 func (machine *Machine) dispatchPending(ctx context.Context, current queue.VersionedValidationExecution, request queue.StageRequest) (queue.VersionedValidationExecution, error) {
+	transitionStarted := time.Now()
+	defer observeOrchestratorTransition("dispatch_stage_request", request.Stage, transitionStarted)
 	if err := machine.PublishStageRequest(ctx, request); err != nil {
 		return current, err
 	}

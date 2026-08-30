@@ -116,6 +116,7 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 		if ctx.Err() != nil {
 			return nil
 		}
+		stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerUBL21XSD), "queue").Inc()
 		return fmt.Errorf("worker-xsd verify XSD worker infrastructure: %w", err)
 	}
 	if err := validateXSDWorkerCapacity(settings, requestDelivery); err != nil {
@@ -125,6 +126,7 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 		if ctx.Err() != nil {
 			return nil
 		}
+		stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerUBL21XSD), "content_store").Inc()
 		return fmt.Errorf("worker-xsd verify upload content infrastructure: %w", err)
 	}
 
@@ -132,12 +134,14 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 	if catalog == nil {
 		catalog, err = loadValidationCatalog()
 		if err != nil {
+			stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerUBL21XSD), "assets").Inc()
 			return fmt.Errorf("worker-xsd load UBL 2.1 schema catalog: %w", err)
 		}
 	}
 	validate := cfg.xsdValidate
 	if validate == nil {
 		if err := ensureXMLLint(); err != nil {
+			stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerUBL21XSD), "runtime").Inc()
 			return fmt.Errorf("worker-xsd verify xmllint runtime: %w", err)
 		}
 		validate = validateReaderAgainstSchema
@@ -287,6 +291,8 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		worker.nak(message)
 		return fmt.Errorf("verify XSD stage authorization: %w", err)
 	}
+	finishObservation := beginStageObservation(request, message, worker.now().UTC())
+	defer finishObservation()
 	if request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
 		dead, found, lookupErr := worker.queue.StageDeadLetterForRequest(ctx, request)
 		if lookupErr != nil {
@@ -299,10 +305,15 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 				worker.nak(message)
 				return fmt.Errorf("recover permanent XSD stage result: %w", resultErr)
 			}
+			publishedAt := time.Now()
 			if err := worker.publishResult(ctx, result); err != nil {
+				observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
 				worker.nak(message)
 				return fmt.Errorf("publish recovered XSD stage result %s: %w", result.ResultID, err)
 			}
+			observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
+			recordSplitStagePublished(result, execution.RetryPolicy.MaxAttemptsFor(request.Stage))
+			logSplitStageResult(worker.logger, result, true)
 			if err := message.Ack(); err != nil {
 				return fmt.Errorf("ack XSD stage request %s: %w", request.RequestID, err)
 			}
@@ -358,6 +369,7 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		worker.nak(message)
 		return fmt.Errorf("build XSD stage result: %w", err)
 	}
+	recordSplitStageExecution(result)
 	if outcome == queue.StageOutcomeOperationalFailure && request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
 		metadata, metadataErr := message.Metadata()
 		if metadataErr != nil {
@@ -382,10 +394,15 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 			return fmt.Errorf("publish XSD stage dead letter %s: %w", dead.DeadLetterID, err)
 		}
 	}
+	publishedAt := time.Now()
 	if err := worker.publishResult(ctx, result); err != nil {
+		observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
 		worker.nak(message)
 		return fmt.Errorf("publish XSD stage result %s: %w", result.ResultID, err)
 	}
+	observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
+	recordSplitStagePublished(result, execution.RetryPolicy.MaxAttemptsFor(request.Stage))
+	logSplitStageResult(worker.logger, result, false)
 	if err := message.Ack(); err != nil {
 		return fmt.Errorf("ack XSD stage request %s: %w", request.RequestID, err)
 	}

@@ -131,6 +131,12 @@ func TestStageQueuesRetainWorkAcrossScaleToZeroAndIsolateStageAndNamespace(t *te
 	if _, err := prod.JS.Publish(ctx, prodXSD.RequestSubject, []byte(`{"stage":"prod-xsd"}`)); err != nil {
 		t.Fatal(err)
 	}
+	if depth, err := dev.StageRequestQueueDepth(ctx, queue.ValidationLayerUBL21XSD); err != nil || depth != 1 {
+		t.Fatalf("dev XSD request depth = %d, %v; want 1", depth, err)
+	}
+	if depth, err := dev.StageRequestQueueDepth(ctx, queue.ValidationLayerEN16931); err != nil || depth != 1 {
+		t.Fatalf("dev EN request depth = %d, %v; want 1", depth, err)
+	}
 	if _, err := dev.JS.Publish(ctx, devXSD.ResultSubject, []byte(`{"outcome":"passed"}`)); err != nil {
 		t.Fatal(err)
 	}

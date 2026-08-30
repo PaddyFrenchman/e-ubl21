@@ -117,6 +117,39 @@ var (
 		Name: "e_ubl21_worker_dead_letter_depth",
 		Help: "Current number of terminal failures retained in the dead-letter stream.",
 	})
+	stageRequestsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_validation_stage_requests_total", Help: "Completed split-stage requests by bounded stage and outcome.",
+	}, []string{"stage", "outcome"})
+	stageQueueWait = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "e_ubl21_validation_stage_queue_wait_seconds", Help: "Time from durable request creation until worker processing starts.", Buckets: prometheus.DefBuckets,
+	}, []string{"stage"})
+	stageRequestAge = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "e_ubl21_validation_stage_request_age_seconds", Help: "Age of a stage request when observed by a worker.", Buckets: prometheus.DefBuckets,
+	}, []string{"stage"})
+	stageInFlight = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "e_ubl21_validation_stage_inflight", Help: "Stage requests currently being handled.",
+	}, []string{"stage"})
+	stageRetriesTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_validation_stage_retries_total", Help: "Operational stage results eligible for another logical attempt.",
+	}, []string{"stage", "reason"})
+	stageRedeliveriesTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_validation_stage_redeliveries_total", Help: "Stage requests observed after their first broker delivery.",
+	}, []string{"stage"})
+	stageDLQDepth = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "e_ubl21_validation_stage_dlq_depth", Help: "Permanent operational dead letters retained by stage.",
+	}, []string{"stage"})
+	stageQueueDepth = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "e_ubl21_validation_stage_queue_depth", Help: "Stage request messages retained by the broker.",
+	}, []string{"stage"})
+	stageResultPublicationLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "e_ubl21_validation_stage_result_publication_latency_seconds", Help: "Duration of stage result publication attempts.", Buckets: prometheus.DefBuckets,
+	}, []string{"stage", "outcome"})
+	stageRuntimeErrorsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_validation_stage_runtime_errors_total", Help: "Operational validator failures by bounded reason.",
+	}, []string{"stage", "reason"})
+	stageStartupErrorsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_validation_stage_startup_errors_total", Help: "Stage process startup failures by bounded component.",
+	}, []string{"stage", "component"})
 )
 
 // recordUploadOutcome increments the upload counter for outcome, e.g.

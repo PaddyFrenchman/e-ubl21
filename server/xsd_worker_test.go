@@ -79,6 +79,7 @@ func TestXSDWorkerClassifiesStandardsAndOperationalFailures(t *testing.T) {
 
 func TestXSDWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds(t *testing.T) {
 	client, ctx := newXSDWorkerTestClient(t)
+	completedBefore := prometheusCounterValue(t, stageRequestsTotal.WithLabelValues(string(queue.ValidationLayerUBL21XSD), string(queue.StageOutcomePassed)))
 	publishXSDWorkerTestRequest(t, ctx, client, []byte("<Invoice/>"))
 	message := fetchXSDWorkerRequest(t, ctx, client)
 	worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error { return nil })
@@ -87,6 +88,9 @@ func TestXSDWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds(t *t
 	worker.nakDelay = 10 * time.Millisecond
 	if err := worker.handle(ctx, message); !errors.Is(err, publicationFailure) {
 		t.Fatalf("publication error = %v, want %v", err, publicationFailure)
+	}
+	if got := prometheusCounterValue(t, stageRequestsTotal.WithLabelValues(string(queue.ValidationLayerUBL21XSD), string(queue.StageOutcomePassed))) - completedBefore; got != 0 {
+		t.Fatalf("completed XSD requests after failed publication = %v, want 0", got)
 	}
 	assertStageRequestStreamMessages(t, ctx, client, queue.ValidationLayerUBL21XSD, 1)
 
@@ -100,6 +104,9 @@ func TestXSDWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds(t *t
 		t.Fatal(err)
 	}
 	_ = fetchXSDWorkerResult(t, ctx, client)
+	if got := prometheusCounterValue(t, stageRequestsTotal.WithLabelValues(string(queue.ValidationLayerUBL21XSD), string(queue.StageOutcomePassed))) - completedBefore; got != 1 {
+		t.Fatalf("completed XSD requests after redelivery = %v, want 1", got)
+	}
 	assertStageRequestStreamMessages(t, ctx, client, queue.ValidationLayerUBL21XSD, 0)
 }
 

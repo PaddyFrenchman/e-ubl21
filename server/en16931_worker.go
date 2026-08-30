@@ -118,6 +118,7 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 		if ctx.Err() != nil {
 			return nil
 		}
+		stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerEN16931), "queue").Inc()
 		return fmt.Errorf("worker-en16931 verify stage worker infrastructure: %w", err)
 	}
 	if err := validateENWorkerCapacity(settings, requestDelivery); err != nil {
@@ -127,12 +128,14 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 		if ctx.Err() != nil {
 			return nil
 		}
+		stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerEN16931), "content_store").Inc()
 		return fmt.Errorf("worker-en16931 verify upload content infrastructure: %w", err)
 	}
 	if err := client.VerifyValidationExecutionInfra(ctx); err != nil {
 		if ctx.Err() != nil {
 			return nil
 		}
+		stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerEN16931), "execution_store").Inc()
 		return fmt.Errorf("worker-en16931 verify validation execution infrastructure: %w", err)
 	}
 
@@ -151,6 +154,7 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 			if ctx.Err() != nil {
 				return nil
 			}
+			stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerEN16931), "runtime").Inc()
 			return fmt.Errorf("worker-en16931 verify Saxon runtime: %w", err)
 		}
 		logValidationRuntimeVersions(logger)
@@ -296,6 +300,8 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 		worker.nak(message)
 		return fmt.Errorf("verify EN 16931 stage authorization: %w", err)
 	}
+	finishObservation := beginStageObservation(request, message, worker.now().UTC())
+	defer finishObservation()
 	if request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
 		dead, found, lookupErr := worker.queue.StageDeadLetterForRequest(ctx, request)
 		if lookupErr != nil {
@@ -308,10 +314,15 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 				worker.nak(message)
 				return fmt.Errorf("recover permanent EN 16931 stage result: %w", resultErr)
 			}
+			publishedAt := time.Now()
 			if err := worker.publishResult(ctx, result); err != nil {
+				observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
 				worker.nak(message)
 				return fmt.Errorf("publish recovered EN 16931 stage result %s: %w", result.ResultID, err)
 			}
+			observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
+			recordSplitStagePublished(result, execution.RetryPolicy.MaxAttemptsFor(request.Stage))
+			logSplitStageResult(worker.logger, result, true)
 			if err := message.Ack(); err != nil {
 				return fmt.Errorf("ack EN 16931 stage request %s: %w", request.RequestID, err)
 			}
@@ -380,6 +391,7 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 		worker.nak(message)
 		return fmt.Errorf("build EN 16931 stage result: %w", err)
 	}
+	recordSplitStageExecution(result)
 	if outcome == queue.StageOutcomeOperationalFailure && request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
 		metadata, metadataErr := message.Metadata()
 		if metadataErr != nil {
@@ -404,10 +416,15 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 			return fmt.Errorf("publish EN 16931 stage dead letter %s: %w", dead.DeadLetterID, err)
 		}
 	}
+	publishedAt := time.Now()
 	if err := worker.publishResult(ctx, result); err != nil {
+		observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
 		worker.nak(message)
 		return fmt.Errorf("publish EN 16931 stage result %s: %w", result.ResultID, err)
 	}
+	observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
+	recordSplitStagePublished(result, execution.RetryPolicy.MaxAttemptsFor(request.Stage))
+	logSplitStageResult(worker.logger, result, false)
 	if err := message.Ack(); err != nil {
 		return fmt.Errorf("ack EN 16931 stage request %s: %w", request.RequestID, err)
 	}

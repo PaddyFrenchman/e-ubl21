@@ -280,6 +280,7 @@ func TestENWorkerOperationalResultsRetryWithoutRerunningXSD(t *testing.T) {
 
 func TestENWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds(t *testing.T) {
 	client, ctx := newENWorkerTestClient(t)
+	completedBefore := prometheusCounterValue(t, stageRequestsTotal.WithLabelValues(string(queue.ValidationLayerEN16931), string(queue.StageOutcomePassed)))
 	_, _ = authorizeENWorkerRequest(t, ctx, client, []byte("<Invoice/>"))
 	message := fetchENWorkerRequest(t, ctx, client)
 	worker := newTestENStageWorker(client, passingENValidator())
@@ -288,6 +289,9 @@ func TestENWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds(t *te
 	worker.nakDelay = 10 * time.Millisecond
 	if err := worker.handle(ctx, message); !errors.Is(err, publicationFailure) {
 		t.Fatalf("publication error = %v, want %v", err, publicationFailure)
+	}
+	if got := prometheusCounterValue(t, stageRequestsTotal.WithLabelValues(string(queue.ValidationLayerEN16931), string(queue.StageOutcomePassed))) - completedBefore; got != 0 {
+		t.Fatalf("completed EN requests after failed publication = %v, want 0", got)
 	}
 	assertENWorkerRequestMessages(t, ctx, client, 1)
 
@@ -301,6 +305,9 @@ func TestENWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds(t *te
 		t.Fatal(err)
 	}
 	_ = fetchENWorkerResult(t, ctx, client)
+	if got := prometheusCounterValue(t, stageRequestsTotal.WithLabelValues(string(queue.ValidationLayerEN16931), string(queue.StageOutcomePassed))) - completedBefore; got != 1 {
+		t.Fatalf("completed EN requests after redelivery = %v, want 1", got)
+	}
 	assertENWorkerRequestMessages(t, ctx, client, 0)
 }
 
