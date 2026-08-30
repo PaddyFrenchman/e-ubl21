@@ -72,11 +72,7 @@ func (machine *Machine) ReplayStage(ctx context.Context, dead queue.StageDeadLet
 	if err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
-	replayAt, err := time.Parse(time.RFC3339Nano, previous.Orchestration.FinalResultPublishedAt)
-	if err != nil {
-		return queue.VersionedValidationExecution{}, fmt.Errorf("parse failed generation final-result publication time: %w", err)
-	}
-	next, err := queue.NextFailedStageReplayGeneration(previous, dead, replayAt)
+	next, err := queue.NextFailedStageReplayGeneration(previous, dead, machine.now())
 	if err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}

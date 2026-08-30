@@ -152,6 +152,16 @@ func TestENFailureUsesIndependentBudgetAndReplayCarriesXSDPrerequisite(t *testin
 		len(failed.Execution.Orchestration.Stages[0].Attempts) != 1 || len(failed.Execution.Orchestration.Stages[1].Attempts) != 1 {
 		t.Fatalf("independent stage attempts = %+v", failed.Execution.Orchestration)
 	}
+	replayCommandAt := time.Date(2026, 8, 31, 9, 30, 0, 0, time.UTC)
+	if failed.Execution.Orchestration.FinalResultPublishedAt == replayCommandAt.Format(time.RFC3339Nano) {
+		t.Fatal("test requires replay command time to differ from failed generation publication time")
+	}
+	replayClock := replayCommandAt
+	machine.Now = func() time.Time {
+		current := replayClock
+		replayClock = replayClock.Add(time.Minute)
+		return current
+	}
 
 	publishStageRequest := machine.PublishStageRequest
 	machine.PublishStageRequest = func(context.Context, queue.StageRequest) error {
@@ -171,6 +181,9 @@ func TestENFailureUsesIndependentBudgetAndReplayCarriesXSDPrerequisite(t *testin
 	if replayed.Execution.Generation != started.Execution.Generation+1 || replayed.Execution.Orchestration.CurrentStageOrdinal != 2 {
 		t.Fatalf("replay execution = %+v", replayed.Execution)
 	}
+	if replayed.Execution.CreatedAt != replayCommandAt.Format(time.RFC3339Nano) {
+		t.Fatalf("replay CreatedAt = %s, want first command time %s", replayed.Execution.CreatedAt, replayCommandAt.Format(time.RFC3339Nano))
+	}
 	inherited := replayed.Execution.Orchestration.Stages[0]
 	if inherited.InheritedEvidence == nil || inherited.TerminalOutcome != queue.StageOutcomePassed || len(inherited.Attempts) != 0 {
 		t.Fatalf("inherited XSD prerequisite = %+v", inherited)
@@ -179,6 +192,9 @@ func TestENFailureUsesIndependentBudgetAndReplayCarriesXSDPrerequisite(t *testin
 	replayEN := takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
 	if replayEN.Generation != replayed.Execution.Generation || replayEN.Attempt != 1 {
 		t.Fatalf("replayed EN request = %+v", replayEN)
+	}
+	if replayEN.CreatedAt != replayCommandAt.Format(time.RFC3339Nano) {
+		t.Fatalf("replayed EN request CreatedAt = %s, want first command time %s", replayEN.CreatedAt, replayCommandAt.Format(time.RFC3339Nano))
 	}
 	completed, err := machine.HandleStageResult(ctx, resultFor(t, replayEN, queue.StageOutcomePassed, queue.StageReasonNone))
 	if err != nil {
@@ -383,6 +399,7 @@ func TestStaleExecutionRevisionCannotOverwriteWinningTransition(t *testing.T) {
 func TestRedeliveredStartLoadsAdvancedExecutionWithoutResettingIt(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	intent := testIntent(t, testPlan())
+	firstCreatedAt := intent.CreatedAt
 	if _, err := machine.Start(ctx, intent); err != nil {
 		t.Fatal(err)
 	}
@@ -391,12 +408,16 @@ func TestRedeliveredStartLoadsAdvancedExecutionWithoutResettingIt(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
+	intent.CreatedAt = intent.CreatedAt.Add(time.Hour)
 	redelivered, err := machine.Start(ctx, intent)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if redelivered.Revision != advanced.Revision || redelivered.Execution.Orchestration.CurrentStageOrdinal != 2 {
 		t.Fatalf("redelivered start reset or changed execution: advanced=%+v redelivered=%+v", advanced, redelivered)
+	}
+	if redelivered.Execution.CreatedAt != firstCreatedAt.Format(time.RFC3339Nano) {
+		t.Fatalf("redelivered start changed CreatedAt to %s, want %s", redelivered.Execution.CreatedAt, firstCreatedAt.Format(time.RFC3339Nano))
 	}
 	_ = takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }

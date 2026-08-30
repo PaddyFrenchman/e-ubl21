@@ -550,7 +550,7 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 			entry, getErr := kv.Get(ctx, validationExecutionKey(execution.UploadID, execution.ValidationID, execution.Generation))
 			if getErr == nil {
 				var existing ValidationExecution
-				if decodeErr := json.Unmarshal(entry.Value(), &existing); decodeErr == nil && sameValidationExecutionIdentity(existing, execution) {
+				if decodeErr := json.Unmarshal(entry.Value(), &existing); decodeErr == nil && sameValidationExecutionCreationIntent(existing, execution) {
 					return entry.Revision(), nil
 				}
 			}
@@ -558,6 +558,18 @@ func (c *Client) CreateValidationExecution(ctx context.Context, execution Valida
 		return 0, fmt.Errorf("create validation execution %s generation %d: %w", execution.ValidationID, execution.Generation, err)
 	}
 	return revision, nil
+}
+
+// sameValidationExecutionCreationIntent recognizes command redelivery after a
+// concurrent first writer has already frozen CreatedAt and orchestration
+// state. The stable intent and every other immutable field must match; only
+// the first writer's actual command time and subsequent mutable state win.
+func sameValidationExecutionCreationIntent(left, right ValidationExecution) bool {
+	left.CreatedAt = ""
+	right.CreatedAt = ""
+	left.Orchestration = ValidationOrchestrationState{}
+	right.Orchestration = ValidationOrchestrationState{}
+	return reflect.DeepEqual(left, right)
 }
 
 // GetValidationExecution retrieves one exact immutable generation.
