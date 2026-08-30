@@ -23,6 +23,19 @@ import (
 
 const instrumentationName = "github.com/PaddyFrenchman/e-ubl21"
 
+const (
+	MaxTraceParentBytes = 512
+	MaxTraceStateBytes  = 512
+)
+
+// TraceCarrier is the bounded operational context persisted beside durable
+// outbox intent. It is not validation evidence and never participates in
+// deterministic request, result, or execution identity.
+type TraceCarrier struct {
+	TraceParent string `json:"traceparent"`
+	TraceState  string `json:"tracestate,omitempty"`
+}
+
 var traceContext = propagation.TraceContext{}
 
 // ConfigureTracing installs a process tracer provider. Standard
@@ -88,6 +101,60 @@ func ExtractNATS(ctx context.Context, header nats.Header) context.Context {
 // InjectNATS writes only traceparent/tracestate into a NATS message header.
 func InjectNATS(ctx context.Context, header nats.Header) {
 	traceContext.Inject(ctx, propagation.HeaderCarrier(header))
+}
+
+// CaptureTrace returns a validated durable carrier for the active span.
+func CaptureTrace(ctx context.Context) *TraceCarrier {
+	header := http.Header{}
+	InjectHTTP(ctx, header)
+	carrier := &TraceCarrier{TraceParent: header.Get("Traceparent"), TraceState: header.Get("Tracestate")}
+	if carrier.TraceParent == "" || carrier.Validate() != nil {
+		return nil
+	}
+	return carrier
+}
+
+// RestoreTrace replaces only the active span context with a validated durable
+// carrier while retaining cancellation, deadlines, and other context values.
+func RestoreTrace(ctx context.Context, carrier *TraceCarrier) context.Context {
+	if carrier == nil || carrier.Validate() != nil {
+		return ctx
+	}
+	header := http.Header{}
+	header.Set("Traceparent", carrier.TraceParent)
+	if carrier.TraceState != "" {
+		header.Set("Tracestate", carrier.TraceState)
+	}
+	return ExtractHTTP(ctx, header)
+}
+
+// Validate rejects oversized, malformed, or partially specified W3C context.
+func (carrier TraceCarrier) Validate() error {
+	if carrier.TraceParent == "" {
+		if carrier.TraceState != "" {
+			return errors.New("tracestate requires traceparent")
+		}
+		return errors.New("traceparent is required")
+	}
+	if len(carrier.TraceParent) > MaxTraceParentBytes {
+		return errors.New("traceparent exceeds durable trace carrier limit")
+	}
+	if len(carrier.TraceState) > MaxTraceStateBytes {
+		return errors.New("tracestate exceeds durable trace carrier limit")
+	}
+	header := http.Header{}
+	header.Set("Traceparent", carrier.TraceParent)
+	if carrier.TraceState != "" {
+		header.Set("Tracestate", carrier.TraceState)
+	}
+	spanContext := trace.SpanContextFromContext(ExtractHTTP(context.Background(), header))
+	if !spanContext.IsValid() {
+		return errors.New("traceparent is not valid W3C trace context")
+	}
+	if spanContext.TraceState().String() != carrier.TraceState {
+		return errors.New("tracestate is not valid W3C trace context")
+	}
+	return nil
 }
 
 // CorrelationFields returns stable identifiers suitable for structured logs.

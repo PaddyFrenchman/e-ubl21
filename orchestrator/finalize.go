@@ -40,6 +40,7 @@ func (machine *Machine) EnsureFinalResult(ctx context.Context, current queue.Ver
 		now := machine.now().Format(time.RFC3339Nano)
 		next.Orchestration.FinalResultStatus = queue.FinalResultPending
 		next.Orchestration.FinalResultID = resultID
+		next.Orchestration.FinalResultTrace = observability.CaptureTrace(ctx)
 		next.Orchestration.UpdatedAt = now
 		revision, updateErr := machine.Queue.UpdateValidationExecutionState(ctx, current, next)
 		if updateErr != nil {
@@ -53,6 +54,7 @@ func (machine *Machine) EnsureFinalResult(ctx context.Context, current queue.Ver
 	if current.Execution.Orchestration.FinalResultStatus != queue.FinalResultPending {
 		return current, fmt.Errorf("validation execution has invalid final result status %q", current.Execution.Orchestration.FinalResultStatus)
 	}
+	ctx = observability.RestoreTrace(ctx, current.Execution.Orchestration.FinalResultTrace)
 	result, err := machine.buildValidationResult(ctx, current.Execution)
 	if err != nil {
 		return current, err

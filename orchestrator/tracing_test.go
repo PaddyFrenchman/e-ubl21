@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/observability"
+	"github.com/PaddyFrenchman/e-ubl21/orchestrator"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
@@ -95,6 +96,100 @@ func TestStageResultTraceIsPreservedWhenOrchestratorPublishesNextRequest(t *test
 	}
 	if err := nextRequest.Ack(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestPendingStageDispatchReconciliationRestoresDurableTrace(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	traceID := trace.TraceID{6, 0, 6, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	traceCtx := contextWithTraceID(ctx, traceID)
+	machine.PublishStageRequest = func(context.Context, queue.StageRequest) error { return context.Canceled }
+	pending, err := machine.HandleStageResult(traceCtx, resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone))
+	if err == nil {
+		t.Fatal("next-stage publication unexpectedly succeeded")
+	}
+	carrier := pending.Execution.Orchestration.Stages[1].DispatchTrace
+	if carrier == nil || carrier.TraceParent == "" {
+		t.Fatalf("pending dispatch has no durable trace: %+v", pending.Execution.Orchestration.Stages[1])
+	}
+
+	restarted := orchestrator.New(client)
+	restarted.Now = machine.Now
+	if report, err := restarted.ReconcilePendingDispatches(context.Background()); err != nil || report.Reconciled != 1 {
+		t.Fatalf("dispatch reconciliation = %+v, %v", report, err)
+	}
+	consumer, err := client.StageRequestConsumer(ctx, queue.ValidationLayerEN16931)
+	if err != nil {
+		t.Fatal(err)
+	}
+	message := fetchTraceMessage(t, ctx, consumer)
+	assertRecoveredTraceID(t, message, traceID)
+	if err := message.Ack(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestPendingFinalResultReconciliationRestoresDurableTrace(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	plan := testPlan()
+	plan.Stages = plan.Stages[:1]
+	if _, err := machine.Start(ctx, testIntent(t, plan)); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	traceID := trace.TraceID{6, 0, 6, 2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	machine.PublishValidationResult = func(context.Context, queue.ValidationResult) error { return context.Canceled }
+	pending, err := machine.HandleStageResult(contextWithTraceID(ctx, traceID), resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone))
+	if err == nil {
+		t.Fatal("final-result publication unexpectedly succeeded")
+	}
+	if pending.Execution.Orchestration.FinalResultTrace == nil {
+		t.Fatal("pending final result has no durable trace")
+	}
+
+	restarted := orchestrator.New(client)
+	restarted.Now = machine.Now
+	var publishedTraceID trace.TraceID
+	restarted.PublishValidationResult = func(publishCtx context.Context, result queue.ValidationResult) error {
+		publishedTraceID = trace.SpanContextFromContext(publishCtx).TraceID()
+		return client.PublishResult(publishCtx, result)
+	}
+	if report, err := restarted.ReconcilePendingFinalResults(context.Background()); err != nil || report.Reconciled != 1 {
+		t.Fatalf("final-result reconciliation = %+v, %v", report, err)
+	}
+	if publishedTraceID != traceID {
+		t.Fatalf("recovered final-result trace = %s, want %s", publishedTraceID, traceID)
+	}
+	stream, err := client.JS.Stream(ctx, client.Namespace.ResultsStreamName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	published, err := stream.GetLastMsgForSubject(ctx, client.Namespace.ResultSubject(pending.Execution.Orchestration.FinalResultID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := trace.SpanContextFromContext(observability.ExtractNATS(context.Background(), published.Header))
+	if got.TraceID() != traceID || !got.IsRemote() {
+		t.Fatalf("recovered final-result message trace = %+v, want remote trace %s", got, traceID)
+	}
+}
+
+func contextWithTraceID(ctx context.Context, traceID trace.TraceID) context.Context {
+	parent := trace.NewSpanContext(trace.SpanContextConfig{
+		TraceID: traceID, SpanID: trace.SpanID{8, 7, 6, 5, 4, 3, 2, 1}, TraceFlags: trace.FlagsSampled,
+	})
+	return trace.ContextWithSpanContext(ctx, parent)
+}
+
+func assertRecoveredTraceID(t *testing.T, message jetstream.Msg, want trace.TraceID) {
+	t.Helper()
+	got := trace.SpanContextFromContext(observability.ExtractNATS(context.Background(), message.Headers()))
+	if got.TraceID() != want || !got.IsRemote() {
+		t.Fatalf("recovered message trace = %+v, want remote trace %s", got, want)
 	}
 }
 

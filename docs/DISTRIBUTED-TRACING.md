@@ -21,6 +21,13 @@ excluded because it is caller-controlled and could contain sensitive business
 data. Invalid remote context is ignored. JetStream retains headers across
 redelivery, and every republish injects the active context.
 
+Crash-safe outbox intents also persist a validated, bounded carrier containing
+only `traceparent` and optional `tracestate`. Upload enqueue, stage dispatch,
+and final-result reconciliation restore that carrier before publication, so a
+process restart does not begin an unrelated trace. These fields remain
+operational metadata: they are not validation evidence and do not contribute
+to deterministic upload, request, result, or execution identity.
+
 The upload response includes the active `traceparent`, allowing a caller or
 operator to correlate the accepted upload immediately.
 
@@ -35,7 +42,7 @@ operator to correlate the accepted upload immediately.
 | `queue.stage_request.publish` | JetStream stage-request publication |
 | `queue.stage_request.wait` | Durable request creation to worker handling |
 | `stage.request.process` | Worker handling, including authorization and publication |
-| `stage.xml.fetch` | Opening the immutable XML object stream |
+| `stage.xml.fetch` | Opening, consuming, checking, and closing the immutable XML stream; this overlaps validator execution |
 | `stage.validator.execute` | Validator execution while consuming that stream |
 | `queue.stage_result.publish` / `queue.stage_result.consume` | Durable result handoff |
 | `orchestrator.stage_result.transition` | Evidence persistence and CAS state transition |

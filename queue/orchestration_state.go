@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 )
 
 // ValidationExecutionStatus is the orchestrator-owned lifecycle of one exact
@@ -76,6 +78,7 @@ type ValidationStageState struct {
 	Attempts          []ValidationStageAttempt          `json:"attempts,omitempty"`
 	TerminalOutcome   StageOutcome                      `json:"terminalOutcome,omitempty"`
 	InheritedEvidence *ValidationStageEvidenceReference `json:"inheritedEvidence,omitempty"`
+	DispatchTrace     *observability.TraceCarrier       `json:"dispatchTrace,omitempty"`
 }
 
 // ValidationOrchestrationState is the mutable, CAS-protected projection kept
@@ -89,6 +92,7 @@ type ValidationOrchestrationState struct {
 	FinalResultStatus      ValidationFinalResultStatus `json:"finalResultStatus,omitempty"`
 	FinalResultID          string                      `json:"finalResultId,omitempty"`
 	FinalResultPublishedAt string                      `json:"finalResultPublishedAt,omitempty"`
+	FinalResultTrace       *observability.TraceCarrier `json:"finalResultTrace,omitempty"`
 }
 
 func newPendingOrchestrationState(at time.Time) ValidationOrchestrationState {
@@ -112,6 +116,11 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 	}
 	for index, stageState := range state.Stages {
 		planStage := execution.Plan.Stages[index]
+		if stageState.DispatchTrace != nil {
+			if err := stageState.DispatchTrace.Validate(); err != nil {
+				return fmt.Errorf("orchestration stage %d dispatch trace: %w", index+1, err)
+			}
+		}
 		if stageState.Ordinal != planStage.Ordinal || stageState.Stage != planStage.ID {
 			return fmt.Errorf("orchestration stage %d does not match frozen plan ordinal", index+1)
 		}
@@ -119,7 +128,7 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 			reference := stageState.InheritedEvidence
 			if index == len(state.Stages)-1 || stageState.TerminalOutcome != StageOutcomePassed ||
 				stageState.AuthorizedAttempt != 0 || stageState.RequestID != "" || stageState.RequestCreatedAt != "" ||
-				stageState.DispatchStatus != "" || stageState.DispatchedAt != "" || len(stageState.Attempts) != 0 {
+				stageState.DispatchStatus != "" || stageState.DispatchedAt != "" || stageState.DispatchTrace != nil || len(stageState.Attempts) != 0 {
 				return fmt.Errorf("inherited orchestration stage %d must be a completed passing prerequisite", index+1)
 			}
 			if reference.ValidationID != execution.ValidationID || reference.Generation == 0 || reference.Generation >= execution.Generation ||
@@ -261,7 +270,7 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 }
 
 func (state ValidationOrchestrationState) hasFinalResultState() bool {
-	return state.FinalResultStatus != "" || state.FinalResultID != "" || state.FinalResultPublishedAt != ""
+	return state.FinalResultStatus != "" || state.FinalResultID != "" || state.FinalResultPublishedAt != "" || state.FinalResultTrace != nil
 }
 
 func (state ValidationOrchestrationState) validateFinalResultState(execution ValidationExecution) error {
@@ -269,6 +278,11 @@ func (state ValidationOrchestrationState) validateFinalResultState(execution Val
 	// so reconciliation can durably claim and publish them.
 	if !state.hasFinalResultState() {
 		return nil
+	}
+	if state.FinalResultTrace != nil {
+		if err := state.FinalResultTrace.Validate(); err != nil {
+			return fmt.Errorf("orchestration final result trace: %w", err)
+		}
 	}
 	wantID, err := ValidationExecutionResultID(execution.ValidationID, execution.Generation)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -91,7 +92,8 @@ func (c *Client) ReconcileUploads(ctx context.Context, minAge time.Duration) (Re
 				continue
 			}
 		}
-		if err := c.PublishDocument(ctx, record.ID, record.DocumentType, receivedAt); err != nil {
+		publishCtx := observability.RestoreTrace(ctx, record.EnqueueTrace)
+		if err := c.PublishDocument(publishCtx, record.ID, record.DocumentType, receivedAt); err != nil {
 			record.Error = "awaiting queue publication: " + err.Error()
 			_, _ = c.UpdateUploadRecord(ctx, record, revision)
 			report.Errors++

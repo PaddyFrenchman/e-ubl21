@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -26,24 +27,25 @@ import (
 // PutUploadContent/GetUploadContent), so status updates never have to read
 // or rewrite the potentially large document body.
 type UploadRecord struct {
-	ID                 string            `json:"id"`
-	DocumentType       string            `json:"documentType"`
-	Profile            ValidationProfile `json:"profile,omitempty"`
-	Status             ValidationStatus  `json:"status"`
-	Error              string            `json:"error,omitempty"`
-	ReceivedAt         string            `json:"receivedAt"`
-	ValidatedAt        string            `json:"validatedAt,omitempty"`
-	ValidationStages   ValidationStages  `json:"validationStages,omitempty"`
-	ContentExpiresAt   string            `json:"contentExpiresAt,omitempty"`
-	ContentExpiredAt   string            `json:"contentExpiredAt,omitempty"`
-	ResultPending      bool              `json:"resultPending,omitempty"`
-	LastError          string            `json:"lastError,omitempty"`
-	ProcessingAttempts uint64            `json:"processingAttempts,omitempty"`
-	ProcessingFailedAt string            `json:"processingFailedAt,omitempty"`
-	ReplayGeneration   uint64            `json:"replayGeneration,omitempty"`
-	ReplayMessageID    string            `json:"replayMessageId,omitempty"`
-	ReplayReady        bool              `json:"replayReady,omitempty"`
-	ReplayClaimedSeq   uint64            `json:"replayClaimedSequence,omitempty"`
+	ID                 string                      `json:"id"`
+	DocumentType       string                      `json:"documentType"`
+	Profile            ValidationProfile           `json:"profile,omitempty"`
+	Status             ValidationStatus            `json:"status"`
+	Error              string                      `json:"error,omitempty"`
+	ReceivedAt         string                      `json:"receivedAt"`
+	ValidatedAt        string                      `json:"validatedAt,omitempty"`
+	ValidationStages   ValidationStages            `json:"validationStages,omitempty"`
+	ContentExpiresAt   string                      `json:"contentExpiresAt,omitempty"`
+	ContentExpiredAt   string                      `json:"contentExpiredAt,omitempty"`
+	ResultPending      bool                        `json:"resultPending,omitempty"`
+	LastError          string                      `json:"lastError,omitempty"`
+	ProcessingAttempts uint64                      `json:"processingAttempts,omitempty"`
+	ProcessingFailedAt string                      `json:"processingFailedAt,omitempty"`
+	ReplayGeneration   uint64                      `json:"replayGeneration,omitempty"`
+	ReplayMessageID    string                      `json:"replayMessageId,omitempty"`
+	ReplayReady        bool                        `json:"replayReady,omitempty"`
+	ReplayClaimedSeq   uint64                      `json:"replayClaimedSequence,omitempty"`
+	EnqueueTrace       *observability.TraceCarrier `json:"enqueueTrace,omitempty"`
 }
 
 // VersionedUploadRecord pairs a record with its JetStream KV revision for
@@ -86,6 +88,9 @@ func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error
 	if !ValidID(record.ID) {
 		return fmt.Errorf("invalid upload id %q", record.ID)
 	}
+	if err := validateUploadTrace(record); err != nil {
+		return err
+	}
 	kv, err := c.uploadsBucket(ctx)
 	if err != nil {
 		return err
@@ -104,6 +109,9 @@ func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error
 func (c *Client) CreateUploadRecord(ctx context.Context, record UploadRecord) (uint64, error) {
 	if !ValidID(record.ID) {
 		return 0, fmt.Errorf("invalid upload id %q", record.ID)
+	}
+	if err := validateUploadTrace(record); err != nil {
+		return 0, err
 	}
 	kv, err := c.uploadsBucket(ctx)
 	if err != nil {
@@ -125,6 +133,9 @@ func (c *Client) UpdateUploadRecord(ctx context.Context, record UploadRecord, ex
 	if !ValidID(record.ID) {
 		return 0, fmt.Errorf("invalid upload id %q", record.ID)
 	}
+	if err := validateUploadTrace(record); err != nil {
+		return 0, err
+	}
 	kv, err := c.uploadsBucket(ctx)
 	if err != nil {
 		return 0, err
@@ -138,6 +149,16 @@ func (c *Client) UpdateUploadRecord(ctx context.Context, record UploadRecord, ex
 		return 0, fmt.Errorf("update upload record %s at revision %d: %w", record.ID, expectedRevision, err)
 	}
 	return revision, nil
+}
+
+func validateUploadTrace(record UploadRecord) error {
+	if record.EnqueueTrace == nil {
+		return nil
+	}
+	if err := record.EnqueueTrace.Validate(); err != nil {
+		return fmt.Errorf("upload enqueue trace: %w", err)
+	}
+	return nil
 }
 
 // GetUploadRecord retrieves the metadata record for id, or ErrRecordNotFound
@@ -166,6 +187,9 @@ func (c *Client) GetUploadRecordVersion(ctx context.Context, id string) (Version
 	}
 	var record UploadRecord
 	if err := json.Unmarshal(entry.Value(), &record); err != nil {
+		return VersionedUploadRecord{}, fmt.Errorf("decode upload record %s: %w", id, err)
+	}
+	if err := validateUploadTrace(record); err != nil {
 		return VersionedUploadRecord{}, fmt.Errorf("decode upload record %s: %w", id, err)
 	}
 	return VersionedUploadRecord{Record: record, Revision: entry.Revision()}, nil

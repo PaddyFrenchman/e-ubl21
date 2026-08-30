@@ -463,10 +463,11 @@ func (worker *xsdStageWorker) nak(message jetstream.Msg) {
 func (worker *xsdStageWorker) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {
 	fetchCtx, fetchSpan := observability.Tracer().Start(ctx, "stage.xml.fetch", trace.WithAttributes(attribute.String("upload.id", uploadID)))
 	content, err := worker.queue.OpenUploadContent(fetchCtx, uploadID)
-	observability.End(fetchSpan, err)
 	if err != nil {
+		observability.End(fetchSpan, err)
 		return fmt.Errorf("%w: open upload content: %w", errValidationContentStream, err)
 	}
+	content = traceUploadContent(content, fetchSpan)
 	validationErr := validate(content)
 	streamErr := content.Error()
 	closeErr := content.Close()

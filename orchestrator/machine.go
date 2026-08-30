@@ -81,6 +81,7 @@ func (machine *Machine) ReplayStage(ctx context.Context, dead queue.StageDeadLet
 	if err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
+	next.Orchestration.Stages[len(next.Orchestration.Stages)-1].DispatchTrace = observability.CaptureTrace(ctx)
 	if err := machine.validatePlanTopology(next); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
@@ -128,7 +129,7 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 			Stages: []queue.ValidationStageState{{
 				Stage: execution.Plan.Stages[0].ID, Ordinal: 1,
 				AuthorizedAttempt: 1, RequestID: request.RequestID, RequestCreatedAt: request.CreatedAt,
-				DispatchStatus: queue.StageDispatchPending,
+				DispatchStatus: queue.StageDispatchPending, DispatchTrace: observability.CaptureTrace(ctx),
 			}},
 			UpdatedAt: machine.now().UTC().Format(time.RFC3339Nano),
 		}
@@ -150,6 +151,7 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 		if err != nil {
 			return queue.VersionedValidationExecution{}, err
 		}
+		ctx = observability.RestoreTrace(ctx, stage.DispatchTrace)
 		return machine.dispatchPending(ctx, current, request)
 	case queue.ExecutionStatusValid, queue.ExecutionStatusInvalid, queue.ExecutionStatusProcessingFailed:
 		return machine.EnsureFinalResult(ctx, current)
@@ -242,7 +244,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 			next.Orchestration.CurrentStageOrdinal = nextOrdinal
 			next.Orchestration.Stages = append(next.Orchestration.Stages, queue.ValidationStageState{
 				Stage: created.Stage, Ordinal: created.StageOrdinal, AuthorizedAttempt: 1, RequestID: created.RequestID, RequestCreatedAt: created.CreatedAt,
-				DispatchStatus: queue.StageDispatchPending,
+				DispatchStatus: queue.StageDispatchPending, DispatchTrace: observability.CaptureTrace(ctx),
 			})
 			request = &created
 		}
@@ -266,6 +268,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 			nextStage.RequestCreatedAt = created.CreatedAt
 			nextStage.DispatchStatus = queue.StageDispatchPending
 			nextStage.DispatchedAt = ""
+			nextStage.DispatchTrace = observability.CaptureTrace(ctx)
 			request = &created
 		}
 	default:
@@ -278,6 +281,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 		}
 		next.Orchestration.FinalResultStatus = queue.FinalResultPending
 		next.Orchestration.FinalResultID = resultID
+		next.Orchestration.FinalResultTrace = observability.CaptureTrace(ctx)
 	}
 	revision, err := machine.Queue.UpdateValidationExecutionState(ctx, current, next)
 	if err != nil {
@@ -431,10 +435,18 @@ func resultMatchesExecution(result queue.StageResult, execution queue.Validation
 
 func cloneExecution(execution queue.ValidationExecution) queue.ValidationExecution {
 	cloned := execution
+	if execution.Orchestration.FinalResultTrace != nil {
+		traceCarrier := *execution.Orchestration.FinalResultTrace
+		cloned.Orchestration.FinalResultTrace = &traceCarrier
+	}
 	cloned.Plan.Stages = append([]queue.FrozenValidationStage(nil), execution.Plan.Stages...)
 	cloned.Orchestration.Stages = append([]queue.ValidationStageState(nil), execution.Orchestration.Stages...)
 	for index := range cloned.Orchestration.Stages {
 		cloned.Orchestration.Stages[index].Attempts = append([]queue.ValidationStageAttempt(nil), execution.Orchestration.Stages[index].Attempts...)
+		if execution.Orchestration.Stages[index].DispatchTrace != nil {
+			traceCarrier := *execution.Orchestration.Stages[index].DispatchTrace
+			cloned.Orchestration.Stages[index].DispatchTrace = &traceCarrier
+		}
 	}
 	return cloned
 }

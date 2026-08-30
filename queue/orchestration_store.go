@@ -106,9 +106,11 @@ func isFinalResultTransition(current, next ValidationExecution) bool {
 	before.FinalResultStatus = ""
 	before.FinalResultID = ""
 	before.FinalResultPublishedAt = ""
+	before.FinalResultTrace = nil
 	after.FinalResultStatus = ""
 	after.FinalResultID = ""
 	after.FinalResultPublishedAt = ""
+	after.FinalResultTrace = nil
 	before.UpdatedAt = ""
 	after.UpdatedAt = ""
 	if !reflect.DeepEqual(before, after) || current.Orchestration.Status != next.Orchestration.Status {
@@ -117,9 +119,11 @@ func isFinalResultTransition(current, next ValidationExecution) bool {
 	switch current.Orchestration.FinalResultStatus {
 	case "":
 		return current.Orchestration.FinalResultID == "" && current.Orchestration.FinalResultPublishedAt == "" &&
-			next.Orchestration.FinalResultStatus == FinalResultPending && next.Orchestration.FinalResultID != "" && next.Orchestration.FinalResultPublishedAt == ""
+			current.Orchestration.FinalResultTrace == nil && next.Orchestration.FinalResultStatus == FinalResultPending &&
+			next.Orchestration.FinalResultID != "" && next.Orchestration.FinalResultPublishedAt == ""
 	case FinalResultPending:
 		return current.Orchestration.FinalResultID == next.Orchestration.FinalResultID && current.Orchestration.FinalResultPublishedAt == "" &&
+			reflect.DeepEqual(current.Orchestration.FinalResultTrace, next.Orchestration.FinalResultTrace) &&
 			next.Orchestration.FinalResultStatus == FinalResultPublished && next.Orchestration.FinalResultPublishedAt == next.Orchestration.UpdatedAt
 	default:
 		return false
@@ -193,7 +197,8 @@ func validateQueuedOrchestrationTransition(current, next ValidationExecution) er
 	if len(nextStages) == len(currentStages)+1 {
 		if next.Orchestration.Status != ExecutionStatusStageQueued || accepted.Outcome != StageOutcomePassed ||
 			nextStage.TerminalOutcome != StageOutcomePassed || nextStage.AuthorizedAttempt != currentStage.AuthorizedAttempt ||
-			nextStage.RequestID != currentStage.RequestID || nextStage.RequestCreatedAt != currentStage.RequestCreatedAt {
+			nextStage.RequestID != currentStage.RequestID || nextStage.RequestCreatedAt != currentStage.RequestCreatedAt ||
+			!reflect.DeepEqual(nextStage.DispatchTrace, currentStage.DispatchTrace) {
 			return errors.New("only a passing attempt may dispatch the next frozen-plan stage")
 		}
 		newStage := nextStages[len(nextStages)-1]
@@ -228,6 +233,9 @@ func validateQueuedOrchestrationTransition(current, next ValidationExecution) er
 	}
 	if nextStage.AuthorizedAttempt != currentStage.AuthorizedAttempt || nextStage.RequestID != currentStage.RequestID || nextStage.RequestCreatedAt != currentStage.RequestCreatedAt {
 		return errors.New("terminal stage transition cannot rewrite its authorized request")
+	}
+	if !reflect.DeepEqual(nextStage.DispatchTrace, currentStage.DispatchTrace) {
+		return errors.New("terminal stage transition cannot rewrite its dispatch trace")
 	}
 	return nil
 }

@@ -3,7 +3,9 @@ package observability_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/nats-io/nats.go"
@@ -52,6 +54,49 @@ func TestInvalidRemoteTraceContextIsIgnored(t *testing.T) {
 	header.Set("Traceparent", "caller-controlled-garbage")
 	if got := trace.SpanContextFromContext(observability.ExtractNATS(context.Background(), header)); got.IsValid() {
 		t.Fatalf("invalid traceparent produced valid context %+v", got)
+	}
+}
+
+func TestDurableTraceCarrierIsBoundedValidatedAndRestorable(t *testing.T) {
+	traceID := trace.TraceID{9, 8, 7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7, 8}
+	spanID := trace.SpanID{8, 6, 4, 2, 1, 3, 5, 7}
+	state, err := trace.ParseTraceState("vendor=value")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parent := trace.NewSpanContext(trace.SpanContextConfig{TraceID: traceID, SpanID: spanID, TraceFlags: trace.FlagsSampled, TraceState: state})
+	carrier := observability.CaptureTrace(trace.ContextWithSpanContext(context.Background(), parent))
+	if carrier == nil || carrier.Validate() != nil {
+		t.Fatalf("captured carrier = %+v", carrier)
+	}
+
+	type contextKey string
+	base, cancel := context.WithTimeout(context.WithValue(context.Background(), contextKey("retained"), "yes"), time.Minute)
+	defer cancel()
+	restored := observability.RestoreTrace(base, carrier)
+	got := trace.SpanContextFromContext(restored)
+	if got.TraceID() != traceID || got.SpanID() != spanID || got.TraceState().String() != state.String() || !got.IsRemote() {
+		t.Fatalf("restored context = %+v", got)
+	}
+	if restored.Value(contextKey("retained")) != "yes" {
+		t.Fatal("restoring trace discarded context values")
+	}
+	if _, ok := restored.Deadline(); !ok {
+		t.Fatal("restoring trace discarded context deadline")
+	}
+
+	invalid := []observability.TraceCarrier{
+		{},
+		{TraceState: "vendor=value"},
+		{TraceParent: "invalid"},
+		{TraceParent: carrier.TraceParent, TraceState: "invalid tracestate"},
+		{TraceParent: strings.Repeat("a", observability.MaxTraceParentBytes+1)},
+		{TraceParent: carrier.TraceParent, TraceState: strings.Repeat("a", observability.MaxTraceStateBytes+1)},
+	}
+	for _, candidate := range invalid {
+		if err := candidate.Validate(); err == nil {
+			t.Errorf("invalid carrier was accepted: %+v", candidate)
+		}
 	}
 }
 

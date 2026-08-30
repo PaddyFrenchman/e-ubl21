@@ -118,7 +118,7 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 	// can be reconciled. No content is written if this first boundary fails.
 	record := queue.UploadRecord{
 		ID: id, DocumentType: rootElement, Profile: profile, Status: queue.StatusAccepting,
-		ReceivedAt: receivedAt.Format(time.RFC3339),
+		ReceivedAt: receivedAt.Format(time.RFC3339), EnqueueTrace: observability.CaptureTrace(r.Context()),
 	}
 	revision, err := h.queue.CreateUploadRecord(r.Context(), record)
 	if err != nil {

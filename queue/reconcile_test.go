@@ -7,9 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestReconcileUploadsRepairsAndTerminatesPartialAcceptance(t *testing.T) {
@@ -74,6 +76,46 @@ func TestReconcileUploadsRepairsAndTerminatesPartialAcceptance(t *testing.T) {
 	}
 	if second.Scanned != 0 || second.Requeued != 0 {
 		t.Fatalf("second reconciliation was not idempotent: %+v", second)
+	}
+}
+
+func TestReconcileUploadsRestoresDurableEnqueueTrace(t *testing.T) {
+	server := queuetest.StartServer(t)
+	client, err := queue.ConnectWithOptions(server.URL, queue.DefaultNamespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+	ctx := context.Background()
+	if err := client.EnsureInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
+	traceID := trace.TraceID{6, 0, 6, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	parent := trace.NewSpanContext(trace.SpanContextConfig{TraceID: traceID, SpanID: trace.SpanID{1, 2, 3, 4, 5, 6, 7, 8}, TraceFlags: trace.FlagsSampled})
+	id, _ := queue.NewID()
+	receivedAt := time.Now().Add(-time.Hour).UTC()
+	record := queue.UploadRecord{
+		ID: id, DocumentType: "Invoice", Status: queue.StatusEnqueuePending,
+		ReceivedAt:   receivedAt.Format(time.RFC3339),
+		EnqueueTrace: observability.CaptureTrace(trace.ContextWithSpanContext(ctx, parent)),
+	}
+	if err := client.PutUploadRecord(ctx, record); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PutUploadContent(ctx, id, []byte("<Invoice/>")); err != nil {
+		t.Fatal(err)
+	}
+	if report, err := client.ReconcileUploads(context.Background(), 0); err != nil || report.Requeued != 1 {
+		t.Fatalf("reconcile report = %+v, %v", report, err)
+	}
+	consumer, err := client.DocumentsConsumer(ctx, "trace-recovery", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	message := fetchOneTraceMessage(t, ctx, consumer)
+	assertMessageTraceID(t, message, traceID)
+	if err := message.Ack(); err != nil {
+		t.Fatal(err)
 	}
 }
 

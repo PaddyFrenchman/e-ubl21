@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"io"
+	"sync"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/observability"
@@ -44,4 +46,61 @@ func stageTraceAttributes(request queue.StageRequest) []attribute.KeyValue {
 
 func beginStageOperation(ctx context.Context, name string, request queue.StageRequest) (context.Context, trace.Span) {
 	return observability.Tracer().Start(ctx, name, trace.WithAttributes(stageTraceAttributes(request)...))
+}
+
+type tracedUploadContent struct {
+	queue.UploadContentReader
+	span      trace.Span
+	once      sync.Once
+	mu        sync.Mutex
+	streamErr error
+}
+
+func traceUploadContent(content queue.UploadContentReader, span trace.Span) queue.UploadContentReader {
+	return &tracedUploadContent{UploadContentReader: content, span: span}
+}
+
+func (content *tracedUploadContent) Read(buffer []byte) (int, error) {
+	read, err := content.UploadContentReader.Read(buffer)
+	if err != nil && err != io.EOF {
+		content.remember(err)
+		observability.RecordError(content.span, err)
+	}
+	return read, err
+}
+
+func (content *tracedUploadContent) Error() error {
+	err := content.UploadContentReader.Error()
+	if err != nil {
+		content.remember(err)
+		observability.RecordError(content.span, err)
+	}
+	return err
+}
+
+func (content *tracedUploadContent) Close() error {
+	err := content.UploadContentReader.Close()
+	if err != nil {
+		observability.RecordError(content.span, err)
+	}
+	endErr := content.remembered()
+	if endErr == nil {
+		endErr = err
+	}
+	content.once.Do(func() { observability.End(content.span, endErr) })
+	return err
+}
+
+func (content *tracedUploadContent) remember(err error) {
+	content.mu.Lock()
+	defer content.mu.Unlock()
+	if content.streamErr == nil {
+		content.streamErr = err
+	}
+}
+
+func (content *tracedUploadContent) remembered() error {
+	content.mu.Lock()
+	defer content.mu.Unlock()
+	return content.streamErr
 }

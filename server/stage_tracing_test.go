@@ -1,7 +1,9 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"io"
 	"testing"
 	"time"
@@ -11,6 +13,14 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
+
+type traceTestUploadContent struct {
+	*bytes.Reader
+	streamErr error
+}
+
+func (content *traceTestUploadContent) Close() error { return nil }
+func (content *traceTestUploadContent) Error() error { return content.streamErr }
 
 func TestXSDWorkerEmitsCorrelatedStageSpansWithoutInvoiceContent(t *testing.T) {
 	recorder := tracetest.NewSpanRecorder()
@@ -77,4 +87,45 @@ func TestXSDWorkerEmitsCorrelatedStageSpansWithoutInvoiceContent(t *testing.T) {
 			t.Errorf("required span %q was not emitted", name)
 		}
 	}
+}
+
+func TestXMLFetchSpanCoversStreamingReaderLifetime(t *testing.T) {
+	recorder := tracetest.NewSpanRecorder()
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(provider)
+	t.Cleanup(func() {
+		otel.SetTracerProvider(previous)
+		_ = provider.Shutdown(context.Background())
+	})
+
+	_, fetchSpan := observability.Tracer().Start(context.Background(), "stage.xml.fetch")
+	deferred := errors.New("deferred object stream failure")
+	content := traceUploadContent(&traceTestUploadContent{Reader: bytes.NewReader([]byte("xml")), streamErr: deferred}, fetchSpan)
+	_, validatorSpan := observability.Tracer().Start(context.Background(), "stage.validator.execute")
+	if _, err := io.ReadAll(content); err != nil {
+		t.Fatal(err)
+	}
+	validatorSpan.End()
+	if hasEndedSpan(recorder.Ended(), "stage.xml.fetch") {
+		t.Fatal("fetch span ended before the streaming reader was checked and closed")
+	}
+	if err := content.Error(); !errors.Is(err, deferred) {
+		t.Fatalf("stream error = %v, want %v", err, deferred)
+	}
+	if err := content.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if !hasEndedSpan(recorder.Ended(), "stage.xml.fetch") {
+		t.Fatal("fetch span did not end when the streaming reader closed")
+	}
+}
+
+func hasEndedSpan(spans []sdktrace.ReadOnlySpan, name string) bool {
+	for _, span := range spans {
+		if span.Name() == name {
+			return true
+		}
+	}
+	return false
 }
