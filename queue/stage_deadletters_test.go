@@ -51,6 +51,18 @@ func TestStageDeadLetterIsPermanentPerExhaustedAttemptAndStageIsolated(t *testin
 	if stored.Deliveries != 4 || stored.Stage != queue.ValidationLayerEN16931 || stored.RulesetVersion != request.RulesetVersion || stored.Attempt != 3 || stored.Reason != queue.StageReasonRuntimeUnavailable {
 		t.Fatalf("stored stage dead letter = %+v", stored)
 	}
+	derivedID, err := queue.StageDeadLetterIDForRequest(request)
+	if err != nil || derivedID != dead.DeadLetterID {
+		t.Fatalf("derived dead-letter ID = %q, %v; want %q", derivedID, err, dead.DeadLetterID)
+	}
+	found, ok, err := client.StageDeadLetterForRequest(ctx, request)
+	if err != nil || !ok || found != stored {
+		t.Fatalf("dead letter for request = %+v, %t, %v; want %+v", found, ok, err, stored)
+	}
+	recovered, err := found.StageResultForRequest(request)
+	if err != nil || !queue.SemanticallyEqualStageResults(recovered, result) {
+		t.Fatalf("recovered stage result = %+v, %v; want semantic match for %+v", recovered, err, result)
+	}
 	conflict := dead
 	conflict.Diagnostic = "different failure"
 	if err := client.PublishStageDeadLetter(ctx, conflict); err == nil {

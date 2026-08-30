@@ -103,6 +103,67 @@ func TestXSDWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds(t *t
 	assertStageRequestStreamMessages(t, ctx, client, queue.ValidationLayerUBL21XSD, 0)
 }
 
+func TestXSDWorkerPermanentDeadLetterFreezesExhaustedRedeliveryOutcome(t *testing.T) {
+	client, ctx := newXSDWorkerTestClient(t)
+	uploadID := testXSDWorkerID(t)
+	if err := client.PutUploadContent(ctx, uploadID, []byte("<Invoice/>")); err != nil {
+		t.Fatal(err)
+	}
+	machine := orchestrator.New(client)
+	if _, err := machine.Start(ctx, queue.ValidationExecutionIntent{
+		IntentID: testXSDWorkerID(t), UploadID: uploadID, DocumentType: "Invoice",
+		Trigger: queue.ValidationTriggerInitial, RequestedProfile: queue.ValidationProfileUBL21,
+		Plan: xsdWorkerTestPlan(false), RetryPolicy: queue.FrozenValidationRetryPolicy{
+			ID: queue.DefaultValidationRetryPolicyID, Version: queue.DefaultValidationRetryPolicyVersion, MaxAttempts: 1,
+		},
+		CreatedAt: time.Now().UTC(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	validatorCalls := 0
+	worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error {
+		validatorCalls++
+		return errors.New("xmllint temporarily unavailable")
+	})
+	publicationFailure := errors.New("result broker unavailable")
+	worker.publishResult = func(context.Context, queue.StageResult) error { return publicationFailure }
+	message := fetchXSDWorkerRequest(t, ctx, client)
+	if err := worker.handle(ctx, message); !errors.Is(err, publicationFailure) {
+		t.Fatalf("publication error = %v, want %v", err, publicationFailure)
+	}
+	if depth, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayerUBL21XSD); err != nil || depth != 1 {
+		t.Fatalf("XSD dead-letter depth = %d, %v; want 1", depth, err)
+	}
+
+	worker.validate = func(context.Context, string, io.Reader, time.Duration) error {
+		validatorCalls++
+		return nil
+	}
+	worker.publishResult = client.PublishStageResult
+	redelivered := fetchXSDWorkerRequest(t, ctx, client)
+	if err := worker.handle(ctx, redelivered); err != nil {
+		t.Fatal(err)
+	}
+	if validatorCalls != 1 {
+		t.Fatalf("validator calls = %d, want 1; permanent DLQ must prevent rerun", validatorCalls)
+	}
+	result := fetchXSDWorkerResult(t, ctx, client)
+	if result.Outcome != queue.StageOutcomeOperationalFailure || result.Reason != queue.StageReasonRuntimeFailure {
+		t.Fatalf("recovered XSD result = %+v", result)
+	}
+	terminal, err := machine.HandleStageResult(ctx, result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if terminal.Execution.Orchestration.Status != queue.ExecutionStatusProcessingFailed {
+		t.Fatalf("terminal execution = %+v", terminal.Execution.Orchestration)
+	}
+	if depth, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayerUBL21XSD); err != nil || depth != 1 {
+		t.Fatalf("final XSD dead-letter depth = %d, %v; want 1", depth, err)
+	}
+}
+
 func TestXSDWorkerShutdownCancelsValidationAndRedeliversRequest(t *testing.T) {
 	client, ctx := newXSDWorkerTestClient(t)
 	publishXSDWorkerTestRequest(t, ctx, client, []byte("<Invoice/>"))

@@ -32,6 +32,14 @@ A crash after step 1 leaves an inspectable DLQ entry and a redeliverable
 request. A crash after step 2 redelivers and converges on both permanent
 records. No publication failure can ACK away the request.
 
+The first permanent DLQ record also freezes the exhausted attempt outcome. On
+redelivery of a final authorized attempt, the worker derives the deterministic
+DLQ identity and checks the permanent stream before invoking its validator. If
+the record already exists, the worker reconstructs and republishes its
+operational `StageResult` instead of recomputing the attempt. A transiently
+recovered validator therefore cannot turn durable exhausted-failure evidence
+into a pass while leaving an orphan operator-facing DLQ entry.
+
 ## Replay decision
 
 The earlier recommendation to reopen the same generation is incompatible with

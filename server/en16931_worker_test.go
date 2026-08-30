@@ -304,6 +304,54 @@ func TestENWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds(t *te
 	assertENWorkerRequestMessages(t, ctx, client, 0)
 }
 
+func TestENWorkerPermanentDeadLetterFreezesExhaustedRedeliveryOutcome(t *testing.T) {
+	client, ctx := newENWorkerTestClient(t)
+	machine, _ := authorizeENWorkerRequestWithRetry(t, ctx, client, []byte("<Invoice/>"), queue.FrozenValidationRetryPolicy{
+		ID: queue.DefaultValidationRetryPolicyID, Version: queue.DefaultValidationRetryPolicyVersion, MaxAttempts: 1,
+	})
+	validatorCalls := 0
+	worker := newTestENStageWorker(client, en16931ValidatorFunc(func(context.Context, io.Reader) (queue.ValidationStageResult, error) {
+		validatorCalls++
+		return queue.ValidationStageResult{}, errors.New("Saxon temporarily unavailable")
+	}))
+	publicationFailure := errors.New("result broker unavailable")
+	worker.publishResult = func(context.Context, queue.StageResult) error { return publicationFailure }
+	message := fetchENWorkerRequest(t, ctx, client)
+	if err := worker.handle(ctx, message); !errors.Is(err, publicationFailure) {
+		t.Fatalf("publication error = %v, want %v", err, publicationFailure)
+	}
+	if depth, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayerEN16931); err != nil || depth != 1 {
+		t.Fatalf("EN dead-letter depth = %d, %v; want 1", depth, err)
+	}
+
+	worker.validator = en16931ValidatorFunc(func(context.Context, io.Reader) (queue.ValidationStageResult, error) {
+		validatorCalls++
+		return queue.ValidationStageResult{Layer: queue.ValidationLayerEN16931, Version: validationassets.EN16931().Version, Valid: true}, nil
+	})
+	worker.publishResult = client.PublishStageResult
+	redelivered := fetchENWorkerRequest(t, ctx, client)
+	if err := worker.handle(ctx, redelivered); err != nil {
+		t.Fatal(err)
+	}
+	if validatorCalls != 1 {
+		t.Fatalf("validator calls = %d, want 1; permanent DLQ must prevent rerun", validatorCalls)
+	}
+	result := fetchENWorkerResult(t, ctx, client)
+	if result.Outcome != queue.StageOutcomeOperationalFailure || result.Reason != queue.StageReasonRuntimeFailure {
+		t.Fatalf("recovered EN result = %+v", result)
+	}
+	terminal, err := machine.HandleStageResult(ctx, result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if terminal.Execution.Orchestration.Status != queue.ExecutionStatusProcessingFailed {
+		t.Fatalf("terminal execution = %+v", terminal.Execution.Orchestration)
+	}
+	if depth, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayerEN16931); err != nil || depth != 1 {
+		t.Fatalf("final EN dead-letter depth = %d, %v; want 1", depth, err)
+	}
+}
+
 func TestENWorkerShutdownCancelsValidationAndRedeliversRequest(t *testing.T) {
 	client, ctx := newENWorkerTestClient(t)
 	_, _ = authorizeENWorkerRequest(t, ctx, client, []byte("<Invoice/>"))

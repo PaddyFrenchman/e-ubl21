@@ -48,9 +48,8 @@ func NewStageDeadLetter(result StageResult, deliveries uint64, failedAt time.Tim
 	if result.Outcome != StageOutcomeOperationalFailure {
 		return StageDeadLetter{}, errors.New("stage dead letter requires operational-failure evidence")
 	}
-	digest := sha256.Sum256([]byte("e-ubl21.stage-dead-letter.v1\x00" + result.ResultID))
 	dead := StageDeadLetter{
-		ContractVersion: StageDeadLetterContractVersion, DeadLetterID: hex.EncodeToString(digest[:16]),
+		ContractVersion: StageDeadLetterContractVersion, DeadLetterID: stageDeadLetterID(result.ResultID),
 		RequestID: result.RequestID, ResultID: result.ResultID, ValidationID: result.ValidationID,
 		UploadID: result.UploadID, DocumentType: result.DocumentType, Generation: result.Generation,
 		Plan: result.Plan, PlanVersion: result.PlanVersion, Stage: result.Stage, StageOrdinal: result.StageOrdinal,
@@ -61,6 +60,47 @@ func NewStageDeadLetter(result StageResult, deliveries uint64, failedAt time.Tim
 		return StageDeadLetter{}, err
 	}
 	return dead, nil
+}
+
+// StageDeadLetterIDForRequest derives the permanent exhausted-attempt slot
+// before a worker reruns a redelivered request.
+func StageDeadLetterIDForRequest(request StageRequest) (string, error) {
+	if err := request.Validate(); err != nil {
+		return "", err
+	}
+	return stageDeadLetterID(stageMessageID("e-ubl21/stage-result", request.RequestID)), nil
+}
+
+func stageDeadLetterID(resultID string) string {
+	digest := sha256.Sum256([]byte("e-ubl21.stage-dead-letter.v1\x00" + resultID))
+	return hex.EncodeToString(digest[:16])
+}
+
+// StageResultForRequest reconstructs the durable operational evidence frozen
+// by this dead letter. Timing is normalized to FailedAt because semantic
+// duplicate comparison deliberately excludes per-execution timing.
+func (dead StageDeadLetter) StageResultForRequest(request StageRequest) (StageResult, error) {
+	if err := dead.Validate(); err != nil {
+		return StageResult{}, err
+	}
+	if err := request.Validate(); err != nil {
+		return StageResult{}, err
+	}
+	deadLetterID, err := StageDeadLetterIDForRequest(request)
+	if err != nil {
+		return StageResult{}, err
+	}
+	if dead.DeadLetterID != deadLetterID || dead.RequestID != request.RequestID || dead.ValidationID != request.ValidationID ||
+		dead.UploadID != request.UploadID || dead.DocumentType != request.DocumentType || dead.Generation != request.Generation ||
+		dead.Plan != request.Plan || dead.PlanVersion != request.PlanVersion || dead.Stage != request.Stage ||
+		dead.StageOrdinal != request.StageOrdinal || dead.RulesetVersion != request.RulesetVersion || dead.Attempt != request.Attempt {
+		return StageResult{}, errors.New("stage dead letter does not match request")
+	}
+	failedAt, err := time.Parse(time.RFC3339Nano, dead.FailedAt)
+	if err != nil {
+		return StageResult{}, fmt.Errorf("parse stage dead-letter failure time: %w", err)
+	}
+	return NewStageResult(request, StageOutcomeOperationalFailure, dead.Reason, nil, dead.Diagnostic, failedAt, failedAt, 0)
 }
 
 func (dead StageDeadLetter) Validate() error {
@@ -94,11 +134,30 @@ func (dead StageDeadLetter) Validate() error {
 	if want := stageMessageID("e-ubl21/stage-result", dead.RequestID); dead.ResultID != want {
 		return errors.New("stage dead-letter result identity is inconsistent")
 	}
-	digest := sha256.Sum256([]byte("e-ubl21.stage-dead-letter.v1\x00" + dead.ResultID))
-	if dead.DeadLetterID != hex.EncodeToString(digest[:16]) {
+	if dead.DeadLetterID != stageDeadLetterID(dead.ResultID) {
 		return errors.New("stage dead-letter id is inconsistent")
 	}
 	return nil
+}
+
+// StageDeadLetterForRequest returns the permanent exhausted-attempt record, if
+// one exists, without making workers depend on JetStream not-found details.
+func (c *Client) StageDeadLetterForRequest(ctx context.Context, request StageRequest) (StageDeadLetter, bool, error) {
+	deadLetterID, err := StageDeadLetterIDForRequest(request)
+	if err != nil {
+		return StageDeadLetter{}, false, err
+	}
+	dead, err := c.GetStageDeadLetter(ctx, request.Stage, deadLetterID)
+	if errors.Is(err, jetstream.ErrMsgNotFound) {
+		return StageDeadLetter{}, false, nil
+	}
+	if err != nil {
+		return StageDeadLetter{}, false, err
+	}
+	if _, err := dead.StageResultForRequest(request); err != nil {
+		return StageDeadLetter{}, false, err
+	}
+	return dead, true, nil
 }
 
 // PublishStageDeadLetter creates the permanent per-attempt slot. Redelivery

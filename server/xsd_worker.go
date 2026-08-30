@@ -287,6 +287,28 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		worker.nak(message)
 		return fmt.Errorf("verify XSD stage authorization: %w", err)
 	}
+	if request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
+		dead, found, lookupErr := worker.queue.StageDeadLetterForRequest(ctx, request)
+		if lookupErr != nil {
+			worker.nak(message)
+			return fmt.Errorf("recover permanent XSD stage dead letter: %w", lookupErr)
+		}
+		if found {
+			result, resultErr := dead.StageResultForRequest(request)
+			if resultErr != nil {
+				worker.nak(message)
+				return fmt.Errorf("recover permanent XSD stage result: %w", resultErr)
+			}
+			if err := worker.publishResult(ctx, result); err != nil {
+				worker.nak(message)
+				return fmt.Errorf("publish recovered XSD stage result %s: %w", result.ResultID, err)
+			}
+			if err := message.Ack(); err != nil {
+				return fmt.Errorf("ack XSD stage request %s: %w", request.RequestID, err)
+			}
+			return nil
+		}
+	}
 
 	startedAt := worker.now().UTC()
 	attemptCtx, cancelAttempt := context.WithTimeout(ctx, worker.timeout)
