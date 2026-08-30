@@ -1,9 +1,15 @@
 package server
 
 import (
+	"context"
+	"errors"
+	"io"
+	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 )
@@ -19,6 +25,19 @@ func histogramSampleCount(t *testing.T, observer prometheus.Observer) uint64 {
 		t.Fatal(err)
 	}
 	return value.GetHistogram().GetSampleCount()
+}
+
+func histogramSampleSum(t *testing.T, observer prometheus.Observer) float64 {
+	t.Helper()
+	metric, ok := observer.(prometheus.Metric)
+	if !ok {
+		t.Fatal("histogram observer does not expose a Prometheus metric")
+	}
+	value := &dto.Metric{}
+	if err := metric.Write(value); err != nil {
+		t.Fatal(err)
+	}
+	return value.GetHistogram().GetSampleSum()
 }
 
 func TestStageQueueWaitIsFirstDeliveryOnlyWhileRequestAgeTracksRedelivery(t *testing.T) {
@@ -51,5 +70,42 @@ func TestStageHistogramBucketsCoverValidatorAndBacklogHorizons(t *testing.T) {
 				t.Fatalf("%s buckets are not strictly increasing: %v", name, buckets)
 			}
 		}
+	}
+}
+
+func TestXSDQueueWaitStopsBeforeAuthorization(t *testing.T) {
+	client, ctx := newXSDWorkerTestClient(t)
+	request := startXSDWorkerTestRequest(t, ctx, client)
+	data, err := request.MarshalJSON()
+	if err != nil {
+		t.Fatal(err)
+	}
+	created, err := time.Parse(time.RFC3339Nano, request.CreatedAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	handlerTime := created.Add(500 * time.Millisecond)
+	currentTime := handlerTime
+	observer := stageQueueWait.WithLabelValues(string(request.Stage))
+	before := histogramSampleSum(t, observer)
+	worker := &xsdStageWorker{
+		queue:    client,
+		logger:   slog.New(slog.NewTextHandler(io.Discard, nil)),
+		nakDelay: time.Millisecond,
+		now:      func() time.Time { return currentTime },
+		authorizeRequest: func(context.Context, queue.StageRequest) (queue.ValidationExecution, error) {
+			currentTime = currentTime.Add(4 * time.Second)
+			return queue.ValidationExecution{}, errors.New("delayed authorization failed")
+		},
+	}
+	message := &workerStateMsg{
+		data:     data,
+		metadata: &jetstream.MsgMetadata{NumDelivered: 1},
+	}
+	if err := worker.handle(context.Background(), message); err == nil {
+		t.Fatal("handle succeeded, want authorization error")
+	}
+	if got := histogramSampleSum(t, observer) - before; got < .499 || got > .501 {
+		t.Fatalf("queue wait = %v seconds, want handler-entry age 0.5 seconds", got)
 	}
 }

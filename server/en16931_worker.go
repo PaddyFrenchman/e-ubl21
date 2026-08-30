@@ -260,6 +260,7 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 type enStageWorker struct {
 	queue             *queue.Client
 	validator         EN16931Validator
+	authorizeRequest  func(context.Context, queue.StageRequest) (queue.ValidationExecution, error)
 	timeout           time.Duration
 	logger            *slog.Logger
 	now               func() time.Time
@@ -291,7 +292,13 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 		_ = message.Term()
 		return fmt.Errorf("terminate non-EN request on EN 16931 consumer: stage %q", request.Stage)
 	}
-	execution, err := worker.authorize(ctx, request)
+	finishObservation := beginStageObservation(request, message, worker.now().UTC())
+	defer finishObservation()
+	authorize := worker.authorize
+	if worker.authorizeRequest != nil {
+		authorize = worker.authorizeRequest
+	}
+	execution, err := authorize(ctx, request)
 	if err != nil {
 		if errors.Is(err, errENStageRequestStale) {
 			_ = message.Term()
@@ -300,8 +307,6 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 		worker.nak(message)
 		return fmt.Errorf("verify EN 16931 stage authorization: %w", err)
 	}
-	finishObservation := beginStageObservation(request, message, worker.now().UTC())
-	defer finishObservation()
 	if request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
 		dead, found, lookupErr := worker.queue.StageDeadLetterForRequest(ctx, request)
 		if lookupErr != nil {

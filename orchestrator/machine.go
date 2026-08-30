@@ -158,7 +158,6 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 // request selected by the frozen plan. Terminal outcomes publish no later work.
 func (machine *Machine) HandleStageResult(ctx context.Context, result queue.StageResult) (queue.VersionedValidationExecution, error) {
 	transitionStarted := time.Now()
-	defer observeOrchestratorTransition("handle_stage_result", result.Stage, transitionStarted)
 	if err := machine.validate(); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
@@ -175,6 +174,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 	if err := resultMatchesExecution(result, current.Execution); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
+	defer observeOrchestratorTransition("handle_stage_result", result.Stage, transitionStarted)
 	stageIndex := int(result.StageOrdinal - 1)
 	if stageIndex < len(current.Execution.Orchestration.Stages) {
 		accepted := current.Execution.Orchestration.Stages[stageIndex].Attempts

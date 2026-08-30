@@ -3,6 +3,7 @@ package orchestrator_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -13,7 +14,22 @@ import (
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+func metricSeriesCount(t *testing.T, name string) int {
+	t.Helper()
+	families, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, family := range families {
+		if family.GetName() == name {
+			return len(family.Metric)
+		}
+	}
+	return 0
+}
 
 func TestMachineAdvancesFrozenPlanAndFinalizesValid(t *testing.T) {
 	machine, client, ctx := newMachine(t)
@@ -54,6 +70,29 @@ func TestMachineAdvancesFrozenPlanAndFinalizesValid(t *testing.T) {
 		if err != nil || stored.ResultID != result.ResultID {
 			t.Fatalf("stored evidence = %+v, %v; want %s", stored, err, result.ResultID)
 		}
+	}
+}
+
+func TestRejectedStageResultsDoNotCreateOrchestratorMetricSeries(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	if _, err := machine.Start(ctx, testIntent(t, testPlan())); err != nil {
+		t.Fatal(err)
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	valid := resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)
+	const metricName = "e_ubl21_orchestrator_transition_duration_seconds"
+	before := metricSeriesCount(t, metricName)
+
+	for index := 0; index < 50; index++ {
+		rejected := valid
+		rejected.Stage = queue.ValidationLayer(fmt.Sprintf("unsupported-stage-%d", index))
+		if _, err := machine.HandleStageResult(ctx, rejected); err == nil {
+			t.Fatalf("unsupported stage %q was accepted", rejected.Stage)
+		}
+	}
+
+	if after := metricSeriesCount(t, metricName); after != before {
+		t.Fatalf("orchestrator transition series grew from %d to %d after rejected stages", before, after)
 	}
 }
 

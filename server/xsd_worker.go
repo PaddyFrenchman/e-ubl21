@@ -250,6 +250,7 @@ type xsdStageWorker struct {
 	queue             *queue.Client
 	catalog           *validationCatalog
 	validate          xsdStreamValidator
+	authorizeRequest  func(context.Context, queue.StageRequest) (queue.ValidationExecution, error)
 	timeout           time.Duration
 	progressInterval  time.Duration
 	logger            *slog.Logger
@@ -282,7 +283,13 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		_ = message.Term()
 		return fmt.Errorf("terminate non-XSD request on XSD consumer: stage %q", request.Stage)
 	}
-	execution, err := worker.authorize(ctx, request)
+	finishObservation := beginStageObservation(request, message, worker.now().UTC())
+	defer finishObservation()
+	authorize := worker.authorize
+	if worker.authorizeRequest != nil {
+		authorize = worker.authorizeRequest
+	}
+	execution, err := authorize(ctx, request)
 	if err != nil {
 		if errors.Is(err, errXSDStageRequestStale) {
 			_ = message.Term()
@@ -291,8 +298,6 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		worker.nak(message)
 		return fmt.Errorf("verify XSD stage authorization: %w", err)
 	}
-	finishObservation := beginStageObservation(request, message, worker.now().UTC())
-	defer finishObservation()
 	if request.Attempt >= execution.RetryPolicy.MaxAttemptsFor(request.Stage) {
 		dead, found, lookupErr := worker.queue.StageDeadLetterForRequest(ctx, request)
 		if lookupErr != nil {
