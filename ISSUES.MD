@@ -70,16 +70,56 @@ The repository CI workflows must follow the branch model:
 - `main` CI is therefore a release-verification safety net, not the normal development integration path.
 - Cleanup of completed `issue/*` branches is based on containment in `development`, not containment in `main`.
 
+### Local development branch requirement
+
+Every working clone must maintain a **local** `development` branch that tracks `origin/development`. `origin/development` is the remote-tracking ref; it is not the day-to-day working branch and issue work must not be started from it in detached-HEAD state.
+
+For a clone that does not yet have a local `development` branch:
+
+```bash
+git fetch origin --prune
+git switch -c development --track origin/development
+```
+
+If the local `development` branch already exists, ensure that its upstream is correct:
+
+```bash
+git switch development
+git branch --set-upstream-to=origin/development development
+```
+
+Verify the relationship with:
+
+```bash
+git branch -vv
+```
+
+The `development` entry must show `[origin/development]`. Before starting any new issue branch, synchronize the local integration branch:
+
+```bash
+git switch development
+git pull --ff-only origin development
+```
+
+The intended working relationship is therefore:
+
+```text
+local development <--> origin/development
+         |
+         +--> issue/<number>-<description>
+```
+
 ### Issue branch creation
 
-Each GitHub issue must be implemented on its own issue branch created from the latest `origin/development`.
+Each GitHub issue must be implemented on its own issue branch created from the synchronized **local `development` branch**.
 
 1. Fetch the latest remote state with `git fetch origin --prune`.
-2. Update the local development branch with `git switch development` followed by `git pull --ff-only origin development`.
-3. Create the issue branch from `development`, for example `git switch -c issue/59-kubernetes-autoscaling`.
-4. Implement, test, commit, and push only on the issue branch until integration is explicitly authorized.
+2. Switch to the local integration branch with `git switch development`.
+3. Synchronize it with `git pull --ff-only origin development`.
+4. Create the issue branch from local `development`, for example `git switch -c issue/59-kubernetes-autoscaling`.
+5. Implement, test, commit, and push only on the issue branch until integration is explicitly authorized.
 
-Issue branches must not be created from `main` or from a release branch.
+Issue branches must not be created from `main`, from a release branch, or directly from the `origin/development` remote-tracking ref.
 
 ### Explicit authorization boundary
 
