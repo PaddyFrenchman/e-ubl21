@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -178,6 +179,7 @@ func (c *Client) PublishStageDeadLetter(ctx context.Context, dead StageDeadLette
 	msg := nats.NewMsg(names.DeadLetterSubjectPrefix + dead.DeadLetterID)
 	msg.Data = payload
 	msg.Header.Set(nats.MsgIdHdr, dead.DeadLetterID)
+	observability.InjectNATS(ctx, msg.Header)
 	if _, err := c.JS.PublishMsg(ctx, msg); err != nil {
 		var apiErr *jetstream.APIError
 		if !errors.As(err, &apiErr) || apiErr.ErrorCode != jsErrCodeStreamMaxMsgsPerSubject {

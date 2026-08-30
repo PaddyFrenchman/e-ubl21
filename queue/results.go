@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -197,6 +198,7 @@ func (c *Client) PublishResult(ctx context.Context, result ValidationResult) err
 		msg.Header.Set(HeaderValidationID, result.ValidationID)
 		msg.Header.Set(HeaderGeneration, fmt.Sprintf("%d", result.Generation))
 	}
+	observability.InjectNATS(ctx, msg.Header)
 
 	if _, err := c.JS.PublishMsg(ctx, msg); err != nil {
 		var apiErr *jetstream.APIError

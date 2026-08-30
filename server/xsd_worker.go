@@ -13,9 +13,12 @@ import (
 	"unicode/utf8"
 
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -269,7 +272,7 @@ func (worker *xsdStageWorker) process(ctx context.Context, message jetstream.Msg
 	}
 }
 
-func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg) error {
+func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg) (err error) {
 	if ctx.Err() != nil {
 		worker.nak(message)
 		return nil
@@ -283,7 +286,10 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		_ = message.Term()
 		return fmt.Errorf("terminate non-XSD request on XSD consumer: stage %q", request.Stage)
 	}
-	finishObservation := beginStageObservation(request, message, worker.now().UTC())
+	handledAt := worker.now().UTC()
+	ctx, processSpan := beginStageTrace(ctx, request, message, handledAt)
+	defer func() { observability.End(processSpan, err) }()
+	finishObservation := beginStageObservation(request, message, handledAt)
 	defer finishObservation()
 	authorize := worker.authorize
 	if worker.authorizeRequest != nil {
@@ -318,7 +324,7 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 			}
 			observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
 			recordSplitStagePublished(result, execution.RetryPolicy.MaxAttemptsFor(request.Stage))
-			logSplitStageResult(worker.logger, result, true)
+			logSplitStageResult(ctx, worker.logger, result, true)
 			if err := message.Ack(); err != nil {
 				return fmt.Errorf("ack XSD stage request %s: %w", request.RequestID, err)
 			}
@@ -344,7 +350,10 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		diagnostic = fmt.Sprintf("worker-xsd has no UBL 2.1 schema for document type %s", request.DocumentType)
 	} else {
 		validationErr := worker.withContent(attemptCtx, request.UploadID, func(reader io.Reader) error {
-			return worker.validate(attemptCtx, schemaPath, reader, worker.timeout)
+			validationCtx, validationSpan := beginStageOperation(attemptCtx, "stage.validator.execute", request)
+			err := worker.validate(validationCtx, schemaPath, reader, worker.timeout)
+			observability.End(validationSpan, err)
+			return err
 		})
 		if validationErr != nil {
 			if ctx.Err() != nil {
@@ -407,7 +416,7 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 	}
 	observeStageResultPublication(result.Stage, result.Outcome, publishedAt)
 	recordSplitStagePublished(result, execution.RetryPolicy.MaxAttemptsFor(request.Stage))
-	logSplitStageResult(worker.logger, result, false)
+	logSplitStageResult(ctx, worker.logger, result, false)
 	if err := message.Ack(); err != nil {
 		return fmt.Errorf("ack XSD stage request %s: %w", request.RequestID, err)
 	}
@@ -452,7 +461,9 @@ func (worker *xsdStageWorker) nak(message jetstream.Msg) {
 }
 
 func (worker *xsdStageWorker) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {
-	content, err := worker.queue.OpenUploadContent(ctx, uploadID)
+	fetchCtx, fetchSpan := observability.Tracer().Start(ctx, "stage.xml.fetch", trace.WithAttributes(attribute.String("upload.id", uploadID)))
+	content, err := worker.queue.OpenUploadContent(fetchCtx, uploadID)
+	observability.End(fetchSpan, err)
 	if err != nil {
 		return fmt.Errorf("%w: open upload content: %w", errValidationContentStream, err)
 	}

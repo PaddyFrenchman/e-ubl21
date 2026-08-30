@@ -21,7 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // maxUploadBytes bounds a single upload's request body. It is enforced
@@ -54,6 +57,14 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
+	ctx := observability.ExtractHTTP(r.Context(), r.Header)
+	ctx, span := observability.Tracer().Start(ctx, "api.upload.accept",
+		trace.WithSpanKind(trace.SpanKindServer),
+		trace.WithAttributes(attribute.String("http.request.method", r.Method), attribute.String("http.route", "/api/v1/ubl/upload")),
+	)
+	r = r.WithContext(ctx)
+	observability.InjectHTTP(ctx, w.Header())
+	defer span.End()
 
 	body, err := readUploadBody(w, r)
 	if err != nil {
@@ -100,6 +111,7 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to generate upload id"})
 		return
 	}
+	span.SetAttributes(attribute.String("upload.id", id))
 	receivedAt := time.Now().UTC()
 
 	// Persist intent first so every later partial failure is observable and

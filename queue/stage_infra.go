@@ -8,8 +8,11 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -221,10 +224,15 @@ func (c *Client) StageResultConsumer(ctx context.Context, stage ValidationLayer)
 
 // PublishStageRequest publishes one orchestrator-authorized attempt to the
 // exact stage queue using its deterministic request ID for broker deduplication.
-func (c *Client) PublishStageRequest(ctx context.Context, request StageRequest) error {
+func (c *Client) PublishStageRequest(ctx context.Context, request StageRequest) (err error) {
 	if err := request.Validate(); err != nil {
 		return err
 	}
+	ctx, span := observability.Tracer().Start(ctx, "queue.stage_request.publish",
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(stageRequestTraceAttributes(request)...),
+	)
+	defer func() { observability.End(span, err) }()
 	names, err := c.Namespace.StageQueue(request.Stage)
 	if err != nil {
 		return err
@@ -236,6 +244,7 @@ func (c *Client) PublishStageRequest(ctx context.Context, request StageRequest) 
 	message := nats.NewMsg(names.RequestSubject)
 	message.Data = payload
 	message.Header.Set(nats.MsgIdHdr, request.RequestID)
+	observability.InjectNATS(ctx, message.Header)
 	if _, err := c.JS.PublishMsg(ctx, message); err != nil {
 		return fmt.Errorf("publish stage request %s: %w", request.RequestID, err)
 	}
@@ -244,10 +253,25 @@ func (c *Client) PublishStageRequest(ctx context.Context, request StageRequest) 
 
 // PublishStageResult publishes immutable worker evidence to the exact result
 // queue using its deterministic result ID for broker deduplication.
-func (c *Client) PublishStageResult(ctx context.Context, result StageResult) error {
+func (c *Client) PublishStageResult(ctx context.Context, result StageResult) (err error) {
 	if err := result.Validate(); err != nil {
 		return err
 	}
+	ctx, span := observability.Tracer().Start(ctx, "queue.stage_result.publish",
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(
+			attribute.String("upload.id", result.UploadID),
+			attribute.String("validation.id", result.ValidationID),
+			attribute.Int64("validation.generation", int64(result.Generation)),
+			attribute.String("stage.name", string(result.Stage)),
+			attribute.Int64("stage.ordinal", int64(result.StageOrdinal)),
+			attribute.Int64("stage.attempt", int64(result.Attempt)),
+			attribute.String("stage.request_id", result.RequestID),
+			attribute.String("stage.result_id", result.ResultID),
+			attribute.String("stage.outcome", string(result.Outcome)),
+		),
+	)
+	defer func() { observability.End(span, err) }()
 	names, err := c.Namespace.StageQueue(result.Stage)
 	if err != nil {
 		return err
@@ -259,10 +283,23 @@ func (c *Client) PublishStageResult(ctx context.Context, result StageResult) err
 	message := nats.NewMsg(names.ResultSubject)
 	message.Data = payload
 	message.Header.Set(nats.MsgIdHdr, result.ResultID)
+	observability.InjectNATS(ctx, message.Header)
 	if _, err := c.JS.PublishMsg(ctx, message); err != nil {
 		return fmt.Errorf("publish stage result %s: %w", result.ResultID, err)
 	}
 	return nil
+}
+
+func stageRequestTraceAttributes(request StageRequest) []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("upload.id", request.UploadID),
+		attribute.String("validation.id", request.ValidationID),
+		attribute.Int64("validation.generation", int64(request.Generation)),
+		attribute.String("stage.name", string(request.Stage)),
+		attribute.Int64("stage.ordinal", int64(request.StageOrdinal)),
+		attribute.Int64("stage.attempt", int64(request.Attempt)),
+		attribute.String("stage.request_id", request.RequestID),
+	}
 }
 
 func validateStageQueueInfraConfig(config StageQueueInfraConfig) error {

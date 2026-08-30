@@ -739,6 +739,8 @@ Load on EN 16931 can increase EN replica count without changing XSD/API/orchestr
 
 # TODO-VALIDATION-SPLIT-013 — Add distributed tracing/correlation across stage events
 
+**Implementation contract:** [`docs/DISTRIBUTED-TRACING.md`](docs/DISTRIBUTED-TRACING.md)
+
 ## Goal
 
 Keep the now-distributed pipeline debuggable.
@@ -761,6 +763,13 @@ Keep the now-distributed pipeline debuggable.
 ## Acceptance criteria
 
 One upload can be followed end-to-end through all services and queue waits without relying on timestamp guessing.
+
+W3C trace context is propagated through HTTP and durable NATS headers without
+changing the immutable V1 stage payloads. OpenTelemetry spans cover API
+acceptance, queue publication/wait/consumption, XML stream acquisition,
+validator execution, orchestration transitions, and final publication. Only
+bounded routing and stable correlation identifiers are attributes; invoice
+content and baggage are excluded.
 
 ---
 

@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // DocumentWorkItem is the deliberately small payload carried by the
@@ -70,13 +73,18 @@ func (c *Client) PublishDocumentForValidationUpgrade(ctx context.Context, id, do
 	return c.publishDocument(ctx, id, documentType, receivedAt, id+":validation-contract-upgrade", false)
 }
 
-func (c *Client) publishDocument(ctx context.Context, id, documentType string, receivedAt time.Time, messageID string, replay bool) error {
+func (c *Client) publishDocument(ctx context.Context, id, documentType string, receivedAt time.Time, messageID string, replay bool) (err error) {
 	if !ValidID(id) {
 		return fmt.Errorf("invalid upload id %q", id)
 	}
 	if documentType == "" {
 		return fmt.Errorf("document type is required")
 	}
+	ctx, span := observability.Tracer().Start(ctx, "queue.document.publish",
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(attribute.String("upload.id", id)),
+	)
+	defer func() { observability.End(span, err) }()
 
 	item := DocumentWorkItem{
 		ID:           id,
@@ -94,6 +102,7 @@ func (c *Client) publishDocument(ctx context.Context, id, documentType string, r
 	msg.Header.Set(HeaderDocumentType, documentType)
 	msg.Header.Set(HeaderReceivedAt, item.ReceivedAt)
 	msg.Header.Set(nats.MsgIdHdr, messageID)
+	observability.InjectNATS(ctx, msg.Header)
 	if replay {
 		msg.Header.Set(HeaderReplayMessageID, messageID)
 	}

@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type failingUploadQueue struct {
@@ -22,6 +24,7 @@ type failingUploadQueue struct {
 	putContentCalls    int
 	deleteContentCalls int
 	publishCalls       int
+	publishTraceID     trace.TraceID
 	revision           uint64
 }
 
@@ -63,8 +66,9 @@ func (f *failingUploadQueue) DeleteUploadContent(context.Context, string) error 
 	f.deleteContentCalls++
 	return f.deleteContentErr
 }
-func (f *failingUploadQueue) PublishDocument(context.Context, string, string, time.Time) error {
+func (f *failingUploadQueue) PublishDocument(ctx context.Context, _ string, _ string, _ time.Time) error {
 	f.publishCalls++
+	f.publishTraceID = trace.SpanContextFromContext(ctx).TraceID()
 	return f.publishErr
 }
 
@@ -79,6 +83,29 @@ func runInjectedUpload(t *testing.T, q *failingUploadQueue) *httptest.ResponseRe
 	res := httptest.NewRecorder()
 	h.handleUpload(res, req)
 	return res
+}
+
+func TestUploadPropagatesRemoteTraceToQueueAndResponse(t *testing.T) {
+	q := &failingUploadQueue{}
+	h := &uploadHandlers{
+		catalog: &documentCatalog{entryByElement: map[string]schemaEntry{"Invoice": {namespace: "urn:test"}}},
+		queue:   q,
+	}
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/ubl/upload", strings.NewReader(`<Invoice xmlns="urn:test"/>`))
+	req.Header.Set("Content-Type", "application/xml")
+	req.Header.Set("Traceparent", "00-0102030405060708090a0b0c0d0e0f10-0102030405060708-01")
+	res := httptest.NewRecorder()
+
+	h.handleUpload(res, req)
+
+	want := trace.TraceID{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	if q.publishTraceID != want {
+		t.Fatalf("queue trace ID = %s, want %s", q.publishTraceID, want)
+	}
+	responseContext := observability.ExtractHTTP(context.Background(), res.Header())
+	if got := trace.SpanContextFromContext(responseContext).TraceID(); got != want {
+		t.Fatalf("response trace ID = %s, want %s", got, want)
+	}
 }
 
 func TestUploadAcceptanceFailureBoundaries(t *testing.T) {

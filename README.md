@@ -162,6 +162,11 @@ Validation orchestrator
 
 Each stage will consume a durable `StageRequest`, publish a durable `StageResult`, and scale independently. The orchestrator alone will own the validation plan and final document status.
 
+Distributed stage tracing uses OpenTelemetry and W3C Trace Context in durable
+NATS headers. See [`docs/DISTRIBUTED-TRACING.md`](docs/DISTRIBUTED-TRACING.md)
+for span names, safe attributes, queue/redelivery semantics, and OTLP export
+configuration.
+
 The shared version 1 wire models, deterministic per-attempt message IDs,
 fail-closed decoding, outcome semantics, and evidence bounds are frozen in
 [`docs/VALIDATION-STAGE-CONTRACTS.md`](docs/VALIDATION-STAGE-CONTRACTS.md).

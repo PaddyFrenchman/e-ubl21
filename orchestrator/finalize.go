@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // EnsureFinalResult claims any pre-#56 terminal state, derives a canonical
@@ -56,10 +58,13 @@ func (machine *Machine) EnsureFinalResult(ctx context.Context, current queue.Ver
 		return current, err
 	}
 	publishStarted := time.Now()
-	if err := machine.PublishValidationResult(ctx, result); err != nil {
+	publishCtx, publishSpan := startExecutionSpan(ctx, "orchestrator.final_result.publish", current.Execution, trace.WithSpanKind(trace.SpanKindProducer))
+	if err := machine.PublishValidationResult(publishCtx, result); err != nil {
+		observability.End(publishSpan, err)
 		orchestratorResultPublicationLatency.Observe(time.Since(publishStarted).Seconds())
 		return current, fmt.Errorf("publish validation result %s: %w", result.ResultID, err)
 	}
+	publishSpan.End()
 	orchestratorResultPublicationLatency.Observe(time.Since(publishStarted).Seconds())
 
 	for {

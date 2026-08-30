@@ -15,10 +15,13 @@ import (
 	"time"
 
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type WorkerConfig struct {
@@ -377,6 +380,9 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	ctx = observability.ExtractNATS(ctx, msg.Headers())
+	ctx, consumeSpan := observability.Tracer().Start(ctx, "queue.document.consume", trace.WithSpanKind(trace.SpanKindConsumer))
+	defer consumeSpan.End()
 	if ctx.Err() != nil {
 		w.deferForShutdown(msg, queue.DocumentWorkItem{})
 		return
@@ -389,6 +395,7 @@ func (w *documentWorker) handle(msg jetstream.Msg) {
 		_ = msg.Term()
 		return
 	}
+	consumeSpan.SetAttributes(attribute.String("upload.id", item.ID))
 
 	id := msg.Headers().Get(queue.HeaderUploadID)
 	documentType := w.queue.Namespace.DocumentTypeFromSubject(msg.Subject())

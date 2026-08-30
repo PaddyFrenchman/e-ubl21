@@ -1,9 +1,11 @@
 package server
 
 import (
+	"context"
 	"log/slog"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -83,8 +85,10 @@ func observeStageResultPublication(stage queue.ValidationLayer, outcome queue.St
 	stageResultPublicationLatency.WithLabelValues(string(stage), string(outcome)).Observe(time.Since(started).Seconds())
 }
 
-func logSplitStageResult(logger *slog.Logger, result queue.StageResult, recovered bool) {
+func logSplitStageResult(ctx context.Context, logger *slog.Logger, result queue.StageResult, recovered bool) {
+	traceID, spanID := observability.CorrelationFields(ctx)
 	logger.Info("validation stage request completed",
+		"trace_id", traceID, "span_id", spanID,
 		"upload_id", result.UploadID, "validation_id", result.ValidationID,
 		"generation", result.Generation, "request_id", result.RequestID,
 		"stage", result.Stage, "attempt", result.Attempt, "outcome", result.Outcome,

@@ -9,8 +9,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Machine advances exact validation execution generations under JetStream KV
@@ -44,6 +47,8 @@ func (machine *Machine) Start(ctx context.Context, intent queue.ValidationExecut
 	if err := machine.validatePlanTopology(execution); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
+	ctx, span := startExecutionSpan(ctx, "orchestrator.start", execution)
+	defer span.End()
 	if _, err := machine.Queue.CreateValidationExecution(ctx, execution); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
@@ -174,6 +179,8 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 	if err := resultMatchesExecution(result, current.Execution); err != nil {
 		return queue.VersionedValidationExecution{}, err
 	}
+	ctx, transitionSpan := startResultSpan(ctx, "orchestrator.stage_result.transition", result, trace.WithTimestamp(transitionStarted))
+	defer transitionSpan.End()
 	defer observeOrchestratorTransition("handle_stage_result", result.Stage, transitionStarted)
 	stageIndex := int(result.StageOrdinal - 1)
 	if stageIndex < len(current.Execution.Orchestration.Stages) {
@@ -292,6 +299,18 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 // that winner without rewriting history.
 func (machine *Machine) dispatchPending(ctx context.Context, current queue.VersionedValidationExecution, request queue.StageRequest) (queue.VersionedValidationExecution, error) {
 	transitionStarted := time.Now()
+	ctx, span := observability.Tracer().Start(ctx, "orchestrator.stage_request.queue",
+		trace.WithAttributes(
+			attribute.String("upload.id", request.UploadID),
+			attribute.String("validation.id", request.ValidationID),
+			attribute.Int64("validation.generation", int64(request.Generation)),
+			attribute.String("stage.name", string(request.Stage)),
+			attribute.Int64("stage.ordinal", int64(request.StageOrdinal)),
+			attribute.Int64("stage.attempt", int64(request.Attempt)),
+			attribute.String("stage.request_id", request.RequestID),
+		),
+	)
+	defer span.End()
 	defer observeOrchestratorTransition("dispatch_stage_request", request.Stage, transitionStarted)
 	if err := machine.PublishStageRequest(ctx, request); err != nil {
 		return current, err
@@ -333,6 +352,9 @@ func (machine *Machine) dispatchPending(ctx context.Context, current queue.Versi
 // failed transitions remain unacknowledged; success ACKs only after evidence,
 // state, and any next request publication complete.
 func (machine *Machine) HandleStageResultMessage(ctx context.Context, message jetstream.Msg) error {
+	ctx = observability.ExtractNATS(ctx, message.Headers())
+	ctx, consumeSpan := observability.Tracer().Start(ctx, "queue.stage_result.consume", trace.WithSpanKind(trace.SpanKindConsumer))
+	defer consumeSpan.End()
 	var result queue.StageResult
 	if err := json.Unmarshal(message.Data(), &result); err != nil {
 		return fmt.Errorf("decode stage result: %w", err)
