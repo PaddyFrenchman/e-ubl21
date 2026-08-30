@@ -60,9 +60,13 @@ the physical key.
 ## Idempotent lineage creation
 
 Generation 1 is created only from a durable `ValidationExecutionIntent`. Its
-`creationIntentId`, timestamp, upload, document type, requested profile, frozen
-plan, trigger, and optional predecessor are immutable command data. Every
-orchestrator replica handling a redelivery must use that same data.
+`creationIntentId`, upload, document type, requested profile, frozen plan,
+trigger, and optional predecessor are stable command data. The first successful
+writer freezes its observed command time as the generation's `createdAt`.
+Another orchestrator replica handling a redelivery may observe a different
+local time, but the same stable creation intent still converges on the existing
+generation and cannot replace its frozen `createdAt` or mutable orchestration
+state.
 
 The 128-bit validation ID is derived with a domain-separated SHA-256 digest:
 
