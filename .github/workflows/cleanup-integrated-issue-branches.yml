@@ -3,7 +3,7 @@ name: Cleanup integrated issue branches
 on:
   push:
     branches:
-      - main
+      - development
   issues:
     types:
       - closed
@@ -16,12 +16,12 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out main history
+      - name: Check out development history
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Delete closed issue branches already contained in main
+      - name: Delete closed issue branches already contained in development
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
@@ -29,7 +29,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          git fetch origin --prune main '+refs/heads/issue/*:refs/remotes/origin/issue/*'
+          git fetch origin --prune development '+refs/heads/issue/*:refs/remotes/origin/issue/*'
 
           deleted=0
           skipped=0
@@ -58,13 +58,13 @@ jobs:
               continue
             fi
 
-            if ! git merge-base --is-ancestor "refs/remotes/origin/$branch" refs/remotes/origin/main; then
-              echo "skip $branch: branch tip is not contained in main"
+            if ! git merge-base --is-ancestor "refs/remotes/origin/$branch" refs/remotes/origin/development; then
+              echo "skip $branch: branch tip is not contained in development"
               skipped=$((skipped + 1))
               continue
             fi
 
-            echo "delete $branch: issue #$issue_number is completed and branch is contained in main"
+            echo "delete $branch: issue #$issue_number is completed and branch is contained in development"
             git push origin --delete "$branch"
             deleted=$((deleted + 1))
           done
