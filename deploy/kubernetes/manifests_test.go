@@ -20,14 +20,19 @@ type objectKey struct {
 func TestWorkloadsAreIndependentAndOperationallyBounded(t *testing.T) {
 	objects := loadObjects(t)
 	wantArgs := map[string]string{
-		"e-ubl21-api":            "serve",
-		"e-ubl21-orchestrator":   "orchestrator",
-		"e-ubl21-worker-xsd":     "worker-xsd",
-		"e-ubl21-worker-en16931": "worker-en16931",
+		"e-ubl21-api":                     "serve",
+		"e-ubl21-orchestrator":            "orchestrator",
+		"e-ubl21-orchestrator-reconciler": "orchestrator",
+		"e-ubl21-worker-xsd":              "worker-xsd",
+		"e-ubl21-worker-en16931":          "worker-en16931",
+	}
+	autoscaled := map[string]bool{
+		"e-ubl21-api": true, "e-ubl21-orchestrator": true,
+		"e-ubl21-worker-xsd": true, "e-ubl21-worker-en16931": true,
 	}
 	for name, wantArg := range wantArgs {
 		deployment := requireObject(t, objects, "Deployment", name)
-		if _, configured := objectMap(t, deployment["spec"])["replicas"]; configured {
+		if _, configured := objectMap(t, deployment["spec"])["replicas"]; autoscaled[name] && configured {
 			t.Fatalf("Deployment/%s declares spec.replicas even though an autoscaler owns it", name)
 		}
 		container := firstContainer(t, deployment)
@@ -44,6 +49,13 @@ func TestWorkloadsAreIndependentAndOperationallyBounded(t *testing.T) {
 		if len(objectMap(t, resources["requests"])) == 0 || len(objectMap(t, resources["limits"])) == 0 {
 			t.Fatalf("Deployment/%s resources must contain requests and limits", name)
 		}
+	}
+	reconciler := requireObject(t, objects, "Deployment", "e-ubl21-orchestrator-reconciler")
+	if replicas := intValue(t, nested(t, reconciler, "spec", "replicas")); replicas != 1 {
+		t.Fatalf("reconciler replicas = %d, want exactly 1", replicas)
+	}
+	if strategy := stringValue(t, nested(t, reconciler, "spec", "strategy", "type")); strategy != "Recreate" {
+		t.Fatalf("reconciler rollout strategy = %q, want Recreate to prevent scanner surge", strategy)
 	}
 
 	xsdEnv := environment(t, firstContainer(t, requireObject(t, objects, "Deployment", "e-ubl21-worker-xsd")))
@@ -80,6 +92,25 @@ func TestResourceMetricsDependencyIsDocumented(t *testing.T) {
 	}
 }
 
+func TestKustomizationIncludesSingletonReconciler(t *testing.T) {
+	file, err := os.Open("kustomization.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+	var kustomization map[string]any
+	if err := yaml.NewDecoder(file).Decode(&kustomization); err != nil {
+		t.Fatal(err)
+	}
+	resources := stringSlice(t, kustomization["resources"])
+	for _, resource := range resources {
+		if resource == "orchestrator-reconciler.yaml" {
+			return
+		}
+	}
+	t.Fatal("kustomization does not include orchestrator-reconciler.yaml")
+}
+
 func TestStageAutoscalersUseDifferentJetStreamConsumers(t *testing.T) {
 	objects := loadObjects(t)
 	xsd := requireObject(t, objects, "ScaledObject", "e-ubl21-worker-xsd")
@@ -106,7 +137,29 @@ func TestStageAutoscalersUseDifferentJetStreamConsumers(t *testing.T) {
 		t.Fatalf("API HPA target = %q", got)
 	}
 	orchestrator := requireObject(t, objects, "ScaledObject", "e-ubl21-orchestrator")
-	assertScaleTarget(t, orchestrator, "e-ubl21-orchestrator", 1, 10)
+	assertScaleTarget(t, orchestrator, "e-ubl21-orchestrator", 0, 10)
+}
+
+func TestOnlySingletonOrchestratorRunsFullHistoryReconciliation(t *testing.T) {
+	objects := loadObjects(t)
+	consumer := requireObject(t, objects, "Deployment", "e-ubl21-orchestrator")
+	reconciler := requireObject(t, objects, "Deployment", "e-ubl21-orchestrator-reconciler")
+	assertEnv(t, environment(t, firstContainer(t, consumer)), "EUBL21_ORCHESTRATOR_ROLE", "consumer")
+	assertEnv(t, environment(t, firstContainer(t, reconciler)), "EUBL21_ORCHESTRATOR_ROLE", "reconciler")
+	if replicas := intValue(t, nested(t, reconciler, "spec", "replicas")); replicas != 1 {
+		t.Fatalf("reconciler replicas = %d, want 1", replicas)
+	}
+	if strategy := stringValue(t, nested(t, reconciler, "spec", "strategy", "type")); strategy != "Recreate" {
+		t.Fatalf("reconciler rollout strategy = %q, want Recreate", strategy)
+	}
+	for key, object := range objects {
+		if key.kind != "ScaledObject" {
+			continue
+		}
+		if target := stringValue(t, nested(t, object, "spec", "scaleTargetRef", "name")); target == "e-ubl21-orchestrator-reconciler" {
+			t.Fatalf("ScaledObject/%s scales the full-history reconciler", key.name)
+		}
+	}
 }
 
 func TestProvisionerOwnsIndependentConsumerDeliverySettings(t *testing.T) {
@@ -131,7 +184,7 @@ func TestProvisionerOwnsIndependentConsumerDeliverySettings(t *testing.T) {
 		}
 	}
 	sort.Strings(pdbs)
-	if want := []string{"e-ubl21-api", "e-ubl21-orchestrator"}; !reflect.DeepEqual(pdbs, want) {
+	if want := []string{"e-ubl21-api"}; !reflect.DeepEqual(pdbs, want) {
 		t.Fatalf("PodDisruptionBudgets = %v, want %v", pdbs, want)
 	}
 }

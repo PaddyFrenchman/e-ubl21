@@ -1,9 +1,10 @@
 # Independent Kubernetes validation workloads
 
 This Kustomize base is the operational topology for issue #59. It deploys the
-API, orchestrator, XSD worker, and EN 16931 worker as separate Deployments from
-one immutable application image. Peppol will add another worker Deployment
-without changing these roles.
+API, autoscaled orchestrator result consumers, a singleton orchestrator
+reconciler, XSD workers, and EN 16931 workers as separate Deployments from one
+immutable application image. Peppol will add another worker Deployment without
+changing these roles.
 
 The base assumes that the namespace can resolve `nats` on ports 4222 (client)
 and 8222 (monitoring), KEDA 2.20 or compatible is installed, the
@@ -53,7 +54,8 @@ kubectl -n e-ubl21 wait --for=condition=complete job/e-ubl21-provision --timeout
 | Role | Replicas/scaler | Concurrency | Prefetch | Timeout | AckWait | Initial resources |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | API | HPA 2–10 | HTTP server | n/a | HTTP limits | n/a | 100m CPU / 128Mi |
-| Orchestrator | KEDA 1–10 | one loop per result stream | 8 per stage | reconciliation 10s | stage result consumer | 100m CPU / 128Mi |
+| Orchestrator consumers | KEDA 0–10 | one loop per result stream | 8 per stage | n/a | stage result consumer | 100m CPU / 128Mi |
+| Orchestrator reconciler | fixed 1 | two repair loops | n/a | reconciliation 10s | n/a | 100m CPU / 128Mi |
 | XSD | KEDA 0–20 | 2 | 2 | 30s | 90s | 250m CPU / 256Mi |
 | EN 16931 | KEDA 0–30 | 1 | 1 | 45s | 120s | 500m CPU / 768Mi |
 
@@ -61,6 +63,17 @@ The XSD and EN `ScaledObject` resources watch different JetStream streams and
 durable consumers. Increasing EN backlog therefore changes only EN replicas.
 CPU is a secondary signal. API scaling uses CPU/memory because it has no stage
 queue, while orchestrator scaling watches both result queues.
+
+The autoscaled orchestrator Deployment runs with
+`EUBL21_ORCHESTRATOR_ROLE=consumer`: it consumes and applies stage results but
+does not run either full-history repair scan. A separate Deployment runs with
+`EUBL21_ORCHESTRATOR_ROLE=reconciler` and exactly one replica. It alone repairs
+pending stage dispatches and final-result publications every 10 seconds. This
+keeps result-consumption throughput independently scalable without multiplying
+the current KV history scans. The default CLI role remains `combined` for
+non-Kubernetes and transitional deployments. Replacing the scans with a durable
+pending-work index is a possible later optimization, not a requirement for
+safe horizontal result consumption.
 
 All autoscaler-managed Deployments deliberately omit `spec.replicas`, so
 reapplying the manifests cannot reset a replica count currently owned by HPA or
@@ -95,10 +108,13 @@ maximum replica count. Oldest-request age remains an operator alarm and a
 reason to lower the lag target or raise the maximum—it must not be hidden by a
 healthy CPU signal.
 
-Validator Deployments deliberately have no PodDisruptionBudget because they
-can scale to zero and unacknowledged work is durable. API and orchestrator use
-PDBs to preserve request admission and plan advancement during voluntary node
-maintenance.
+Validator and orchestrator Deployments deliberately have no
+[PodDisruptionBudget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
+because queued/unacknowledged work and pending outbox state are durable. This
+permits voluntary node drains even when a role currently has one replica;
+Kubernetes recreates the singleton reconciler and its repair loops resume. The
+API retains `minAvailable: 1` because its HPA minimum is two and the service
+should continue admitting requests during voluntary maintenance.
 
 This base defines the post-split workloads but does not authorize switching an
 existing installation from the combined worker. In particular, applying it is

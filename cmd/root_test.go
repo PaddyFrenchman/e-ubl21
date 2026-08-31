@@ -147,7 +147,7 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	if cfg.ENWorkerMetricsAddr != ":9093" || cfg.ENWorkerValidationTimeout != 30*time.Second || cfg.ENWorkerConcurrency != 1 || cfg.ENWorkerPrefetch != 1 || cfg.ENWorkerProgressInterval != 20*time.Second || cfg.ENWorkerJavaExecutable != "java" || cfg.ENWorkerSaxonStartupTimeout != 30*time.Second {
 		t.Fatalf("default worker-en16931 config = %+v", cfg)
 	}
-	if cfg.OrchestratorMetricsAddr != ":9094" || cfg.OrchestratorResultPrefetch != 8 || cfg.OrchestratorReconcileInterval != 10*time.Second {
+	if cfg.OrchestratorMetricsAddr != ":9094" || cfg.OrchestratorRole != "combined" || cfg.OrchestratorResultPrefetch != 8 || cfg.OrchestratorReconcileInterval != 10*time.Second {
 		t.Fatalf("default orchestrator config = %+v", cfg)
 	}
 	if cfg.StageXSDAckWait != 90*time.Second || cfg.StageXSDMaxAckPending != 64 || cfg.StageENAckWait != 120*time.Second || cfg.StageENMaxAckPending != 32 || cfg.StagePeppolAckWait != 120*time.Second || cfg.StagePeppolMaxAckPending != 32 {
@@ -159,6 +159,7 @@ func TestLoadConfigReadsIndependentOrchestratorAndStageProvisioningSettings(t *t
 	v := viper.New()
 	configureViper(v)
 	t.Setenv("EUBL21_ORCHESTRATOR_METRICS_ADDR", ":9494")
+	t.Setenv("EUBL21_ORCHESTRATOR_ROLE", "reconciler")
 	t.Setenv("EUBL21_ORCHESTRATOR_RESULT_PREFETCH", "17")
 	t.Setenv("EUBL21_ORCHESTRATOR_RECONCILE_INTERVAL", "3s")
 	t.Setenv("EUBL21_STAGE_XSD_ACK_WAIT", "41s")
@@ -172,7 +173,7 @@ func TestLoadConfigReadsIndependentOrchestratorAndStageProvisioningSettings(t *t
 	if err := loadConfig(v, cfg); err != nil {
 		t.Fatal(err)
 	}
-	if cfg.OrchestratorMetricsAddr != ":9494" || cfg.OrchestratorResultPrefetch != 17 || cfg.OrchestratorReconcileInterval != 3*time.Second {
+	if cfg.OrchestratorMetricsAddr != ":9494" || cfg.OrchestratorRole != "reconciler" || cfg.OrchestratorResultPrefetch != 17 || cfg.OrchestratorReconcileInterval != 3*time.Second {
 		t.Fatalf("orchestrator settings = %+v", cfg)
 	}
 	if cfg.StageXSDAckWait != 41*time.Second || cfg.StageXSDMaxAckPending != 19 || cfg.StageENAckWait != 73*time.Second || cfg.StageENMaxAckPending != 11 || cfg.StagePeppolAckWait != 89*time.Second || cfg.StagePeppolMaxAckPending != 7 {

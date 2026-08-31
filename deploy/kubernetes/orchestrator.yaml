@@ -44,6 +44,8 @@ spec:
               value: e-ubl21-orchestrator
             - name: EUBL21_ORCHESTRATOR_METRICS_ADDR
               value: :9094
+            - name: EUBL21_ORCHESTRATOR_ROLE
+              value: consumer
             - name: EUBL21_ORCHESTRATOR_RESULT_PREFETCH
               value: "8"
             - name: EUBL21_ORCHESTRATOR_RECONCILE_INTERVAL

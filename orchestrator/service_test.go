@@ -19,9 +19,35 @@ func TestResolveServiceConfigDefaultsAndRejectsInvalidLimits(t *testing.T) {
 	if cfg.ResultPrefetch != defaultResultPrefetch || cfg.ReconciliationInterval != defaultReconciliationInterval || cfg.Logger == nil {
 		t.Fatalf("resolved config = %+v", cfg)
 	}
+	if cfg.Role != ServiceRoleCombined {
+		t.Fatalf("default role = %q, want %q", cfg.Role, ServiceRoleCombined)
+	}
 	for _, input := range []ServiceConfig{{ResultPrefetch: -1}, {ReconciliationInterval: -time.Second}} {
 		if _, err := resolveServiceConfig(input); err == nil {
 			t.Fatalf("resolveServiceConfig(%+v) unexpectedly succeeded", input)
+		}
+	}
+	if _, err := resolveServiceConfig(ServiceConfig{Role: "leaderish"}); err == nil {
+		t.Fatal("invalid orchestrator role unexpectedly succeeded")
+	}
+}
+
+func TestServiceRolesKeepScaledConsumersSeparateFromHistoryScans(t *testing.T) {
+	tests := []struct {
+		role       ServiceRole
+		consumes   bool
+		reconciles bool
+	}{
+		{role: ServiceRoleCombined, consumes: true, reconciles: true},
+		{role: ServiceRoleConsumer, consumes: true, reconciles: false},
+		{role: ServiceRoleReconciler, consumes: false, reconciles: true},
+	}
+	for _, test := range tests {
+		if got := test.role.consumesResults(); got != test.consumes {
+			t.Fatalf("role %q consumesResults = %t, want %t", test.role, got, test.consumes)
+		}
+		if got := test.role.runsReconciliation(); got != test.reconciles {
+			t.Fatalf("role %q runsReconciliation = %t, want %t", test.role, got, test.reconciles)
 		}
 	}
 }
@@ -67,7 +93,7 @@ func TestRunServiceOpensProvisionedConsumersAndStops(t *testing.T) {
 	runCtx, cancel := context.WithCancel(ctx)
 	done := make(chan error, 1)
 	go func() {
-		done <- RunService(runCtx, ServiceConfig{queueClient: client, MetricsAddr: ""})
+		done <- RunService(runCtx, ServiceConfig{queueClient: client, MetricsAddr: "", Role: ServiceRoleConsumer})
 	}()
 	consumer, err := client.StageResultConsumer(ctx, queue.ValidationLayerUBL21XSD)
 	if err != nil {
@@ -95,5 +121,37 @@ func TestRunServiceOpensProvisionedConsumersAndStops(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("orchestrator did not stop after cancellation")
+	}
+}
+
+func TestReconcilerRoleDoesNotOpenStageConsumers(t *testing.T) {
+	server := queuetest.StartServer(t)
+	client, err := queue.ConnectWithOptions(server.URL, queue.DefaultNamespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.Close)
+	if err := client.ProvisionValidationExecutionInfra(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- RunService(runCtx, ServiceConfig{queueClient: client, MetricsAddr: "", Role: ServiceRoleReconciler, ReconciliationInterval: 10 * time.Millisecond})
+	}()
+	select {
+	case err := <-done:
+		t.Fatalf("reconciler stopped before cancellation: %v", err)
+	case <-time.After(50 * time.Millisecond):
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("reconciler did not stop after cancellation")
 	}
 }

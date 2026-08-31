@@ -19,6 +19,7 @@ func TestOrchestratorStartsAndStopsOnContextCancellation(t *testing.T) {
 	}
 	cfg := &Config{
 		OrchestratorMetricsAddr:       ":9494",
+		OrchestratorRole:              "consumer",
 		OrchestratorResultPrefetch:    13,
 		OrchestratorReconcileInterval: 4 * time.Second,
 	}
@@ -27,7 +28,7 @@ func TestOrchestratorStartsAndStopsOnContextCancellation(t *testing.T) {
 	go func() { done <- orchestratorService(ctx, cfg) }()
 	select {
 	case received := <-started:
-		if received.MetricsAddr != ":9494" || received.ResultPrefetch != 13 || received.ReconciliationInterval != 4*time.Second {
+		if received.MetricsAddr != ":9494" || received.Role != orchestrator.ServiceRoleConsumer || received.ResultPrefetch != 13 || received.ReconciliationInterval != 4*time.Second {
 			t.Fatalf("orchestrator config = %+v", received)
 		}
 	case <-time.After(time.Second):

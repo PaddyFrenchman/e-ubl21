@@ -20,6 +20,26 @@ const (
 	defaultReconciliationInterval = 10 * time.Second
 )
 
+// ServiceRole controls which independently scalable orchestration duties run
+// in one process. Combined preserves the non-Kubernetes/default behavior;
+// Kubernetes separates consumers from the singleton history-scanning repair
+// role so scaling result throughput cannot multiply reconciliation scans.
+type ServiceRole string
+
+const (
+	ServiceRoleCombined   ServiceRole = "combined"
+	ServiceRoleConsumer   ServiceRole = "consumer"
+	ServiceRoleReconciler ServiceRole = "reconciler"
+)
+
+func (role ServiceRole) consumesResults() bool {
+	return role == ServiceRoleCombined || role == ServiceRoleConsumer
+}
+
+func (role ServiceRole) runsReconciliation() bool {
+	return role == ServiceRoleCombined || role == ServiceRoleReconciler
+}
+
 // ServiceConfig configures the independently deployable orchestration role.
 // Broker topology remains deployer-owned; the service verifies and consumes
 // existing resources without creating or changing them.
@@ -30,12 +50,21 @@ type ServiceConfig struct {
 	MetricsAddr            string
 	ResultPrefetch         int
 	ReconciliationInterval time.Duration
+	Role                   ServiceRole
 	Logger                 *slog.Logger
 
 	queueClient *queue.Client
 }
 
 func resolveServiceConfig(cfg ServiceConfig) (ServiceConfig, error) {
+	if cfg.Role == "" {
+		cfg.Role = ServiceRoleCombined
+	}
+	switch cfg.Role {
+	case ServiceRoleCombined, ServiceRoleConsumer, ServiceRoleReconciler:
+	default:
+		return ServiceConfig{}, fmt.Errorf("invalid orchestrator role %q: want combined, consumer, or reconciler", cfg.Role)
+	}
 	if cfg.ResultPrefetch == 0 {
 		cfg.ResultPrefetch = defaultResultPrefetch
 	}
@@ -54,8 +83,8 @@ func resolveServiceConfig(cfg ServiceConfig) (ServiceConfig, error) {
 	return cfg, nil
 }
 
-// RunService consumes XSD and EN 16931 StageResults and continuously repairs
-// durable request/final-result outboxes until ctx is canceled.
+// RunService performs the result-consumer and/or reconciliation duties selected
+// by ServiceConfig.Role until ctx is canceled.
 func RunService(ctx context.Context, raw ServiceConfig) error {
 	cfg, err := resolveServiceConfig(raw)
 	if err != nil {
@@ -77,7 +106,10 @@ func RunService(ctx context.Context, raw ServiceConfig) error {
 		return fmt.Errorf("orchestrator verify execution infrastructure: %w", err)
 	}
 
-	stages := []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931}
+	stages := make([]queue.ValidationLayer, 0, 2)
+	if cfg.Role.consumesResults() {
+		stages = append(stages, queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931)
+	}
 	consumers := make([]jetstream.Consumer, 0, len(stages))
 	for _, stage := range stages {
 		consumer, consumerErr := client.StageResultConsumer(ctx, stage)
@@ -120,37 +152,39 @@ func RunService(ctx context.Context, raw ServiceConfig) error {
 			}
 		}()
 	}
-	workers.Add(2)
-	go func() {
-		defer workers.Done()
-		reconcileErr := machine.RunDispatchReconciler(runCtx, cfg.ReconciliationInterval, func(report DispatchReconcileReport, reconcileErr error) {
+	if cfg.Role.runsReconciliation() {
+		workers.Add(2)
+		go func() {
+			defer workers.Done()
+			reconcileErr := machine.RunDispatchReconciler(runCtx, cfg.ReconciliationInterval, func(report DispatchReconcileReport, reconcileErr error) {
+				if reconcileErr != nil {
+					cfg.Logger.Error("orchestrator dispatch reconciliation failed", "error", reconcileErr, "scanned", report.Scanned, "reconciled", report.Reconciled)
+				}
+			})
 			if reconcileErr != nil {
-				cfg.Logger.Error("orchestrator dispatch reconciliation failed", "error", reconcileErr, "scanned", report.Scanned, "reconciled", report.Reconciled)
+				select {
+				case errCh <- fmt.Errorf("orchestrator dispatch reconciler: %w", reconcileErr):
+				case <-runCtx.Done():
+				}
 			}
-		})
-		if reconcileErr != nil {
-			select {
-			case errCh <- fmt.Errorf("orchestrator dispatch reconciler: %w", reconcileErr):
-			case <-runCtx.Done():
-			}
-		}
-	}()
-	go func() {
-		defer workers.Done()
-		reconcileErr := machine.RunFinalResultReconciler(runCtx, cfg.ReconciliationInterval, func(report FinalResultReconcileReport, reconcileErr error) {
+		}()
+		go func() {
+			defer workers.Done()
+			reconcileErr := machine.RunFinalResultReconciler(runCtx, cfg.ReconciliationInterval, func(report FinalResultReconcileReport, reconcileErr error) {
+				if reconcileErr != nil {
+					cfg.Logger.Error("orchestrator final-result reconciliation failed", "error", reconcileErr, "scanned", report.Scanned, "reconciled", report.Reconciled)
+				}
+			})
 			if reconcileErr != nil {
-				cfg.Logger.Error("orchestrator final-result reconciliation failed", "error", reconcileErr, "scanned", report.Scanned, "reconciled", report.Reconciled)
+				select {
+				case errCh <- fmt.Errorf("orchestrator final-result reconciler: %w", reconcileErr):
+				case <-runCtx.Done():
+				}
 			}
-		})
-		if reconcileErr != nil {
-			select {
-			case errCh <- fmt.Errorf("orchestrator final-result reconciler: %w", reconcileErr):
-			case <-runCtx.Done():
-			}
-		}
-	}()
+		}()
+	}
 
-	cfg.Logger.Info("orchestrator started", "queueNamespace", cfg.QueueNamespace.String(), "resultPrefetch", cfg.ResultPrefetch, "reconciliationInterval", cfg.ReconciliationInterval)
+	cfg.Logger.Info("orchestrator started", "role", cfg.Role, "queueNamespace", cfg.QueueNamespace.String(), "resultPrefetch", cfg.ResultPrefetch, "reconciliationInterval", cfg.ReconciliationInterval)
 	select {
 	case <-ctx.Done():
 		cancel()

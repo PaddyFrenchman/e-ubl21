@@ -7,6 +7,7 @@ resources:
   - provision-job.yaml
   - api.yaml
   - orchestrator.yaml
+  - orchestrator-reconciler.yaml
   - worker-xsd.yaml
   - worker-en16931.yaml
   - disruption-budgets.yaml

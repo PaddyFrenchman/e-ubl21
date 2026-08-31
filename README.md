@@ -431,9 +431,14 @@ Then run the independent result consumer and reconciliation loops:
 ```bash
 go run . orchestrator \
   --nats-url nats://localhost:4222 \
+  --orchestrator-role combined \
   --orchestrator-result-prefetch 8 \
   --orchestrator-reconcile-interval 10s
 ```
+
+Kubernetes runs `--orchestrator-role consumer` in the autoscaled result-reader
+Deployment and `--orchestrator-role reconciler` in one fixed repair Deployment,
+so adding result consumers never multiplies full-history reconciliation scans.
 
 The migration from the combined worker remains a separate stop/drain and
 legacy-pending reconciliation step tracked by issue #61.

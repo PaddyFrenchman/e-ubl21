@@ -71,6 +71,7 @@ type Config struct {
 	ENWorkerXSLTPath               string
 	ENWorkerSaxonStartupTimeout    time.Duration
 	OrchestratorMetricsAddr        string
+	OrchestratorRole               string
 	OrchestratorResultPrefetch     int
 	OrchestratorReconcileInterval  time.Duration
 	StageXSDAckWait                time.Duration
@@ -217,6 +218,7 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-en16931-java-executable", "java")
 	v.SetDefault("worker-en16931-saxon-startup-timeout", 30*time.Second)
 	v.SetDefault("orchestrator-metrics-addr", ":9094")
+	v.SetDefault("orchestrator-role", "combined")
 	v.SetDefault("orchestrator-result-prefetch", 8)
 	v.SetDefault("orchestrator-reconcile-interval", 10*time.Second)
 	v.SetDefault("stage-xsd-ack-wait", 90*time.Second)
@@ -304,6 +306,7 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.ENWorkerXSLTPath = v.GetString("worker-en16931-runtime-xslt-path")
 	cfg.ENWorkerSaxonStartupTimeout = v.GetDuration("worker-en16931-saxon-startup-timeout")
 	cfg.OrchestratorMetricsAddr = v.GetString("orchestrator-metrics-addr")
+	cfg.OrchestratorRole = v.GetString("orchestrator-role")
 	cfg.OrchestratorResultPrefetch = v.GetInt("orchestrator-result-prefetch")
 	cfg.OrchestratorReconcileInterval = v.GetDuration("orchestrator-reconcile-interval")
 	cfg.StageXSDAckWait = v.GetDuration("stage-xsd-ack-wait")
