@@ -21,9 +21,10 @@ const (
 type DeploymentMode string
 
 const (
-	DeploymentModeLegacy   DeploymentMode = "legacy"
-	DeploymentModeDraining DeploymentMode = "draining"
-	DeploymentModeSplit    DeploymentMode = "split"
+	DeploymentModeLegacy     DeploymentMode = "legacy"
+	DeploymentModeDraining   DeploymentMode = "draining"
+	DeploymentModeActivating DeploymentMode = "activating"
+	DeploymentModeSplit      DeploymentMode = "split"
 )
 
 var (
@@ -56,7 +57,7 @@ func (state DeploymentGeneration) Validate() error {
 		return errors.New("deployment generation must be at least 1")
 	}
 	switch state.Mode {
-	case DeploymentModeLegacy, DeploymentModeDraining, DeploymentModeSplit:
+	case DeploymentModeLegacy, DeploymentModeDraining, DeploymentModeActivating, DeploymentModeSplit:
 	default:
 		return fmt.Errorf("unsupported deployment mode %q", state.Mode)
 	}
@@ -129,7 +130,8 @@ func (c *Client) TransitionDeploymentMode(ctx context.Context, current Versioned
 		return VersionedDeploymentGeneration{}, errors.New("invalid current deployment generation")
 	}
 	legal := current.State.Mode == DeploymentModeLegacy && nextMode == DeploymentModeDraining ||
-		current.State.Mode == DeploymentModeDraining && (nextMode == DeploymentModeLegacy || nextMode == DeploymentModeSplit)
+		current.State.Mode == DeploymentModeDraining && (nextMode == DeploymentModeLegacy || nextMode == DeploymentModeActivating) ||
+		current.State.Mode == DeploymentModeActivating && nextMode == DeploymentModeSplit
 	if !legal {
 		return VersionedDeploymentGeneration{}, fmt.Errorf("illegal deployment mode transition %q -> %q", current.State.Mode, nextMode)
 	}
@@ -181,8 +183,8 @@ func (c *Client) RequireLegacyDeployment(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if current.State.Mode == DeploymentModeSplit {
-		return errors.New("legacy combined worker is disabled after split deployment activation")
+	if current.State.Mode == DeploymentModeActivating || current.State.Mode == DeploymentModeSplit {
+		return fmt.Errorf("legacy combined worker is disabled in deployment mode %q", current.State.Mode)
 	}
 	return nil
 }

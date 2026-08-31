@@ -96,6 +96,9 @@ func migrationTransition(ctx context.Context, output io.Writer, cfg *Config, tar
 	if target == queue.DeploymentModeLegacy && current.State.Mode == queue.DeploymentModeSplit {
 		return errors.New("split activation is forward-only; the legacy combined worker cannot interpret split execution state")
 	}
+	if target == queue.DeploymentModeLegacy && current.State.Mode == queue.DeploymentModeActivating {
+		return errors.New("activation reconciliation has begun and is forward-only; repair the reported error and resume activation")
+	}
 	next, err := client.TransitionDeploymentMode(ctx, current, target, time.Now())
 	if err != nil {
 		return err
@@ -116,8 +119,8 @@ func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consu
 	if current.State.Mode == queue.DeploymentModeSplit {
 		return writeMigrationOutput(output, migrationOutput{State: current.State})
 	}
-	if current.State.Mode != queue.DeploymentModeDraining {
-		return fmt.Errorf("split activation requires deployment mode %q, found %q", queue.DeploymentModeDraining, current.State.Mode)
+	if current.State.Mode != queue.DeploymentModeDraining && current.State.Mode != queue.DeploymentModeActivating {
+		return fmt.Errorf("split activation requires deployment mode %q or %q, found %q", queue.DeploymentModeDraining, queue.DeploymentModeActivating, current.State.Mode)
 	}
 	drain, err := client.InspectLegacyDrain(ctx, consumer)
 	if err != nil {
@@ -132,6 +135,12 @@ func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consu
 	for _, stage := range []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931} {
 		if _, err := client.VerifyStageWorkerInfra(ctx, stage); err != nil {
 			return fmt.Errorf("verify %s stage infrastructure: %w", stage, err)
+		}
+	}
+	if current.State.Mode == queue.DeploymentModeDraining {
+		current, err = client.TransitionDeploymentMode(ctx, current, queue.DeploymentModeActivating, time.Now())
+		if err != nil {
+			return fmt.Errorf("claim forward-only activation reconciliation: %w", err)
 		}
 	}
 	reconciliation, err := server.MigrateLegacyPendingUploads(ctx, client)
@@ -151,7 +160,7 @@ func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consu
 	if err != nil {
 		return fmt.Errorf("reload deployment generation after reconciliation: %w", err)
 	}
-	if current.State.Mode != queue.DeploymentModeDraining {
+	if current.State.Mode != queue.DeploymentModeActivating {
 		return fmt.Errorf("deployment mode changed during reconciliation: found %q", current.State.Mode)
 	}
 	next, err := client.TransitionDeploymentMode(ctx, current, queue.DeploymentModeSplit, time.Now())

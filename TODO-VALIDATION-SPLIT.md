@@ -799,7 +799,8 @@ Move from the monolithic worker to asynchronous stages without duplicate or mixe
 Migration cannot create a document marked `valid` under the new model with missing stage evidence.
 
 The namespace-scoped deployment marker enforces the forward cutover from
-`legacy` through `draining` to `split`. Admission pauses during drain,
+`legacy` through `draining` and forward-only `activating` to `split`.
+Admission pauses during drain,
 activation requires an idle legacy stream/consumer, and ambiguous pending
 records restart from the first stage of a complete frozen plan. Terminal
 records are preserved and rollback to the combined worker is prohibited after

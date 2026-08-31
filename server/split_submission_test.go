@@ -73,6 +73,7 @@ func TestApplicationMigrationModesControlAdmissionAndDispatch(t *testing.T) {
 		wantExec   int
 	}{
 		{name: "draining", mode: queue.DeploymentModeDraining, wantStatus: http.StatusServiceUnavailable},
+		{name: "activating", mode: queue.DeploymentModeActivating, wantStatus: http.StatusServiceUnavailable},
 		{name: "split", mode: queue.DeploymentModeSplit, wantStatus: http.StatusAccepted, wantExec: 1},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -98,6 +99,12 @@ func TestApplicationMigrationModesControlAdmissionAndDispatch(t *testing.T) {
 			current, err := seed.TransitionDeploymentMode(ctx, legacy, queue.DeploymentModeDraining, time.Now())
 			if err != nil {
 				t.Fatal(err)
+			}
+			if test.mode == queue.DeploymentModeActivating || test.mode == queue.DeploymentModeSplit {
+				current, err = seed.TransitionDeploymentMode(ctx, current, queue.DeploymentModeActivating, time.Now())
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 			if test.mode == queue.DeploymentModeSplit {
 				current, err = seed.TransitionDeploymentMode(ctx, current, queue.DeploymentModeSplit, time.Now())
@@ -149,7 +156,11 @@ func TestSplitCanonicalResultProjectsToUploadStatusAndRetention(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeSplit, time.Now()); err != nil {
+	activating, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeActivating, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.TransitionDeploymentMode(ctx, activating, queue.DeploymentModeSplit, time.Now()); err != nil {
 		t.Fatal(err)
 	}
 

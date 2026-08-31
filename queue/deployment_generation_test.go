@@ -46,11 +46,21 @@ func TestDeploymentGenerationTransitionsAreDurableAndForwardOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	split, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeSplit, time.Now())
+	activating, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeActivating, time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if split.State.Generation != 5 || split.State.Mode != queue.DeploymentModeSplit {
+	if err := client.RequireLegacyDeployment(ctx); err == nil {
+		t.Fatal("legacy runtime accepted activating deployment")
+	}
+	if _, err := client.TransitionDeploymentMode(ctx, activating, queue.DeploymentModeLegacy, time.Now()); err == nil {
+		t.Fatal("activating deployment rolled back to legacy")
+	}
+	split, err := client.TransitionDeploymentMode(ctx, activating, queue.DeploymentModeSplit, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if split.State.Generation != 6 || split.State.Mode != queue.DeploymentModeSplit {
 		t.Fatalf("split generation = %+v", split.State)
 	}
 	if err := client.RequireSplitDeployment(ctx); err != nil {

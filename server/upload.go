@@ -114,7 +114,7 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "validation deployment state is unavailable"})
 			return
 		}
-		if mode == queue.DeploymentModeDraining {
+		if mode == queue.DeploymentModeDraining || mode == queue.DeploymentModeActivating {
 			recordUploadOutcome("migration_draining")
 			w.Header().Set("Retry-After", "30")
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "validation deployment is draining for migration; retry later"})

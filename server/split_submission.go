@@ -77,7 +77,7 @@ func dispatchAcceptedUpload(ctx context.Context, client *queue.Client, record qu
 	switch mode {
 	case queue.DeploymentModeLegacy:
 		return client.PublishDocument(ctx, record.ID, record.DocumentType, receivedAt)
-	case queue.DeploymentModeDraining:
+	case queue.DeploymentModeDraining, queue.DeploymentModeActivating:
 		return queue.ErrDeploymentDraining
 	case queue.DeploymentModeSplit:
 		return startSplitValidation(ctx, client, record, receivedAt)

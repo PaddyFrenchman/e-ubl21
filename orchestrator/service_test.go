@@ -51,7 +51,11 @@ func TestRunServiceOwnsSuccessfulBrokerConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeSplit, time.Now()); err != nil {
+	activating, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeActivating, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.TransitionDeploymentMode(ctx, activating, queue.DeploymentModeSplit, time.Now()); err != nil {
 		t.Fatal(err)
 	}
 	client.Close()

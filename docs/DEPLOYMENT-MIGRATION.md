@@ -14,11 +14,13 @@ marker:
 | --- | --- | --- | --- |
 | `legacy` | Publishes legacy document descriptors | allowed | refused |
 | `draining` | HTTP 503 with `Retry-After` | allowed to finish retained work | refused |
+| `activating` | HTTP 503 with `Retry-After` | refused | refused |
 | `split` | Creates a frozen validation execution | refused | allowed |
 
 Every transition increments the deployment generation. The only permitted
-transitions are `legacy -> draining`, `draining -> legacy`, and
-`draining -> split`. Split activation is intentionally forward-only.
+transitions are `legacy -> draining`, `draining -> legacy`,
+`draining -> activating`, and `activating -> split`. Reconciliation begins
+only after the CAS-protected `activating` claim and is forward-only from there.
 
 An installation without the marker remains compatible with the legacy
 combined worker. Split runtimes always fail closed until the marker exists and
@@ -89,7 +91,8 @@ Activation handles records as follows:
 - a pending record without content, a pending dead-letter transition, invalid
   metadata, or any infrastructure/CAS error blocks activation.
 
-Only after every candidate has a durable execution and first-stage outbox does
+Activation first claims the forward-only `activating` mode. Only after every
+candidate has a durable execution and first-stage outbox does
 the marker move to `split`. Start or scale the orchestrator and stage workers
 after the command succeeds. The API observes the marker for each admission and
 automatically resumes using split execution submission. Status reads project
@@ -99,7 +102,7 @@ evidence is durably published. Content retention uses the same projection.
 
 ## Rollback
 
-Before activation, rollback is safe and explicit:
+Before the `activate` command claims reconciliation, rollback is safe and explicit:
 
 ```bash
 e-ubl21 migration rollback --nats-url "$NATS_URL" --queue-namespace "$QUEUE_NAMESPACE"
@@ -107,6 +110,12 @@ e-ubl21 migration rollback --nats-url "$NATS_URL" --queue-namespace "$QUEUE_NAME
 
 This changes `draining` back to `legacy`; restart/scale the combined workers
 and confirm API admission. It does not delete queues, records, or content.
+
+Once `activate` reports `activating`, rollback is prohibited even if the
+command later reports a repairable record or infrastructure error. Fix the
+reported condition and rerun `activate`; its durable execution creation and
+dispatch are idempotent. This prevents partially reconciled split work from
+being handed back to a legacy worker.
 
 After the marker reaches `split`, rollback to the monolithic worker is
 forbidden. The old worker cannot interpret frozen execution state and could
