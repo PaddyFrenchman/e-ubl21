@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image benchmark-en16931 regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-validation-chaos benchmark-en16931 regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -13,6 +13,11 @@ test-en16931-compliance: test-en16931
 # transform succeeds with networking disabled. Override IMAGE if required.
 test-en16931-image:
 	./devsetup/test-en16931-image.sh "$(or $(IMAGE),e-ubl21:en16931-check)"
+
+# Run the deterministic JetStream chaos/crash/replay integration gate. The
+# scenario-to-test mapping is documented in docs/CHAOS-CRASH-REPLAY.md.
+test-validation-chaos:
+	go test ./orchestrator ./server -count=1 -run '^(TestReconcilerRepairsCrashAfterIntentBeforePublish|TestXSDWorkerShutdownCancelsValidationAndRedeliversRequest|TestXSDWorkerHandleControlAndPublicationFailures|TestReconcilerRepairsCrashAfterResultStateBeforeNextPublish|TestConcurrentDuplicateResultsConvergeWithoutRedelivery|TestENWorkerShutdownCancelsValidationAndRedeliversRequest|TestENWorkerHandleControlAndPublicationFailures|TestChaosGateDuplicateENResultsProduceOneFinalResult|TestXSDWorkerRecoversAfterTemporaryObjectStoreOutage|TestXSDWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds|TestENWorkerLeavesRequestUnacknowledgedUntilResultPublicationSucceeds|TestFinalResultPublicationFailureLeavesDurablePendingIntentForReconciliation|TestChaosGateRestartDrainsThousandsOfCompletedTransitions|TestENWorkerScalesFromZeroAndFinalizesWithoutXSDWorker|TestXSDWorkerRejectsStalePreviousGenerationAfterRevalidation|TestChaosGateConcurrentReplayCommandsConverge)$$'
 
 # Run the real-runtime worker capacity matrix. Override the fixed iteration
 # count when collecting release evidence, for example BENCHTIME=10x.

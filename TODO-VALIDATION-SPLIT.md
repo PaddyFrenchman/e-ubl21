@@ -810,6 +810,8 @@ split activation.
 
 # TODO-VALIDATION-SPLIT-015 — Add chaos/crash/replay integration tests
 
+**Implementation contract:** [`docs/CHAOS-CRASH-REPLAY.md`](docs/CHAOS-CRASH-REPLAY.md)
+
 ## Goal
 
 Prove distributed stage transitions are durable under failure.
@@ -835,6 +837,10 @@ Prove distributed stage transitions are durable under failure.
 ## Acceptance criteria
 
 Every case converges to exactly one correct durable state and exactly one permanent final result when validation is terminal.
+
+The deterministic `make test-validation-chaos` gate maps every required
+scenario to an executable JetStream integration test and runs as part of the
+GitHub correctness workflow.
 
 ---
 

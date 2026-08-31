@@ -37,6 +37,8 @@ jobs:
           java-version: "21"
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Run validation chaos, crash, and replay gate
+        run: make test-validation-chaos
       - name: Run deterministic correctness regression
         run: make regression-correctness
       - name: Publish regression test summary

@@ -404,6 +404,124 @@ func TestXSDWorkerOperationalResultsDriveIndependentRetryAndExhaustion(t *testin
 	}
 }
 
+func TestXSDWorkerRecoversAfterTemporaryObjectStoreOutage(t *testing.T) {
+	client, ctx := newXSDWorkerTestClient(t)
+	request := publishXSDWorkerTestRequestWithoutContent(t, ctx, client)
+	machine := orchestrator.New(client)
+	worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error { return nil })
+
+	firstMessage := fetchXSDWorkerRequest(t, ctx, client)
+	if err := worker.handle(ctx, firstMessage); err != nil {
+		t.Fatal(err)
+	}
+	firstResult := fetchXSDWorkerResult(t, ctx, client)
+	if firstResult.Outcome != queue.StageOutcomeOperationalFailure || firstResult.Reason != queue.StageReasonContentUnavailable {
+		t.Fatalf("Object Store outage result = %+v", firstResult)
+	}
+	retrying, err := machine.HandleStageResult(ctx, firstResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if retrying.Execution.Orchestration.Stages[0].AuthorizedAttempt != 2 {
+		t.Fatalf("Object Store recovery retry state = %+v", retrying.Execution.Orchestration)
+	}
+
+	if err := client.PutUploadContent(ctx, request.UploadID, []byte("<Invoice/>")); err != nil {
+		t.Fatal(err)
+	}
+	secondMessage := fetchXSDWorkerRequest(t, ctx, client)
+	if err := worker.handle(ctx, secondMessage); err != nil {
+		t.Fatal(err)
+	}
+	secondResult := fetchXSDWorkerResult(t, ctx, client)
+	if secondResult.Outcome != queue.StageOutcomePassed || secondResult.Attempt != 2 {
+		t.Fatalf("recovered Object Store result = %+v", secondResult)
+	}
+	terminal, err := machine.HandleStageResult(ctx, secondResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if terminal.Execution.Orchestration.Status != queue.ExecutionStatusValid || terminal.Execution.Orchestration.FinalResultStatus != queue.FinalResultPublished {
+		t.Fatalf("Object Store recovery terminal state = %+v", terminal.Execution.Orchestration)
+	}
+	if _, err := client.GetValidationExecutionResult(ctx, terminal.Execution.ValidationID, terminal.Execution.Generation); err != nil {
+		t.Fatalf("Object Store recovery permanent result: %v", err)
+	}
+}
+
+func TestXSDWorkerRejectsStalePreviousGenerationAfterRevalidation(t *testing.T) {
+	client, ctx := newXSDWorkerTestClient(t)
+	machine := orchestrator.New(client)
+	started, err := machine.Start(ctx, queue.ValidationExecutionIntent{
+		IntentID: testXSDWorkerID(t), UploadID: testXSDWorkerID(t), DocumentType: "Invoice",
+		Trigger: queue.ValidationTriggerInitial, RequestedProfile: queue.ValidationProfileUBL21,
+		Plan: xsdWorkerTestPlan(false), RetryPolicy: queue.DefaultFrozenValidationRetryPolicy(),
+		CreatedAt: time.Now().UTC(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PutUploadContent(ctx, started.Execution.UploadID, []byte("<Invoice/>")); err != nil {
+		t.Fatal(err)
+	}
+	requestCreatedAt, err := time.Parse(time.RFC3339Nano, started.Execution.Orchestration.Stages[0].RequestCreatedAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldRequest, err := queue.NewStageRequest(started.Execution, 1, 1, requestCreatedAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldMessage := fetchXSDWorkerRequest(t, ctx, client)
+	if err := oldMessage.Ack(); err != nil {
+		t.Fatal(err)
+	}
+	completedAt := time.Now().UTC()
+	passed, err := queue.NewStageResult(oldRequest, queue.StageOutcomePassed, queue.StageReasonNone, nil, "", completedAt, completedAt, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	initialTerminal, err := machine.HandleStageResult(ctx, passed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if initialTerminal.Execution.Orchestration.Status != queue.ExecutionStatusValid {
+		t.Fatalf("initial terminal generation = %+v", initialTerminal.Execution.Orchestration)
+	}
+	revalidated, err := machine.Start(ctx, queue.ValidationExecutionIntent{
+		IntentID: testXSDWorkerID(t), UploadID: started.Execution.UploadID, DocumentType: "Invoice",
+		Trigger: queue.ValidationTriggerRevalidation, RequestedProfile: queue.ValidationProfileUBL21EN16931,
+		RevalidationOf: &queue.ValidationExecutionReference{
+			ValidationID: started.Execution.ValidationID, Generation: started.Execution.Generation,
+		},
+		Plan: xsdWorkerTestPlan(true), RetryPolicy: queue.DefaultFrozenValidationRetryPolicy(),
+		CreatedAt: time.Now().UTC(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	createdAt, err := time.Parse(time.RFC3339Nano, revalidated.Execution.Orchestration.Stages[0].RequestCreatedAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	currentRequest, err := queue.NewStageRequest(revalidated.Execution, 1, 1, createdAt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error { return nil })
+	if _, err := worker.authorize(ctx, oldRequest); !errors.Is(err, errXSDStageRequestStale) {
+		t.Fatalf("previous-generation request error = %v, want stale", err)
+	}
+	if _, err := worker.authorize(ctx, currentRequest); err != nil {
+		t.Fatalf("current revalidation request rejected: %v", err)
+	}
+	storedOld, err := client.GetValidationExecution(ctx, oldRequest.UploadID, oldRequest.ValidationID, oldRequest.Generation)
+	if err != nil || storedOld.Orchestration.Status != queue.ExecutionStatusValid {
+		t.Fatalf("stale request changed old generation = %+v, %v", storedOld.Orchestration, err)
+	}
+}
+
 func TestXSDWorkerTerminatesMalformedOrMisroutedRequests(t *testing.T) {
 	client, ctx := newXSDWorkerTestClient(t)
 	names, err := client.Namespace.StageQueue(queue.ValidationLayerUBL21XSD)

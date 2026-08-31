@@ -318,6 +318,14 @@ executes both manifests, and retains normalized results, JUnit, logs, metrics,
 and evidence on success or failure. GitHub's job summary lists any failed
 fixture IDs directly.
 
+The durable split-stage failure gate is available as
+`make test-validation-chaos`. It injects the 15 required orchestrator/worker
+crash, lost-ACK, duplicate-delivery, transient-storage, restart-backlog,
+scale-to-zero, stale-generation, and concurrent-replay scenarios against
+JetStream. The scenario matrix and exact convergence assertions are documented
+in [`docs/CHAOS-CRASH-REPLAY.md`](docs/CHAOS-CRASH-REPLAY.md). This gate runs
+before the semantic correctness regression in GitHub.
+
 GitHub also runs the local `make regression-minikube` lifecycle against both
 tracked corpora in parallel disposable clusters. This hosted Kubernetes gate
 uses the same candidate-image build/load, deployment, authenticated semantic
