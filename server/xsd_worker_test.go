@@ -545,6 +545,9 @@ func TestXSDWorkerRejectsStalePreviousGenerationAfterRevalidation(t *testing.T) 
 	if err := worker.handle(ctx, staleDelivery); !errors.Is(err, errXSDStageRequestStale) {
 		t.Fatalf("previous-generation broker delivery error = %v, want stale", err)
 	}
+	if err := client.NC.Flush(); err != nil {
+		t.Fatalf("flush stale request termination: %v", err)
+	}
 	if validatorCalled {
 		t.Fatal("XSD validator ran for a stale previous-generation delivery")
 	}
