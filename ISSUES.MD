@@ -24,7 +24,7 @@ An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #
 
 The repository uses a GitFlow-lite model with three branch roles:
 
-- `main` is the release-history branch. It is normally updated only when a release is promoted and every release commit on `main` must be tagged with its release version. Explicitly authorized repository-governance/documentation maintenance is the only exception to that normal release-only rule.
+- `main` is the release-history branch. It is updated only when a release is promoted and every release commit on `main` must be tagged with its release version.
 - `development` is the designated default integration branch for ongoing work. The GitHub repository default branch must be set to `development`. All normal issue branches are created from `development` and are integrated back into `development`.
 - `release/vX.Y.Z` branches are short-lived release-stabilization branches created from `development` when a specific release is prepared. A permanent `release` branch is not used.
 
@@ -32,12 +32,6 @@ The normal flow is:
 
 ```text
 issue/<number>-<description>
-        |
-        v
-   commit + push
-        |
-        v
-PR -> iterative review/fix cycle
         |
         v
    development
@@ -52,8 +46,6 @@ PR -> iterative review/fix cycle
      tag vX.Y.Z
 ```
 
-The pull request is the mandatory code-review surface for normal issue work. PR creation is part of implementation/review, **not** part of issue closure and **not** authorization to integrate the branch. The final issue integration remains rebase-first and fast-forward-only after explicit authorization to close that specific issue.
-
 Release-only fixes made on `release/vX.Y.Z` must also be propagated back to `development` so that the next development cycle does not lose them.
 
 ### Required repository settings
@@ -61,8 +53,8 @@ Release-only fixes made on `release/vX.Y.Z` must also be propagated back to `dev
 The branch model is a repository invariant, not a naming convention. GitHub must be configured as follows whenever the repository plan supports enforcement:
 
 - Set `development` as the GitHub default branch.
-- Protect `main` from direct day-to-day development pushes, force pushes, and deletion. Changes to `main` must come only from an approved `release/vX.Y.Z` promotion, except for explicitly authorized repository-governance/documentation maintenance, and must pass the applicable gates.
-- Protect `development` from force pushes and deletion. Normal changes reach it through issue-branch integration after required CI and review succeed.
+- Protect `main` from direct day-to-day development pushes, force pushes, and deletion. Changes to `main` must come only from an approved `release/vX.Y.Z` promotion and must pass the release CI gates.
+- Protect `development` from force pushes and deletion. Normal changes reach it through issue-branch integration after required CI succeeds.
 - Keep linear history on `development` and `main` unless a specific exception is explicitly authorized.
 - Require the applicable correctness, Minikube, and standards-validation checks for development and release integration.
 - Do not create a permanent `release` branch. Protect short-lived `release/vX.Y.Z` branches as release candidates where repository-plan capabilities permit.
@@ -126,65 +118,71 @@ Each GitHub issue must be implemented on its own issue branch created from the s
 3. Synchronize it with `git pull --ff-only origin development`.
 4. Create the issue branch from local `development`, for example `git switch -c issue/61-safe-deployment-migration`.
 5. Implement and test on the issue branch.
-6. Commit the implementation on the issue branch.
-7. Push the issue branch to `origin`.
-8. Create a pull request from the issue branch targeting `development`.
+6. Commit the reviewable work and push the issue branch.
+7. Create a pull request from the issue branch into `development`.
 
 Issue branches must not be created from `main`, from a release branch, or directly from the `origin/development` remote-tracking ref.
 
-### Pull-request review loop
+### Pull-request review cycle
 
-The pull request is the canonical review workspace for the issue branch and remains open throughout the implementation/review cycle.
+The pull request is the normal code-review surface for an issue. **Creating, updating, or reviewing a pull request is part of implementation and is not part of the issue-closing workflow.** The issue remains open throughout the review cycle.
 
-1. After the initial implementation commit is pushed, create the PR targeting `development`.
-2. The reviewer inspects the complete PR diff and leaves findings as inline file/line review comments wherever a concrete code location exists.
-3. The reviewer also produces a complete PR report summarizing correctness, architecture, tests, regressions, risks, and any non-inline findings.
-4. The user addresses the report and review comments on the issue branch, then commits and pushes the fixes.
-5. The reviewer re-reviews the updated PR **and all unresolved review threads**, verifies each addressed finding, resolves the threads that are satisfactorily fixed, leaves unresolved findings open, and adds new inline comments if new problems are discovered.
-6. The reviewer produces an updated complete PR report after each review pass.
-7. Steps 4–6 repeat until the PR has no unresolved blocking findings and the required checks/tests pass.
+The required review loop is:
 
-Review comments are not deleted when addressed. Their threads are resolved so the PR retains an audit trail from finding -> fixing commit -> verification -> resolution.
+1. Commit the current issue implementation.
+2. Push the issue branch.
+3. Create or update the pull request targeting `development`.
+4. ChatGPT/Codex reviews the complete PR diff, leaves findings as inline file/line review comments where appropriate, and provides a complete PR review report summarizing correctness, architecture, tests, regressions, risks, and any required changes.
+5. The user addresses the review findings, then commits and pushes the fixes to the same issue branch.
+6. ChatGPT/Codex re-reviews the updated PR, including both the new diff and the existing review threads.
+7. Review threads whose findings are fully addressed are resolved. Unresolved findings remain open. New findings are added inline when necessary, and an updated complete PR report is produced.
+8. Steps 5 through 7 repeat until the implementation fully satisfies the issue and the PR review has no unresolved blocking findings.
 
-A clean PR review does **not** authorize integration or issue closure. The issue and PR remain open until the user explicitly authorizes closure of that specific issue.
+The PR and its review threads are retained as the audit trail connecting each finding to the commit that addressed it. Review comments must not be deleted merely because they are resolved.
+
+During this review loop:
+
+- do not rebase the issue branch onto `development` merely because a review iteration completed;
+- do not fast-forward the issue branch into `development`;
+- do not close the PR as merged;
+- do not close the GitHub issue;
+- do not interpret a clean PR review as authorization to integrate or close the issue.
 
 ### Explicit authorization boundary
 
-Codex/ChatGPT must **never close a GitHub issue unless the user explicitly instructs it to close that specific issue**. A request to review, fix, implement, test, commit, push, create/update a PR, resolve addressed review threads, or otherwise work on an issue is not permission to close or integrate it.
+ChatGPT/Codex must **never close a GitHub issue unless the user explicitly instructs it to close that specific issue**. A request to implement, test, commit, push, create a PR, review a PR, add inline comments, resolve review threads, or otherwise continue the review cycle is not permission to close or integrate the issue.
 
-Until the user explicitly says to close the issue, work remains on the issue branch and in its PR review loop. Commits may be pushed and review threads may be added or resolved, but Codex/ChatGPT must not begin the integration workflow: do not rebase the issue branch for integration, switch to `development` for integration, fast-forward the issue work into `development`, push the resulting `development`, or change the GitHub issue state.
+Until the user explicitly says to close the issue, the work remains on the issue branch and in its pull request. The branch may be committed and pushed repeatedly, and the PR may be reviewed repeatedly, but the closing/integration workflow must not begin: do not rebase for integration, switch to `development` for integration, fast-forward the issue branch into `development`, push the integrated `development`, or change the GitHub issue state.
 
-Mentioning this workflow, asking whether work is committed or pushed, creating a PR, approving a PR, resolving all review comments, or saying that the workflow should be followed does not authorize issue closure or integration. If the user's intent to close a specific issue is ambiguous, Codex/ChatGPT must ask rather than infer permission.
+Mentioning this workflow, asking whether work is committed or pushed, or saying that the issue appears complete does not authorize issue closure or integration. If the user's intent to close a specific issue is ambiguous, ChatGPT/Codex must ask rather than infer permission.
 
-Only when explicitly told to **close a specific issue** must the following **rebase-first, fast-forward-only** closure/integration workflow begin. The intent is to keep `development` linear while preserving the PR as the review and audit surface.
+Only when explicitly told to **close a specific issue** must the following **rebase-first, fast-forward-only** integration workflow begin. The intent is to keep `development` linear while preserving the PR as the completed review record.
 
 1. Fetch the latest remote state with `git fetch origin --prune` and ensure the working tree is clean.
 2. Switch to the issue branch.
 3. Rebase the issue branch onto the current `origin/development` with `git rebase origin/development`.
 4. Resolve any conflicts on the issue branch. If the rebase cannot be completed safely, abort it and report the problem rather than merging `development` into the issue branch.
 5. Run the tests and verification required by the issue/repository on the rebased branch.
-6. If conflict resolution or another necessary post-rebase correction changes code, commit that change. Do not create an otherwise empty commit merely because a rebase occurred.
-7. Because the PR branch has already been published, push the rebased branch with `git push --force-with-lease origin <issue-branch>` when commit IDs were rewritten; use a normal push only when history was not rewritten.
-8. Re-review the PR delta created by the rebase, re-check all unresolved review threads, resolve any findings now satisfied, and require the applicable PR checks to pass. If the rebase introduces a new defect, return to the normal commit/push/review loop before integration.
-9. Switch to `development` and update it with `git pull --ff-only origin development`.
-10. Integrate the issue branch with `git merge --ff-only <issue-branch>`.
-11. Run the final required verification on the integrated `development` state.
-12. Push `development` with `git push origin development`.
-13. Confirm that the PR head is contained in `development`; close the PR if GitHub has not automatically recognized the integration.
-14. Only after the `development` push succeeds and the reviewed PR head is contained in it should Codex/ChatGPT close the GitHub issue.
-15. Delete the completed issue branch only after containment in `development` is confirmed and the issue/PR are safely closed.
+6. A rebase normally rewrites existing commits; it does **not** require an additional commit unless resolving the rebase requires an actual content change. If published commits were rewritten, push the rebased issue branch with `git push --force-with-lease origin <issue-branch>`; otherwise use a normal push as appropriate.
+7. Re-check the PR after the rebase to ensure the reviewed implementation remains unchanged in substance and no new blocking finding or conflict-resolution regression was introduced.
+8. Switch to `development` and update it with `git pull --ff-only origin development`.
+9. Integrate the issue branch with `git merge --ff-only <issue-branch>`.
+10. Run the final required verification on the integrated `development` state.
+11. Push `development` with `git push origin development`.
+12. Close the PR as completed/merged according to the repository's chosen PR bookkeeping method.
+13. Only after the integrated `development` push succeeds should the GitHub issue be closed.
+14. Delete the completed issue branch only after its commits are confirmed contained in `development`.
 
-If `git merge --ff-only` fails because `development` advanced after the rebase, return to the issue branch, rebase it onto the new `origin/development`, repeat verification and the final PR-delta review, then try the fast-forward integration again.
+If `git merge --ff-only` fails because `development` advanced after the rebase, return to the issue branch, rebase it onto the new `origin/development`, repeat verification and the post-rebase PR check, then try the fast-forward integration again.
 
 **Do not:**
 
 - merge `development` into an issue branch;
-- use PR creation, PR approval, or resolved review threads as implied authorization to close an issue;
-- use the GitHub merge button to create a merge commit for normal issue integration unless explicitly instructed;
 - integrate an issue branch directly into `main`;
 - integrate an issue branch directly into a `release/vX.Y.Z` branch;
 - create a merge commit when integrating an issue branch unless explicitly instructed;
-- close the GitHub issue before the rebased and reviewed branch has been successfully fast-forwarded into `development`, verified, and pushed.
+- use the GitHub PR merge button to bypass the documented rebase-first, fast-forward-only integration policy;
+- close the GitHub issue before the rebased branch has been successfully fast-forwarded into `development`, verified, and pushed.
 
 ### Release preparation workflow
 
@@ -200,7 +198,7 @@ A release branch is created only when a concrete version is ready for stabilizat
 8. Propagate any fixes made only on `release/vX.Y.Z` back into `development`.
 9. Delete the release branch after the release is complete and all release-only fixes are safely present in `development`.
 
-`main` must never be used as the day-to-day integration branch. Between releases it remains unchanged except for explicitly authorized repository-governance/documentation maintenance.
+`main` must never be used as the day-to-day integration branch. Between releases it remains unchanged.
 
 ---
 
