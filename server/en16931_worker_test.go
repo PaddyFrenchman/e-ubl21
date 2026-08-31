@@ -367,7 +367,7 @@ func TestENWorkerShutdownCancelsValidationAndRedeliversRequest(t *testing.T) {
 	done := make(chan error, 1)
 	go func() {
 		done <- RunEN16931Worker(workerCtx, EN16931WorkerConfig{
-			queueClient: client, MetricsAddr: "", ValidationTimeout: time.Minute,
+			queueClient: client, MetricsAddr: "127.0.0.1:0", ValidationTimeout: time.Minute,
 			Concurrency: 1, Prefetch: 1, ProgressInterval: 10 * time.Millisecond,
 			validator: en16931ValidatorFunc(func(ctx context.Context, _ io.Reader) (queue.ValidationStageResult, error) {
 				close(started)

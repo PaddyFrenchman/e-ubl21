@@ -362,6 +362,13 @@ func TestRunDispatchAndUsage(t *testing.T) {
 	}
 }
 
+func TestMainRunsSuccessfulInventoryCommand(t *testing.T) {
+	original := os.Args
+	t.Cleanup(func() { os.Args = original })
+	os.Args = []string{"createsamples", "inventory", "--xsd", "../XSD"}
+	main()
+}
+
 func TestSchemaIndexReadErrorsAndNamespaceFallback(t *testing.T) {
 	dir := t.TempDir()
 	if ns, name := qualifyRef("", "context"); ns != "" || name != "" {

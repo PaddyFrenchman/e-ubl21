@@ -1,11 +1,43 @@
 package main
 
 import (
+	"flag"
+	"io"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 )
+
+func TestMainPrintsSignedToken(t *testing.T) {
+	originalArgs, originalFlags, originalStdout := os.Args, flag.CommandLine, os.Stdout
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		os.Args, flag.CommandLine, os.Stdout = originalArgs, originalFlags, originalStdout
+		_ = reader.Close()
+		_ = writer.Close()
+	})
+	t.Setenv("EUBL21_REGRESSION_HMAC_SECRET", "local-secret")
+	flag.CommandLine = flag.NewFlagSet("regression-token", flag.ContinueOnError)
+	os.Args = []string{"regression-token", "--issuer", "issuer", "--audience", "audience", "--ttl", "1h"}
+	os.Stdout = writer
+	main()
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	content, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(strings.TrimSpace(string(content)), ".") != 2 {
+		t.Fatalf("token output = %q", content)
+	}
+}
 
 func TestSignTokenProducesAcceptedHS256Claims(t *testing.T) {
 	now := time.Date(2026, 8, 28, 12, 0, 0, 0, time.UTC)

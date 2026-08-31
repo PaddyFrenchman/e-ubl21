@@ -180,7 +180,7 @@ func TestXSDWorkerShutdownCancelsValidationAndRedeliversRequest(t *testing.T) {
 	done := make(chan error, 1)
 	go func() {
 		done <- RunXSDWorker(workerCtx, XSDWorkerConfig{
-			queueClient: client, catalog: testXSDCatalog(), MetricsAddr: "",
+			queueClient: client, catalog: testXSDCatalog(), MetricsAddr: "127.0.0.1:0",
 			ValidationTimeout: time.Minute, Concurrency: 1, Prefetch: 1, ProgressInterval: 10 * time.Millisecond,
 			xsdValidate: func(ctx context.Context, _ string, _ io.Reader, _ time.Duration) error {
 				close(started)
@@ -461,6 +461,37 @@ func TestXSDWorkerTreatsContentReadFailureAsOperationalEvenWithSchemaDiagnostics
 	}
 	if reason := xsdStageOperationalReason(err); reason != queue.StageReasonContentUnavailable {
 		t.Fatalf("operational reason = %q, want %q", reason, queue.StageReasonContentUnavailable)
+	}
+}
+
+func TestXSDWorkerAuthorizationRejectsDurableIdentityDrift(t *testing.T) {
+	client, ctx := newXSDWorkerTestClient(t)
+	request := startXSDWorkerTestRequest(t, ctx, client)
+	worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error { return nil })
+	if _, err := worker.authorize(ctx, request); err != nil {
+		t.Fatalf("current request rejected: %v", err)
+	}
+	for name, mutate := range map[string]func(*queue.StageRequest){
+		"document":   func(r *queue.StageRequest) { r.DocumentType = "Order" },
+		"plan":       func(r *queue.StageRequest) { r.Plan = "different" },
+		"ordinal":    func(r *queue.StageRequest) { r.StageOrdinal = 2 },
+		"stage":      func(r *queue.StageRequest) { r.Stage = queue.ValidationLayerEN16931 },
+		"ruleset":    func(r *queue.StageRequest) { r.RulesetVersion = "future" },
+		"attempt":    func(r *queue.StageRequest) { r.Attempt = 2 },
+		"request id": func(r *queue.StageRequest) { r.RequestID = "different" },
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate := request
+			mutate(&candidate)
+			if _, err := worker.authorize(ctx, candidate); !errors.Is(err, errXSDStageRequestStale) {
+				t.Fatalf("identity drift error = %v", err)
+			}
+		})
+	}
+	missing := request
+	missing.UploadID = testXSDWorkerID(t)
+	if _, err := worker.authorize(ctx, missing); !errors.Is(err, errXSDStageRequestStale) {
+		t.Fatalf("missing execution error = %v", err)
 	}
 }
 

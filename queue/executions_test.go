@@ -370,3 +370,120 @@ func TestValidationExecutionLookupsRejectWrongIdentity(t *testing.T) {
 		t.Fatalf("empty upload executions = %+v, %v", empty, err)
 	}
 }
+
+func TestValidationExecutionCreationRejectsBrokenReplayAndRevalidationHistory(t *testing.T) {
+	ctx := context.Background()
+	plan := testFrozenPlan()
+
+	t.Run("missing intermediate generation", func(t *testing.T) {
+		client := newExecutionTestClient(t, queue.MustNamespace("execution.missing"))
+		initial, err := queue.NewValidationExecution(testInitialIntent(t, testID(t), plan, time.Now().UTC()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := client.CreateValidationExecution(ctx, initial); err != nil {
+			t.Fatal(err)
+		}
+		second, err := queue.NextValidationGeneration(initial, testID(t), time.Now().UTC())
+		if err != nil {
+			t.Fatal(err)
+		}
+		third, err := queue.NextValidationGeneration(second, testID(t), time.Now().UTC())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := client.CreateValidationExecution(ctx, third); err == nil || !strings.Contains(err.Error(), "generation 2 is missing") {
+			t.Fatalf("missing generation error = %v", err)
+		}
+	})
+
+	t.Run("reused replay intent and changed plan", func(t *testing.T) {
+		client := newExecutionTestClient(t, queue.MustNamespace("execution.lineage"))
+		initial, err := queue.NewValidationExecution(testInitialIntent(t, testID(t), plan, time.Now().UTC()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := client.CreateValidationExecution(ctx, initial); err != nil {
+			t.Fatal(err)
+		}
+		replayIntent := testID(t)
+		second, err := queue.NextValidationGeneration(initial, replayIntent, time.Now().UTC())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := client.CreateValidationExecution(ctx, second); err != nil {
+			t.Fatal(err)
+		}
+		third, err := queue.NextValidationGeneration(second, replayIntent, time.Now().UTC())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := client.CreateValidationExecution(ctx, third); err == nil || !strings.Contains(err.Error(), "already used") {
+			t.Fatalf("reused replay intent error = %v", err)
+		}
+		changed, err := queue.NextValidationGeneration(second, testID(t), time.Now().UTC())
+		if err != nil {
+			t.Fatal(err)
+		}
+		changed.Plan.Version = "2"
+		if _, err := client.CreateValidationExecution(ctx, changed); err == nil || !strings.Contains(err.Error(), "lineage changed") {
+			t.Fatalf("changed replay lineage error = %v", err)
+		}
+	})
+
+	t.Run("missing and unchanged revalidation predecessor", func(t *testing.T) {
+		client := newExecutionTestClient(t, queue.MustNamespace("execution.revalidation"))
+		initial, err := queue.NewValidationExecution(testInitialIntent(t, testID(t), plan, time.Now().UTC()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		missingIntent := testInitialIntent(t, initial.UploadID, plan, time.Now().UTC())
+		missingIntent.Trigger = queue.ValidationTriggerRevalidation
+		missingIntent.RevalidationOf = &queue.ValidationExecutionReference{ValidationID: testID(t), Generation: 1}
+		missing, err := queue.NewValidationExecution(missingIntent)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := client.CreateValidationExecution(ctx, missing); err == nil || !strings.Contains(err.Error(), "referenced execution is missing") {
+			t.Fatalf("missing predecessor error = %v", err)
+		}
+		if _, err := client.CreateValidationExecution(ctx, initial); err != nil {
+			t.Fatal(err)
+		}
+		unchangedIntent := testInitialIntent(t, initial.UploadID, plan, time.Now().UTC())
+		unchangedIntent.Trigger = queue.ValidationTriggerRevalidation
+		unchangedIntent.RevalidationOf = &queue.ValidationExecutionReference{ValidationID: initial.ValidationID, Generation: 1}
+		unchanged, err := queue.NewValidationExecution(unchangedIntent)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := client.CreateValidationExecution(ctx, unchanged); err == nil || !strings.Contains(err.Error(), "unchanged; use replay") {
+			t.Fatalf("unchanged revalidation error = %v", err)
+		}
+	})
+}
+
+func TestNextValidationGenerationRejectsInvalidInputAndOverflow(t *testing.T) {
+	initial, err := queue.NewValidationExecution(testInitialIntent(t, testID(t), testFrozenPlan(), time.Now().UTC()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := queue.NextValidationGeneration(initial, "bad", time.Now()); err == nil {
+		t.Fatal("invalid replay intent was accepted")
+	}
+	invalid := initial
+	invalid.SchemaVersion++
+	if _, err := queue.NextValidationGeneration(invalid, testID(t), time.Now()); err == nil {
+		t.Fatal("invalid predecessor was accepted")
+	}
+	overflow := initial
+	overflow.Trigger = queue.ValidationTriggerReplay
+	overflow.Generation = ^uint64(0)
+	overflow.ReplayOf = &queue.ValidationExecutionReference{ValidationID: overflow.ValidationID, Generation: overflow.Generation - 1}
+	if err := overflow.Validate(); err != nil {
+		t.Fatalf("overflow fixture invalid: %v", err)
+	}
+	if _, err := queue.NextValidationGeneration(overflow, testID(t), time.Now()); err == nil || !strings.Contains(err.Error(), "overflow") {
+		t.Fatalf("overflow error = %v", err)
+	}
+}

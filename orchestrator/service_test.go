@@ -11,6 +11,59 @@ import (
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 )
 
+func TestRunServiceReportsConnectionAndMissingTopology(t *testing.T) {
+	if err := RunService(context.Background(), ServiceConfig{NATSURL: "://bad"}); err == nil {
+		t.Fatal("malformed NATS URL was accepted")
+	}
+	server := queuetest.StartServer(t)
+	client, err := queue.ConnectWithOptions(server.URL, queue.MustNamespace("orchestrator.startup"), server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.Close)
+	if err := RunService(context.Background(), ServiceConfig{queueClient: client, Role: ServiceRoleConsumer}); err == nil {
+		t.Fatal("missing execution topology was accepted")
+	}
+	if err := client.ProvisionValidationExecutionInfra(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := RunService(context.Background(), ServiceConfig{queueClient: client, Role: ServiceRoleConsumer}); err == nil {
+		t.Fatal("missing stage result topology was accepted")
+	}
+}
+
+func TestRunServiceOwnsSuccessfulBrokerConnection(t *testing.T) {
+	server := queuetest.StartServer(t)
+	namespace := queue.MustNamespace("orchestrator.owned")
+	client, err := queue.ConnectWithOptions(server.URL, namespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if err := client.ProvisionValidationExecutionInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
+	client.Close()
+	runCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- RunService(runCtx, ServiceConfig{
+			NATSURL: server.URL, NATSOptions: server.Options, QueueNamespace: namespace,
+			Role: ServiceRoleReconciler, ReconciliationInterval: 10 * time.Millisecond,
+		})
+	}()
+	time.Sleep(25 * time.Millisecond)
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("owned orchestrator connection did not stop")
+	}
+}
+
 func TestResolveServiceConfigDefaultsAndRejectsInvalidLimits(t *testing.T) {
 	cfg, err := resolveServiceConfig(ServiceConfig{})
 	if err != nil {

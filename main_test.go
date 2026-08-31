@@ -38,3 +38,23 @@ func TestRunReportsCommandErrors(t *testing.T) {
 		t.Fatalf("exit code = %d", code)
 	}
 }
+
+func TestCommandServiceNames(t *testing.T) {
+	for name, test := range map[string]struct {
+		args []string
+		want string
+	}{
+		"empty": {nil, "e-ubl21"},
+		"flag":  {[]string{"--help"}, "e-ubl21"},
+		"api":   {[]string{"serve"}, "e-ubl21-api"},
+		"xsd":   {[]string{"worker-xsd"}, "e-ubl21-worker-xsd"},
+		"en":    {[]string{"worker-en16931"}, "e-ubl21-worker-en16931"},
+		"other": {[]string{"custom_worker"}, "e-ubl21-custom-worker"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := commandServiceName(test.args); got != test.want {
+				t.Fatalf("service name = %q, want %q", got, test.want)
+			}
+		})
+	}
+}

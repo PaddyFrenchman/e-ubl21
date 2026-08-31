@@ -43,6 +43,9 @@ func TestStageQueueProvisioningCreatesIndependentDurableTopology(t *testing.T) {
 		t.Fatalf("XSD worker request delivery = %+v, want %+v", workerDelivery, config.Stages[0].RequestDelivery)
 	}
 	for _, stage := range config.Stages {
+		if depth, err := client.StageRequestQueueDepth(ctx, stage.Stage); err != nil || depth != 0 {
+			t.Fatalf("%s initial request depth = %d, %v", stage.Stage, depth, err)
+		}
 		names, err := client.Namespace.StageQueue(stage.Stage)
 		if err != nil {
 			t.Fatal(err)
@@ -104,6 +107,9 @@ func TestStageQueueProvisioningCreatesIndependentDurableTopology(t *testing.T) {
 			deadLetterInfo.Config.Storage != jetstream.FileStorage || deadLetterInfo.Config.MaxAge != stage.DeadLetterMaxAge || deadLetterInfo.Config.MaxMsgsPerSubject != 1 || !deadLetterInfo.Config.DiscardNewPerSubject {
 			t.Fatalf("%s dead-letter stream config = %+v", stage.Stage, deadLetterInfo.Config)
 		}
+	}
+	if _, err := client.StageRequestQueueDepth(ctx, queue.ValidationLayer("unknown")); err == nil {
+		t.Fatal("unknown stage request depth was accepted")
 	}
 }
 

@@ -26,6 +26,7 @@ type workerStateMsg struct {
 	nacked      int
 	delayed     int
 	terminated  int
+	ackErr      error
 }
 
 func (m *workerStateMsg) Metadata() (*jetstream.MsgMetadata, error) { return m.metadata, m.metadataErr }
@@ -33,7 +34,7 @@ func (m *workerStateMsg) Data() []byte                              { return m.d
 func (m *workerStateMsg) Headers() nats.Header                      { return m.headers }
 func (m *workerStateMsg) Subject() string                           { return m.subject }
 func (*workerStateMsg) Reply() string                               { return "" }
-func (m *workerStateMsg) Ack() error                                { m.acked++; return nil }
+func (m *workerStateMsg) Ack() error                                { m.acked++; return m.ackErr }
 func (m *workerStateMsg) DoubleAck(context.Context) error           { m.acked++; return nil }
 func (m *workerStateMsg) Nak() error                                { m.nacked++; return nil }
 func (m *workerStateMsg) NakWithDelay(time.Duration) error          { m.delayed++; return nil }

@@ -61,3 +61,39 @@ func TestDeadLetterRetryCommandReportsConnectionFailure(t *testing.T) {
 		t.Fatal("malformed NATS URL returned success")
 	}
 }
+
+func TestStageDeadLetterRetryCommandRejectsInvalidAndMissingRecords(t *testing.T) {
+	invalid := newDeadLetterCmd(&Config{})
+	invalid.SilenceErrors = true
+	invalid.SilenceUsage = true
+	invalid.SetArgs([]string{"stage-retry", "unknown", "00000000000000000000000000000000"})
+	if err := invalid.Execute(); err == nil {
+		t.Fatal("unknown stage was accepted")
+	}
+
+	connection := newDeadLetterCmd(&Config{NATSURL: "://bad"})
+	connection.SilenceErrors = true
+	connection.SilenceUsage = true
+	connection.SetArgs([]string{"stage-retry", string(queue.ValidationLayerUBL21XSD), "00000000000000000000000000000000"})
+	if err := connection.Execute(); err == nil {
+		t.Fatal("stage retry accepted malformed NATS URL")
+	}
+
+	server := queuetest.StartServer(t)
+	namespace := queue.MustNamespace("eubl21.stage.command")
+	client, err := queue.ConnectWithOptions(server.URL, namespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.Close)
+	if err := client.ProvisionStageQueueInfra(context.Background(), queue.DefaultStageQueueInfraConfig()); err != nil {
+		t.Fatal(err)
+	}
+	missing := newDeadLetterCmd(&Config{NATSURL: server.URL, NATSOptions: server.Options, QueueNamespace: namespace})
+	missing.SilenceErrors = true
+	missing.SilenceUsage = true
+	missing.SetArgs([]string{"stage-retry", string(queue.ValidationLayerUBL21XSD), "00000000000000000000000000000000"})
+	if err := missing.Execute(); err == nil {
+		t.Fatal("missing stage dead letter was replayed")
+	}
+}

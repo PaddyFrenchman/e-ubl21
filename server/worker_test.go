@@ -22,6 +22,7 @@ func runTestWorker(t *testing.T, cfg Config, overrides func(*WorkerConfig)) {
 
 	workerCfg := WorkerConfig{
 		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace,
+		MetricsAddr:            "127.0.0.1:0",
 		UploadContentRetention: cfg.UploadContentRetention, UploadContentMaxBytes: cfg.UploadContentMaxBytes,
 		en16931Validator: en16931ValidatorFunc(func(_ context.Context, xml io.Reader) (queue.ValidationStageResult, error) {
 			if _, err := io.Copy(io.Discard, xml); err != nil {

@@ -578,3 +578,62 @@ func TestGeneratedCorpusReplacesOnlyMarkedOutput(t *testing.T) {
 		t.Fatalf("replacement manifest = %q, %v", manifest, err)
 	}
 }
+
+func TestCorpusFileWritingAndValidationFailureBranches(t *testing.T) {
+	if _, err := buildGeneratedCorpus([]generatedFixture{{entry: fixtureManifestEntry{
+		ID: "invalid", Provenance: fixtureProvenance{SourceMember: make(chan int)},
+	}}}); err == nil {
+		t.Fatal("unmarshalable fixture provenance was accepted")
+	}
+	if err := writeCorpusFiles(filepath.Join(t.TempDir(), "missing", "child"), generatedCorpus{}); err == nil {
+		t.Fatal("missing output directory unexpectedly succeeded")
+	}
+
+	dir := t.TempDir()
+	blocking := filepath.Join(dir, "blocking")
+	if err := os.WriteFile(blocking, []byte("file"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fixtureCorpus := generatedCorpus{fixtures: []generatedFixture{{
+		entry: fixtureManifestEntry{File: "blocking/sample.xml"}, content: []byte("<Invoice/>")},
+	}}
+	if err := writeCorpusFiles(dir, fixtureCorpus); err == nil {
+		t.Fatal("fixture below ordinary file unexpectedly succeeded")
+	}
+
+	manifestDir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(manifestDir, "manifest.json"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeCorpusFiles(manifestDir, generatedCorpus{manifestJSON: []byte("{}")}); err == nil {
+		t.Fatal("manifest overwrite of directory unexpectedly succeeded")
+	}
+
+	negative := generatedCorpus{fixtures: []generatedFixture{{
+		entry:              fixtureManifestEntry{ID: "negative", ExpectedFinal: "invalid"},
+		expectedDiagnostic: "wanted", content: []byte("<Invoice/>"), schemaPath: "missing.xsd",
+	}}}
+	if err := validateGeneratedCorpus("/bin/true", negative); err == nil {
+		t.Fatal("negative fixture accepted by validator was ignored")
+	}
+	if err := validateGeneratedCorpus("/bin/false", negative); err == nil {
+		t.Fatal("negative fixture without expected diagnostic was accepted")
+	}
+	if err := validateGeneratedCorpus("/definitely/missing/xmllint", negative); err == nil {
+		t.Fatal("missing validator executable was ignored")
+	}
+}
+
+func TestCorpusDeterminismRejectsFixtureCountAndIdentityChanges(t *testing.T) {
+	manifest := []byte("same")
+	first := generatedCorpus{manifestJSON: manifest, fixtures: []generatedFixture{{entry: fixtureManifestEntry{ID: "one", File: "one.xml"}, content: []byte("one")}}}
+	if err := verifyCorpusDeterminism(first, generatedCorpus{manifestJSON: manifest}); err == nil {
+		t.Fatal("fixture count drift was accepted")
+	}
+	second := first
+	second.fixtures = append([]generatedFixture(nil), first.fixtures...)
+	second.fixtures[0].entry.File = "two.xml"
+	if err := verifyCorpusDeterminism(first, second); err == nil {
+		t.Fatal("fixture identity drift was accepted")
+	}
+}

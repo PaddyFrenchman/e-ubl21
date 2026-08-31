@@ -46,6 +46,28 @@ func TestReplayProcessingFailureRejectsUnsafeStates(t *testing.T) {
 	}
 }
 
+func TestDeadLetterPublicationIsBoundedAndIdempotent(t *testing.T) {
+	client := newTestClient(t)
+	ctx := context.Background()
+	if depth, err := client.DeadLetterDepth(ctx); err != nil || depth != 0 {
+		t.Fatalf("initial dead-letter depth = %d, %v", depth, err)
+	}
+	if err := client.PublishDeadLetter(ctx, queue.DeadLetter{ID: "bad"}); err == nil {
+		t.Fatal("invalid dead letter was published")
+	}
+	id, _ := queue.NewID()
+	dead := queue.DeadLetter{ID: id, DocumentType: "Invoice", ReceivedAt: time.Now().UTC().Format(time.RFC3339), LastError: "failed", Attempts: 3, FailedAt: time.Now().UTC().Format(time.RFC3339)}
+	if err := client.PublishDeadLetter(ctx, dead); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PublishDeadLetter(ctx, dead); err != nil {
+		t.Fatalf("idempotent dead-letter publication: %v", err)
+	}
+	if depth, err := client.DeadLetterDepth(ctx); err != nil || depth != 1 {
+		t.Fatalf("published dead-letter depth = %d, %v", depth, err)
+	}
+}
+
 func TestReplayRecoversAfterDLQPurgeFailureWithoutDuplicateWork(t *testing.T) {
 	client := newTestClient(t)
 	ctx := context.Background()

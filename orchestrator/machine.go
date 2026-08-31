@@ -376,6 +376,9 @@ func (machine *Machine) HandleStageResultMessage(ctx context.Context, message je
 
 func (machine *Machine) currentRequest(execution queue.ValidationExecution) (queue.StageRequest, error) {
 	ordinal := execution.Orchestration.CurrentStageOrdinal
+	if ordinal == 0 || int(ordinal) > len(execution.Orchestration.Stages) {
+		return queue.StageRequest{}, errors.New("durable queued request has no current stage")
+	}
 	stage := execution.Orchestration.Stages[ordinal-1]
 	createdAt, err := time.Parse(time.RFC3339Nano, stage.RequestCreatedAt)
 	if err != nil {
@@ -449,6 +452,10 @@ func cloneExecution(execution queue.ValidationExecution) queue.ValidationExecuti
 	cloned.Orchestration.Stages = append([]queue.ValidationStageState(nil), execution.Orchestration.Stages...)
 	for index := range cloned.Orchestration.Stages {
 		cloned.Orchestration.Stages[index].Attempts = append([]queue.ValidationStageAttempt(nil), execution.Orchestration.Stages[index].Attempts...)
+		if execution.Orchestration.Stages[index].InheritedEvidence != nil {
+			reference := *execution.Orchestration.Stages[index].InheritedEvidence
+			cloned.Orchestration.Stages[index].InheritedEvidence = &reference
+		}
 		if execution.Orchestration.Stages[index].DispatchTrace != nil {
 			traceCarrier := *execution.Orchestration.Stages[index].DispatchTrace
 			cloned.Orchestration.Stages[index].DispatchTrace = &traceCarrier

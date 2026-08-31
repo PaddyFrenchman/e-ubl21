@@ -123,3 +123,40 @@ func TestOperationErrorsDoNotCopyDiagnosticsIntoTrace(t *testing.T) {
 		t.Fatalf("error produced trace events %+v", ended[0].Events())
 	}
 }
+
+func TestConfigureTracingCorrelationAndCombinedShutdown(t *testing.T) {
+	t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+	t.Setenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "")
+	previous := otel.GetTracerProvider()
+	shutdown, err := observability.ConfigureTracing(context.Background(), "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = shutdown(context.Background())
+		otel.SetTracerProvider(previous)
+	})
+
+	ctx, span := observability.Tracer().Start(context.Background(), "correlation")
+	traceID, spanID := observability.CorrelationFields(ctx)
+	if traceID == "" || spanID == "" {
+		t.Fatalf("missing correlation fields %q/%q", traceID, spanID)
+	}
+	observability.RecordError(nil, errors.New("ignored"))
+	observability.RecordError(span, nil)
+	span.End()
+	if traceID, spanID := observability.CorrelationFields(context.Background()); traceID != "" || spanID != "" {
+		t.Fatalf("background correlation = %q/%q", traceID, spanID)
+	}
+
+	first := errors.New("first shutdown")
+	second := errors.New("second shutdown")
+	err = observability.ShutdownAll(context.Background(),
+		nil,
+		func(context.Context) error { return first },
+		func(context.Context) error { return second },
+	)
+	if !errors.Is(err, first) || !errors.Is(err, second) {
+		t.Fatalf("combined shutdown error = %v", err)
+	}
+}

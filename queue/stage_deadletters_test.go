@@ -2,6 +2,7 @@ package queue_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -35,6 +36,9 @@ func TestStageDeadLetterIsPermanentPerExhaustedAttemptAndStageIsolated(t *testin
 	dead, err := queue.NewStageDeadLetter(result, 4, time.Now().UTC())
 	if err != nil {
 		t.Fatal(err)
+	}
+	if found, ok, err := client.StageDeadLetterForRequest(ctx, request); err != nil || ok || found.DeadLetterID != "" {
+		t.Fatalf("missing dead letter = %+v, %t, %v", found, ok, err)
 	}
 	if err := client.PublishStageDeadLetter(ctx, dead); err != nil {
 		t.Fatal(err)
@@ -73,6 +77,77 @@ func TestStageDeadLetterIsPermanentPerExhaustedAttemptAndStageIsolated(t *testin
 	}
 	if xsdDepth, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayerUBL21XSD); err != nil || xsdDepth != 0 {
 		t.Fatalf("XSD dead-letter depth = %d, %v", xsdDepth, err)
+	}
+	if err := client.DeleteStageDeadLetter(ctx, queue.ValidationLayerEN16931, dead.DeadLetterID); err != nil {
+		t.Fatal(err)
+	}
+	if enDepth, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayerEN16931); err != nil || enDepth != 0 {
+		t.Fatalf("deleted EN dead-letter depth = %d, %v", enDepth, err)
+	}
+	if err := client.DeleteStageDeadLetter(ctx, queue.ValidationLayerEN16931, "bad"); err == nil {
+		t.Fatal("invalid dead-letter deletion identity was accepted")
+	}
+	if _, err := client.GetStageDeadLetter(ctx, queue.ValidationLayerEN16931, "bad"); err == nil {
+		t.Fatal("invalid dead-letter lookup identity was accepted")
+	}
+	if _, err := client.StageDeadLetterDepth(ctx, queue.ValidationLayer("unknown")); err == nil {
+		t.Fatal("unknown stage dead-letter depth was accepted")
+	}
+	invalidDead := dead
+	invalidDead.ContractVersion++
+	if err := client.PublishStageDeadLetter(ctx, invalidDead); err == nil {
+		t.Fatal("invalid dead letter was published")
+	}
+}
+
+func TestStageDeadLetterValidationRejectsIdentityAndEvidenceDrift(t *testing.T) {
+	execution, err := queue.NewValidationExecution(testInitialIntent(t, testID(t), testFrozenPlan(), time.Now().UTC()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request, err := queue.NewStageRequest(execution, 1, 1, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := queue.NewStageResult(request, queue.StageOutcomeOperationalFailure, queue.StageReasonRuntimeFailure, nil, "failure", time.Now().UTC(), time.Now().UTC(), time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dead, err := queue.NewStageDeadLetter(result, 1, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, mutate := range map[string]func(*queue.StageDeadLetter){
+		"contract":   func(d *queue.StageDeadLetter) { d.ContractVersion++ },
+		"identity":   func(d *queue.StageDeadLetter) { d.DeadLetterID = "bad" },
+		"generation": func(d *queue.StageDeadLetter) { d.Generation = 0 },
+		"reason":     func(d *queue.StageDeadLetter) { d.Reason = "other" },
+		"diagnostic": func(d *queue.StageDeadLetter) { d.Diagnostic = strings.Repeat("x", queue.MaxStageDiagnosticBytes+1) },
+		"failed at":  func(d *queue.StageDeadLetter) { d.FailedAt = "bad" },
+		"request":    func(d *queue.StageDeadLetter) { d.RequestID = "bad" },
+		"result":     func(d *queue.StageDeadLetter) { d.ResultID = "bad" },
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate := dead
+			mutate(&candidate)
+			if err := candidate.Validate(); err == nil {
+				t.Fatalf("malformed dead letter was accepted: %+v", candidate)
+			}
+		})
+	}
+
+	wrongRequest := request
+	wrongRequest.Attempt = 2
+	if _, err := dead.StageResultForRequest(wrongRequest); err == nil {
+		t.Fatal("dead letter reconstructed a different request")
+	}
+	invalidDead := dead
+	invalidDead.ContractVersion++
+	if _, err := invalidDead.StageResultForRequest(request); err == nil {
+		t.Fatal("invalid dead letter reconstructed evidence")
+	}
+	if _, err := queue.StageDeadLetterIDForRequest(queue.StageRequest{}); err == nil {
+		t.Fatal("invalid request produced a dead-letter ID")
 	}
 }
 

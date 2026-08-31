@@ -38,6 +38,13 @@ func newTestClientWithNamespace(t *testing.T, server queuetest.Server, namespace
 	return client
 }
 
+func TestVerifyUploadContentInfraUsesProvisionedObjectStore(t *testing.T) {
+	client := newTestClient(t)
+	if err := client.VerifyUploadContentInfra(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestPublishDocumentAndConsume(t *testing.T) {
 	t.Parallel()
 	client := newTestClient(t)
