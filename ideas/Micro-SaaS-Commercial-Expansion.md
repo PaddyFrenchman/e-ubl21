@@ -193,19 +193,7 @@ Every external syntax becomes an adapter around that model.
                  AP           network        webhook
 ```
 
-This avoids a combinatorial explosion of point-to-point transforms such as:
-
-```text
-EDIFACT -> UBL
-EDIFACT -> CII
-X12 -> UBL
-X12 -> CII
-JSON -> UBL
-JSON -> CII
-...
-```
-
-Instead:
+This avoids a combinatorial explosion of point-to-point transforms. Instead:
 
 ```text
 source format -> canonical model -> target format
@@ -214,8 +202,6 @@ source format -> canonical model -> target format
 ---
 
 # Input directions
-
-## Priority order
 
 | Input | Feasibility | Commercial value | Priority |
 | --- | --- | --- | --- |
@@ -231,20 +217,7 @@ source format -> canonical model -> target format
 
 ## Canonical JSON first
 
-The first generation API should allow an ERP or SaaS vendor to submit normalized invoice data such as:
-
-```json
-{
-  "invoiceNumber": "INV-10023",
-  "issueDate": "2026-08-31",
-  "seller": {},
-  "buyer": {},
-  "currency": "EUR",
-  "lines": []
-}
-```
-
-with a requested destination/profile such as:
+The first generation API should allow an ERP or SaaS vendor to submit normalized invoice data and request a destination/profile such as:
 
 ```text
 target = peppol-bis-billing
@@ -331,15 +304,7 @@ EDI parser -> UBL
 
 An inbound invoice may lack information needed by the destination profile or network.
 
-A controlled trading-partner configuration can provide information such as:
-
-```text
-partner: ACME-DE
-VAT ID: DE123456789
-Peppol endpoint: 0204:...
-endpoint scheme: 0204
-preferred outbound profile: Peppol BIS Billing 3
-```
+A controlled trading-partner configuration can provide information such as VAT identifiers, Peppol endpoint identifiers, endpoint schemes, target profiles and approved mapping defaults.
 
 The platform must never invent legally or semantically required data. Missing required information should either be supplied from approved master data or fail conversion/validation with a precise diagnostic.
 
@@ -437,26 +402,11 @@ DELIVER
 ACK / STATUS
 ```
 
-## Routing decision inputs
-
-The router may consider:
-
-- seller identity;
-- buyer identity;
-- country;
-- requested/required invoice profile;
-- Peppol participant capability;
-- customer routing policy;
-- national platform requirements;
-- direct trading-partner configuration;
-- fallback channel;
-- retry policy.
+The router may consider seller identity, buyer identity, country, requested profile, Peppol participant capability, customer routing policy, national platform requirements, direct partner configuration, fallback channel and retry policy.
 
 ## Keep delivery state separate from validation state
 
-A valid invoice can fail delivery.
-
-Therefore do not flatten everything into one status.
+A valid invoice can fail delivery. Therefore do not flatten everything into one status.
 
 Use separate state dimensions such as:
 
@@ -467,16 +417,6 @@ delivery_status
 payment_status
 reconciliation_status
 ```
-
-For example:
-
-```text
-validation_status = valid
-delivery_status   = failed
-payment_status    = not_requested
-```
-
-This distinction becomes crucial once payments are introduced.
 
 ---
 
@@ -507,11 +447,7 @@ The routing layer must therefore abstract transport providers from day one.
 
 Payments should be considered a **later invoice-lifecycle capability**, after conversion, delivery and receiving are stable.
 
-The first payment objective should not be to hold funds.
-
-It should be to connect invoice state with payment state.
-
-## Initial payment capabilities
+The first payment objective should not be to hold funds. It should be to connect invoice state with payment state.
 
 Possible capabilities include:
 
@@ -522,8 +458,7 @@ Possible capabilities include:
 - SEPA Request-to-Pay where appropriate;
 - track payment initiation and settlement status;
 - record payment references/remittance information;
-- handle partial payments;
-- handle overpayments;
+- handle partial payments and overpayments;
 - handle failed/rejected payments;
 - associate payments with invoices automatically;
 - expose payment-status webhooks.
@@ -533,110 +468,84 @@ A useful lifecycle becomes:
 ```text
 invoice generated
       |
-      v
 invoice validated
       |
-      v
 invoice delivered
       |
-      v
 recipient accepts / receives
       |
-      v
 payment requested
       |
-      v
 payment initiated
       |
-      v
 settlement confirmed
       |
-      v
 invoice reconciled
       |
-      v
 receipt / remittance evidence produced
 ```
 
-## SEPA Request-to-Pay
+## Payment architecture boundary
 
-SEPA Request-to-Pay is especially interesting architecturally because it is a request/messaging layer around payment initiation rather than the payment instrument itself.
-
-That aligns naturally with an invoice platform:
+The recommended first payment architecture is orchestration, not custody:
 
 ```text
-invoice
-   |
-   v
-payment request
-   |
-   v
-payer approval
-   |
-   v
-underlying SEPA payment
-   |
-   v
-settlement event
-   |
-   v
-reconciliation
+invoice platform
+      |
+payment request / initiation
+      |
+regulated bank / PSP
+      |
+payment network
+      |
+settlement
+      |
+bank / PSP event
+      |
+invoice platform reconciliation
 ```
 
-## Instant payments
+The platform should initially avoid holding customer funds, maintaining stored balances, directly acquiring cards, storing raw card details, acting as merchant-of-record by default, or claiming settlement before authoritative confirmation.
 
-Instant euro transfers are increasingly useful for invoice settlement because settlement can occur within seconds and around the clock.
-
-The platform can use regulated bank/PSP integrations while maintaining invoice-level orchestration and reconciliation itself.
+A deeper regulated payment role should only be evaluated later if transaction volume and economics justify the regulatory, AML, fraud, treasury and operational burden.
 
 ---
 
 # Later extension: receipts and remittance
 
-The word **receipt** should be modeled explicitly rather than treated as a PDF afterthought.
+Receipts should be modeled explicitly rather than treated as a PDF afterthought.
 
-There are several related business objects:
+Related business objects include:
 
 - payment confirmation;
-- payment receipt issued to the payer;
+- payment receipt;
 - remittance advice;
 - settlement evidence;
 - credit note/refund information;
 - invoice-payment allocation;
 - accounting reconciliation record.
 
-The platform should support machine-readable evidence first, with human-readable PDF receipts as a presentation layer.
-
-## Remittance advice
-
-UBL 2.1 already contains business documents such as `RemittanceAdvice`, which fits naturally with the broader platform direction.
+UBL 2.1 already includes `RemittanceAdvice`, which fits naturally with the broader platform direction.
 
 A future flow may be:
 
 ```text
 payment settles
      |
-     v
 payment event
      |
-     v
 match against invoice(s)
      |
-     v
 reconciliation
      |
      +--> canonical remittance record
-     |
      +--> UBL RemittanceAdvice
-     |
      +--> JSON event
-     |
      +--> PDF receipt
-     |
      +--> ERP posting/update
 ```
 
-The important concept is that payment and receipt data become part of the same durable business workflow as the invoice, while remaining distinct objects with their own identities and audit histories.
+Payment and receipt data become part of the same durable business workflow as the invoice while remaining distinct objects with their own identities and audit histories.
 
 ---
 
@@ -644,177 +553,28 @@ The important concept is that payment and receipt data become part of the same d
 
 This may become one of the highest-value later features.
 
-The platform already knows:
-
-- invoice identifier;
-- supplier/customer identities;
-- amount due;
-- currency;
-- due date;
-- payment reference;
-- delivery destination.
+The platform already knows invoice identity, supplier/customer identities, amount due, currency, due date, payment reference and delivery destination.
 
 With bank/PSP settlement data it can match:
 
 ```text
 payment transaction
         |
-        v
 candidate invoice(s)
         |
-        v
 reference + amount + counterparty matching
         |
         +--> exact match
-        |
         +--> partial payment
-        |
         +--> overpayment
-        |
         +--> ambiguous/unmatched payment
 ```
 
-This expands the commercial value from compliance infrastructure into **accounts-receivable automation**.
-
-Inbound supplier invoices plus payment execution can later extend the same architecture into **accounts-payable automation**.
-
----
-
-# Payment architecture boundary
-
-## Stage 1: orchestration, not custody
-
-The recommended first payment architecture is:
-
-```text
-invoice platform
-      |
-      | payment request / initiation
-      v
-regulated bank / PSP
-      |
-      v
-payment network
-      |
-      v
-settlement
-      |
-      v
-bank / PSP event
-      |
-      v
-invoice platform reconciliation
-```
-
-The platform should initially avoid:
-
-- holding customer funds;
-- maintaining stored balances;
-- directly acquiring cards;
-- storing raw card details;
-- acting as merchant-of-record by default;
-- claiming settlement before authoritative confirmation.
-
-This captures most of the customer value while keeping regulated payment execution with licensed providers.
-
-## Stage 2: deeper regulated payment role only if justified
-
-Much further down the road, evaluate whether becoming or partnering more deeply as a regulated payment provider is strategically worthwhile.
-
-That decision should be driven by:
-
-- transaction volume;
-- payment revenue opportunity;
-- customer demand;
-- geography;
-- regulatory/licensing cost;
-- fraud and AML obligations;
-- treasury/custody requirements;
-- operational risk.
-
-It should not be a prerequisite for invoice conversion, routing or reconciliation.
-
----
-
-# End-state architecture
-
-```text
-                              CUSTOMER SYSTEMS
-                                    |
-              +---------------------+---------------------+
-              |                     |                     |
-             ERP                   EDI                  API
-              |                     |                     |
-              +---------------------+---------------------+
-                                    |
-                                    v
-                          +-------------------+
-                          | INGEST / ADAPTERS |
-                          +-------------------+
-                                    |
-                                    v
-                          +-------------------+
-                          | CANONICAL INVOICE |
-                          +-------------------+
-                                    |
-                  +-----------------+------------------+
-                  |                 |                  |
-                  v                 v                  v
-             ENRICHMENT         VALIDATION         GENERATION
-                  |                 |                  |
-                  +-----------------+------------------+
-                                    |
-                                    v
-                               +---------+
-                               | ROUTER  |
-                               +---------+
-                                    |
-              +---------------------+----------------------+
-              |                     |                      |
-              v                     v                      v
-           Peppol               National               Direct/API
-              |                  network                 channel
-              +---------------------+----------------------+
-                                    |
-                             SEND / RECEIVE
-                                    |
-                                    v
-                            DELIVERY EVENTS
-                                    |
-                                    v
-                         +---------------------+
-                         | PAYMENT ORCHESTRATOR|
-                         +---------------------+
-                                    |
-                     +--------------+--------------+
-                     |                             |
-                     v                             v
-                   BANK                           PSP
-                     |                             |
-                     +--------------+--------------+
-                                    |
-                                    v
-                              SETTLEMENT
-                                    |
-                                    v
-                           RECONCILIATION
-                                    |
-                     +--------------+--------------+
-                     |                             |
-                     v                             v
-                REMITTANCE                      RECEIPT
-                     |                             |
-                     +--------------+--------------+
-                                    |
-                                    v
-                              ERP / LEDGER
-```
+This expands the commercial value from compliance infrastructure into **accounts-receivable automation**. Inbound supplier invoices plus payment execution can later extend the same architecture into **accounts-payable automation**.
 
 ---
 
 # Core product invariants
-
-As the product expands, several rules should remain non-negotiable.
 
 1. **Conversion is reproducible.** Every output identifies the input, mapping version, target profile and transformation version.
 2. **Validation is evidence-based.** A document cannot be reported profile-valid without complete required validation evidence.
@@ -826,6 +586,8 @@ As the product expands, several rules should remain non-negotiable.
 8. **No invented compliance data.** Missing required identifiers or tax/payment information must fail or require controlled enrichment.
 9. **Adapters and mappings are versioned.** Trading-partner behavior must be reproducible.
 10. **Transport providers are replaceable.** Peppol APs, national networks, banks and PSPs sit behind connector interfaces.
+11. **Usage billing is idempotent.** Infrastructure retries and duplicate queue deliveries must never create duplicate customer charges.
+12. **SaaS billing credits are separate from invoice-payment money.** The commercial credit ledger must never become a customer-funds ledger.
 
 ---
 
@@ -841,96 +603,35 @@ As the product expands, several rules should remain non-negotiable.
 
 ## Phase A — Canonical invoice and generation API
 
-Build:
-
-- canonical semantic invoice model;
-- canonical JSON contract;
-- JSON/canonical -> UBL generation;
-- target-profile selection;
-- generated-document validation;
-- deterministic transformation provenance.
+Build the canonical semantic invoice model, canonical JSON contract, UBL generation, target-profile selection, generated-document validation and deterministic transformation provenance.
 
 ## Phase B — Multi-format conversion
 
-Add:
-
-- CII;
-- CSV/flat-file mapping;
-- EDIFACT INVOIC;
-- X12 810;
-- selected ERP adapters such as SAP IDoc.
+Add CII, CSV/flat-file mapping, EDIFACT INVOIC, X12 810 and selected ERP adapters such as SAP IDoc.
 
 ## Phase C — Routing and delivery
 
-Add:
-
-- recipient/profile resolution;
-- Peppol participant lookup;
-- Access Point connector abstraction;
-- delivery state machine;
-- retries/DLQ;
-- delivery evidence;
-- webhooks/callbacks.
+Add recipient/profile resolution, Peppol participant lookup, Access Point connector abstraction, delivery state machine, retries/DLQ, delivery evidence and callbacks.
 
 ## Phase D — Inbound exchange
 
-Receive invoices and convert them into:
-
-- canonical JSON;
-- EDIFACT INVOIC;
-- X12 810;
-- ERP-specific formats.
+Receive invoices and convert them into canonical JSON, EDIFACT INVOIC, X12 810 and ERP-specific formats.
 
 ## Phase E — National profile/network expansion
 
 Add country capability packs according to commercial demand and regulatory timing.
 
-Potential examples:
-
-- France;
-- Germany;
-- Belgium;
-- Italy;
-- Poland;
-- additional Peppol/national regimes.
-
 ## Phase F — Payment requests and payment status
 
-Add:
-
-- payment instruction extraction;
-- payment request creation;
-- PSP/bank connectors;
-- SEPA payment initiation through regulated providers;
-- SEPA Request-to-Pay integration where commercially useful;
-- payment-status events;
-- durable payment state.
+Add payment instruction extraction, payment request creation, PSP/bank connectors, SEPA initiation through regulated providers, SEPA Request-to-Pay where commercially useful, payment-status events and durable payment state.
 
 ## Phase G — Reconciliation and receipts
 
-Add:
-
-- settlement ingestion;
-- invoice/payment matching;
-- partial/multiple payment allocation;
-- remittance advice;
-- payment receipts;
-- accounting/ERP update hooks;
-- reconciliation APIs.
+Add settlement ingestion, invoice/payment matching, partial/multiple payment allocation, remittance advice, payment receipts, ERP update hooks and reconciliation APIs.
 
 ## Phase H — Advanced payment capabilities
 
-Evaluate:
-
-- deeper bank integrations;
-- open-banking payment initiation;
-- payment routing optimisation;
-- refunds;
-- payment collection options;
-- potential regulated payment-provider role;
-- treasury/cash-management capabilities.
-
-Do this only after invoice exchange volume and customer demand justify the regulatory and operational cost.
+Evaluate deeper bank integrations, open-banking payment initiation, payment routing optimisation, refunds, payment collection options, a possible regulated payment-provider role and treasury/cash-management capabilities.
 
 ---
 
@@ -938,22 +639,7 @@ Do this only after invoice exchange volume and customer demand justify the regul
 
 A simple valid/invalid API is commodity territory.
 
-The defensible product becomes the combination of:
-
-1. deterministic standards validation;
-2. canonical invoice semantics;
-3. configurable and versioned conversion;
-4. multi-format generation;
-5. trading-partner enrichment;
-6. recipient/profile resolution;
-7. bidirectional routing;
-8. network/provider abstraction;
-9. permanent delivery evidence;
-10. payment orchestration;
-11. automatic reconciliation;
-12. receipts/remittance;
-13. regression testing across standards upgrades;
-14. private deployment.
+The defensible product becomes the combination of deterministic standards validation, canonical invoice semantics, configurable/versioned conversion, multi-format generation, trading-partner enrichment, recipient/profile resolution, bidirectional routing, network/provider abstraction, permanent delivery evidence, payment orchestration, automatic reconciliation, receipts/remittance, regression testing across standards upgrades and private deployment.
 
 The deeper into the lifecycle the platform goes, the harder it becomes to replace because it owns not only compliance but also the customer's business-process integration.
 
@@ -961,61 +647,9 @@ The deeper into the lifecycle the platform goes, the harder it becomes to replac
 
 # Developer experience as a moat
 
-Validation diagnostics should remain excellent:
+Validation diagnostics, conversion diagnostics, delivery failures and payment/reconciliation state should all be machine-readable, stable and developer-friendly.
 
-```json
-{
-  "valid": false,
-  "profile": "PEPPOL-BIS-3",
-  "errors": [
-    {
-      "rule": "BR-CO-10",
-      "severity": "fatal",
-      "path": "/Invoice/...",
-      "field": "invoice_total",
-      "explanation": "...",
-      "suggested_fix": "..."
-    }
-  ]
-}
-```
-
-Conversion failures should be equally explicit:
-
-```json
-{
-  "converted": false,
-  "source": "edifact-invoic-d96a",
-  "target": "peppol-bis-billing-3",
-  "errors": [
-    {
-      "field": "buyer.endpoint_id",
-      "source": "NAD+BY",
-      "explanation": "A buyer electronic endpoint identifier is required by the target profile and none is present in the message or approved partner configuration."
-    }
-  ]
-}
-```
-
-Payment/reconciliation APIs should follow the same principle:
-
-```json
-{
-  "invoiceId": "INV-10023",
-  "amountDue": "1200.00",
-  "currency": "EUR",
-  "paymentStatus": "partially_paid",
-  "settledAmount": "800.00",
-  "remainingAmount": "400.00",
-  "allocations": [
-    {
-      "paymentId": "pay_01",
-      "amount": "800.00",
-      "status": "settled"
-    }
-  ]
-}
-```
+The public API should expose business outcomes and durable operation identifiers rather than leaking internal worker topology.
 
 ---
 
@@ -1052,26 +686,359 @@ invoice reconciliation API
 
 ---
 
-# Pricing direction
+# Usage-credit commercial model
 
-Validation-only pricing can remain simple at first.
+## Commercial principle
 
-The broader platform should eventually price around value and transaction volume.
+The platform should support a **prepaid usage-credit model** as a primary self-service purchasing mechanism.
 
-Potential dimensions:
+The customer buys a bundle of platform credits and spends them on invoice-processing outcomes. This is a natural fit for API customers because cost scales with document volume rather than seats or user accounts.
 
-- invoices converted;
-- invoices delivered/received;
-- active trading partners;
-- enabled country/profile packs;
-- EDI/ERP connectors;
-- delivery-network connectors;
-- payment requests initiated;
-- settlements reconciled;
-- private deployment;
-- SLA/support tier.
+A simple commercial message is:
 
-Customers should buy an invoice-lifecycle outcome rather than internal pipeline stages.
+> **No subscription required. Buy invoice-processing credits and use them for validation, conversion, delivery and receiving.**
+
+Enterprise customers can later use monthly committed volume, contract pricing or postpaid invoicing while using the same underlying metering model.
+
+## Make the credit value transparent
+
+Use a stable, understandable unit:
+
+```text
+1 credit = €0.01
+```
+
+This makes invoices, dashboards and rate cards easy to understand. Avoid opaque credit exchange rates that force customers to calculate the true euro price of every operation.
+
+## Do not expose every internal stage as a billable item
+
+The implementation may internally execute many steps:
+
+```text
+parse
+normalize
+enrich
+generate
+XSD validate
+EN 16931 validate
+Peppol validate
+recipient lookup
+route
+send
+acknowledgement tracking
+```
+
+Customers should not receive eleven microcharges for one invoice journey.
+
+Internal stages should be metered for observability and cost accounting, but the public rate card should expose a small number of **business-level operations**.
+
+Suggested initial billable operations:
+
+| Operation | Illustrative credits | Illustrative price |
+| --- | ---: | ---: |
+| Basic UBL/XSD validation | 10 | €0.10 |
+| EN 16931 validation | 20 | €0.20 |
+| Full Peppol validation | 25 | €0.25 |
+| Canonical JSON -> compliant invoice conversion | 25 | €0.25 |
+| CII/UBL conversion | 25 | €0.25 |
+| EDIFACT/X12 -> canonical conversion surcharge | 20–35 | €0.20–€0.35 |
+| Route/send through supported e-invoice network | 40+ | €0.40+ |
+| Receive invoice through supported network | 25+ | €0.25+ |
+| Payment request | later | TBD |
+| Automatic reconciliation | later | TBD |
+
+These figures are **provisional commercial hypotheses**, not frozen prices. In particular, routing must not be priced permanently until wholesale Access Point/network/provider costs and support costs are known.
+
+## Sell invoice journeys as well as atomic operations
+
+The API may expose atomic operations, but the commercial offer should increasingly sell complete outcomes.
+
+Illustrative journey pricing:
+
+| Invoice journey | Illustrative price |
+| --- | ---: |
+| Validate only | €0.25 |
+| Convert + validate | €0.40 |
+| Convert + validate + route/send | €0.65 |
+| Receive + validate + convert | €0.55 |
+| EDIFACT -> Peppol complete outbound | €0.80 |
+| Peppol -> EDIFACT complete inbound | €0.70 |
+
+This keeps customer pricing simple while allowing the platform to maintain detailed internal cost accounting.
+
+## Credit bundles
+
+An initial bundle structure could be:
+
+| Pack | Customer pays | Credits issued | Effective bonus |
+| --- | ---: | ---: | ---: |
+| Starter | €50 | 5,000 | none |
+| Developer | €200 | 22,000 | 10% |
+| Business | €1,000 | 120,000 | 20% |
+| Scale | €5,000 | 650,000 | 30% |
+| Enterprise | negotiated | negotiated | contract |
+
+Bundle sizes and discounts should be tested against actual acquisition cost, support burden, external network cost and observed volume distribution.
+
+## Auto-recharge
+
+Self-service accounts should optionally support an automatic recharge rule such as:
+
+```text
+if credit_balance < 2,000:
+    purchase 20,000 credits
+```
+
+The customer must control the threshold, recharge amount and spending limits.
+
+## Volume economics
+
+A flat €0.25 validation price is reasonable as a low-volume self-service hypothesis, but probably too expensive for very large customers.
+
+The effective unit price should decline with committed or prepaid volume.
+
+Illustrative validation economics:
+
+```text
+1–1,000 invoices          €0.25 each
+1,001–10,000              €0.15 each
+10,001–100,000            €0.08 each
+100,000+                  negotiated
+```
+
+Credit-pack bonuses can implement much of this decline without creating a complicated per-request tariff table.
+
+## Routing price must include external provider economics
+
+Routing is not equivalent to validation because it may incur an external Peppol Access Point, national platform or delivery-provider charge.
+
+The internal economic model should therefore be:
+
+```text
+customer routing price
+    =
+platform routing cost
+    + external network/provider cost
+    + support/risk allowance
+    + margin
+```
+
+The public API can still expose one simple price when provider costs are predictable.
+
+A provisional €0.40 routing price is plausible only if the underlying wholesale/provider economics leave adequate margin.
+
+## Billing rules for success, failure and retries
+
+Billing semantics must be frozen as carefully as validation semantics.
+
+Recommended principles:
+
+```text
+VALIDATION
+- charge once when the requested validation actually executes
+- charge whether the business result is valid or invalid
+- do not charge again for infrastructure retries
+
+CONVERSION
+- charge once when a requested conversion reaches its defined billable outcome
+- malformed source rejection before meaningful processing may be free
+- platform failure must not create a charge
+
+ROUTING / DELIVERY
+- define the exact billable boundary explicitly
+- normally charge once when the platform successfully hands the document to the configured external delivery connector or reaches another contractually defined submission point
+- platform retry/redelivery must never create another charge
+
+RECEIVING
+- charge once per accepted inbound business document, not once per internal delivery attempt
+
+IDEMPOTENT CUSTOMER RETRY
+- same idempotency key and same operation must never create a duplicate charge
+
+PLATFORM FAILURE
+- never leave a customer permanently charged for an operation that failed solely because of platform infrastructure
+- use a reversal/credit transaction rather than deleting billing history
+```
+
+## Immutable credit ledger
+
+Do not implement billing as a mutable `balance = balance - 25` counter with no durable explanation.
+
+Use an immutable ledger.
+
+Conceptually:
+
+```text
+credit_account
+    tenant_id
+    currency
+    current_balance_projection
+
+credit_transaction
+    id
+    tenant_id
+    timestamp
+    invoice_id / document_id
+    operation_id
+    operation_type
+    rate_card_version
+    credits
+    direction
+    idempotency_key
+    external_cost_reference
+    metadata
+```
+
+Example ledger:
+
+```text
++10000  CREDIT_PURCHASE
+   -25  PEPPOL_VALIDATE
+   -35  EDIFACT_CONVERT
+   -40  PEPPOL_SEND
+   +40  REVERSAL_PLATFORM_FAILURE
+```
+
+The displayed balance should be a projection/reconciliation of immutable ledger entries, not the only accounting truth.
+
+## Bill each business operation exactly once
+
+The existing durable/idempotent architecture is a strong foundation for usage billing.
+
+Every billable operation should have a deterministic billing idempotency key derived from business identity, operation type and billable generation/attempt semantics.
+
+For example:
+
+```text
+billing_key = tenant + invoice_generation + operation_type
+```
+
+The exact contract needs refinement for revalidation, replay, replacement conversions and customer-requested resend, but queue redelivery and infrastructure retry must never alter the billable identity.
+
+## Version the rate card
+
+Historical charges must remain reproducible after prices change.
+
+Example:
+
+```text
+rate_card = 2026-01
+operation = peppol-send
+credits = 40
+```
+
+Later:
+
+```text
+rate_card = 2027-01
+operation = peppol-send
+credits = 35
+```
+
+Every ledger debit must record the rate-card version that produced it.
+
+Rate-card changes should never retroactively rewrite previous ledger entries.
+
+## Separate commercial credits from future payment funds
+
+When payment orchestration arrives, there will be two completely different concepts of money:
+
+```text
+SERVICE CREDITS
+customer -> platform
+used to buy SaaS/API operations
+```
+
+and:
+
+```text
+INVOICE FUNDS
+payer -> supplier
+tracked/orchestrated as part of invoice settlement
+```
+
+These must be different domains, ledgers, identifiers and security boundaries.
+
+```text
+SaaS billing ledger != invoice payment ledger
+```
+
+A prepaid API-credit balance must never evolve accidentally into a stored-value or customer-funds wallet.
+
+## Customer billing surfaces
+
+The commercial API/dashboard should expose at least:
+
+- current credit balance;
+- purchased bundles;
+- credit expiry policy, ideally no arbitrary short expiry;
+- rate-card version;
+- per-operation usage;
+- per-invoice usage breakdown;
+- monthly usage export;
+- invoice/receipt for credit purchases;
+- debit and reversal history;
+- auto-recharge settings;
+- spending alerts;
+- optional tenant/sub-account budgets.
+
+For ERP vendors serving many downstream businesses, sub-account or customer attribution will be particularly valuable even when the ERP vendor owns the master credit balance.
+
+## Market precedent
+
+Credit/wallet usage billing already exists in adjacent e-invoicing APIs.
+
+Examples observed in 2026 include:
+
+- Scell.io: prepaid credits, no subscription, with a published per-invoice issuance price;
+- OpenAPI: wallet/pay-as-you-go and subscription pricing for electronic invoicing, with lower effective unit prices at higher committed volumes.
+
+These examples support the commercial feasibility of prepaid invoice-processing credits, while also showing that large-volume transaction pricing can fall into the low-cent range. Therefore premium prices such as €0.25 validation should be positioned as low-volume/self-service prices rather than assumed enterprise-volume prices.
+
+---
+
+# Pricing strategy by customer segment
+
+## Self-service / developer
+
+Primary model:
+
+```text
+prepaid credits
+no mandatory subscription
+public rate card
+auto-recharge optional
+```
+
+Goal: minimal purchasing friction.
+
+## Growing SaaS / ERP vendor
+
+Primary model:
+
+```text
+larger prepaid bundle
+volume bonus
+monthly minimum optional
+shared tenant/sub-account reporting
+```
+
+Goal: predictable marginal invoice cost.
+
+## Enterprise / integrator
+
+Primary model:
+
+```text
+annual committed volume
+negotiated credit rate
+postpaid or prepaid contract
+SLA/support
+private networking/deployment options
+country/profile packs
+```
+
+The underlying meter remains operation/credit based even when commercial invoicing becomes monthly or annual.
 
 ---
 
@@ -1114,7 +1081,9 @@ reconciliation + receipts
 possible deeper payment role
 ```
 
-The next architectural design work should therefore still be the **canonical semantic invoice model and adapter contract**, followed by a **routing/transport abstraction**.
+The next architectural design work should still be the **canonical semantic invoice model and adapter contract**, followed by a **routing/transport abstraction**.
+
+The billing architecture can be designed in parallel because deterministic operation identity, idempotency and immutable usage evidence should be built into later conversion/routing workflows rather than bolted on after launch.
 
 Payments should be designed into the long-term data model now, but implemented only after the invoice exchange platform is stable.
 
@@ -1132,6 +1101,8 @@ Payments should be designed into the long-term data model now, but implemented o
 | Partner-AP Peppol routing | High |
 | Inbound Peppol -> EDI/ERP | High |
 | National profile packs | High but ongoing standards work |
+| Prepaid usage-credit billing | Very high |
+| Immutable metering/credit ledger | Very high |
 | Payment request / PSP-bank orchestration | High |
 | SEPA Request-to-Pay integration | High |
 | Settlement ingestion and reconciliation | High |
@@ -1144,9 +1115,9 @@ The overall expansion is technically credible and fits the current asynchronous,
 
 The long-term product can be summarized as:
 
-> **Convert any supported business invoice format into the format the destination requires, validate it, route it, send and receive it, then connect the resulting obligation to payment, reconciliation and receipt evidence.**
+> **Convert any supported business invoice format into the format the destination requires, validate it, route it, send and receive it, then connect the resulting obligation to payment, reconciliation and receipt evidence. Bill the service through transparent usage credits tied to durable business operations rather than seats or opaque subscriptions.**
 
-Validation creates trust. Conversion creates interoperability. Routing makes the system operational. Bidirectional exchange embeds it into ERP/EDI workflows. Payment and reconciliation eventually turn it into an invoice lifecycle platform.
+Validation creates trust. Conversion creates interoperability. Routing makes the system operational. Bidirectional exchange embeds it into ERP/EDI workflows. Payment and reconciliation eventually turn it into an invoice lifecycle platform. Usage credits make the commercial model scale naturally with transaction volume.
 
 ---
 
@@ -1170,8 +1141,14 @@ https://docs.peppol.eu/poacc/billing/3.0/
 European Commission payment services:  
 https://finance.ec.europa.eu/consumer-finance-and-payments/payment-services/payment-services_en
 
-European Commission instant payments:  
-https://finance.ec.europa.eu/news/new-eu-rules-make-instant-euro-payments-faster-and-safer-2025-10-10_en
-
 European Payments Council SEPA Request-to-Pay:  
 https://www.europeanpaymentscouncil.eu/what-we-do/other-schemes/sepa-request-pay
+
+Scell.io prepaid-credit model:  
+https://scell.io/en/faq
+
+OpenAPI electronic-invoicing wallet pricing:  
+https://console.openapi.com/apis/sdi/pricing
+
+OpenAPI electronic-invoicing product pricing:  
+https://openapi.com/products/italian-electronic-invoicing
