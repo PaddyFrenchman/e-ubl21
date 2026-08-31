@@ -406,9 +406,20 @@ func TestXSDWorkerOperationalResultsDriveIndependentRetryAndExhaustion(t *testin
 
 func TestXSDWorkerRecoversAfterTemporaryObjectStoreOutage(t *testing.T) {
 	client, ctx := newXSDWorkerTestClient(t)
-	request := publishXSDWorkerTestRequestWithoutContent(t, ctx, client)
+	request := publishXSDWorkerTestRequest(t, ctx, client, []byte("<Invoice/>"))
+	if content, err := client.GetUploadContent(ctx, request.UploadID); err != nil || string(content) != "<Invoice/>" {
+		t.Fatalf("content before Object Store outage = %q, %v", content, err)
+	}
 	machine := orchestrator.New(client)
 	worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error { return nil })
+	backendFailure := errors.New("Object Store backend temporarily unavailable")
+	backendAvailable := false
+	worker.openContent = func(ctx context.Context, uploadID string) (queue.UploadContentReader, error) {
+		if !backendAvailable {
+			return nil, backendFailure
+		}
+		return client.OpenUploadContent(ctx, uploadID)
+	}
 
 	firstMessage := fetchXSDWorkerRequest(t, ctx, client)
 	if err := worker.handle(ctx, firstMessage); err != nil {
@@ -418,6 +429,9 @@ func TestXSDWorkerRecoversAfterTemporaryObjectStoreOutage(t *testing.T) {
 	if firstResult.Outcome != queue.StageOutcomeOperationalFailure || firstResult.Reason != queue.StageReasonContentUnavailable {
 		t.Fatalf("Object Store outage result = %+v", firstResult)
 	}
+	if !strings.Contains(firstResult.Diagnostic, backendFailure.Error()) {
+		t.Fatalf("Object Store outage diagnostic = %q", firstResult.Diagnostic)
+	}
 	retrying, err := machine.HandleStageResult(ctx, firstResult)
 	if err != nil {
 		t.Fatal(err)
@@ -426,8 +440,9 @@ func TestXSDWorkerRecoversAfterTemporaryObjectStoreOutage(t *testing.T) {
 		t.Fatalf("Object Store recovery retry state = %+v", retrying.Execution.Orchestration)
 	}
 
-	if err := client.PutUploadContent(ctx, request.UploadID, []byte("<Invoice/>")); err != nil {
-		t.Fatal(err)
+	backendAvailable = true
+	if content, err := client.GetUploadContent(ctx, request.UploadID); err != nil || string(content) != "<Invoice/>" {
+		t.Fatalf("content after Object Store recovery = %q, %v", content, err)
 	}
 	secondMessage := fetchXSDWorkerRequest(t, ctx, client)
 	if err := worker.handle(ctx, secondMessage); err != nil {
@@ -488,6 +503,7 @@ func TestXSDWorkerRejectsStalePreviousGenerationAfterRevalidation(t *testing.T) 
 	if initialTerminal.Execution.Orchestration.Status != queue.ExecutionStatusValid {
 		t.Fatalf("initial terminal generation = %+v", initialTerminal.Execution.Orchestration)
 	}
+	evidenceBefore := validationEvidenceCount(t, ctx, client)
 	revalidated, err := machine.Start(ctx, queue.ValidationExecutionIntent{
 		IntentID: testXSDWorkerID(t), UploadID: started.Execution.UploadID, DocumentType: "Invoice",
 		Trigger: queue.ValidationTriggerRevalidation, RequestedProfile: queue.ValidationProfileUBL21EN16931,
@@ -500,21 +516,41 @@ func TestXSDWorkerRejectsStalePreviousGenerationAfterRevalidation(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	createdAt, err := time.Parse(time.RFC3339Nano, revalidated.Execution.Orchestration.Stages[0].RequestCreatedAt)
+	currentDelivery := fetchXSDWorkerRequest(t, ctx, client)
+	var currentRequest queue.StageRequest
+	if err := currentRequest.UnmarshalJSON(currentDelivery.Data()); err != nil {
+		t.Fatal(err)
+	}
+	if currentRequest.Generation != revalidated.Execution.Generation {
+		t.Fatalf("queued current generation = %d, want %d", currentRequest.Generation, revalidated.Execution.Generation)
+	}
+	payload, err := oldRequest.MarshalJSON()
 	if err != nil {
 		t.Fatal(err)
 	}
-	currentRequest, err := queue.NewStageRequest(revalidated.Execution, 1, 1, createdAt)
+	names, err := client.Namespace.StageQueue(queue.ValidationLayerUBL21XSD)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error { return nil })
-	if _, err := worker.authorize(ctx, oldRequest); !errors.Is(err, errXSDStageRequestStale) {
-		t.Fatalf("previous-generation request error = %v, want stale", err)
+	if _, err := client.JS.Publish(ctx, names.RequestSubject, payload); err != nil {
+		t.Fatal(err)
 	}
-	if _, err := worker.authorize(ctx, currentRequest); err != nil {
-		t.Fatalf("current revalidation request rejected: %v", err)
+	staleDelivery := fetchXSDWorkerRequest(t, ctx, client)
+	validatorCalled := false
+	worker := newTestXSDStageWorker(client, func(context.Context, string, io.Reader, time.Duration) error {
+		validatorCalled = true
+		return nil
+	})
+	if err := worker.handle(ctx, staleDelivery); !errors.Is(err, errXSDStageRequestStale) {
+		t.Fatalf("previous-generation broker delivery error = %v, want stale", err)
+	}
+	if validatorCalled {
+		t.Fatal("XSD validator ran for a stale previous-generation delivery")
+	}
+	assertStageRequestStreamMessages(t, ctx, client, queue.ValidationLayerUBL21XSD, 1)
+	assertStageResultStreamMessages(t, ctx, client, queue.ValidationLayerUBL21XSD, 0)
+	if evidenceAfter := validationEvidenceCount(t, ctx, client); evidenceAfter != evidenceBefore {
+		t.Fatalf("validation evidence count after stale delivery = %d, want %d", evidenceAfter, evidenceBefore)
 	}
 	storedOld, err := client.GetValidationExecution(ctx, oldRequest.UploadID, oldRequest.ValidationID, oldRequest.Generation)
 	if err != nil || storedOld.Orchestration.Status != queue.ExecutionStatusValid {
@@ -806,4 +842,39 @@ func assertStageRequestStreamMessages(t *testing.T, ctx context.Context, client 
 	if info.State.Msgs != want {
 		t.Fatalf("%s request stream messages = %d, want %d", stage, info.State.Msgs, want)
 	}
+}
+
+func assertStageResultStreamMessages(t *testing.T, ctx context.Context, client *queue.Client, stage queue.ValidationLayer, want uint64) {
+	t.Helper()
+	names, err := client.Namespace.StageQueue(stage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stream, err := client.JS.Stream(ctx, names.ResultStream)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.State.Msgs != want {
+		t.Fatalf("%s result stream messages = %d, want %d", stage, info.State.Msgs, want)
+	}
+}
+
+func validationEvidenceCount(t *testing.T, ctx context.Context, client *queue.Client) int {
+	t.Helper()
+	kv, err := client.JS.KeyValue(ctx, client.Namespace.ValidationStageEvidenceBucketName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	keys, err := kv.Keys(ctx)
+	if err != nil {
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
+			return 0
+		}
+		t.Fatal(err)
+	}
+	return len(keys)
 }

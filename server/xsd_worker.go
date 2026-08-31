@@ -260,6 +260,7 @@ type xsdStageWorker struct {
 	queue             *queue.Client
 	catalog           *validationCatalog
 	validate          xsdStreamValidator
+	openContent       func(context.Context, string) (queue.UploadContentReader, error)
 	authorizeRequest  func(context.Context, queue.StageRequest) (queue.ValidationExecution, error)
 	timeout           time.Duration
 	progressInterval  time.Duration
@@ -469,7 +470,11 @@ func (worker *xsdStageWorker) nak(message jetstream.Msg) {
 
 func (worker *xsdStageWorker) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {
 	fetchCtx, fetchSpan := observability.Tracer().Start(ctx, "stage.xml.fetch", trace.WithAttributes(attribute.String("upload.id", uploadID)))
-	content, err := worker.queue.OpenUploadContent(fetchCtx, uploadID)
+	openContent := worker.openContent
+	if openContent == nil {
+		openContent = worker.queue.OpenUploadContent
+	}
+	content, err := openContent(fetchCtx, uploadID)
 	if err != nil {
 		observability.End(fetchSpan, err)
 		return fmt.Errorf("%w: open upload content: %w", errValidationContentStream, err)
