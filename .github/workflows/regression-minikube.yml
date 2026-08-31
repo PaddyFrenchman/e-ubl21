@@ -2,8 +2,15 @@ name: Minikube regression gate
 
 on:
   pull_request:
+    branches:
+      - development
+      - main
+      - 'release/**'
   push:
-    branches: [main]
+    branches:
+      - development
+      - main
+      - 'release/**'
 
 permissions:
   contents: read
@@ -34,70 +41,35 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-          cache: true
-      - name: Install evidence prerequisites
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-      - name: Install pinned Minikube
+      - name: Install required tools
         shell: bash
         run: |
-          curl --fail --location --silent --show-error \
-            --output minikube \
-            "https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-linux-amd64"
-          echo "${MINIKUBE_SHA256}  minikube" | sha256sum --check
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils
+      - name: Install Minikube
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSLo minikube https://storage.googleapis.com/minikube/releases/${MINIKUBE_VERSION}/minikube-linux-amd64
+          echo "${MINIKUBE_SHA256}  minikube" | sha256sum -c -
           sudo install minikube /usr/local/bin/minikube
           minikube version
-      - name: Start disposable Minikube cluster
-        run: >-
-          minikube start
-          --profile "$MINIKUBE_PROFILE"
-          --driver "$MINIKUBE_DRIVER"
-          --kubernetes-version v1.35.1
-          --cpus 2
-          --memory 4096mb
-      - name: Run deployed Kubernetes regression
-        run: >-
-          make regression-minikube
-          MANIFEST="${{ matrix.manifest }}"
-          PROFILE=all
-          ARTIFACT_DIR="regression-results/minikube/${{ matrix.corpus }}"
-      - name: Tear down disposable Minikube cluster
-        if: always()
-        run: minikube delete --profile "$MINIKUBE_PROFILE" || true
-      - name: Publish regression test summary
+      - name: Run Minikube regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          make regression-minikube CORPUS="${{ matrix.corpus }}" MANIFEST="${{ matrix.manifest }}"
+      - name: Collect Minikube evidence
         if: always()
         shell: bash
         run: |
-          summary="regression-results/minikube/${{ matrix.corpus }}/summary.json"
-          results="regression-results/minikube/${{ matrix.corpus }}/results.jsonl"
-          {
-            echo "## Minikube regression: ${{ matrix.corpus }}"
-            if [[ -f "$summary" ]]; then
-              echo '```json'
-              cat "$summary"
-              echo '```'
-              equivalence="regression-results/minikube/${{ matrix.corpus }}/equivalence.json"
-              if [[ -f "$equivalence" ]]; then
-                echo "Validation-split equivalence:"
-                echo '```json'
-                cat "$equivalence"
-                echo '```'
-              fi
-            else
-              echo "No semantic summary was produced; inspect the uploaded infrastructure evidence."
-            fi
-            if [[ -f "$results" ]]; then
-              failures="$(grep '"result":"fail"' "$results" || true)"
-              if [[ -n "$failures" ]]; then
-                echo "Failed fixture IDs:"
-                sed -E 's/.*"fixtureId":"([^"]+)".*/- `\1`/' <<<"$failures"
-              elif [[ -f "$summary" ]]; then
-                echo "All fixtures passed."
-              fi
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          set +e
+          mkdir -p "regression-results/minikube/${{ matrix.corpus }}/evidence"
+          minikube -p "${MINIKUBE_PROFILE}" status > "regression-results/minikube/${{ matrix.corpus }}/evidence/minikube-status.txt" 2>&1
+          kubectl get all -A -o wide > "regression-results/minikube/${{ matrix.corpus }}/evidence/kubectl-get-all.txt" 2>&1
+          kubectl get events -A --sort-by=.lastTimestamp > "regression-results/minikube/${{ matrix.corpus }}/evidence/kubectl-events.txt" 2>&1
+          kubectl logs -n e-ubl21 -l app.kubernetes.io/part-of=e-ubl21 --all-containers=true --prefix=true > "regression-results/minikube/${{ matrix.corpus }}/evidence/workload-logs.txt" 2>&1
       - name: Upload Minikube regression artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -106,3 +78,7 @@ jobs:
           path: regression-results/minikube/${{ matrix.corpus }}/
           if-no-files-found: warn
           retention-days: 14
+      - name: Cleanup Minikube
+        if: always()
+        shell: bash
+        run: minikube -p "${MINIKUBE_PROFILE}" delete || true
