@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"sync"
 	"testing"
 	"time"
 
@@ -97,31 +98,48 @@ func TestSplitWorkersOwnSuccessfulBrokerConnections(t *testing.T) {
 		t.Fatal(err)
 	}
 	client.Close()
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
-	for name, run := range map[string]func(context.Context) error{
-		"xsd": func(runCtx context.Context) error {
-			return RunXSDWorker(runCtx, XSDWorkerConfig{
-				NATSURL: server.URL, NATSOptions: server.Options, QueueNamespace: namespace,
-				catalog: testXSDCatalog(), xsdValidate: func(context.Context, string, io.Reader, time.Duration) error { return nil },
-				Logger: logger,
-			})
+	for name, test := range map[string]struct {
+		startedMessage string
+		run            func(context.Context, *slog.Logger) error
+	}{
+		"xsd": {
+			startedMessage: "worker-xsd started",
+			run: func(runCtx context.Context, logger *slog.Logger) error {
+				return RunXSDWorker(runCtx, XSDWorkerConfig{
+					NATSURL: server.URL, NATSOptions: server.Options, QueueNamespace: namespace,
+					catalog: testXSDCatalog(), xsdValidate: func(context.Context, string, io.Reader, time.Duration) error { return nil },
+					Logger: logger,
+				})
+			},
 		},
-		"en": func(runCtx context.Context) error {
-			return RunEN16931Worker(runCtx, EN16931WorkerConfig{
-				NATSURL: server.URL, NATSOptions: server.Options, QueueNamespace: namespace,
-				validator: en16931ValidatorFunc(func(context.Context, io.Reader) (queue.ValidationStageResult, error) {
-					return queue.ValidationStageResult{}, nil
-				}),
-				Logger: logger,
-			})
+		"en": {
+			startedMessage: "worker-en16931 started",
+			run: func(runCtx context.Context, logger *slog.Logger) error {
+				return RunEN16931Worker(runCtx, EN16931WorkerConfig{
+					NATSURL: server.URL, NATSOptions: server.Options, QueueNamespace: namespace,
+					validator: en16931ValidatorFunc(func(context.Context, io.Reader) (queue.ValidationStageResult, error) {
+						return queue.ValidationStageResult{}, nil
+					}),
+					Logger: logger,
+				})
+			},
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			runCtx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			done := make(chan error, 1)
-			go func() { done <- run(runCtx) }()
-			time.Sleep(25 * time.Millisecond)
+			started := make(chan struct{})
+			startupLogger := slog.New(&workerStartupLogHandler{message: test.startedMessage, started: started})
+			go func() { done <- test.run(runCtx, startupLogger) }()
+			select {
+			case <-started:
+			case err := <-done:
+				t.Fatalf("owned worker connection exited before startup: %v", err)
+			case <-time.After(3 * time.Second):
+				t.Fatal("owned worker connection did not start")
+			}
 			cancel()
 			select {
 			case err := <-done:
@@ -134,6 +152,25 @@ func TestSplitWorkersOwnSuccessfulBrokerConnections(t *testing.T) {
 		})
 	}
 }
+
+type workerStartupLogHandler struct {
+	message string
+	started chan struct{}
+	once    sync.Once
+}
+
+func (handler *workerStartupLogHandler) Enabled(context.Context, slog.Level) bool { return true }
+
+func (handler *workerStartupLogHandler) Handle(_ context.Context, record slog.Record) error {
+	if record.Message == handler.message {
+		handler.once.Do(func() { close(handler.started) })
+	}
+	return nil
+}
+
+func (handler *workerStartupLogHandler) WithAttrs([]slog.Attr) slog.Handler { return handler }
+
+func (handler *workerStartupLogHandler) WithGroup(string) slog.Handler { return handler }
 
 func TestStageOperationalReasonClassificationAndTextBounds(t *testing.T) {
 	for err, want := range map[error]queue.StageOperationalReason{
