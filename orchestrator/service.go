@@ -102,6 +102,9 @@ func RunService(ctx context.Context, raw ServiceConfig) error {
 	}
 	if ownedClient {
 		defer client.Close()
+		if err := client.RequireSplitDeployment(ctx); err != nil {
+			return fmt.Errorf("orchestrator deployment barrier: %w", err)
+		}
 	}
 	if err := client.VerifyValidationExecutionInfra(ctx); err != nil {
 		return fmt.Errorf("orchestrator verify execution infrastructure: %w", err)

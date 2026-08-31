@@ -127,8 +127,8 @@ paths:
         - UBL
       summary: Upload a UBL 2.1 XML document
       description: >-
-        Accepts an XML payload, stores it once, and queues a compact work
-        descriptor for asynchronous standards validation. Every recognized
+        Accepts an XML payload, stores it once, and durably submits it to the
+        active validation deployment generation. Every recognized
         document is validated against UBL 2.1 XSD. By default Invoice and
         CreditNote then undergo EN 16931 semantic validation; callers may
         explicitly freeze either supported validation profile.
@@ -220,6 +220,17 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '503':
+          description: Validation admission is paused while the legacy deployment drains for migration.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Suggested retry delay in seconds.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Server or queue/storage failure.
           content:

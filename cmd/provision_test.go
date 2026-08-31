@@ -34,6 +34,13 @@ func TestProvisionInfrastructureAppliesIndependentStageDeliveryLimits(t *testing
 	if err := client.VerifyValidationExecutionInfra(context.Background()); err != nil {
 		t.Fatal(err)
 	}
+	generation, err := client.DeploymentGeneration(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if generation.State.Mode != queue.DeploymentModeLegacy || generation.State.Generation != 1 {
+		t.Fatalf("provisioned deployment generation = %+v", generation.State)
+	}
 	want := queue.StageQueueInfraConfig{Stages: []queue.StageQueueConfig{
 		provisionStage(queue.ValidationLayerUBL21XSD, 41*time.Second, 19),
 		provisionStage(queue.ValidationLayerEN16931, 73*time.Second, 11),

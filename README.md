@@ -106,8 +106,8 @@ e-ubl21 serve
 e-ubl21 worker
 ```
 
-The validation-split work also exposes independent stage roles without yet
-switching the deployment migration barrier:
+The validation-split runtime exposes independent stage roles behind a durable
+deployment-generation migration barrier:
 
 ```text
 e-ubl21 orchestrator
@@ -119,7 +119,9 @@ The versioned Kubernetes base, independent resource and delivery settings,
 KEDA JetStream autoscalers, and capacity formula are documented in
 [`deploy/kubernetes/README.md`](deploy/kubernetes/README.md). The
 `e-ubl21 provision` command is the deployer entry point for creating the
-durable execution and stage topology before these runtime roles start.
+durable execution, stage, and deployment-generation topology before these
+runtime roles start. The controlled stop/drain/reconcile/activate procedure is
+documented in [`docs/DEPLOYMENT-MIGRATION.md`](docs/DEPLOYMENT-MIGRATION.md).
 
 They communicate through NATS JetStream.
 
@@ -440,8 +442,10 @@ Kubernetes runs `--orchestrator-role consumer` in the autoscaled result-reader
 Deployment and `--orchestrator-role reconciler` in one fixed repair Deployment,
 so adding result consumers never multiplies full-history reconciliation scans.
 
-The migration from the combined worker remains a separate stop/drain and
-legacy-pending reconciliation step tracked by issue #61.
+Use `e-ubl21 migration begin-drain`, `status`, `activate`, and pre-activation
+`rollback` to move safely from the combined worker to split execution. Split
+runtimes refuse to start before activation, and the combined worker refuses to
+start afterward.
 
 ### Command help
 
@@ -453,6 +457,7 @@ go run . worker-xsd --help
 go run . worker-en16931 --help
 go run . orchestrator --help
 go run . provision --help
+go run . migration --help
 go run . dead-letter --help
 go run . maintenance --help
 ```

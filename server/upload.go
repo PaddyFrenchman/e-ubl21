@@ -37,8 +37,10 @@ const maxUploadBytes = 10 << 20
 var errPayloadTooLarge = fmt.Errorf("request body exceeds the maximum allowed size of %d bytes", maxUploadBytes)
 
 type uploadHandlers struct {
-	catalog *documentCatalog
-	queue   uploadQueue
+	catalog        *documentCatalog
+	queue          uploadQueue
+	deploymentMode func(context.Context) (queue.DeploymentMode, error)
+	publishWork    queue.UploadWorkPublisher
 }
 
 type uploadQueue interface {
@@ -104,6 +106,20 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
+	if h.deploymentMode != nil {
+		mode, modeErr := h.deploymentMode(r.Context())
+		if modeErr != nil {
+			recordUploadOutcome("internal_error")
+			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "validation deployment state is unavailable"})
+			return
+		}
+		if mode == queue.DeploymentModeDraining {
+			recordUploadOutcome("migration_draining")
+			w.Header().Set("Retry-After", "30")
+			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "validation deployment is draining for migration; retry later"})
+			return
+		}
+	}
 
 	id, err := queue.NewID()
 	if err != nil {
@@ -159,7 +175,13 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 	// The upload ID enables normal JetStream deduplication. A failure here
 	// leaves enqueue_pending for CAS-safe retry, while the worker's terminal
 	// record check suppresses duplicates even beyond the broker dedup window.
-	if err := h.queue.PublishDocument(r.Context(), id, rootElement, receivedAt); err != nil {
+	publish := h.publishWork
+	if publish == nil {
+		publish = func(ctx context.Context, record queue.UploadRecord, receivedAt time.Time) error {
+			return h.queue.PublishDocument(ctx, record.ID, record.DocumentType, receivedAt)
+		}
+	}
+	if err := publish(r.Context(), record, receivedAt); err != nil {
 		record.Error = "awaiting queue publication: " + err.Error()
 		revision, _ = h.queue.UpdateUploadRecord(r.Context(), record, revision)
 		recordUploadOutcome("recovering")

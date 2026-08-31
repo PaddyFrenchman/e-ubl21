@@ -115,6 +115,9 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 	}
 	if ownedClient {
 		defer client.Close()
+		if err := client.RequireSplitDeployment(ctx); err != nil {
+			return fmt.Errorf("worker-en16931 deployment barrier: %w", err)
+		}
 	}
 
 	requestDelivery, err := client.VerifyStageWorkerInfra(ctx, queue.ValidationLayerEN16931)

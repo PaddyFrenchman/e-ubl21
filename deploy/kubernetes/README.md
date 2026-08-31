@@ -116,7 +116,9 @@ Kubernetes recreates the singleton reconciler and its repair loops resume. The
 API retains `minAvailable: 1` because its HPA minimum is two and the service
 should continue admitting requests during voluntary maintenance.
 
-This base defines the post-split workloads but does not authorize switching an
-existing installation from the combined worker. In particular, applying it is
-not a substitute for reconciling legacy pending uploads. The stop/drain,
-activation, legacy reconciliation, and rollback barrier remains issue #61.
+This base defines the post-split workloads but applying it does not itself
+activate them. Provisioning creates a durable `legacy` marker. Follow
+[`docs/DEPLOYMENT-MIGRATION.md`](../../docs/DEPLOYMENT-MIGRATION.md) to pause
+admission, drain and stop the combined worker, reconcile pending uploads, and
+move the marker to `split`. The split runtimes fail closed before activation;
+the combined worker fails closed afterward.

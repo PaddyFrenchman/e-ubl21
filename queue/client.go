@@ -36,6 +36,7 @@ type Client struct {
 	cachedUploadsKV              jetstream.KeyValue
 	cachedValidationExecutionsKV jetstream.KeyValue
 	cachedValidationEvidenceKV   jetstream.KeyValue
+	cachedDeploymentGenerationKV jetstream.KeyValue
 	cachedUploadContentStore     jetstream.ObjectStore
 }
 

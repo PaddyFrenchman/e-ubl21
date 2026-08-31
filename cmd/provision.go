@@ -46,6 +46,9 @@ func provisionInfrastructure(ctx context.Context, cfg *Config) error {
 	if err := client.ProvisionValidationExecutionInfra(ctx); err != nil {
 		return fmt.Errorf("provision execution infrastructure: %w", err)
 	}
+	if _, err := client.ProvisionDeploymentGenerationInfra(ctx, time.Now()); err != nil {
+		return fmt.Errorf("provision deployment generation infrastructure: %w", err)
+	}
 	stageConfig := queue.StageQueueInfraConfig{Stages: []queue.StageQueueConfig{
 		provisionStage(queue.ValidationLayerUBL21XSD, cfg.StageXSDAckWait, cfg.StageXSDMaxAckPending),
 		provisionStage(queue.ValidationLayerEN16931, cfg.StageENAckWait, cfg.StageENMaxAckPending),

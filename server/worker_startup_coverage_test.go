@@ -96,6 +96,17 @@ func TestSplitWorkersOwnSuccessfulBrokerConnections(t *testing.T) {
 	if err := client.ProvisionValidationExecutionInfra(ctx); err != nil {
 		t.Fatal(err)
 	}
+	legacy, err := client.ProvisionDeploymentGenerationInfra(ctx, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	draining, err := client.TransitionDeploymentMode(ctx, legacy, queue.DeploymentModeDraining, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeSplit, time.Now()); err != nil {
+		t.Fatal(err)
+	}
 	client.Close()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 

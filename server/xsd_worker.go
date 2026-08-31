@@ -113,6 +113,9 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 	}
 	if ownedClient {
 		defer client.Close()
+		if err := client.RequireSplitDeployment(ctx); err != nil {
+			return fmt.Errorf("worker-xsd deployment barrier: %w", err)
+		}
 	}
 
 	requestDelivery, err := client.VerifyStageWorkerInfra(ctx, queue.ValidationLayerUBL21XSD)

@@ -155,6 +155,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newEN16931WorkerCmd(v, cfg))
 	rootCmd.AddCommand(newOrchestratorCmd(v, cfg))
 	rootCmd.AddCommand(newProvisionCmd(v, cfg))
+	rootCmd.AddCommand(newMigrationCmd(cfg))
 	rootCmd.AddCommand(newDeadLetterCmd(cfg))
 	rootCmd.AddCommand(newMaintenanceCmd(cfg))
 	rootCmd.AddCommand(newRegressionCmd(cfg))

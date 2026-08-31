@@ -777,6 +777,8 @@ content and baggage are excluded.
 
 # TODO-VALIDATION-SPLIT-014 — Migrate existing deployments safely
 
+**Implementation contract:** [`docs/DEPLOYMENT-MIGRATION.md`](docs/DEPLOYMENT-MIGRATION.md)
+
 ## Goal
 
 Move from the monolithic worker to asynchronous stages without duplicate or mixed-generation processing.
@@ -795,6 +797,13 @@ Move from the monolithic worker to asynchronous stages without duplicate or mixe
 ## Acceptance criteria
 
 Migration cannot create a document marked `valid` under the new model with missing stage evidence.
+
+The namespace-scoped deployment marker enforces the forward cutover from
+`legacy` through `draining` to `split`. Admission pauses during drain,
+activation requires an idle legacy stream/consumer, and ambiguous pending
+records restart from the first stage of a complete frozen plan. Terminal
+records are preserved and rollback to the combined worker is prohibited after
+split activation.
 
 ---
 

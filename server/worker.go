@@ -160,6 +160,9 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		}
 		return fmt.Errorf("ensure JetStream infrastructure: %w", err)
 	}
+	if err := q.RequireLegacyDeployment(ctx); err != nil {
+		return fmt.Errorf("legacy worker deployment barrier: %w", err)
+	}
 
 	catalog, err := loadValidationCatalog()
 	if err != nil {

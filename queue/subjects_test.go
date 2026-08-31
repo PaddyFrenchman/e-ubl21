@@ -27,6 +27,9 @@ func TestDefaultNamespacePreservesLegacyNames(t *testing.T) {
 	if got, want := ns.ValidationStageEvidenceBucketName(), "UBL_VALIDATION_STAGE_EVIDENCE"; got != want {
 		t.Errorf("ValidationStageEvidenceBucketName() = %q, want %q", got, want)
 	}
+	if got, want := ns.DeploymentGenerationBucketName(), "UBL_DEPLOYMENT_GENERATION"; got != want {
+		t.Errorf("DeploymentGenerationBucketName() = %q, want %q", got, want)
+	}
 	if got, want := ns.DocumentSubject("Invoice"), "ubl.documents.Invoice"; got != want {
 		t.Errorf("DocumentSubject(%q) = %q, want %q", "Invoice", got, want)
 	}
@@ -83,6 +86,9 @@ func TestNamespaceDerivesNamesFromExample(t *testing.T) {
 	}
 	if got, want := ns.ValidationStageEvidenceBucketName(), "EUBL21_PROD_VALIDATION_STAGE_EVIDENCE"; got != want {
 		t.Errorf("ValidationStageEvidenceBucketName() = %q, want %q", got, want)
+	}
+	if got, want := ns.DeploymentGenerationBucketName(), "EUBL21_PROD_DEPLOYMENT_GENERATION"; got != want {
+		t.Errorf("DeploymentGenerationBucketName() = %q, want %q", got, want)
 	}
 }
 

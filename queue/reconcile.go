@@ -12,14 +12,29 @@ import (
 
 // ReconcileReport summarizes one acceptance reconciliation scan.
 type ReconcileReport struct {
-	Scanned, Requeued, Failed, Errors int
+	Scanned, Requeued, Deferred, Failed, Errors int
 }
+
+// UploadWorkPublisher is the acceptance-reconciliation handoff. Legacy mode
+// publishes a document descriptor; split mode creates a frozen execution.
+type UploadWorkPublisher func(context.Context, UploadRecord, time.Time) error
 
 // ReconcileUploads repairs stale accepting/enqueue_pending records. minAge
 // prevents a background scan from racing an active HTTP upload; tests and
 // explicit operator runs may pass zero.
 func (c *Client) ReconcileUploads(ctx context.Context, minAge time.Duration) (ReconcileReport, error) {
+	return c.ReconcileUploadsWithPublisher(ctx, minAge, func(ctx context.Context, record UploadRecord, receivedAt time.Time) error {
+		return c.PublishDocument(ctx, record.ID, record.DocumentType, receivedAt)
+	})
+}
+
+// ReconcileUploadsWithPublisher repairs partial acceptance using the active
+// deployment's handoff without assuming the legacy documents queue.
+func (c *Client) ReconcileUploadsWithPublisher(ctx context.Context, minAge time.Duration, publish UploadWorkPublisher) (ReconcileReport, error) {
 	var report ReconcileReport
+	if publish == nil {
+		return report, errors.New("upload work publisher is required")
+	}
 	kv, err := c.uploadsBucket(ctx)
 	if err != nil {
 		return report, err
@@ -93,7 +108,11 @@ func (c *Client) ReconcileUploads(ctx context.Context, minAge time.Duration) (Re
 			}
 		}
 		publishCtx := observability.RestoreTrace(ctx, record.EnqueueTrace)
-		if err := c.PublishDocument(publishCtx, record.ID, record.DocumentType, receivedAt); err != nil {
+		if err := publish(publishCtx, record, receivedAt); err != nil {
+			if errors.Is(err, ErrDeploymentDraining) {
+				report.Deferred++
+				continue
+			}
 			record.Error = "awaiting queue publication: " + err.Error()
 			_, _ = c.UpdateUploadRecord(ctx, record, revision)
 			report.Errors++

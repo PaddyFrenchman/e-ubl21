@@ -85,7 +85,13 @@ func NewApplication(cfg Config) (*Application, error) {
 		q.Close()
 		return nil, fmt.Errorf("ensure JetStream infrastructure: %w", err)
 	}
-	uploads := &uploadHandlers{catalog: catalog, queue: q}
+	uploads := &uploadHandlers{
+		catalog: catalog, queue: q,
+		deploymentMode: func(ctx context.Context) (queue.DeploymentMode, error) { return deploymentMode(ctx, q) },
+		publishWork: func(ctx context.Context, record queue.UploadRecord, receivedAt time.Time) error {
+			return dispatchAcceptedUpload(ctx, q, record, receivedAt)
+		},
+	}
 	auth := newOAuthValidator(cfg.OAuthHMACSecret, cfg.OAuthIssuer, cfg.OAuthAudience)
 
 	rps := cfg.RateLimitRPS
@@ -170,17 +176,20 @@ const uploadReconcileMinAge = time.Minute
 
 func runUploadMaintenance(ctx context.Context, q *queue.Client, contentRetention time.Duration, logger *slog.Logger) {
 	reconcile := func() {
-		report, err := q.ReconcileUploads(ctx, uploadReconcileMinAge)
+		report, err := q.ReconcileUploadsWithPublisher(ctx, uploadReconcileMinAge, func(ctx context.Context, record queue.UploadRecord, receivedAt time.Time) error {
+			return dispatchAcceptedUpload(ctx, q, record, receivedAt)
+		})
 		if err != nil && ctx.Err() == nil {
 			logger.Error("upload acceptance reconciliation failed", "error", err)
 			return
 		}
-		if report.Requeued > 0 || report.Failed > 0 || report.Errors > 0 {
+		if report.Requeued > 0 || report.Deferred > 0 || report.Failed > 0 || report.Errors > 0 {
 			uploadReconciliations.WithLabelValues("requeued").Add(float64(report.Requeued))
+			uploadReconciliations.WithLabelValues("deferred").Add(float64(report.Deferred))
 			uploadReconciliations.WithLabelValues("acceptance_failed").Add(float64(report.Failed))
 			uploadReconciliations.WithLabelValues("error").Add(float64(report.Errors))
 			logger.Info("upload acceptance reconciliation completed",
-				"scanned", report.Scanned, "requeued", report.Requeued,
+				"scanned", report.Scanned, "requeued", report.Requeued, "deferred", report.Deferred,
 				"failed", report.Failed, "errors", report.Errors)
 		}
 		expiry, expiryErr := q.ExpireUploadContent(ctx, contentRetention, time.Now())

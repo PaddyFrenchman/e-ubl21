@@ -35,6 +35,7 @@ const (
 	legacyUploadsBucketName               = "UBL_UPLOADS"
 	defaultValidationExecutionsBucketName = "UBL_VALIDATION_EXECUTIONS"
 	defaultValidationEvidenceBucketName   = "UBL_VALIDATION_STAGE_EVIDENCE"
+	defaultDeploymentGenerationBucketName = "UBL_DEPLOYMENT_GENERATION"
 	legacyUploadContentBucketName         = "UBL_UPLOAD_CONTENT"
 	legacyDocumentSubjectPrefix           = "ubl.documents."
 	legacyResultsSubject                  = "ubl.validation.results"
@@ -334,6 +335,15 @@ func (n Namespace) ValidationStageEvidenceBucketName() string {
 		return defaultValidationEvidenceBucketName
 	}
 	return n.resourcePrefix() + "_VALIDATION_STAGE_EVIDENCE"
+}
+
+// DeploymentGenerationBucketName is the namespace-scoped KV bucket holding
+// the migration barrier between the legacy combined worker and split stages.
+func (n Namespace) DeploymentGenerationBucketName() string {
+	if n == DefaultNamespace {
+		return defaultDeploymentGenerationBucketName
+	}
+	return n.resourcePrefix() + "_DEPLOYMENT_GENERATION"
 }
 
 // UploadContentBucketName is the JetStream KV bucket, within this
