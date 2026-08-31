@@ -220,6 +220,37 @@ func TestSplitCanonicalResultProjectsToUploadStatusAndRetention(t *testing.T) {
 	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &statusPayload) != nil || statusPayload["status"] != string(queue.StatusValid) {
 		t.Fatalf("projected HTTP status = %d body=%s", response.Code, response.Body.String())
 	}
+	executions, err := client.ValidationExecutionsForUpload(ctx, id)
+	if err != nil || len(executions) != 1 {
+		t.Fatalf("initial executions = %+v, err=%v", executions, err)
+	}
+	replayIntentID, _ := queue.NewID()
+	replay, err := queue.NextValidationGeneration(executions[0], replayIntentID, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.CreateValidationExecution(ctx, replay); err != nil {
+		t.Fatal(err)
+	}
+	replayVersion, err := client.GetValidationExecutionVersion(ctx, replay.UploadID, replay.ValidationID, replay.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requests = nil
+	if _, err := machine.EnsureDispatch(ctx, replayVersion); err != nil {
+		t.Fatal(err)
+	}
+	invalidResult, err := queue.NewStageResult(requests[0], queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, nil, "replay found invalid XML", time.Now(), time.Now().Add(time.Second), time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := machine.HandleStageResult(ctx, invalidResult); err != nil {
+		t.Fatal(err)
+	}
+	projected, err = client.ProjectUploadRecord(ctx, stored)
+	if err != nil || projected.Status != queue.StatusInvalid || len(projected.ValidationStages) != 1 {
+		t.Fatalf("replay generation projection = %+v, err=%v", projected, err)
+	}
 	report, err := client.ExpireUploadContent(ctx, time.Minute, time.Now().Add(time.Hour))
 	if err != nil {
 		t.Fatal(err)

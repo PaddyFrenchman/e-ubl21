@@ -677,14 +677,28 @@ func (c *Client) ProjectUploadRecord(ctx context.Context, record UploadRecord) (
 	if err != nil {
 		return UploadRecord{}, err
 	}
+	lineageID := ""
+	for index := range executions {
+		execution := executions[index]
+		if execution.Trigger != ValidationTriggerInitial || execution.CreationIntentID != record.ID {
+			continue
+		}
+		if lineageID != "" && lineageID != execution.ValidationID {
+			return UploadRecord{}, errors.New("upload has conflicting initial validation lineages")
+		}
+		lineageID = execution.ValidationID
+	}
+	if lineageID == "" {
+		return record, nil
+	}
 	var current *ValidationExecution
 	for index := range executions {
 		execution := &executions[index]
-		// Initial split validation uses the upload ID as its stable creation
-		// intent. Replay generations remain in that lineage. Future explicit
-		// revalidation needs its own API selection contract rather than silently
+		// Replay generations have distinct creation-intent IDs but retain their
+		// initial validation ID. Future explicit revalidation has a different
+		// lineage and needs its own API selection contract rather than silently
 		// changing this view.
-		if execution.CreationIntentID != record.ID {
+		if execution.ValidationID != lineageID {
 			continue
 		}
 		if current == nil || execution.Generation > current.Generation {
