@@ -54,6 +54,7 @@ type ServiceConfig struct {
 	Logger                 *slog.Logger
 
 	queueClient *queue.Client
+	onStarted   func()
 }
 
 func resolveServiceConfig(cfg ServiceConfig) (ServiceConfig, error) {
@@ -184,6 +185,9 @@ func RunService(ctx context.Context, raw ServiceConfig) error {
 		}()
 	}
 
+	if cfg.onStarted != nil {
+		cfg.onStarted()
+	}
 	cfg.Logger.Info("orchestrator started", "role", cfg.Role, "queueNamespace", cfg.QueueNamespace.String(), "resultPrefetch", cfg.ResultPrefetch, "reconciliationInterval", cfg.ReconciliationInterval)
 	select {
 	case <-ctx.Done():

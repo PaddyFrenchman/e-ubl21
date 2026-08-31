@@ -2,10 +2,8 @@ package orchestrator
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"sync"
 	"testing"
 	"time"
 
@@ -54,7 +52,7 @@ func TestRunServiceOwnsSuccessfulBrokerConnection(t *testing.T) {
 		done <- RunService(runCtx, ServiceConfig{
 			NATSURL: server.URL, NATSOptions: server.Options, QueueNamespace: namespace,
 			Role: ServiceRoleReconciler, ReconciliationInterval: 10 * time.Millisecond,
-			Logger: slog.New(&startupLogHandler{message: "orchestrator started", started: started}),
+			onStarted: func() { close(started) },
 		})
 	}()
 	select {
@@ -74,25 +72,6 @@ func TestRunServiceOwnsSuccessfulBrokerConnection(t *testing.T) {
 		t.Fatal("owned orchestrator connection did not stop")
 	}
 }
-
-type startupLogHandler struct {
-	message string
-	started chan struct{}
-	once    sync.Once
-}
-
-func (handler *startupLogHandler) Enabled(context.Context, slog.Level) bool { return true }
-
-func (handler *startupLogHandler) Handle(_ context.Context, record slog.Record) error {
-	if record.Message == handler.message {
-		handler.once.Do(func() { close(handler.started) })
-	}
-	return nil
-}
-
-func (handler *startupLogHandler) WithAttrs([]slog.Attr) slog.Handler { return handler }
-
-func (handler *startupLogHandler) WithGroup(string) slog.Handler { return handler }
 
 func TestResolveServiceConfigDefaultsAndRejectsInvalidLimits(t *testing.T) {
 	cfg, err := resolveServiceConfig(ServiceConfig{})

@@ -49,6 +49,7 @@ type XSDWorkerConfig struct {
 	catalog     *validationCatalog
 	xsdValidate xsdStreamValidator
 	now         func() time.Time
+	onStarted   func()
 }
 
 type xsdWorkerSettings struct {
@@ -204,6 +205,9 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 		}()
 	}
 
+	if cfg.onStarted != nil {
+		cfg.onStarted()
+	}
 	logger.Info("worker-xsd started",
 		"queueNamespace", nonEmpty(cfg.QueueNamespace.String(), "(default)"),
 		"stage", queue.ValidationLayerUBL21XSD,

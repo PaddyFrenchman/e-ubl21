@@ -53,6 +53,7 @@ type EN16931WorkerConfig struct {
 	validator     EN16931Validator
 	verifyRuntime func(context.Context, saxonRuntimeConfig) error
 	now           func() time.Time
+	onStarted     func()
 }
 
 type enWorkerSettings struct {
@@ -217,6 +218,9 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 		}()
 	}
 
+	if cfg.onStarted != nil {
+		cfg.onStarted()
+	}
 	logger.Info("worker-en16931 started",
 		"queueNamespace", nonEmpty(cfg.QueueNamespace.String(), "(default)"),
 		"stage", queue.ValidationLayerEN16931, "rulesetVersion", validationassets.EN16931().Version,
