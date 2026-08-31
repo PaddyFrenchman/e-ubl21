@@ -2,8 +2,15 @@ name: Correctness regression gate
 
 on:
   pull_request:
+    branches:
+      - development
+      - main
+      - 'release/**'
   push:
-    branches: [main]
+    branches:
+      - development
+      - main
+      - 'release/**'
 
 permissions:
   contents: read
