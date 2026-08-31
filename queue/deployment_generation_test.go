@@ -85,9 +85,24 @@ func TestLegacyDrainRequiresAnEmptyStream(t *testing.T) {
 	if err := client.EnsureInfra(ctx); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := client.InspectLegacyDrain(ctx, "ubl-validator"); !errors.Is(err, queue.ErrLegacyConsumerNotFound) {
+		t.Fatalf("missing expected consumer error = %v", err)
+	}
+	if status, err := client.InspectLegacyDrainWithPolicy(ctx, "ubl-validator", true); err != nil || !status.Ready || status.ConsumerCount != 0 {
+		t.Fatalf("explicit no-consumer drain status = %+v, err=%v", status, err)
+	}
+	if _, err := client.DocumentsConsumer(ctx, "ubl-validator", client.Namespace.DocumentSubject("Invoice")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.DocumentsConsumer(ctx, "credit-note-validator", client.Namespace.DocumentSubject("CreditNote")); err != nil {
+		t.Fatal(err)
+	}
 	status, err := client.InspectLegacyDrain(ctx, "ubl-validator")
-	if err != nil || !status.Ready {
+	if err != nil || !status.Ready || status.ConsumerCount != 2 {
 		t.Fatalf("empty drain status = %+v, err=%v", status, err)
+	}
+	if _, err := client.InspectLegacyDrain(ctx, "ubl-validtor"); !errors.Is(err, queue.ErrLegacyConsumerNotFound) {
+		t.Fatalf("misspelled expected consumer error = %v", err)
 	}
 	id, _ := queue.NewID()
 	if err := client.PublishDocument(ctx, id, "Invoice", time.Now()); err != nil {

@@ -50,8 +50,10 @@ split runtimes yet; they will refuse the legacy marker.
    ```
 
 2. Wait until `streamMessages`, `consumerPending`, and `consumerAckPending` are
-   zero. Then scale the combined worker deployment to zero. This removes its
-   outstanding pull requests, so `consumerWaiting` also becomes zero.
+   zero. The consumer counters aggregate every durable consumer on the legacy
+   documents stream, including workers with custom names or subject filters.
+   Then scale every combined worker deployment to zero. This removes outstanding
+   pull requests, so `consumerWaiting` also becomes zero.
 
 3. Confirm `ready: true`:
 
@@ -64,7 +66,10 @@ split runtimes yet; they will refuse the legacy marker.
 
 Do not activate while any of the four drain counters is non-zero. Activation
 checks them both before and after legacy reconciliation and aborts if the queue
-becomes active in between.
+becomes active in between. The named expected consumer must exist, so a typo
+fails closed. Only an installation where the combined worker was never started
+may explicitly add `--allow-no-legacy-consumer`; this still enumerates and
+checks every consumer that does exist.
 
 ## Reconcile and activate
 
@@ -86,8 +91,11 @@ Activation handles records as follows:
   `ubl21` or `ubl21-en16931` plan;
 - incomplete legacy stage evidence is never inherited or used to manufacture
   a new valid result;
-- accepting/enqueue-pending records without durable content become
-  `acceptance_failed`;
+- an `accepting` record without currently visible content is left byte-for-byte
+  unchanged and blocks activation because its HTTP content write may still be
+  in flight; rerun activation after the request or normal stale-acceptance
+  reconciliation finishes;
+- an enqueue-pending record without durable content becomes `acceptance_failed`;
 - a pending record without content, a pending dead-letter transition, invalid
   metadata, or any infrastructure/CAS error blocks activation.
 

@@ -89,7 +89,7 @@ func dispatchAcceptedUpload(ctx context.Context, client *queue.Client, record qu
 // LegacyPendingMigrationReport accounts for every upload inspected during the
 // one-time split activation reconciliation.
 type LegacyPendingMigrationReport struct {
-	Scanned, Started, Preserved, AcceptanceFailed, Errors int
+	Scanned, Started, Preserved, Deferred, AcceptanceFailed, Errors int
 }
 
 // MigrateLegacyPendingUploads re-runs every ambiguous active upload from the
@@ -133,6 +133,13 @@ func MigrateLegacyPendingUploads(ctx context.Context, client *queue.Client) (Leg
 			continue
 		}
 		if !hasContent {
+			if record.Status == queue.StatusAccepting {
+				// This may be an HTTP request between acceptance-record creation
+				// and Object Store persistence. Never turn that live request into
+				// a terminal failure; leave it untouched and block activation.
+				report.Deferred++
+				continue
+			}
 			if record.Status == queue.StatusPending {
 				report.Errors++
 				continue
@@ -175,8 +182,8 @@ func MigrateLegacyPendingUploads(ctx context.Context, client *queue.Client) (Leg
 		}
 		report.Started++
 	}
-	if report.Errors != 0 {
-		return report, fmt.Errorf("legacy pending reconciliation completed with %d errors", report.Errors)
+	if report.Errors != 0 || report.Deferred != 0 {
+		return report, fmt.Errorf("legacy pending reconciliation blocked by %d errors and %d in-flight accepting uploads", report.Errors, report.Deferred)
 	}
 	return report, nil
 }

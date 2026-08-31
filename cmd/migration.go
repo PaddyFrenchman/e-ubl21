@@ -24,12 +24,14 @@ type migrationOutput struct {
 func newMigrationCmd(cfg *Config) *cobra.Command {
 	command := &cobra.Command{Use: "migration", Short: "Control the legacy-to-split deployment barrier"}
 	command.PersistentFlags().String("legacy-consumer-name", defaultLegacyConsumerName, "Legacy combined-worker durable consumer to drain")
+	command.PersistentFlags().Bool("allow-no-legacy-consumer", false, "Explicitly allow the named legacy consumer to be absent while still checking all stream consumers")
 	command.AddCommand(
 		&cobra.Command{
 			Use: "status", Short: "Show the durable deployment generation and legacy drain state", Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				consumer, _ := cmd.Flags().GetString("legacy-consumer-name")
-				return migrationStatus(cmd.Context(), cmd.OutOrStdout(), cfg, consumer)
+				allowMissing, _ := cmd.Flags().GetBool("allow-no-legacy-consumer")
+				return migrationStatus(cmd.Context(), cmd.OutOrStdout(), cfg, consumer, allowMissing)
 			},
 		},
 		&cobra.Command{
@@ -42,7 +44,8 @@ func newMigrationCmd(cfg *Config) *cobra.Command {
 			Use: "activate", Short: "Reconcile pending uploads and activate split validation", Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				consumer, _ := cmd.Flags().GetString("legacy-consumer-name")
-				return migrationActivate(cmd.Context(), cmd.OutOrStdout(), cfg, consumer)
+				allowMissing, _ := cmd.Flags().GetBool("allow-no-legacy-consumer")
+				return migrationActivate(cmd.Context(), cmd.OutOrStdout(), cfg, consumer, allowMissing)
 			},
 		},
 		&cobra.Command{
@@ -63,7 +66,7 @@ func migrationClient(cfg *Config) (*queue.Client, error) {
 	return client, nil
 }
 
-func migrationStatus(ctx context.Context, output io.Writer, cfg *Config, consumer string) error {
+func migrationStatus(ctx context.Context, output io.Writer, cfg *Config, consumer string, allowMissing bool) error {
 	client, err := migrationClient(cfg)
 	if err != nil {
 		return err
@@ -73,7 +76,7 @@ func migrationStatus(ctx context.Context, output io.Writer, cfg *Config, consume
 	if err != nil {
 		return fmt.Errorf("load deployment generation: %w", err)
 	}
-	drain, err := client.InspectLegacyDrain(ctx, consumer)
+	drain, err := client.InspectLegacyDrainWithPolicy(ctx, consumer, allowMissing)
 	if err != nil {
 		return err
 	}
@@ -106,7 +109,7 @@ func migrationTransition(ctx context.Context, output io.Writer, cfg *Config, tar
 	return writeMigrationOutput(output, migrationOutput{State: next.State})
 }
 
-func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consumer string) error {
+func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consumer string, allowMissing bool) error {
 	client, err := migrationClient(cfg)
 	if err != nil {
 		return err
@@ -122,7 +125,7 @@ func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consu
 	if current.State.Mode != queue.DeploymentModeDraining && current.State.Mode != queue.DeploymentModeActivating {
 		return fmt.Errorf("split activation requires deployment mode %q or %q, found %q", queue.DeploymentModeDraining, queue.DeploymentModeActivating, current.State.Mode)
 	}
-	drain, err := client.InspectLegacyDrain(ctx, consumer)
+	drain, err := client.InspectLegacyDrainWithPolicy(ctx, consumer, allowMissing)
 	if err != nil {
 		return err
 	}
@@ -149,7 +152,7 @@ func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consu
 	}
 	// Re-check after reconciliation closes the window for a late legacy
 	// descriptor that was already in flight when draining began.
-	drain, err = client.InspectLegacyDrain(ctx, consumer)
+	drain, err = client.InspectLegacyDrainWithPolicy(ctx, consumer, allowMissing)
 	if err != nil {
 		return err
 	}

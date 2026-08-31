@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,6 +15,23 @@ import (
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 )
+
+type blockingContentUploadQueue struct {
+	*queue.Client
+	entered chan struct{}
+	release chan struct{}
+	once    sync.Once
+}
+
+func (blocked *blockingContentUploadQueue) PutUploadContent(ctx context.Context, id string, content []byte) error {
+	blocked.once.Do(func() { close(blocked.entered) })
+	select {
+	case <-blocked.release:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	return blocked.Client.PutUploadContent(ctx, id, content)
+}
 
 func TestMigrateLegacyPendingUploadsRestartsCompletePlanAndPreservesTerminal(t *testing.T) {
 	client, ctx := newMigrationTestClient(t)
@@ -62,6 +81,94 @@ func TestMigrateLegacyPendingUploadsRestartsCompletePlanAndPreservesTerminal(t *
 	}
 	if got := executions[0].Plan.Stages; len(got) != 2 || got[0].ID != queue.ValidationLayerUBL21XSD || got[1].ID != queue.ValidationLayerEN16931 {
 		t.Fatalf("migrated plan = %+v", got)
+	}
+}
+
+func TestMigrationDefersInFlightAcceptingUploadUntilContentIsDurable(t *testing.T) {
+	client, ctx := newMigrationTestClient(t)
+	legacy, err := client.ProvisionDeploymentGenerationInfra(ctx, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	catalog, err := loadDocumentCatalog()
+	if err != nil {
+		t.Fatal(err)
+	}
+	blocked := &blockingContentUploadQueue{
+		Client: client, entered: make(chan struct{}), release: make(chan struct{}),
+	}
+	handler := &uploadHandlers{
+		catalog: catalog, queue: blocked,
+		deploymentMode: func(ctx context.Context) (queue.DeploymentMode, error) { return deploymentMode(ctx, client) },
+		publishWork: func(ctx context.Context, record queue.UploadRecord, receivedAt time.Time) error {
+			return dispatchAcceptedUpload(ctx, client, record, receivedAt)
+		},
+	}
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/ubl/upload", strings.NewReader(validInvoiceXML))
+	request.Header.Set("Content-Type", "application/xml")
+	response := httptest.NewRecorder()
+	done := make(chan struct{})
+	go func() {
+		handler.handleUpload(response, request)
+		close(done)
+	}()
+	select {
+	case <-blocked.entered:
+	case <-time.After(5 * time.Second):
+		t.Fatal("upload did not reach blocked content persistence")
+	}
+
+	keys, err := client.UploadRecordKeys(ctx)
+	if err != nil || len(keys) != 1 {
+		t.Fatalf("in-flight upload keys = %v, err=%v", keys, err)
+	}
+	id := keys[0]
+	before, err := client.GetUploadRecord(ctx, id)
+	if err != nil || before.Status != queue.StatusAccepting {
+		t.Fatalf("in-flight upload record = %+v, err=%v", before, err)
+	}
+	draining, err := client.TransitionDeploymentMode(ctx, legacy, queue.DeploymentModeDraining, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	activating, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeActivating, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := MigrateLegacyPendingUploads(ctx, client)
+	if err == nil || report.Deferred != 1 || report.AcceptanceFailed != 0 || report.Errors != 0 {
+		t.Fatalf("in-flight migration report = %+v, err=%v", report, err)
+	}
+	deferred, err := client.GetUploadRecord(ctx, id)
+	if err != nil || deferred.Status != queue.StatusAccepting {
+		t.Fatalf("deferred upload record = %+v, err=%v", deferred, err)
+	}
+
+	close(blocked.release)
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("upload did not finish after releasing content persistence")
+	}
+	if response.Code != http.StatusAccepted {
+		t.Fatalf("upload response = %d body=%s", response.Code, response.Body.String())
+	}
+	if hasContent, err := client.HasUploadContent(ctx, id); err != nil || !hasContent {
+		t.Fatalf("durable upload content = %t, err=%v", hasContent, err)
+	}
+	if report, err = MigrateLegacyPendingUploads(ctx, client); err != nil || report.Started != 1 || report.Deferred != 0 {
+		t.Fatalf("resumed migration report = %+v, err=%v", report, err)
+	}
+	if _, err := client.TransitionDeploymentMode(ctx, activating, queue.DeploymentModeSplit, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	finalRecord, err := client.GetUploadRecord(ctx, id)
+	if err != nil || finalRecord.Status != queue.StatusPending {
+		t.Fatalf("migrated upload record = %+v, err=%v", finalRecord, err)
+	}
+	executions, err := client.ValidationExecutionsForUpload(ctx, id)
+	if err != nil || len(executions) != 1 {
+		t.Fatalf("migrated upload executions = %+v, err=%v", executions, err)
 	}
 }
 
@@ -138,7 +245,7 @@ func TestApplicationMigrationModesControlAdmissionAndDispatch(t *testing.T) {
 			if err != nil || len(executions) != test.wantExec {
 				t.Fatalf("split executions = %+v, err=%v", executions, err)
 			}
-			drain, err := applicationClient.InspectLegacyDrain(ctx, defaultWorkerConsumerName)
+			drain, err := applicationClient.InspectLegacyDrainWithPolicy(ctx, defaultWorkerConsumerName, true)
 			if err != nil || drain.StreamMessages != 0 {
 				t.Fatalf("legacy queue received split upload: %+v, err=%v", drain, err)
 			}
