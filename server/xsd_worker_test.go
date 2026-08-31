@@ -462,6 +462,7 @@ func TestXSDWorkerRecoversAfterTemporaryObjectStoreOutage(t *testing.T) {
 	if _, err := client.GetValidationExecutionResult(ctx, terminal.Execution.ValidationID, terminal.Execution.Generation); err != nil {
 		t.Fatalf("Object Store recovery permanent result: %v", err)
 	}
+	assertPermanentResultStreamMessages(t, ctx, client, 1)
 }
 
 func TestXSDWorkerRejectsStalePreviousGenerationAfterRevalidation(t *testing.T) {
@@ -556,6 +557,42 @@ func TestXSDWorkerRejectsStalePreviousGenerationAfterRevalidation(t *testing.T) 
 	if err != nil || storedOld.Orchestration.Status != queue.ExecutionStatusValid {
 		t.Fatalf("stale request changed old generation = %+v, %v", storedOld.Orchestration, err)
 	}
+
+	if err := worker.handle(ctx, currentDelivery); err != nil {
+		t.Fatalf("handle current revalidation delivery: %v", err)
+	}
+	if !validatorCalled {
+		t.Fatal("XSD validator did not run for the current revalidation delivery")
+	}
+	xsdResult := fetchXSDWorkerResult(t, ctx, client)
+	advanced, err := machine.HandleStageResult(ctx, xsdResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if advanced.Execution.Orchestration.Status != queue.ExecutionStatusStageQueued || advanced.Execution.Orchestration.CurrentStageOrdinal != 2 {
+		t.Fatalf("current revalidation after XSD = %+v", advanced.Execution.Orchestration)
+	}
+	enRequest := fetchAndAckStageRequest(t, ctx, client, queue.ValidationLayerEN16931)
+	enCompletedAt := time.Now().UTC()
+	enResult, err := queue.NewStageResult(enRequest, queue.StageOutcomePassed, queue.StageReasonNone, nil, "", enCompletedAt, enCompletedAt, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	currentTerminal, err := machine.HandleStageResult(ctx, enResult)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if currentTerminal.Execution.Orchestration.Status != queue.ExecutionStatusValid || currentTerminal.Execution.Orchestration.FinalResultStatus != queue.FinalResultPublished {
+		t.Fatalf("current revalidation terminal state = %+v", currentTerminal.Execution.Orchestration)
+	}
+	if _, err := client.GetValidationExecutionResult(ctx, currentTerminal.Execution.ValidationID, currentTerminal.Execution.Generation); err != nil {
+		t.Fatalf("current revalidation permanent result: %v", err)
+	}
+	storedOld, err = client.GetValidationExecution(ctx, oldRequest.UploadID, oldRequest.ValidationID, oldRequest.Generation)
+	if err != nil || storedOld.Orchestration.Status != queue.ExecutionStatusValid {
+		t.Fatalf("current completion changed old generation = %+v, %v", storedOld.Orchestration, err)
+	}
+	assertPermanentResultStreamMessages(t, ctx, client, 2)
 }
 
 func TestXSDWorkerTerminatesMalformedOrMisroutedRequests(t *testing.T) {
@@ -877,4 +914,19 @@ func validationEvidenceCount(t *testing.T, ctx context.Context, client *queue.Cl
 		t.Fatal(err)
 	}
 	return len(keys)
+}
+
+func assertPermanentResultStreamMessages(t *testing.T, ctx context.Context, client *queue.Client, want uint64) {
+	t.Helper()
+	stream, err := client.JS.Stream(ctx, client.Namespace.ResultsStreamName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.State.Msgs != want {
+		t.Fatalf("permanent result stream messages = %d, want %d", info.State.Msgs, want)
+	}
 }

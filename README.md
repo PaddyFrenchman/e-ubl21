@@ -324,7 +324,8 @@ crash, lost-ACK, duplicate-delivery, transient-storage, restart-backlog,
 scale-to-zero, stale-generation, and concurrent-replay scenarios against
 JetStream. The scenario matrix and exact convergence assertions are documented
 in [`docs/CHAOS-CRASH-REPLAY.md`](docs/CHAOS-CRASH-REPLAY.md). This gate runs
-before the semantic correctness regression in GitHub.
+before the semantic correctness regression in GitHub and fails immediately if
+any test mapped to a required scenario has been renamed or removed.
 
 GitHub also runs the local `make regression-minikube` lifecycle against both
 tracked corpora in parallel disposable clusters. This hosted Kubernetes gate
