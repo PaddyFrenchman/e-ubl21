@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: e-ubl21-provision
+spec:
+  backoffLimit: 10
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: e-ubl21
+        app.kubernetes.io/component: provisioner
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: provisioner
+          image: e-ubl21:replace-me
+          imagePullPolicy: IfNotPresent
+          args: ["provision"]
+          envFrom:
+            - configMapRef:
+                name: e-ubl21-runtime
+          env:
+            - name: EUBL21_STAGE_XSD_ACK_WAIT
+              value: 90s
+            - name: EUBL21_STAGE_XSD_MAX_ACK_PENDING
+              value: "64"
+            - name: EUBL21_STAGE_EN16931_ACK_WAIT
+              value: 120s
+            - name: EUBL21_STAGE_EN16931_MAX_ACK_PENDING
+              value: "32"
+            - name: EUBL21_STAGE_PEPPOL_ACK_WAIT
+              value: 120s
+            - name: EUBL21_STAGE_PEPPOL_MAX_ACK_PENDING
+              value: "32"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi

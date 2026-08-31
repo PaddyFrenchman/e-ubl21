@@ -684,6 +684,8 @@ result-publication latency. Throughput is derived from the request counter rate.
 
 # TODO-VALIDATION-SPLIT-012 — Add independent Kubernetes deployment and autoscaling configuration
 
+**Implementation contract:** [`deploy/kubernetes/README.md`](deploy/kubernetes/README.md)
+
 ## Goal
 
 Turn logical isolation into operational isolation.

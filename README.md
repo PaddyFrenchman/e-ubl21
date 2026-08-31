@@ -110,9 +110,16 @@ The validation-split work also exposes independent stage roles without yet
 switching the deployment migration barrier:
 
 ```text
+e-ubl21 orchestrator
 e-ubl21 worker-xsd
 e-ubl21 worker-en16931
 ```
+
+The versioned Kubernetes base, independent resource and delivery settings,
+KEDA JetStream autoscalers, and capacity formula are documented in
+[`deploy/kubernetes/README.md`](deploy/kubernetes/README.md). The
+`e-ubl21 provision` command is the deployer entry point for creating the
+durable execution and stage topology before these runtime roles start.
 
 They communicate through NATS JetStream.
 
@@ -405,6 +412,32 @@ The command verifies passing XSD evidence before invoking the pinned Saxon
 runtime. EN work remains durable while this role is scaled to zero. See
 [`docs/EN16931-WORKER.md`](docs/EN16931-WORKER.md).
 
+### Provision and run the validation orchestrator
+
+The split runtime requires deployer-owned durable infrastructure. Provision it
+with stage-specific acknowledgement windows and fleet-wide pending limits:
+
+```bash
+go run . provision \
+  --nats-url nats://localhost:4222 \
+  --stage-xsd-ack-wait 90s \
+  --stage-xsd-max-ack-pending 64 \
+  --stage-en16931-ack-wait 120s \
+  --stage-en16931-max-ack-pending 32
+```
+
+Then run the independent result consumer and reconciliation loops:
+
+```bash
+go run . orchestrator \
+  --nats-url nats://localhost:4222 \
+  --orchestrator-result-prefetch 8 \
+  --orchestrator-reconcile-interval 10s
+```
+
+The migration from the combined worker remains a separate stop/drain and
+legacy-pending reconciliation step tracked by issue #61.
+
 ### Command help
 
 ```bash
@@ -413,6 +446,8 @@ go run . serve --help
 go run . worker --help
 go run . worker-xsd --help
 go run . worker-en16931 --help
+go run . orchestrator --help
+go run . provision --help
 go run . dead-letter --help
 go run . maintenance --help
 ```
@@ -431,6 +466,8 @@ Examples:
 --worker-validation-timeout -> EUBL21_WORKER_VALIDATION_TIMEOUT
 --worker-xsd-timeout         -> EUBL21_WORKER_XSD_TIMEOUT
 --worker-en16931-timeout     -> EUBL21_WORKER_EN16931_TIMEOUT
+--orchestrator-result-prefetch -> EUBL21_ORCHESTRATOR_RESULT_PREFETCH
+--stage-xsd-ack-wait         -> EUBL21_STAGE_XSD_ACK_WAIT
 ```
 
 Major configuration groups include:

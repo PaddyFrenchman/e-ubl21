@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: e-ubl21
+resources:
+  - namespace.yaml
+  - runtime-config.yaml
+  - provision-job.yaml
+  - api.yaml
+  - orchestrator.yaml
+  - worker-xsd.yaml
+  - worker-en16931.yaml
+  - disruption-budgets.yaml
+  - autoscaling.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: e-ubl21
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: true

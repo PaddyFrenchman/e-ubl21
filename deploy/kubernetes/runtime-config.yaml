@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: e-ubl21-runtime
+data:
+  EUBL21_NATS_URL: nats://nats:4222
+  EUBL21_QUEUE_NAMESPACE: eubl21.prod
+  EUBL21_UPLOAD_CONTENT_RETENTION: 720h
+  EUBL21_UPLOAD_CONTENT_MAX_BYTES: "10737418240"
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318

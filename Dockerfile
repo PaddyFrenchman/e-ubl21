@@ -1,7 +1,6 @@
-# Multi-stage build for the e-ubl21 binary. The same image and binary are
-# used for both the "api" (`serve`) and "worker" (`worker`) docker-compose
-# services - they only differ in the command they run - so a single
-# Dockerfile is sufficient (see docker-compose.yml).
+# Multi-stage build for the e-ubl21 binary. The same immutable image runs the
+# API, transitional combined worker, orchestrator, provisioner, and independent
+# stage-worker roles; only the command and configuration differ.
 
 # ---- Build stage -----------------------------------------------------------
 FROM docker.io/library/golang:1.25-alpine AS build

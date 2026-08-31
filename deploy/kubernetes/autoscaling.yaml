@@ -1,0 +1,114 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: e-ubl21-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: e-ubl21-api
+  minReplicas: 2
+  maxReplicas: 10
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: e-ubl21-orchestrator
+spec:
+  scaleTargetRef:
+    name: e-ubl21-orchestrator
+  pollingInterval: 10
+  cooldownPeriod: 120
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+    - type: nats-jetstream
+      metadata:
+        natsServerMonitoringEndpoint: nats:8222
+        account: "$G"
+        stream: EUBL21_PROD_VALIDATION_RESULT_XSD
+        consumer: EUBL21_PROD_VALIDATION_XSD_ORCHESTRATOR
+        lagThreshold: "16"
+        activationLagThreshold: "1"
+        useHttps: "false"
+    - type: nats-jetstream
+      metadata:
+        natsServerMonitoringEndpoint: nats:8222
+        account: "$G"
+        stream: EUBL21_PROD_VALIDATION_RESULT_EN16931
+        consumer: EUBL21_PROD_VALIDATION_EN16931_ORCHESTRATOR
+        lagThreshold: "8"
+        activationLagThreshold: "1"
+        useHttps: "false"
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "70"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: e-ubl21-worker-xsd
+spec:
+  scaleTargetRef:
+    name: e-ubl21-worker-xsd
+  pollingInterval: 10
+  cooldownPeriod: 120
+  minReplicaCount: 0
+  maxReplicaCount: 20
+  triggers:
+    - type: nats-jetstream
+      metadata:
+        natsServerMonitoringEndpoint: nats:8222
+        account: "$G"
+        stream: EUBL21_PROD_VALIDATION_REQUEST_XSD
+        consumer: EUBL21_PROD_VALIDATION_XSD_WORKER
+        lagThreshold: "8"
+        activationLagThreshold: "1"
+        useHttps: "false"
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "70"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: e-ubl21-worker-en16931
+spec:
+  scaleTargetRef:
+    name: e-ubl21-worker-en16931
+  pollingInterval: 10
+  cooldownPeriod: 180
+  minReplicaCount: 0
+  maxReplicaCount: 30
+  triggers:
+    - type: nats-jetstream
+      metadata:
+        natsServerMonitoringEndpoint: nats:8222
+        account: "$G"
+        stream: EUBL21_PROD_VALIDATION_REQUEST_EN16931
+        consumer: EUBL21_PROD_VALIDATION_EN16931_WORKER
+        lagThreshold: "4"
+        activationLagThreshold: "1"
+        useHttps: "false"
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "70"

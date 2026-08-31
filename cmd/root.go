@@ -70,6 +70,15 @@ type Config struct {
 	ENWorkerSaxonConfigurationPath string
 	ENWorkerXSLTPath               string
 	ENWorkerSaxonStartupTimeout    time.Duration
+	OrchestratorMetricsAddr        string
+	OrchestratorResultPrefetch     int
+	OrchestratorReconcileInterval  time.Duration
+	StageXSDAckWait                time.Duration
+	StageXSDMaxAckPending          int
+	StageENAckWait                 time.Duration
+	StageENMaxAckPending           int
+	StagePeppolAckWait             time.Duration
+	StagePeppolMaxAckPending       int
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -143,6 +152,8 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newXSDWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newEN16931WorkerCmd(v, cfg))
+	rootCmd.AddCommand(newOrchestratorCmd(v, cfg))
+	rootCmd.AddCommand(newProvisionCmd(v, cfg))
 	rootCmd.AddCommand(newDeadLetterCmd(cfg))
 	rootCmd.AddCommand(newMaintenanceCmd(cfg))
 	rootCmd.AddCommand(newRegressionCmd(cfg))
@@ -205,6 +216,15 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-en16931-progress-interval", 20*time.Second)
 	v.SetDefault("worker-en16931-java-executable", "java")
 	v.SetDefault("worker-en16931-saxon-startup-timeout", 30*time.Second)
+	v.SetDefault("orchestrator-metrics-addr", ":9094")
+	v.SetDefault("orchestrator-result-prefetch", 8)
+	v.SetDefault("orchestrator-reconcile-interval", 10*time.Second)
+	v.SetDefault("stage-xsd-ack-wait", 90*time.Second)
+	v.SetDefault("stage-xsd-max-ack-pending", 64)
+	v.SetDefault("stage-en16931-ack-wait", 120*time.Second)
+	v.SetDefault("stage-en16931-max-ack-pending", 32)
+	v.SetDefault("stage-peppol-ack-wait", 120*time.Second)
+	v.SetDefault("stage-peppol-max-ack-pending", 32)
 	v.SetEnvPrefix("EUBL21")
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
@@ -283,6 +303,15 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.ENWorkerSaxonConfigurationPath = v.GetString("worker-en16931-saxon-configuration-path")
 	cfg.ENWorkerXSLTPath = v.GetString("worker-en16931-runtime-xslt-path")
 	cfg.ENWorkerSaxonStartupTimeout = v.GetDuration("worker-en16931-saxon-startup-timeout")
+	cfg.OrchestratorMetricsAddr = v.GetString("orchestrator-metrics-addr")
+	cfg.OrchestratorResultPrefetch = v.GetInt("orchestrator-result-prefetch")
+	cfg.OrchestratorReconcileInterval = v.GetDuration("orchestrator-reconcile-interval")
+	cfg.StageXSDAckWait = v.GetDuration("stage-xsd-ack-wait")
+	cfg.StageXSDMaxAckPending = v.GetInt("stage-xsd-max-ack-pending")
+	cfg.StageENAckWait = v.GetDuration("stage-en16931-ack-wait")
+	cfg.StageENMaxAckPending = v.GetInt("stage-en16931-max-ack-pending")
+	cfg.StagePeppolAckWait = v.GetDuration("stage-peppol-ack-wait")
+	cfg.StagePeppolMaxAckPending = v.GetInt("stage-peppol-max-ack-pending")
 
 	return nil
 }
