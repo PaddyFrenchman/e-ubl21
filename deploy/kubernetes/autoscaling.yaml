@@ -45,7 +45,7 @@ spec:
         stream: EUBL21_PROD_VALIDATION_RESULT_XSD
         consumer: EUBL21_PROD_VALIDATION_XSD_ORCHESTRATOR
         lagThreshold: "16"
-        activationLagThreshold: "1"
+        activationLagThreshold: "0"
         useHttps: "false"
     - type: nats-jetstream
       metadata:
@@ -54,7 +54,7 @@ spec:
         stream: EUBL21_PROD_VALIDATION_RESULT_EN16931
         consumer: EUBL21_PROD_VALIDATION_EN16931_ORCHESTRATOR
         lagThreshold: "8"
-        activationLagThreshold: "1"
+        activationLagThreshold: "0"
         useHttps: "false"
     - type: cpu
       metricType: Utilization
@@ -80,7 +80,7 @@ spec:
         stream: EUBL21_PROD_VALIDATION_REQUEST_XSD
         consumer: EUBL21_PROD_VALIDATION_XSD_WORKER
         lagThreshold: "8"
-        activationLagThreshold: "1"
+        activationLagThreshold: "0"
         useHttps: "false"
     - type: cpu
       metricType: Utilization
@@ -106,7 +106,7 @@ spec:
         stream: EUBL21_PROD_VALIDATION_REQUEST_EN16931
         consumer: EUBL21_PROD_VALIDATION_EN16931_WORKER
         lagThreshold: "4"
-        activationLagThreshold: "1"
+        activationLagThreshold: "0"
         useHttps: "false"
     - type: cpu
       metricType: Utilization

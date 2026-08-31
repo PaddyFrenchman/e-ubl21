@@ -27,6 +27,9 @@ func TestWorkloadsAreIndependentAndOperationallyBounded(t *testing.T) {
 	}
 	for name, wantArg := range wantArgs {
 		deployment := requireObject(t, objects, "Deployment", name)
+		if _, configured := objectMap(t, deployment["spec"])["replicas"]; configured {
+			t.Fatalf("Deployment/%s declares spec.replicas even though an autoscaler owns it", name)
+		}
 		container := firstContainer(t, deployment)
 		args := stringSlice(t, container["args"])
 		if !reflect.DeepEqual(args, []string{wantArg}) {
@@ -51,6 +54,30 @@ func TestWorkloadsAreIndependentAndOperationallyBounded(t *testing.T) {
 	assertEnv(t, enEnv, "EUBL21_WORKER_EN16931_CONCURRENCY", "1")
 	assertEnv(t, enEnv, "EUBL21_WORKER_EN16931_PREFETCH", "1")
 	assertEnv(t, enEnv, "EUBL21_WORKER_EN16931_TIMEOUT", "45s")
+}
+
+func TestScaleToZeroWorkersActivateForOneQueuedRequest(t *testing.T) {
+	objects := loadObjects(t)
+	for _, name := range []string{"e-ubl21-worker-xsd", "e-ubl21-worker-en16931"} {
+		scaledObject := requireObject(t, objects, "ScaledObject", name)
+		metadata := jetStreamTriggerMetadata(t, scaledObject)
+		if got := stringValue(t, metadata["activationLagThreshold"]); got != "0" {
+			t.Fatalf("ScaledObject/%s activationLagThreshold = %q, want 0 so one request activates from zero replicas", name, got)
+		}
+	}
+}
+
+func TestResourceMetricsDependencyIsDocumented(t *testing.T) {
+	content, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	documentation := string(content)
+	for _, required := range []string{"Kubernetes Metrics Server", "/apis/metrics.k8s.io/v1beta1/nodes"} {
+		if !strings.Contains(documentation, required) {
+			t.Fatalf("README does not document autoscaling prerequisite %q", required)
+		}
+	}
 }
 
 func TestStageAutoscalersUseDifferentJetStreamConsumers(t *testing.T) {
@@ -204,15 +231,20 @@ func assertScaleTarget(t *testing.T, object map[string]any, target string, min, 
 
 func jetStreamTrigger(t *testing.T, object map[string]any) (string, string) {
 	t.Helper()
+	metadata := jetStreamTriggerMetadata(t, object)
+	return stringValue(t, metadata["stream"]), stringValue(t, metadata["consumer"])
+}
+
+func jetStreamTriggerMetadata(t *testing.T, object map[string]any) map[string]any {
+	t.Helper()
 	for _, raw := range objectSlice(t, nested(t, object, "spec", "triggers")) {
 		trigger := objectMap(t, raw)
 		if stringValue(t, trigger["type"]) == "nats-jetstream" {
-			metadata := objectMap(t, trigger["metadata"])
-			return stringValue(t, metadata["stream"]), stringValue(t, metadata["consumer"])
+			return objectMap(t, trigger["metadata"])
 		}
 	}
 	t.Fatalf("ScaledObject has no nats-jetstream trigger")
-	return "", ""
+	return nil
 }
 
 func assertHasTrigger(t *testing.T, object map[string]any, triggerType string) {

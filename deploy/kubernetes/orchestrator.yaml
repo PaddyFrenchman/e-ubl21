@@ -16,7 +16,6 @@ kind: Deployment
 metadata:
   name: e-ubl21-orchestrator
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: e-ubl21

@@ -16,7 +16,6 @@ kind: Deployment
 metadata:
   name: e-ubl21-api
 spec:
-  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:

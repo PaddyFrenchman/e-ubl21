@@ -6,10 +6,21 @@ one immutable application image. Peppol will add another worker Deployment
 without changing these roles.
 
 The base assumes that the namespace can resolve `nats` on ports 4222 (client)
-and 8222 (monitoring), KEDA 2.20 or compatible is installed, an OpenTelemetry
-collector is reachable as `otel-collector:4318`, and an `e-ubl21-auth` Secret
-contains `issuer`, `audience`, and `hmac-secret`. Patch those endpoints and the
-placeholder image before applying:
+and 8222 (monitoring), KEDA 2.20 or compatible is installed, the
+[Kubernetes Metrics Server](https://github.com/kubernetes-sigs/metrics-server)
+is installed for the
+[KEDA CPU/memory scaling signals](https://keda.sh/docs/2.20/scalers/cpu/), an
+OpenTelemetry collector is
+reachable as `otel-collector:4318`, and an `e-ubl21-auth` Secret contains
+`issuer`, `audience`, and `hmac-secret`. Metrics Server is not present by
+default on every managed Kubernetes platform; install it using the deployment
+platform's supported method and verify the resource metrics API before rollout:
+
+```bash
+kubectl get --raw /apis/metrics.k8s.io/v1beta1/nodes
+```
+
+Patch the external endpoints and placeholder image before applying:
 
 ```bash
 kubectl apply -f deploy/kubernetes/namespace.yaml
@@ -50,6 +61,12 @@ The XSD and EN `ScaledObject` resources watch different JetStream streams and
 durable consumers. Increasing EN backlog therefore changes only EN replicas.
 CPU is a secondary signal. API scaling uses CPU/memory because it has no stage
 queue, while orchestrator scaling watches both result queues.
+
+All autoscaler-managed Deployments deliberately omit `spec.replicas`, so
+reapplying the manifests cannot reset a replica count currently owned by HPA or
+KEDA. The scale-to-zero worker triggers explicitly use an activation lag of
+zero: because KEDA activation is a strict greater-than comparison, one queued
+request is sufficient to activate a worker.
 
 KEDA's [NATS JetStream scaler](https://keda.sh/docs/2.20/scalers/nats-jetstream/)
 provides durable consumer lag even while a worker is at zero replicas. The
