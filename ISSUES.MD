@@ -127,34 +127,43 @@ Issue branches must not be created from `main`, from a release branch, or direct
 
 The pull request is the normal code-review surface for an issue. **Creating, updating, or reviewing a pull request is part of implementation and is not part of the issue-closing workflow.** The issue remains open throughout the review cycle.
 
+The review roles are deliberately separated:
+
+- **ChatGPT is the designated code reviewer.** It reviews the complete PR diff, issue acceptance criteria, tests, CI results, architecture, regressions, migration/safety behavior, and existing review history.
+- **Codex in VS Code is the implementation and fix agent.** It implements the issue, runs local verification, commits/pushes work, and addresses findings supplied from the ChatGPT review.
+- **Codex must not perform a second independent full code review by default.** The user submits ChatGPT's review findings to Codex so that Codex can fix them without duplicating the complete review and consuming unnecessary coding-agent credits.
+- While addressing a finding, Codex may explain why it believes a specific finding is incorrect or may surface a newly discovered implementation problem. That is not permission to start another broad PR review unless the user explicitly requests one.
+
 The required review loop is:
 
-1. Commit the current issue implementation.
-2. Push the issue branch.
+1. Codex or the user implements the current issue on its issue branch and runs the appropriate local tests.
+2. Commit and push the issue branch.
 3. Create or update the pull request targeting `development`.
-4. ChatGPT/Codex reviews the complete PR diff, leaves findings as inline file/line review comments where appropriate, and provides a complete PR review report summarizing correctness, architecture, tests, regressions, risks, and any required changes.
-5. The user addresses the review findings, then commits and pushes the fixes to the same issue branch.
-6. ChatGPT/Codex re-reviews the updated PR, including both the new diff and the existing review threads.
-7. Review threads whose findings are fully addressed are resolved. Unresolved findings remain open. New findings are added inline when necessary, and an updated complete PR report is produced.
-8. Steps 5 through 7 repeat until the implementation fully satisfies the issue and the PR review has no unresolved blocking findings.
+4. The user asks **ChatGPT to review the PR**.
+5. ChatGPT reviews the complete current PR against `development`, the GitHub issue/acceptance criteria, relevant repository contracts and tests, current CI state, and prior unresolved findings. ChatGPT produces a complete review report and may post it to the PR when requested.
+6. The user submits ChatGPT's review report to Codex. Codex addresses the identified findings, adds or updates tests where required, runs verification, then commits and pushes the fixes to the same issue branch. Codex does not repeat the full review unless explicitly instructed.
+7. The user asks ChatGPT to re-review the updated PR. ChatGPT verifies the fixes, reviews the new diff for regressions or newly introduced defects, checks the relevant CI/tests, and updates the review verdict.
+8. Findings that are fully addressed are recorded as resolved; unresolved findings remain blocking or advisory according to severity. New findings are added when necessary.
+9. Steps 6 through 8 repeat until the implementation fully satisfies the issue and ChatGPT reports no unresolved blocking findings.
 
-The PR and its review threads are retained as the audit trail connecting each finding to the commit that addressed it. Review comments must not be deleted merely because they are resolved.
+The PR and its review comments are retained as the audit trail connecting each finding to the commit that addressed it. Review comments must not be deleted merely because they are resolved.
 
 During this review loop:
 
+- do not ask Codex to run a redundant complete review after ChatGPT has already reviewed the same PR state unless the user explicitly wants an additional review;
 - do not rebase the issue branch onto `development` merely because a review iteration completed;
 - do not fast-forward the issue branch into `development`;
 - do not close the PR as merged;
 - do not close the GitHub issue;
-- do not interpret a clean PR review as authorization to integrate or close the issue.
+- do not interpret a clean ChatGPT PR review as authorization to integrate or close the issue.
 
 ### Explicit authorization boundary
 
-ChatGPT/Codex must **never close a GitHub issue unless the user explicitly instructs it to close that specific issue**. A request to implement, test, commit, push, create a PR, review a PR, add inline comments, resolve review threads, or otherwise continue the review cycle is not permission to close or integrate the issue.
+Neither ChatGPT nor Codex must **ever close a GitHub issue unless the user explicitly instructs it to close that specific issue**. A request to implement, test, commit, push, create a PR, review a PR, add comments, address review findings, or otherwise continue the review cycle is not permission to close or integrate the issue.
 
-Until the user explicitly says to close the issue, the work remains on the issue branch and in its pull request. The branch may be committed and pushed repeatedly, and the PR may be reviewed repeatedly, but the closing/integration workflow must not begin: do not rebase for integration, switch to `development` for integration, fast-forward the issue branch into `development`, push the integrated `development`, or change the GitHub issue state.
+Until the user explicitly says to close the issue, the work remains on the issue branch and in its pull request. The branch may be committed and pushed repeatedly, and ChatGPT may review the PR repeatedly, but the closing/integration workflow must not begin: do not rebase for integration, switch to `development` for integration, fast-forward the issue branch into `development`, push the integrated `development`, or change the GitHub issue state.
 
-Mentioning this workflow, asking whether work is committed or pushed, or saying that the issue appears complete does not authorize issue closure or integration. If the user's intent to close a specific issue is ambiguous, ChatGPT/Codex must ask rather than infer permission.
+Mentioning this workflow, asking whether work is committed or pushed, or saying that the issue appears complete does not authorize issue closure or integration. If the user's intent to close a specific issue is ambiguous, ChatGPT or Codex must ask rather than infer permission.
 
 Only when explicitly told to **close a specific issue** must the following **rebase-first, fast-forward-only** integration workflow begin. The intent is to keep `development` linear while preserving the PR as the completed review record.
 
@@ -164,7 +173,7 @@ Only when explicitly told to **close a specific issue** must the following **reb
 4. Resolve any conflicts on the issue branch. If the rebase cannot be completed safely, abort it and report the problem rather than merging `development` into the issue branch.
 5. Run the tests and verification required by the issue/repository on the rebased branch.
 6. A rebase normally rewrites existing commits; it does **not** require an additional commit unless resolving the rebase requires an actual content change. If published commits were rewritten, push the rebased issue branch with `git push --force-with-lease origin <issue-branch>`; otherwise use a normal push as appropriate.
-7. Re-check the PR after the rebase to ensure the reviewed implementation remains unchanged in substance and no new blocking finding or conflict-resolution regression was introduced.
+7. Re-check the PR after the rebase to ensure the reviewed implementation remains unchanged in substance and no new blocking finding or conflict-resolution regression was introduced. ChatGPT remains the designated reviewer for any substantive post-rebase review; Codex should not perform a redundant full review unless explicitly requested.
 8. Switch to `development` and update it with `git pull --ff-only origin development`.
 9. Integrate the issue branch with `git merge --ff-only <issue-branch>`.
 10. Run the final required verification on the integrated `development` state.
