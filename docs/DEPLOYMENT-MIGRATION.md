@@ -92,7 +92,10 @@ Activation handles records as follows:
 Only after every candidate has a durable execution and first-stage outbox does
 the marker move to `split`. Start or scale the orchestrator and stage workers
 after the command succeeds. The API observes the marker for each admission and
-automatically resumes using split execution submission.
+automatically resumes using split execution submission. Status reads project
+the selected execution's permanent canonical result over immutable acceptance
+metadata; they never expose a terminal split result before its complete stage
+evidence is durably published. Content retention uses the same projection.
 
 ## Rollback
 

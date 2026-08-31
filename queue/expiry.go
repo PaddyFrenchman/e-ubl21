@@ -57,7 +57,12 @@ func (c *Client) ExpireUploadContent(ctx context.Context, retention time.Duratio
 			continue
 		}
 		record := versioned.Record
-		if record.Status != StatusValid && record.Status != StatusInvalid {
+		projected, err := c.ProjectUploadRecord(ctx, record)
+		if err != nil {
+			report.Errors++
+			continue
+		}
+		if projected.Status != StatusValid && projected.Status != StatusInvalid {
 			continue
 		}
 		report.Scanned++
@@ -81,7 +86,7 @@ func (c *Client) ExpireUploadContent(ctx context.Context, retention time.Duratio
 			continue
 		}
 
-		deadline, err := contentExpiryDeadline(record, retention)
+		deadline, err := contentExpiryDeadline(projected, retention)
 		if err != nil {
 			report.Errors++
 			continue
@@ -145,7 +150,11 @@ func (c *Client) markUploadContentExpired(ctx context.Context, versioned Version
 			// Another sweeper committed the same expiry.
 			return false, nil
 		}
-		if record.Status != StatusValid && record.Status != StatusInvalid {
+		projected, err := c.ProjectUploadRecord(ctx, record)
+		if err != nil {
+			return false, err
+		}
+		if projected.Status != StatusValid && projected.Status != StatusInvalid {
 			return false, fmt.Errorf("upload %s left terminal state during content expiry", record.ID)
 		}
 		record.ContentExpiresAt = deadline.UTC().Format(time.RFC3339)

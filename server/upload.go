@@ -41,6 +41,7 @@ type uploadHandlers struct {
 	queue          uploadQueue
 	deploymentMode func(context.Context) (queue.DeploymentMode, error)
 	publishWork    queue.UploadWorkPublisher
+	projectUpload  func(context.Context, queue.UploadRecord) (queue.UploadRecord, error)
 }
 
 type uploadQueue interface {
@@ -244,6 +245,13 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load upload: " + err.Error()})
 		return
+	}
+	if h.projectUpload != nil {
+		record, err = h.projectUpload(r.Context(), record)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to project upload validation: " + err.Error()})
+			return
+		}
 	}
 
 	response := map[string]any{

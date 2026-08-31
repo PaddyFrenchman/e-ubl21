@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/orchestrator"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 )
@@ -134,6 +136,100 @@ func TestApplicationMigrationModesControlAdmissionAndDispatch(t *testing.T) {
 				t.Fatalf("legacy queue received split upload: %+v, err=%v", drain, err)
 			}
 		})
+	}
+}
+
+func TestSplitCanonicalResultProjectsToUploadStatusAndRetention(t *testing.T) {
+	client, ctx := newMigrationTestClient(t)
+	legacy, err := client.ProvisionDeploymentGenerationInfra(ctx, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	draining, err := client.TransitionDeploymentMode(ctx, legacy, queue.DeploymentModeDraining, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.TransitionDeploymentMode(ctx, draining, queue.DeploymentModeSplit, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := queue.NewID()
+	receivedAt := time.Now().Add(-2 * time.Hour).UTC().Truncate(time.Second)
+	record := queue.UploadRecord{
+		ID: id, DocumentType: "Invoice", Profile: queue.ValidationProfileUBL21EN16931,
+		Status: queue.StatusPending, ReceivedAt: receivedAt.Format(time.RFC3339),
+	}
+	if err := client.PutUploadRecord(ctx, record); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PutUploadContent(ctx, id, []byte(validInvoiceXML)); err != nil {
+		t.Fatal(err)
+	}
+
+	_, plan, err := FrozenValidationPlanFor(record.DocumentType, record.Profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var requests []queue.StageRequest
+	machine := orchestrator.New(client)
+	machine.PublishStageRequest = func(_ context.Context, request queue.StageRequest) error {
+		requests = append(requests, request)
+		return nil
+	}
+	if _, err := machine.Start(ctx, queue.ValidationExecutionIntent{
+		IntentID: id, UploadID: id, DocumentType: record.DocumentType,
+		Trigger: queue.ValidationTriggerInitial, RequestedProfile: record.Profile,
+		Plan: plan, RetryPolicy: queue.DefaultFrozenValidationRetryPolicy(), CreatedAt: receivedAt,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	for index := 0; index < 2; index++ {
+		if len(requests) != index+1 {
+			t.Fatalf("published requests = %d, want %d", len(requests), index+1)
+		}
+		started := receivedAt.Add(time.Duration(index+1) * time.Minute)
+		result, err := queue.NewStageResult(requests[index], queue.StageOutcomePassed, queue.StageReasonNone, nil, "", started, started.Add(time.Second), time.Second)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := machine.HandleStageResult(ctx, result); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	stored, err := client.GetUploadRecord(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Status != queue.StatusPending {
+		t.Fatalf("acceptance metadata was mutated to %q", stored.Status)
+	}
+	projected, err := client.ProjectUploadRecord(ctx, stored)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if projected.Status != queue.StatusValid || len(projected.ValidationStages) != 2 || projected.ValidatedAt == "" {
+		executions, listErr := client.ValidationExecutionsForUpload(ctx, id)
+		t.Fatalf("split upload projection = %+v; executions=%+v; listErr=%v", projected, executions, listErr)
+	}
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/ubl/"+id, nil)
+	request.SetPathValue("id", id)
+	response := httptest.NewRecorder()
+	(&uploadHandlers{queue: client, projectUpload: client.ProjectUploadRecord}).handleGetUpload(response, request)
+	var statusPayload map[string]any
+	if response.Code != http.StatusOK || json.Unmarshal(response.Body.Bytes(), &statusPayload) != nil || statusPayload["status"] != string(queue.StatusValid) {
+		t.Fatalf("projected HTTP status = %d body=%s", response.Code, response.Body.String())
+	}
+	report, err := client.ExpireUploadContent(ctx, time.Minute, time.Now().Add(time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Expired != 1 || report.Reclaimed != 1 {
+		t.Fatalf("split retention report = %+v", report)
+	}
+	expired, err := client.GetUploadRecord(ctx, id)
+	if err != nil || expired.ContentExpiredAt == "" {
+		t.Fatalf("split retention metadata = %+v, err=%v", expired, err)
 	}
 }
 

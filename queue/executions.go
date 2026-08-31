@@ -656,6 +656,66 @@ func (c *Client) ValidationExecutionsForUpload(ctx context.Context, uploadID str
 	return executions, nil
 }
 
+// ProjectUploadRecord overlays the active split execution's permanent result
+// onto API-owned acceptance metadata without mutating either aggregate. Legacy
+// terminal records remain authoritative and unchanged.
+func (c *Client) ProjectUploadRecord(ctx context.Context, record UploadRecord) (UploadRecord, error) {
+	if record.Status == StatusValid || record.Status == StatusInvalid || record.Status == StatusProcessingFailed || record.Status == StatusAcceptanceFailed {
+		return record, nil
+	}
+	deployment, err := c.DeploymentGeneration(ctx)
+	if errors.Is(err, ErrDeploymentGenerationNotProvisioned) {
+		return record, nil
+	}
+	if err != nil {
+		return UploadRecord{}, fmt.Errorf("load deployment generation for upload projection: %w", err)
+	}
+	if deployment.State.Mode != DeploymentModeSplit {
+		return record, nil
+	}
+	executions, err := c.ValidationExecutionsForUpload(ctx, record.ID)
+	if err != nil {
+		return UploadRecord{}, err
+	}
+	var current *ValidationExecution
+	for index := range executions {
+		execution := &executions[index]
+		// Initial split validation uses the upload ID as its stable creation
+		// intent. Replay generations remain in that lineage. Future explicit
+		// revalidation needs its own API selection contract rather than silently
+		// changing this view.
+		if execution.CreationIntentID != record.ID {
+			continue
+		}
+		if current == nil || execution.Generation > current.Generation {
+			current = execution
+		}
+	}
+	if current == nil {
+		return record, nil
+	}
+	record.Profile = current.RequestedProfile
+	if current.Orchestration.FinalResultStatus != FinalResultPublished {
+		return record, nil
+	}
+	result, err := c.GetValidationExecutionResult(ctx, current.ValidationID, current.Generation)
+	if err != nil {
+		return UploadRecord{}, fmt.Errorf("load canonical result for upload projection: %w", err)
+	}
+	if result.ID != record.ID || result.DocumentType != record.DocumentType || result.Profile != current.RequestedProfile {
+		return UploadRecord{}, errors.New("canonical result does not match upload acceptance metadata")
+	}
+	record.Status = result.Status
+	record.ValidatedAt = result.ValidatedAt
+	record.ValidationStages = append(ValidationStages(nil), result.ValidationStages...)
+	record.Error = result.Error
+	if result.Status == StatusProcessingFailed {
+		record.LastError = result.Error
+		record.ProcessingFailedAt = result.ValidatedAt
+	}
+	return record, nil
+}
+
 // ValidationExecutionsRequiringDispatch lists every execution that either has
 // not authorized its first stage yet or has a durable pending outbox intent.
 // The caller may advance and publish each execution independently; CAS state

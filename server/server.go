@@ -91,6 +91,7 @@ func NewApplication(cfg Config) (*Application, error) {
 		publishWork: func(ctx context.Context, record queue.UploadRecord, receivedAt time.Time) error {
 			return dispatchAcceptedUpload(ctx, q, record, receivedAt)
 		},
+		projectUpload: q.ProjectUploadRecord,
 	}
 	auth := newOAuthValidator(cfg.OAuthHMACSecret, cfg.OAuthIssuer, cfg.OAuthAudience)
 
