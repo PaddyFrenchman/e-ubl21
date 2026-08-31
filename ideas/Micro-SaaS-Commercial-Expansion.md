@@ -1,46 +1,66 @@
-# Micro-SaaS Portfolio: Commercial Expansion and Go-to-Market Playbook
+# Invoice Lifecycle Platform: Conversion, Routing, Exchange and Payments
+
+## Strategic product direction
+
+The long-term commercial product should evolve beyond an e-invoice validator into a **bidirectional invoice conversion, routing and exchange platform**, and later into an **invoice-to-payment lifecycle platform**.
+
+The product should eventually answer one operational question:
+
+> **Give us the invoice in the format your system already produces. We convert it into the format the destination requires, validate it, route it, deliver it, track it, receive the response, and do the reverse for incoming invoices. Later, we can also initiate or request payment, track settlement, reconcile the payment and produce the appropriate receipt/remittance evidence.**
+
+Validation remains essential, but it becomes the **trust core** inside a larger invoice-processing platform.
+
+The product therefore evolves around six primary capabilities:
+
+```text
+CONVERT
+VALIDATE
+ROUTE
+SEND / RECEIVE
+RECONCILE
+PAY / RECEIPT
+```
+
+The commercial destination is not merely an e-invoice API. It is an **invoice lifecycle infrastructure layer for ERP, accounting, billing, EDI and vertical-SaaS products**.
 
 ---
 
-# 5. EU E-Invoicing Interoperability Platform
+# Product evolution at a glance
 
-## Product thesis
+```text
+PHASE 0
+Validation trust core
+    |
+    v
+PHASE 1
+Canonical invoice model + generation
+    |
+    v
+PHASE 2
+Multi-format conversion
+    |
+    v
+PHASE 3
+Routing + delivery + receiving
+    |
+    v
+PHASE 4
+Bidirectional ERP / EDI exchange
+    |
+    v
+PHASE 5
+Payment requests + settlement tracking
+    |
+    v
+PHASE 6
+Automatic reconciliation + receipts/remittance
+    |
+    v
+PHASE 7
+Possible deeper payment-service integration
+```
 
-The initial commercial wedge remains validation:
-
-> **Will this European e-invoice pass the required validation rules, and if not, exactly why?**
-
-But the larger product opportunity is broader:
-
-> **Accept the invoice format a customer's system already produces, convert it into the required compliant European e-invoice, validate it, and route it to the required destination.**
-
-This turns e-ubl21 from a validator into an **e-invoicing interoperability and compliance gateway** while keeping deterministic validation as the trust core.
-
-Relevant standards, syntaxes and profiles include:
-
-- UBL;
-- UN/CEFACT CII;
-- EN 16931;
-- Peppol BIS;
-- national CIUS profiles;
-- XSD;
-- Schematron;
-- code lists;
-- EDIFACT INVOIC;
-- ANSI X12 810;
-- selected ERP-specific formats and APIs.
-
-## Why now
-
-The EU ViDA package was adopted in March 2025 and is being rolled out progressively. From 1 July 2030, cross-border B2B transactions are scheduled to be subject to digital reporting requirements based on e-invoicing.
-
-The immediate commercial driver is that national programmes are already live or entering major deployment phases:
-
-- Belgium introduced mandatory structured B2B e-invoicing from 1 January 2026;
-- France begins the major rollout of mandatory e-invoicing and e-reporting on 1 September 2026, with all businesses required to be able to receive electronic invoices from that date and large/mid-sized companies required to issue them;
-- Germany introduced the B2B e-invoice framework from 1 January 2025, with transitional issuance rules through 2026/2027 and mandatory receiving capability already in effect.
-
-Software vendors therefore need multi-country e-invoicing capability now, not only in preparation for 2030.
+The implementation should preserve the existing rule that standards validation remains deterministic, versioned and independently testable even as side-effecting routing and payment workflows are added around it.
 
 ---
 
@@ -48,9 +68,9 @@ Software vendors therefore need multi-country e-invoicing capability now, not on
 
 ## Primary ideal customer profile
 
-The first marketing target should be:
+The initial commercial target should be:
 
-> **European ERP, accounting, billing and vertical-SaaS vendors that need to add multi-country e-invoicing to an existing product without building an internal e-invoicing standards team.**
+> **European ERP, accounting, billing and vertical-SaaS vendors that need to add multi-country e-invoicing and invoice exchange to an existing product without building an internal standards and network-integration team.**
 
 Typical characteristics:
 
@@ -61,16 +81,16 @@ Typical characteristics:
 | Engineering | Own development/integration team |
 | Geography | Serves or intends to serve two or more European countries |
 | Customer base | Hundreds to tens of thousands of business customers |
-| Current problem | Existing invoice model does not naturally produce every required EU syntax/profile |
-| Buying trigger | Customer or regulatory demand for Peppol, EN 16931 or a national mandate |
+| Current problem | Existing invoice model does not naturally produce every required EU syntax/profile/network |
+| Buying trigger | Customer or regulatory demand for Peppol, EN 16931, national mandates or invoice automation |
 | Buyer | CTO, VP Engineering, Head of Product, Integration Lead |
 | Desired solution | API/OEM infrastructure rather than a consulting project |
 
-This segment has a repeatable problem, technical buyers, recurring volume and meaningful switching costs once the service is embedded.
+This segment has a repeatable problem, technical buyers, recurring document volume and meaningful switching costs once the service is embedded.
 
 ## Secondary target: EDI and enterprise integration
 
-A second, distinct commercial target should be:
+A second, distinct target should be:
 
 > **EDI integration companies and enterprises with established EDIFACT/X12 infrastructure that need a bridge into modern European e-invoicing.**
 
@@ -78,160 +98,126 @@ Marketing message:
 
 > **Keep your EDI. Add European e-invoicing.**
 
-The customer does not need to replace a 10- or 20-year-old EDI estate merely because customers or regulators now require EN 16931, Peppol or national formats.
+The customer should not need to replace a mature EDI estate merely because customers or regulators now require EN 16931, Peppol or national formats.
 
-The gateway can translate between legacy B2B formats and modern e-invoice networks in both directions.
+The platform can translate between legacy B2B formats and modern e-invoice networks in both directions.
 
-## Later target: large enterprises
+## Later target: finance operations
 
-Large enterprises are attractive but should not be the initial focus because procurement, security review, integration and contractual cycles are substantially longer.
+Once delivery, payment and reconciliation exist, the buyer set expands to:
 
-They become more attractive once the product has:
+- finance systems vendors;
+- accounts-receivable platforms;
+- accounts-payable platforms;
+- treasury/cash-management software;
+- payment-service and banking integration providers;
+- larger enterprises seeking one invoice/payment orchestration layer.
 
-- proven connector coverage;
-- private deployment;
-- SLAs;
-- auditability;
-- multi-tenant controls;
-- enterprise identity integration;
-- routing and delivery evidence.
-
----
-
-# Core pain
-
-The problem is not parsing XML.
-
-It is managing the full chain between a customer's existing invoice representation and the format, validation profile and transport mechanism required by the recipient or jurisdiction.
-
-Validation alone may involve:
-
-```text
-well-formed XML
-→ UBL/CII syntax
-→ EN 16931
-→ Peppol BIS
-→ national CIUS
-→ code-list rules
-```
-
-A document can pass one layer and fail the next.
-
-The larger interoperability problem is:
-
-```text
-customer format
-→ semantic mapping
-→ enrichment
-→ target syntax generation
-→ validation
-→ recipient/network selection
-→ delivery
-→ acknowledgement/status
-```
+At that point the value proposition shifts from pure compliance to **invoice-to-cash and procure-to-pay automation**.
 
 ---
 
-# Positioning
+# Product positioning
 
-## Validation-only wedge
-
-Headline:
+## Initial validation wedge
 
 > **One API to tell you whether a European e-invoice will pass.**
 
-Subheading:
+This remains a useful developer-led entry product and lead generator.
 
-> Validate UBL and CII documents against EN 16931, Peppol BIS and supported national profiles. Receive structured errors with rule IDs, XPath locations and developer-readable explanations.
+## Conversion platform positioning
 
-Alternative:
-
-> **Stop debugging Peppol invoices by reading raw Schematron output.**
-
-## Expanded platform positioning
-
-Headline:
-
-> **One integration layer between your software and European e-invoicing.**
+> **One conversion layer between your software and European e-invoicing.**
 
 Subheading:
 
-> Send the invoice data or business format your application already produces. Generate, validate and route the compliant e-invoice required by the destination.
+> Send the invoice data or business format your application already produces. Generate and validate the compliant e-invoice required by the destination.
 
-For ERP/SaaS vendors:
+## Exchange platform positioning
 
-> **Send us your invoice data. We produce, validate and deliver the compliant European e-invoice.**
+> **Send us the invoice once. We convert it, validate it and deliver it through the right network. Incoming invoices arrive back in the format your software already understands.**
 
-For EDI users:
+## EDI positioning
 
 > **Keep EDIFACT or X12 internally. Bridge it to and from Peppol and European e-invoicing formats.**
 
+## Long-term invoice-to-payment positioning
+
+> **From invoice creation to delivery, payment and reconciliation through one API.**
+
+The platform should ultimately make regulatory and network complexity disappear behind a stable application contract.
+
 ---
 
-# Product architecture direction
+# Core architectural principle: canonical invoice semantics
 
 ## Do not make UBL the universal internal representation
 
-UBL should remain a first-class supported syntax, but the expanded product should not use UBL XML itself as the canonical internal business model.
+UBL remains a first-class supported syntax, but it should not become the universal internal business model.
 
-Introduce a **canonical semantic invoice model**, preferably closely aligned with EN 16931 business terms and groups, with explicit extension points for information required by national regimes or trading partners.
+Introduce a **canonical semantic invoice model** closely aligned with EN 16931 business terms and groups, with controlled extension points for national regimes, networks and trading-partner information.
 
-Conceptually:
+Every external syntax becomes an adapter around that model.
 
 ```text
-                         INPUTS
-                            |
-          +-----------------+-------------------+
-          |                 |                   |
-        JSON             EDIFACT             X12 810
-          |               INVOIC                |
-          |                 |                   |
-        CSV               CII                 UBL
-          |                 |                   |
-          +-----------------+-------------------+
-                            |
-                            v
-                +-----------------------+
-                | Canonical semantic    |
-                | invoice model         |
-                | EN 16931 aligned      |
-                +-----------------------+
-                            |
-                   normalize / enrich
-                            |
-                            v
-                      GENERATION
-                            |
-                            v
-                      VALIDATION
-                            |
-                XSD -> EN16931 -> profile
-                            |
-                            v
-                         OUTPUT
-             +--------------+--------------+
-             |              |              |
-          Peppol UBL       CII        national formats
-             |              |              |
-             +--------------+--------------+
-                            |
-                            v
-                         ROUTER
-                 +----------+----------+
-                 |          |          |
-              Peppol     national    API/SFTP/
-                AP        network      webhook
+                           INPUT ADAPTERS
+                                |
+       +------------------------+-------------------------+
+       |            |           |           |             |
+      JSON         UBL         CII       EDIFACT        X12
+       |            |           |         INVOIC         810
+       |            |           |           |             |
+       +------------------------+-------------------------+
+                                |
+                                v
+                    +-------------------------+
+                    | Canonical invoice model |
+                    | EN 16931 aligned        |
+                    +-------------------------+
+                                |
+                     normalize / enrich
+                                |
+               +----------------+----------------+
+               |                                 |
+               v                                 v
+          VALIDATION                         GENERATION
+               |                                 |
+               +----------------+----------------+
+                                |
+                                v
+                             ROUTING
+                                |
+                  +-------------+-------------+
+                  |             |             |
+               Peppol        national       API/SFTP/
+                 AP           network        webhook
 ```
 
-This allows syntaxes to become adapters around one semantic nucleus rather than building point-to-point transformations for every pair of formats.
+This avoids a combinatorial explosion of point-to-point transforms such as:
+
+```text
+EDIFACT -> UBL
+EDIFACT -> CII
+X12 -> UBL
+X12 -> CII
+JSON -> UBL
+JSON -> CII
+...
+```
+
+Instead:
+
+```text
+source format -> canonical model -> target format
+```
 
 ---
 
-# Input extension directions
+# Input directions
 
 ## Priority order
 
-| Input | Feasibility | Commercial value | Suggested priority |
+| Input | Feasibility | Commercial value | Priority |
 | --- | --- | --- | --- |
 | Canonical JSON API | Very high | Very high | 1 |
 | UBL 2.1 | Existing core | Very high | 1 |
@@ -240,12 +226,12 @@ This allows syntaxes to become adapters around one semantic nucleus rather than 
 | EDIFACT INVOIC | High | Very high for EDI segment | 2 |
 | ANSI X12 810 | High | High for multinational/US-linked customers | 3 |
 | SAP IDoc | Medium-high | Very high | 3 |
-| Dynamics / NetSuite / ERP connectors | Medium | High | Later |
-| PDF/OCR invoice extraction | Medium-low | Large market but ambiguous semantics | Much later |
+| Dynamics / NetSuite / ERP APIs | Medium | High | Later |
+| PDF/OCR extraction | Medium-low | Large market but ambiguous semantics | Much later |
 
-## Canonical JSON should come before broad EDI support
+## Canonical JSON first
 
-A software vendor should eventually be able to submit clean business data such as:
+The first generation API should allow an ERP or SaaS vendor to submit normalized invoice data such as:
 
 ```json
 {
@@ -258,23 +244,21 @@ A software vendor should eventually be able to submit clean business data such a
 }
 ```
 
-and request a target such as:
+with a requested destination/profile such as:
 
 ```text
 target = peppol-bis-billing
 ```
 
-The platform would then generate and validate the required syntax.
+The platform then generates and validates the required invoice syntax.
 
-Building this semantic API first forces the canonical invoice model to be well designed and provides the same normalized target that later EDIFACT, X12, CII and ERP adapters can feed.
+This forces the canonical model and adapter contract to be correct before broader EDI support is attempted.
 
 ---
 
-# EDI-to-e-invoice feasibility
+# EDI conversion feasibility
 
 ## Example: EDIFACT INVOIC to Peppol
-
-A realistic pipeline is:
 
 ```text
 EDIFACT INVOIC
@@ -286,7 +270,7 @@ parse
 trading-partner mapping profile
       |
       v
-canonical semantic invoice
+canonical invoice
       |
       v
 enrichment / master data
@@ -323,11 +307,9 @@ TAX    taxes
 MOA    monetary amounts
 ```
 
-The hard part is not parsing EDIFACT. The hard part is **semantic mapping and trading-partner variation**.
+The main difficulty is not parsing EDIFACT. It is **semantic mapping and trading-partner variation**.
 
-EDI implementations are commonly governed by partner-specific implementation guides. The same general standard may contain different qualifiers, optional segments and business conventions for different partners.
-
-Therefore the architecture needs:
+Therefore the product needs:
 
 ```text
 EDI parser
@@ -336,7 +318,7 @@ versioned mapping profile
    +
 customer/trading-partner master data
    +
-canonical semantic invoice
+canonical invoice
 ```
 
 not merely:
@@ -347,9 +329,9 @@ EDI parser -> UBL
 
 ## Enrichment is a product feature
 
-An inbound EDI message may not contain every field required by Peppol or a national profile.
+An inbound invoice may lack information needed by the destination profile or network.
 
-For example, a trading partner configuration may need to provide:
+A controlled trading-partner configuration can provide information such as:
 
 ```text
 partner: ACME-DE
@@ -359,32 +341,30 @@ endpoint scheme: 0204
 preferred outbound profile: Peppol BIS Billing 3
 ```
 
-The platform must never invent legally or semantically required data. Missing information should either be supplied by configured master data or fail mapping/validation with a precise diagnostic.
-
-This makes **mapping, enrichment and profile configuration** part of the commercial product rather than incidental glue code.
+The platform must never invent legally or semantically required data. Missing required information should either be supplied from approved master data or fail conversion/validation with a precise diagnostic.
 
 ---
 
-# Output extension directions
+# Output directions
 
 | Output | Feasibility | Commercial value / comment |
 | --- | --- | --- |
 | EN 16931 UBL | Very high | Natural first generator |
-| Peppol BIS Billing UBL | Very high | Natural extension of current validation roadmap |
+| Peppol BIS Billing UBL | Very high | Natural extension of current roadmap |
 | EN 16931 CII | High | Practical once canonical model exists |
 | XRechnung | High | Profile-specific generation/validation |
 | Factur-X / ZUGFeRD | Medium-high | Requires CII plus PDF/A packaging |
 | Human-readable PDF | High | Presentation copy, not canonical compliance representation |
 | EDIFACT INVOIC | High | Valuable reverse bridge |
 | ANSI X12 810 | High | Valuable reverse bridge |
-| Canonical JSON | Very high | Useful receiving/integration API |
+| Canonical JSON | Very high | Receiving/integration API |
 | Webhook / REST callback | Very high | Delivery and status integration |
 
 ---
 
-# Bidirectional interoperability
+# Bidirectional exchange
 
-The system should eventually support both outbound and inbound transformation.
+The system should treat outbound and inbound flows as equal product capabilities.
 
 ## Outbound
 
@@ -392,16 +372,16 @@ The system should eventually support both outbound and inbound transformation.
 ERP / EDIFACT / JSON
         |
         v
- e-ubl21 gateway
+ invoice conversion platform
         |
         v
- compliant e-invoice
+ target compliant invoice
         |
         v
- Peppol / national network
+ Peppol / national network / direct channel
         |
         v
- customer
+ recipient
 ```
 
 ## Inbound
@@ -410,13 +390,13 @@ ERP / EDIFACT / JSON
 supplier
    |
    v
-Peppol / national network
+Peppol / national network / direct channel
    |
    v
-e-ubl21 gateway
+invoice conversion platform
    |
    v
-canonical semantic invoice
+canonical invoice
    |
    +--> EDIFACT
    +--> X12
@@ -427,17 +407,13 @@ canonical semantic invoice
 customer ERP / accounts payable
 ```
 
-This is commercially important because customers can adopt modern European e-invoicing without replacing their internal EDI or ERP integration model.
+This lets customers adopt modern European e-invoicing without replacing their internal ERP/EDI model.
 
 ---
 
 # Routing and delivery
 
-## Separate validation from transport
-
-Validation should remain deterministic and side-effect free from the perspective of business delivery.
-
-Routing and delivery should be a separate workflow layer:
+Routing should be a first-class subsystem rather than hard-coded transport logic.
 
 ```text
 INGEST
@@ -452,6 +428,8 @@ GENERATE
   |
 VALIDATE
   |
+RESOLVE DESTINATION
+  |
 ROUTE
   |
 DELIVER
@@ -459,60 +437,531 @@ DELIVER
 ACK / STATUS
 ```
 
-The validator answers whether the generated document conforms to the requested frozen profile.
+## Routing decision inputs
 
-The router decides where and how to send an already validated document.
+The router may consider:
 
-## Do not initially become a Peppol Access Point
+- seller identity;
+- buyer identity;
+- country;
+- requested/required invoice profile;
+- Peppol participant capability;
+- customer routing policy;
+- national platform requirements;
+- direct trading-partner configuration;
+- fallback channel;
+- retry policy.
 
-The initial routing product should integrate with one or more existing certified Peppol Access Points through their APIs.
+## Keep delivery state separate from validation state
 
-Preferred first model:
+A valid invoice can fail delivery.
+
+Therefore do not flatten everything into one status.
+
+Use separate state dimensions such as:
 
 ```text
-e-ubl21
+validation_status
+conversion_status
+delivery_status
+payment_status
+reconciliation_status
+```
+
+For example:
+
+```text
+validation_status = valid
+delivery_status   = failed
+payment_status    = not_requested
+```
+
+This distinction becomes crucial once payments are introduced.
+
+---
+
+# Do not initially become a Peppol Access Point
+
+The first routing implementation should integrate with one or more existing certified Peppol Access Points through stable connector interfaces.
+
+```text
+platform
    |
-   | API
+   | AP connector API
    v
-certified Peppol Access Point partner
+certified Peppol Access Point
    |
    v
 Peppol network
 ```
 
-rather than immediately operating:
+Operating an Access Point introduces certification, membership, PKI certificates, AS4 transport, operational guarantees and network-level security obligations.
 
-```text
-e-ubl21 = certified Peppol Access Point
-```
+It may become strategically attractive later, but it should not block the conversion and routing product.
 
-Operating an Access Point introduces certification, membership, PKI certificates, AS4 transport, operational obligations, security processes and network-level SLAs.
-
-It remains technically feasible and may become economically attractive later, especially if transaction volume makes third-party AP fees material.
-
-The decision should be volume-driven rather than a prerequisite for the interoperability product.
+The routing layer must therefore abstract transport providers from day one.
 
 ---
 
-# Core commercial differentiation
+# Later extension: payments
 
-A simple valid/invalid endpoint is commodity territory.
+Payments should be considered a **later invoice-lifecycle capability**, after conversion, delivery and receiving are stable.
 
-The moat should become the combination of:
+The first payment objective should not be to hold funds.
 
-1. excellent developer-facing validation diagnostics;
-2. deterministic versioned standards assets;
-3. canonical invoice semantics;
-4. configurable mapping and enrichment;
-5. multi-format generation;
+It should be to connect invoice state with payment state.
+
+## Initial payment capabilities
+
+Possible capabilities include:
+
+- generate payment instructions from invoice data;
+- expose payment links or bank-payment initiation options;
+- integrate with PSPs and banks;
+- SEPA credit transfer / instant-payment initiation through regulated providers;
+- SEPA Request-to-Pay where appropriate;
+- track payment initiation and settlement status;
+- record payment references/remittance information;
+- handle partial payments;
+- handle overpayments;
+- handle failed/rejected payments;
+- associate payments with invoices automatically;
+- expose payment-status webhooks.
+
+A useful lifecycle becomes:
+
+```text
+invoice generated
+      |
+      v
+invoice validated
+      |
+      v
+invoice delivered
+      |
+      v
+recipient accepts / receives
+      |
+      v
+payment requested
+      |
+      v
+payment initiated
+      |
+      v
+settlement confirmed
+      |
+      v
+invoice reconciled
+      |
+      v
+receipt / remittance evidence produced
+```
+
+## SEPA Request-to-Pay
+
+SEPA Request-to-Pay is especially interesting architecturally because it is a request/messaging layer around payment initiation rather than the payment instrument itself.
+
+That aligns naturally with an invoice platform:
+
+```text
+invoice
+   |
+   v
+payment request
+   |
+   v
+payer approval
+   |
+   v
+underlying SEPA payment
+   |
+   v
+settlement event
+   |
+   v
+reconciliation
+```
+
+## Instant payments
+
+Instant euro transfers are increasingly useful for invoice settlement because settlement can occur within seconds and around the clock.
+
+The platform can use regulated bank/PSP integrations while maintaining invoice-level orchestration and reconciliation itself.
+
+---
+
+# Later extension: receipts and remittance
+
+The word **receipt** should be modeled explicitly rather than treated as a PDF afterthought.
+
+There are several related business objects:
+
+- payment confirmation;
+- payment receipt issued to the payer;
+- remittance advice;
+- settlement evidence;
+- credit note/refund information;
+- invoice-payment allocation;
+- accounting reconciliation record.
+
+The platform should support machine-readable evidence first, with human-readable PDF receipts as a presentation layer.
+
+## Remittance advice
+
+UBL 2.1 already contains business documents such as `RemittanceAdvice`, which fits naturally with the broader platform direction.
+
+A future flow may be:
+
+```text
+payment settles
+     |
+     v
+payment event
+     |
+     v
+match against invoice(s)
+     |
+     v
+reconciliation
+     |
+     +--> canonical remittance record
+     |
+     +--> UBL RemittanceAdvice
+     |
+     +--> JSON event
+     |
+     +--> PDF receipt
+     |
+     +--> ERP posting/update
+```
+
+The important concept is that payment and receipt data become part of the same durable business workflow as the invoice, while remaining distinct objects with their own identities and audit histories.
+
+---
+
+# Automatic reconciliation
+
+This may become one of the highest-value later features.
+
+The platform already knows:
+
+- invoice identifier;
+- supplier/customer identities;
+- amount due;
+- currency;
+- due date;
+- payment reference;
+- delivery destination.
+
+With bank/PSP settlement data it can match:
+
+```text
+payment transaction
+        |
+        v
+candidate invoice(s)
+        |
+        v
+reference + amount + counterparty matching
+        |
+        +--> exact match
+        |
+        +--> partial payment
+        |
+        +--> overpayment
+        |
+        +--> ambiguous/unmatched payment
+```
+
+This expands the commercial value from compliance infrastructure into **accounts-receivable automation**.
+
+Inbound supplier invoices plus payment execution can later extend the same architecture into **accounts-payable automation**.
+
+---
+
+# Payment architecture boundary
+
+## Stage 1: orchestration, not custody
+
+The recommended first payment architecture is:
+
+```text
+invoice platform
+      |
+      | payment request / initiation
+      v
+regulated bank / PSP
+      |
+      v
+payment network
+      |
+      v
+settlement
+      |
+      v
+bank / PSP event
+      |
+      v
+invoice platform reconciliation
+```
+
+The platform should initially avoid:
+
+- holding customer funds;
+- maintaining stored balances;
+- directly acquiring cards;
+- storing raw card details;
+- acting as merchant-of-record by default;
+- claiming settlement before authoritative confirmation.
+
+This captures most of the customer value while keeping regulated payment execution with licensed providers.
+
+## Stage 2: deeper regulated payment role only if justified
+
+Much further down the road, evaluate whether becoming or partnering more deeply as a regulated payment provider is strategically worthwhile.
+
+That decision should be driven by:
+
+- transaction volume;
+- payment revenue opportunity;
+- customer demand;
+- geography;
+- regulatory/licensing cost;
+- fraud and AML obligations;
+- treasury/custody requirements;
+- operational risk.
+
+It should not be a prerequisite for invoice conversion, routing or reconciliation.
+
+---
+
+# End-state architecture
+
+```text
+                              CUSTOMER SYSTEMS
+                                    |
+              +---------------------+---------------------+
+              |                     |                     |
+             ERP                   EDI                  API
+              |                     |                     |
+              +---------------------+---------------------+
+                                    |
+                                    v
+                          +-------------------+
+                          | INGEST / ADAPTERS |
+                          +-------------------+
+                                    |
+                                    v
+                          +-------------------+
+                          | CANONICAL INVOICE |
+                          +-------------------+
+                                    |
+                  +-----------------+------------------+
+                  |                 |                  |
+                  v                 v                  v
+             ENRICHMENT         VALIDATION         GENERATION
+                  |                 |                  |
+                  +-----------------+------------------+
+                                    |
+                                    v
+                               +---------+
+                               | ROUTER  |
+                               +---------+
+                                    |
+              +---------------------+----------------------+
+              |                     |                      |
+              v                     v                      v
+           Peppol               National               Direct/API
+              |                  network                 channel
+              +---------------------+----------------------+
+                                    |
+                             SEND / RECEIVE
+                                    |
+                                    v
+                            DELIVERY EVENTS
+                                    |
+                                    v
+                         +---------------------+
+                         | PAYMENT ORCHESTRATOR|
+                         +---------------------+
+                                    |
+                     +--------------+--------------+
+                     |                             |
+                     v                             v
+                   BANK                           PSP
+                     |                             |
+                     +--------------+--------------+
+                                    |
+                                    v
+                              SETTLEMENT
+                                    |
+                                    v
+                           RECONCILIATION
+                                    |
+                     +--------------+--------------+
+                     |                             |
+                     v                             v
+                REMITTANCE                      RECEIPT
+                     |                             |
+                     +--------------+--------------+
+                                    |
+                                    v
+                              ERP / LEDGER
+```
+
+---
+
+# Core product invariants
+
+As the product expands, several rules should remain non-negotiable.
+
+1. **Conversion is reproducible.** Every output identifies the input, mapping version, target profile and transformation version.
+2. **Validation is evidence-based.** A document cannot be reported profile-valid without complete required validation evidence.
+3. **Delivery is separate from validity.** A standards-valid document may still fail transport.
+4. **Payment initiation is separate from settlement.** Initiating a payment never marks an invoice paid.
+5. **Settlement requires authoritative evidence.** Only bank/PSP/network confirmation advances payment state to settled.
+6. **Reconciliation is explicit.** Partial, multiple, overpaid and ambiguous settlements are represented rather than hidden.
+7. **Receipts/remittance are durable business artifacts.** They are not reconstructed casually from current mutable state.
+8. **No invented compliance data.** Missing required identifiers or tax/payment information must fail or require controlled enrichment.
+9. **Adapters and mappings are versioned.** Trading-partner behavior must be reproducible.
+10. **Transport providers are replaceable.** Peppol APs, national networks, banks and PSPs sit behind connector interfaces.
+
+---
+
+# Product roadmap
+
+## Current foundation
+
+- UBL 2.1 validation;
+- EN 16931 validation;
+- asynchronous durable processing;
+- independent validation stages;
+- Peppol validation roadmap.
+
+## Phase A — Canonical invoice and generation API
+
+Build:
+
+- canonical semantic invoice model;
+- canonical JSON contract;
+- JSON/canonical -> UBL generation;
+- target-profile selection;
+- generated-document validation;
+- deterministic transformation provenance.
+
+## Phase B — Multi-format conversion
+
+Add:
+
+- CII;
+- CSV/flat-file mapping;
+- EDIFACT INVOIC;
+- X12 810;
+- selected ERP adapters such as SAP IDoc.
+
+## Phase C — Routing and delivery
+
+Add:
+
+- recipient/profile resolution;
+- Peppol participant lookup;
+- Access Point connector abstraction;
+- delivery state machine;
+- retries/DLQ;
+- delivery evidence;
+- webhooks/callbacks.
+
+## Phase D — Inbound exchange
+
+Receive invoices and convert them into:
+
+- canonical JSON;
+- EDIFACT INVOIC;
+- X12 810;
+- ERP-specific formats.
+
+## Phase E — National profile/network expansion
+
+Add country capability packs according to commercial demand and regulatory timing.
+
+Potential examples:
+
+- France;
+- Germany;
+- Belgium;
+- Italy;
+- Poland;
+- additional Peppol/national regimes.
+
+## Phase F — Payment requests and payment status
+
+Add:
+
+- payment instruction extraction;
+- payment request creation;
+- PSP/bank connectors;
+- SEPA payment initiation through regulated providers;
+- SEPA Request-to-Pay integration where commercially useful;
+- payment-status events;
+- durable payment state.
+
+## Phase G — Reconciliation and receipts
+
+Add:
+
+- settlement ingestion;
+- invoice/payment matching;
+- partial/multiple payment allocation;
+- remittance advice;
+- payment receipts;
+- accounting/ERP update hooks;
+- reconciliation APIs.
+
+## Phase H — Advanced payment capabilities
+
+Evaluate:
+
+- deeper bank integrations;
+- open-banking payment initiation;
+- payment routing optimisation;
+- refunds;
+- payment collection options;
+- potential regulated payment-provider role;
+- treasury/cash-management capabilities.
+
+Do this only after invoice exchange volume and customer demand justify the regulatory and operational cost.
+
+---
+
+# Commercial differentiation
+
+A simple valid/invalid API is commodity territory.
+
+The defensible product becomes the combination of:
+
+1. deterministic standards validation;
+2. canonical invoice semantics;
+3. configurable and versioned conversion;
+4. multi-format generation;
+5. trading-partner enrichment;
 6. recipient/profile resolution;
-7. transport abstraction;
-8. regression testing across standards upgrades;
-9. private deployment for sensitive workloads.
+7. bidirectional routing;
+8. network/provider abstraction;
+9. permanent delivery evidence;
+10. payment orchestration;
+11. automatic reconciliation;
+12. receipts/remittance;
+13. regression testing across standards upgrades;
+14. private deployment.
 
-## Structured validation output
+The deeper into the lifecycle the platform goes, the harder it becomes to replace because it owns not only compliance but also the customer's business-process integration.
 
-Return structured data such as:
+---
+
+# Developer experience as a moat
+
+Validation diagnostics should remain excellent:
 
 ```json
 {
@@ -531,168 +980,42 @@ Return structured data such as:
 }
 ```
 
-## Mapping diagnostics
-
-Transformation failures should be equally developer-readable:
+Conversion failures should be equally explicit:
 
 ```json
 {
-  "mapped": false,
+  "converted": false,
   "source": "edifact-invoic-d96a",
   "target": "peppol-bis-billing-3",
   "errors": [
     {
       "field": "buyer.endpoint_id",
       "source": "NAD+BY",
-      "explanation": "Target Peppol profile requires a buyer electronic endpoint identifier and none is present in the message or trading-partner configuration."
+      "explanation": "A buyer electronic endpoint identifier is required by the target profile and none is present in the message or approved partner configuration."
     }
   ]
 }
 ```
 
----
+Payment/reconciliation APIs should follow the same principle:
 
-# Killer features
-
-## Versioned validation
-
-Allow customers to validate against:
-
-- current production rules;
-- a pinned historical version;
-- a future/release-candidate ruleset.
-
-This lets ERP vendors test future compatibility.
-
-## Regression suites
-
-A customer uploads 100 representative invoices. When a ruleset changes, run them again and report:
-
-```text
-98 still pass
-2 newly fail
+```json
+{
+  "invoiceId": "INV-10023",
+  "amountDue": "1200.00",
+  "currency": "EUR",
+  "paymentStatus": "partially_paid",
+  "settledAmount": "800.00",
+  "remainingAmount": "400.00",
+  "allocations": [
+    {
+      "paymentId": "pay_01",
+      "amount": "800.00",
+      "status": "settled"
+    }
+  ]
+}
 ```
-
-This turns the product into **e-invoice compatibility CI**.
-
-## Versioned mapping profiles
-
-EDI and ERP transformations must be versioned like code.
-
-A customer should be able to identify exactly which mapping transformed a source document into a target invoice and reproduce that transformation later.
-
-## Trading-partner configuration
-
-Store controlled configuration for:
-
-- identifiers;
-- endpoint schemes;
-- VAT/tax identifiers;
-- target networks;
-- target profiles;
-- mapping versions;
-- customer-specific defaults;
-- enrichment rules.
-
-## Private Docker deployment
-
-Invoices contain sensitive commercial data. Offer an on-premises/private container edition.
-
-Possible price:
-
-```text
-€3,000–€10,000/year
-```
-
-depending on SLA, volume, connector rights and standards-update rights.
-
----
-
-# Product roadmap
-
-## Current foundation
-
-```text
-UBL validation
-    |
-    v
-EN 16931
-    |
-    v
-Peppol validation
-```
-
-Peppol validation should remain the next standards milestone before network transport.
-
-## Phase A — Canonical invoice and generation API
-
-Build:
-
-- canonical semantic invoice model;
-- canonical JSON API;
-- canonical model -> UBL Invoice/CreditNote generation;
-- target profile selection;
-- generated-document validation;
-- deterministic transformation provenance.
-
-This phase creates the architectural nucleus for every later adapter.
-
-## Phase B — Additional input/output adapters
-
-Add in roughly this order:
-
-- CII;
-- CSV/flat-file mapping;
-- EDIFACT INVOIC;
-- X12 810;
-- selected ERP adapters such as SAP IDoc.
-
-Mappings should be versioned and explicit rather than hidden in application code.
-
-## Phase C — Routing through partner networks
-
-Add:
-
-- recipient/profile resolution;
-- Peppol participant lookup where applicable;
-- connector to certified Access Point partner(s);
-- delivery state machine;
-- callbacks/webhooks;
-- acknowledgements and permanent delivery evidence;
-- retry and operational dead-letter handling separate from standards validity.
-
-## Phase D — Inbound e-invoice gateway
-
-Receive invoices from Peppol or other supported networks and transform them into:
-
-- canonical JSON;
-- EDIFACT INVOIC;
-- X12 810;
-- ERP-specific formats.
-
-This makes the product useful to existing accounts-payable and EDI estates, not only invoice issuers.
-
-## Phase E — National profiles and platforms
-
-Expand according to commercial demand and regulatory timing, for example:
-
-- France;
-- Germany;
-- Belgium;
-- Italy;
-- Poland;
-- other supported EN 16931/Peppol/national regimes.
-
-Each national capability should have a versioned compliance contract rather than being treated as an ad-hoc transformation.
-
-## Phase F — Evaluate operating a Peppol Access Point
-
-Only evaluate becoming a certified AP once:
-
-- transaction volume is high enough to justify it;
-- partner AP fees are material;
-- network operation is strategically important;
-- security, PKI, certification and 24/7 operational requirements are supportable.
 
 ---
 
@@ -702,57 +1025,53 @@ The first motion should remain developer-led growth.
 
 Build:
 
-- free public validator;
-- excellent docs;
+- free validator;
+- excellent API documentation;
 - CLI;
 - GitHub examples;
 - Docker demo image;
-- SEO pages for exact Peppol/EN 16931 rule IDs;
-- articles explaining validation failures;
-- runnable examples for `JSON -> Peppol`;
-- runnable examples for `EDIFACT INVOIC -> Peppol` once available;
+- exact rule-ID SEO pages;
+- `JSON -> Peppol` examples;
+- `EDIFACT INVOIC -> Peppol` examples;
+- inbound Peppol -> JSON/EDI examples;
 - migration guides for ERP and EDI vendors.
 
-A developer searching for a specific failed rule is already a qualified prospect.
-
-Once transformation exists, additional high-intent search themes become:
+Later high-intent topics include:
 
 ```text
 EDIFACT to Peppol
 X12 810 to Peppol
 JSON to Peppol invoice
 ERP Peppol API
-EN16931 invoice API
-Peppol validation API
-XRechnung API
+Peppol receive API
+invoice conversion API
+invoice routing API
+SEPA invoice payment API
+invoice reconciliation API
 ```
 
 ---
 
 # Pricing direction
 
-Validation-only entry pricing can remain simple:
+Validation-only pricing can remain simple at first.
 
-- Free: 100 validations/month
-- Developer: €29/month
-- Startup: €99/month
-- Business: €299/month
-- Enterprise: €750–€2,000+/month
-- Private deployment: annual licence
-
-The expanded interoperability product should eventually price around value and transaction volume rather than validations alone.
+The broader platform should eventually price around value and transaction volume.
 
 Potential dimensions:
 
-- documents transformed;
-- documents delivered;
+- invoices converted;
+- invoices delivered/received;
 - active trading partners;
 - enabled country/profile packs;
-- premium EDI/ERP connectors;
+- EDI/ERP connectors;
+- delivery-network connectors;
+- payment requests initiated;
+- settlements reconciled;
 - private deployment;
 - SLA/support tier.
 
-Avoid pricing every minor validation stage separately. Customers should buy an interoperability outcome, not an internal pipeline topology.
+Customers should buy an invoice-lifecycle outcome rather than internal pipeline stages.
 
 ---
 
@@ -766,44 +1085,42 @@ validator
 + every EDI dialect
 + every national regime
 + certified Peppol AP
-+ OCR platform
++ banking platform
++ payment institution
++ OCR product
 ```
 
-The recommended expansion sequence is:
+Recommended expansion order:
 
 ```text
 validation trust core
         |
 canonical semantic model
         |
-generation API
+generation
         |
-selected high-value adapters
+conversion adapters
         |
-partner-network routing
+routing + delivery
         |
-inbound interoperability
+inbound exchange
         |
 national expansion
         |
-possible own AP
+payment orchestration
+        |
+reconciliation + receipts
+        |
+possible deeper payment role
 ```
 
-The most important next architectural design work is therefore **not an EDIFACT parser**.
+The next architectural design work should therefore still be the **canonical semantic invoice model and adapter contract**, followed by a **routing/transport abstraction**.
 
-It is defining the canonical semantic invoice model and adapter contract correctly.
-
-Once that nucleus exists, JSON, UBL, CII, EDIFACT, X12 and ERP-specific representations become adapters around the same model rather than separate point-to-point products.
+Payments should be designed into the long-term data model now, but implemented only after the invoice exchange platform is stable.
 
 ---
 
-# Feasibility verdict
-
-The proposed expansion is technically credible and is a natural evolution of the current e-ubl21 architecture.
-
-The current asynchronous, durable and independently staged validation design is a strong foundation because transformation and routing can be added around the validation core without weakening standards correctness.
-
-Approximate feasibility assessment:
+# Feasibility assessment
 
 | Capability | Feasibility |
 | --- | --- |
@@ -815,35 +1132,25 @@ Approximate feasibility assessment:
 | Partner-AP Peppol routing | High |
 | Inbound Peppol -> EDI/ERP | High |
 | National profile packs | High but ongoing standards work |
-| Own certified Peppol AP | Technically high, operationally much harder |
+| Payment request / PSP-bank orchestration | High |
+| SEPA Request-to-Pay integration | High |
+| Settlement ingestion and reconciliation | High |
+| Receipt/remittance generation | High |
+| Own certified Peppol AP | Technically high, operationally harder |
+| Holding/custody of customer funds | Technically possible, regulatory complexity high |
 | PDF/OCR -> legally reliable canonical invoice | Medium and should be deferred |
 
-Commercially, the strongest wedge is not a generic global e-invoicing platform on day one.
+The overall expansion is technically credible and fits the current asynchronous, durable e-ubl21 architecture.
 
-It is:
+The long-term product can be summarized as:
 
-> **European e-invoice infrastructure for software vendors and EDI systems.**
+> **Convert any supported business invoice format into the format the destination requires, validate it, route it, send and receive it, then connect the resulting obligation to payment, reconciliation and receipt evidence.**
 
-Validation creates trust. Transformation makes the product usable. Routing makes it operationally valuable. Bidirectional EDI/ERP interoperability makes it difficult to replace.
+Validation creates trust. Conversion creates interoperability. Routing makes the system operational. Bidirectional exchange embeds it into ERP/EDI workflows. Payment and reconciliation eventually turn it into an invoice lifecycle platform.
 
 ---
 
-# Current references
-
-European Accessibility Act:  
-https://commission.europa.eu/strategy-and-policy/policies/justice-and-fundamental-rights/disability/european-accessibility-act-eaa_en
-
-Microsoft high-volume sender requirements:  
-https://techcommunity.microsoft.com/blog/microsoftdefenderforoffice365blog/strengthening-email-ecosystem-outlook%E2%80%99s-new-requirements-for-high%E2%80%90volume-senders/4399730
-
-DORA Register of Information:  
-https://www.eba.europa.eu/activities/direct-supervision-and-oversight/digital-operational-resilience-act/preparation-dora-application
-
-DORA ITS Register templates:  
-https://www.eba.europa.eu/activities/single-rulebook/regulatory-activities/operational-resilience/implementing-technical-standards-establish-templates-register-information
-
-NIS2:  
-https://digital-strategy.ec.europa.eu/en/policies/nis2-directive
+# References
 
 ViDA:  
 https://taxation-customs.ec.europa.eu/taxation/vat/vat-digital-age-vida_en
@@ -860,17 +1167,11 @@ https://peppol.org/members/peppol-certified-service-providers/
 Peppol BIS Billing documentation:  
 https://docs.peppol.eu/poacc/billing/3.0/
 
-Current agency-monitoring examples:  
-https://pinglyra.com/  
-https://tracefox.co/white-label-monitoring  
-https://uptimeify.io/  
-https://sitebrief.net/
+European Commission payment services:  
+https://finance.ec.europa.eu/consumer-finance-and-payments/payment-services/payment-services_en
 
-Current DORA-product examples:  
-https://www.treica.com/  
-https://www.dora-guard.com/  
-https://www.dokimos.eu/
+European Commission instant payments:  
+https://finance.ec.europa.eu/news/new-eu-rules-make-instant-euro-payments-faster-and-safer-2025-10-10_en
 
-Current e-invoice-validator examples:  
-https://peppolvalidator.com/  
-https://www.invoicexml.com/api/validate/ubl
+European Payments Council SEPA Request-to-Pay:  
+https://www.europeanpaymentscouncil.eu/what-we-do/other-schemes/sepa-request-pay
