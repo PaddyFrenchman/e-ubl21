@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #62, the **next actionable issue is #63 — TODO-VALIDATION-SPLIT-016 — Benchmark each stage and establish scaling baselines**. Issues #48 through #62 are complete. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+After completion of #63, the **next actionable issue is #65 — TODO-VALIDATION-SPLIT-018 — Final end-to-end distributed validation gate**. Issues #48 through #63 are complete. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -333,7 +333,7 @@ Freeze that stage workers cannot finalize whole-document validity or choose the 
 
 **Acceptance:** A written ownership table leaves no state mutation shared by unrelated roles without an explicit CAS/idempotency contract.
 
-**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44. **#48 through #62 are complete; #63 is the current next actionable issue.**
+**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44. **#48 through #63 are complete; #65 is the current next actionable issue.**
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/48
 
