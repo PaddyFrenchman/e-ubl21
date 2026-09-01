@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	minStageCapacitySamples     = 100
 	defaultStageCapacitySamples = 100
 	maxStageCapacitySamples     = 500
 )
@@ -395,8 +396,8 @@ func stageCapacitySampleCount(b *testing.B) int {
 		return defaultStageCapacitySamples
 	}
 	count, err := strconv.Atoi(value)
-	if err != nil || count < 1 || count > maxStageCapacitySamples {
-		b.Fatalf("EUBL21_CAPACITY_SAMPLES must be between 1 and %d; got %q", maxStageCapacitySamples, value)
+	if err != nil || count < minStageCapacitySamples || count > maxStageCapacitySamples {
+		b.Fatalf("EUBL21_CAPACITY_SAMPLES must be between %d and %d; got %q", minStageCapacitySamples, maxStageCapacitySamples, value)
 	}
 	return count
 }

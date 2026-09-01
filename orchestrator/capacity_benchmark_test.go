@@ -18,6 +18,7 @@ import (
 )
 
 const (
+	minOrchestratorCapacitySamples     = 100
 	defaultOrchestratorCapacitySamples = 100
 	maxOrchestratorCapacitySamples     = 500
 )
@@ -217,8 +218,8 @@ func orchestratorCapacitySampleCount(b *testing.B) int {
 		return defaultOrchestratorCapacitySamples
 	}
 	count, err := strconv.Atoi(value)
-	if err != nil || count < 1 || count > maxOrchestratorCapacitySamples {
-		b.Fatalf("EUBL21_CAPACITY_SAMPLES must be between 1 and %d; got %q", maxOrchestratorCapacitySamples, value)
+	if err != nil || count < minOrchestratorCapacitySamples || count > maxOrchestratorCapacitySamples {
+		b.Fatalf("EUBL21_CAPACITY_SAMPLES must be between %d and %d; got %q", minOrchestratorCapacitySamples, maxOrchestratorCapacitySamples, value)
 	}
 	return count
 }
