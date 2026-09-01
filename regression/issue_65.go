@@ -1,391 +1,557 @@
 package regression
 
 import (
-	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 )
 
 type Issue65GateConfig struct {
-	BaseURL        string
-	Token          string
-	ManifestPath   string
-	OutputDir      string
-	NATSURL        string
-	QueueNamespace string
-	KubectlBin     string
-	Namespace      string
-	PollInterval   time.Duration
-	FixtureTimeout time.Duration
+	BaseURL             string
+	Token               string
+	ManifestPath        string
+	// XSDInvalidManifestPath optionally names a second manifest searched for
+	// an XSD-invalid fixture when the primary manifest has none. The fixture
+	// is re-profiled to ubl21-en16931 so the plan includes EN, which must
+	// then never be requested.
+	XSDInvalidManifestPath string
+	OutputDir              string
+	NATSURL                string
+	QueueNamespace         string
+	KubectlBin             string
+	Namespace              string
+	ENDeployment           string
+	EquivalenceBaseline    string
+	PollInterval           time.Duration
+	FixtureTimeout         time.Duration
 }
 
+type issue65Env struct {
+	cfg        Issue65GateConfig
+	baseURL    *url.URL
+	corpusRoot string
+	manifest   Manifest
+}
+
+// RunIssue65Gate proves the issue #65 acceptance scenarios against a live
+// split deployment reachable via cfg.BaseURL/cfg.NATSURL/cfg.Namespace:
+//  1. valid EN 16931 plan: public upload -> XSD PASS -> EN PASS -> final valid
+//  2. XSD-invalid: final invalid and the EN request stream receives nothing
+//  3. EN-invalid: XSD PASS -> EN standards-invalid -> final invalid
+//  4. EN scale-to-zero: requests accumulate durably, restoring workers drains
+//     the backlog and every outage upload reaches its expected terminal state
+//  5. frozen semantic-equivalence corpus matches the monolithic baseline
 func RunIssue65Gate(ctx context.Context, cfg Issue65GateConfig) (*Summary, error) {
-	summary := &Summary{Total: 5}
-
-	fmt.Printf("Issue #65 split-deployment gate\n")
-	fmt.Printf("  API: %s\n", cfg.BaseURL)
-	fmt.Printf("  NATS: %s\n", cfg.NATSURL)
-	fmt.Printf("  Namespace: %s\n", cfg.Namespace)
-
-	// Load manifest
-	manifest, err := loadFixtureManifest(cfg.ManifestPath)
+	env, err := newIssue65Env(cfg)
 	if err != nil {
-		return summary, fmt.Errorf("load manifest: %w", err)
+		return &Summary{}, err
 	}
 
-	// Scenario 1: Valid EN16931 document
-	fmt.Println("\n[1/5] Valid EN16931 document pipeline")
-	if scenario1Valid(ctx, cfg, manifest) == nil {
-		fmt.Println("✓ PASS")
+	scenarios := []struct {
+		name string
+		run  func(context.Context, *issue65Env) error
+	}{
+		{"valid plan completes through split pipeline", scenarioValidPlan},
+		{"XSD-invalid finalizes without any EN request", scenarioXSDInvalidStopsBeforeEN},
+		{"EN-invalid after XSD pass finalizes invalid", scenarioENInvalidAfterXSDPass},
+		{"EN scale-to-zero accumulates then drains", scenarioENScaleToZero},
+		{"frozen semantic-equivalence corpus", scenarioSemanticEquivalence},
+	}
+
+	summary := &Summary{SchemaVersion: 1, Total: len(scenarios), ByProfile: map[string]Counts{}}
+	var failures []string
+	for index, scenario := range scenarios {
+		fmt.Printf("\n[%d/%d] %s\n", index+1, len(scenarios), scenario.name)
+		if err := scenario.run(ctx, env); err != nil {
+			fmt.Printf("  FAIL: %v\n", err)
+			summary.Failed++
+			failures = append(failures, fmt.Sprintf("%s: %v", scenario.name, err))
+			continue
+		}
+		fmt.Println("  PASS")
 		summary.Passed++
-	} else {
-		fmt.Println("✗ FAIL")
 	}
 
-	// Scenario 2: XSD-invalid stops before EN
-	fmt.Println("\n[2/5] XSD-invalid stops before EN (EN queue empty)")
-	if scenario2XSDInvalid(ctx, cfg, manifest) == nil {
-		fmt.Println("✓ PASS")
-		summary.Passed++
-	} else {
-		fmt.Println("✗ FAIL")
-	}
-
-	// Scenario 3: EN-invalid after XSD
-	fmt.Println("\n[3/5] EN-invalid after XSD PASS")
-	if scenario3ENInvalid(ctx, cfg, manifest) == nil {
-		fmt.Println("✓ PASS")
-		summary.Passed++
-	} else {
-		fmt.Println("✗ FAIL")
-	}
-
-	// Scenario 4: EN scale-to-zero
-	fmt.Println("\n[4/5] EN scale-to-zero with recovery")
-	if scenario4ENScaleToZero(ctx, cfg, manifest) == nil {
-		fmt.Println("✓ PASS")
-		summary.Passed++
-	} else {
-		fmt.Println("✗ FAIL")
-	}
-
-	// Scenario 5: Semantic equivalence
-	fmt.Println("\n[5/5] Semantic equivalence baseline")
-	if scenario5SemanticEquivalence(ctx, cfg, manifest) == nil {
-		fmt.Println("✓ PASS")
-		summary.Passed++
-	} else {
-		fmt.Println("✗ FAIL")
-	}
-
-	fmt.Printf("\n%d/%d scenarios passed\n", summary.Passed, summary.Total)
-	if summary.Passed < summary.Total {
-		return summary, fmt.Errorf("%d scenarios failed", summary.Total-summary.Passed)
+	if len(failures) > 0 {
+		return summary, fmt.Errorf("issue #65 gate failed %d of %d scenarios:\n  %s",
+			summary.Failed, summary.Total, strings.Join(failures, "\n  "))
 	}
 	return summary, nil
 }
 
-// Scenario 1: Upload a valid EN16931 document, verify it completes as valid
-func scenario1Valid(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
-	if len(manifest.Fixtures) == 0 {
-		return fmt.Errorf("no fixtures in manifest")
+func newIssue65Env(cfg Issue65GateConfig) (*issue65Env, error) {
+	if strings.TrimSpace(cfg.BaseURL) == "" || strings.TrimSpace(cfg.Token) == "" {
+		return nil, errors.New("base URL and bearer token are required")
 	}
-
-	fixture := manifest.Fixtures[0]
-	data, err := os.ReadFile(fixture.Path)
+	if cfg.ManifestPath == "" || cfg.OutputDir == "" {
+		return nil, errors.New("manifest path and output directory are required")
+	}
+	if strings.TrimSpace(cfg.NATSURL) == "" {
+		return nil, errors.New("NATS URL is required for stream assertions")
+	}
+	if strings.TrimSpace(cfg.KubectlBin) == "" || strings.TrimSpace(cfg.Namespace) == "" {
+		return nil, errors.New("kubectl binary and Kubernetes namespace are required")
+	}
+	if strings.TrimSpace(cfg.EquivalenceBaseline) == "" {
+		return nil, errors.New("frozen equivalence baseline path is required")
+	}
+	if cfg.ENDeployment == "" {
+		cfg.ENDeployment = "e-ubl21-worker-en16931"
+	}
+	if cfg.PollInterval <= 0 {
+		cfg.PollInterval = defaultPollInterval
+	}
+	if cfg.FixtureTimeout <= 0 {
+		cfg.FixtureTimeout = defaultFixtureTimeout
+	}
+	baseURL, err := url.Parse(strings.TrimRight(cfg.BaseURL, "/"))
+	if err != nil || (baseURL.Scheme != "http" && baseURL.Scheme != "https") || baseURL.Host == "" {
+		return nil, fmt.Errorf("invalid base URL %q", cfg.BaseURL)
+	}
+	manifestBytes, err := os.ReadFile(cfg.ManifestPath)
 	if err != nil {
-		return fmt.Errorf("read fixture: %w", err)
+		return nil, fmt.Errorf("read fixture manifest: %w", err)
 	}
-
-	uploadID, err := uploadDocument(ctx, cfg.BaseURL, cfg.Token, data)
-	if err != nil {
-		return fmt.Errorf("upload: %w", err)
-	}
-
-	status, err := pollStatus(ctx, cfg.BaseURL, cfg.Token, uploadID, cfg.FixtureTimeout)
-	if err != nil {
-		return fmt.Errorf("poll: %w", err)
-	}
-
-	if status != "valid" {
-		return fmt.Errorf("expected valid, got %s", status)
-	}
-
-	fmt.Printf("  Upload %s: valid ✓\n", uploadID[:8])
-	return nil
-}
-
-// Scenario 2: Upload XSD-invalid document, verify it's invalid and EN queue is empty
-func scenario2XSDInvalid(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
-	invalidFixture := getFixtureByName(manifest, "invalid")
-	if invalidFixture == nil {
-		return fmt.Errorf("no invalid fixture found in manifest")
-	}
-
-	data, err := os.ReadFile(invalidFixture.Path)
-	if err != nil {
-		return fmt.Errorf("read fixture: %w", err)
-	}
-
-	uploadID, err := uploadDocument(ctx, cfg.BaseURL, cfg.Token, data)
-	if err != nil {
-		return fmt.Errorf("upload: %w", err)
-	}
-
-	status, err := pollStatus(ctx, cfg.BaseURL, cfg.Token, uploadID, cfg.FixtureTimeout)
-	if err != nil {
-		return fmt.Errorf("poll: %w", err)
-	}
-
-	if status != "invalid" {
-		return fmt.Errorf("expected invalid, got %s", status)
-	}
-
-	// Verify EN queue is empty (no EN requests were queued)
-	enCount, err := getJetStreamMessageCount(ctx, cfg.NATSURL, cfg.QueueNamespace, "VALIDATION_LAYER_EN16931")
-	if err != nil {
-		return fmt.Errorf("check EN queue: %w", err)
-	}
-
-	if enCount > 0 {
-		return fmt.Errorf("EN queue should be empty, found %d messages", enCount)
-	}
-
-	fmt.Printf("  Upload %s: invalid, EN queue empty ✓\n", uploadID[:8])
-	return nil
-}
-
-// Scenario 3: Upload document that passes XSD but fails EN
-func scenario3ENInvalid(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
-	// This would require a fixture that's XSD-valid but EN-invalid, or simulate it
-	// For now, test basic EN failure handling
-	if len(manifest.Fixtures) < 2 {
-		return fmt.Errorf("need at least 2 fixtures for EN-invalid scenario")
-	}
-
-	fixture := manifest.Fixtures[0]
-	data, err := os.ReadFile(fixture.Path)
-	if err != nil {
-		return fmt.Errorf("read fixture: %w", err)
-	}
-
-	uploadID, err := uploadDocument(ctx, cfg.BaseURL, cfg.Token, data)
-	if err != nil {
-		return fmt.Errorf("upload: %w", err)
-	}
-
-	status, err := pollStatus(ctx, cfg.BaseURL, cfg.Token, uploadID, cfg.FixtureTimeout)
-	if err != nil {
-		return fmt.Errorf("poll: %w", err)
-	}
-
-	// Accept either valid or invalid (this scenario needs a specific EN-invalid fixture)
-	if status != "valid" && status != "invalid" {
-		return fmt.Errorf("unexpected status: %s", status)
-	}
-
-	fmt.Printf("  Upload %s: %s ✓\n", uploadID[:8], status)
-	return nil
-}
-
-// Scenario 4: Scale EN to zero, verify backlog accumulates, then restore and verify drain
-func scenario4ENScaleToZero(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
-	// Scale EN to zero
-	if err := kubectl(ctx, cfg.KubectlBin, "-n", cfg.Namespace, "scale", "deployment/e-ubl21-worker-en16931", "--replicas=0"); err != nil {
-		return fmt.Errorf("scale EN to 0: %w", err)
-	}
-
-	// Submit documents while EN is down
-	uploadIDs := make([]string, 3)
-	for i := 0; i < 3; i++ {
-		if len(manifest.Fixtures) == 0 {
-			return fmt.Errorf("no fixtures for scale-to-zero test")
-		}
-		fixture := manifest.Fixtures[i%len(manifest.Fixtures)]
-		data, err := os.ReadFile(fixture.Path)
-		if err != nil {
-			return fmt.Errorf("read fixture: %w", err)
-		}
-		id, err := uploadDocument(ctx, cfg.BaseURL, cfg.Token, data)
-		if err != nil {
-			return fmt.Errorf("upload during outage: %w", err)
-		}
-		uploadIDs[i] = id
-	}
-
-	time.Sleep(2 * time.Second)
-
-	// Verify EN queue accumulated
-	enCount, err := getJetStreamMessageCount(ctx, cfg.NATSURL, cfg.QueueNamespace, "VALIDATION_LAYER_EN16931")
-	if err != nil {
-		return fmt.Errorf("check EN queue: %w", err)
-	}
-
-	if enCount == 0 {
-		return fmt.Errorf("EN queue should have accumulated messages, found none")
-	}
-
-	// Restore EN
-	if err := kubectl(ctx, cfg.KubectlBin, "-n", cfg.Namespace, "scale", "deployment/e-ubl21-worker-en16931", "--replicas=1"); err != nil {
-		return fmt.Errorf("restore EN: %w", err)
-	}
-
-	if err := kubectl(ctx, cfg.KubectlBin, "-n", cfg.Namespace, "rollout", "status", "deployment/e-ubl21-worker-en16931", "--timeout=5m"); err != nil {
-		return fmt.Errorf("wait for EN ready: %w", err)
-	}
-
-	// Wait for recovery
-	deadline := time.Now().Add(30 * time.Second)
-	for time.Now().Before(deadline) {
-		enCount, _ := getJetStreamMessageCount(ctx, cfg.NATSURL, cfg.QueueNamespace, "VALIDATION_LAYER_EN16931")
-		if enCount == 0 {
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
-
-	fmt.Printf("  Scale-to-zero: %d documents accumulated and recovered ✓\n", len(uploadIDs))
-	return nil
-}
-
-// Scenario 5: Verify semantic equivalence (basic check, full corpus not implemented yet)
-func scenario5SemanticEquivalence(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
-	// Load baseline if available
-	baselinePath := "regression/baselines/validation-split/en16931.results.jsonl"
-	if _, err := os.Stat(baselinePath); err != nil {
-		fmt.Printf("  Baseline not available, skipping corpus comparison\n")
-		return nil
-	}
-
-	// TODO: Run full corpus comparison against baseline
-	// For now, just verify the split topology is producing results in expected format
-	if len(manifest.Fixtures) == 0 {
-		return fmt.Errorf("no fixtures for equivalence test")
-	}
-
-	data, err := os.ReadFile(manifest.Fixtures[0].Path)
-	if err != nil {
-		return fmt.Errorf("read fixture: %w", err)
-	}
-
-	_, err = uploadDocument(ctx, cfg.BaseURL, cfg.Token, data)
-	if err != nil {
-		return fmt.Errorf("upload: %w", err)
-	}
-
-	fmt.Printf("  Semantic equivalence: baseline structure verified ✓\n")
-	return nil
-}
-
-// Helper: upload document via public API
-func uploadDocument(ctx context.Context, baseURL, token string, data []byte) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/api/v1/ubl/upload", bytes.NewReader(data))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/xml")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("upload failed: %d %s", resp.StatusCode, string(body))
-	}
-
-	var result struct {
-		UploadID string `json:"uploadId"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
-	}
-
-	return result.UploadID, nil
-}
-
-// Helper: poll for validation status
-func pollStatus(ctx context.Context, baseURL, token, uploadID string, timeout time.Duration) (string, error) {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		req, err := http.NewRequestWithContext(ctx, "GET", baseURL+"/api/v1/ubl/"+uploadID, nil)
-		if err != nil {
-			return "", err
-		}
-		req.Header.Set("Authorization", "Bearer "+token)
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		}
-
-		var result struct {
-			Status string `json:"status"`
-		}
-		json.NewDecoder(resp.Body).Decode(&result)
-		resp.Body.Close()
-
-		if result.Status != "" && result.Status != "queued" && result.Status != "processing" {
-			return result.Status, nil
-		}
-
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	return "", fmt.Errorf("timeout waiting for status")
-}
-
-// Helper: kubectl command
-func kubectl(ctx context.Context, bin string, args ...string) error {
-	cmd := exec.CommandContext(ctx, bin, args...)
-	return cmd.Run()
-}
-
-// Helper: get JetStream message count
-func getJetStreamMessageCount(ctx context.Context, natsURL, namespace, streamName string) (int, error) {
-	// TODO: implement via NATS client
-	// For now, return 0 (assume empty)
-	return 0, nil
-}
-
-// Helper: load fixture manifest
-func loadFixtureManifest(path string) (*Issue65FixtureManifest, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
+	if err := ValidateFixtureManifest(manifestBytes); err != nil {
 		return nil, err
 	}
-	var m Issue65FixtureManifest
-	if err := json.Unmarshal(data, &m); err != nil {
-		return nil, err
+	var manifest Manifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		return nil, fmt.Errorf("decode fixture manifest: %w", err)
 	}
-	return &m, nil
+	return &issue65Env{
+		cfg:        cfg,
+		baseURL:    baseURL,
+		corpusRoot: filepath.Dir(cfg.ManifestPath),
+		manifest:   manifest,
+	}, nil
 }
 
-// Helper: find fixture by name pattern
-func getFixtureByName(m *Issue65FixtureManifest, pattern string) *Issue65Fixture {
-	for _, f := range m.Fixtures {
-		if bytes.Contains([]byte(f.Path), []byte(pattern)) {
-			return &f
+// Fixture selection is deterministic: it keys off the manifest's declared
+// expected stages, never off file-name conventions.
+
+func (e *issue65Env) findFixture(match func(Fixture) bool, description string) (Fixture, error) {
+	for _, fixture := range e.manifest.Fixtures {
+		if match(fixture) {
+			return fixture, nil
+		}
+	}
+	return Fixture{}, fmt.Errorf("manifest %s has no fixture that is %s", e.cfg.ManifestPath, description)
+}
+
+func fixtureIsValidTwoStage(f Fixture) bool {
+	return f.ExpectedFinal == "valid" &&
+		len(f.ExpectedStages) == 2 &&
+		f.ExpectedStages[0].Stage == "ubl21-xsd" && f.ExpectedStages[0].Outcome == "passed" &&
+		f.ExpectedStages[1].Stage == "en16931" && f.ExpectedStages[1].Outcome == "passed"
+}
+
+func fixtureIsXSDInvalid(f Fixture) bool {
+	return f.ExpectedFinal == "invalid" &&
+		len(f.ExpectedStages) == 1 &&
+		f.ExpectedStages[0].Stage == "ubl21-xsd" && f.ExpectedStages[0].Outcome == "standards-invalid"
+}
+
+func fixtureIsENInvalid(f Fixture) bool {
+	return f.ExpectedFinal == "invalid" &&
+		len(f.ExpectedStages) == 2 &&
+		f.ExpectedStages[0].Stage == "ubl21-xsd" && f.ExpectedStages[0].Outcome == "passed" &&
+		f.ExpectedStages[1].Stage == "en16931" && f.ExpectedStages[1].Outcome == "standards-invalid"
+}
+
+func (e *issue65Env) readFixture(fixture Fixture) ([]byte, error) {
+	return readFixtureFrom(e.corpusRoot, fixture)
+}
+
+func readFixtureFrom(corpusRoot string, fixture Fixture) ([]byte, error) {
+	content, err := os.ReadFile(filepath.Join(corpusRoot, filepath.FromSlash(fixture.File)))
+	if err != nil {
+		return nil, fmt.Errorf("read fixture %s: %w", fixture.ID, err)
+	}
+	if actual := fmt.Sprintf("%x", sha256.Sum256(content)); actual != fixture.SHA256 {
+		return nil, fmt.Errorf("fixture %s SHA-256 is %s, manifest has %s", fixture.ID, actual, fixture.SHA256)
+	}
+	return content, nil
+}
+
+// xsdInvalidFixture returns an XSD-invalid fixture and the corpus root its
+// file lives under. If the primary manifest has none, the secondary manifest
+// is searched and the fixture is re-profiled to ubl21-en16931 so that the
+// validation plan contains the EN stage that must then never be requested.
+func (e *issue65Env) xsdInvalidFixture() (Fixture, string, error) {
+	if fixture, err := e.findFixture(fixtureIsXSDInvalid, ""); err == nil {
+		return fixture, e.corpusRoot, nil
+	}
+	if e.cfg.XSDInvalidManifestPath == "" {
+		return Fixture{}, "", fmt.Errorf("manifest %s has no XSD-invalid fixture and no --xsd-invalid-manifest was provided", e.cfg.ManifestPath)
+	}
+	manifestBytes, err := os.ReadFile(e.cfg.XSDInvalidManifestPath)
+	if err != nil {
+		return Fixture{}, "", fmt.Errorf("read XSD-invalid manifest: %w", err)
+	}
+	if err := ValidateFixtureManifest(manifestBytes); err != nil {
+		return Fixture{}, "", err
+	}
+	var manifest Manifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		return Fixture{}, "", fmt.Errorf("decode XSD-invalid manifest: %w", err)
+	}
+	for _, fixture := range manifest.Fixtures {
+		if fixtureIsXSDInvalid(fixture) {
+			fixture.Profile = "ubl21-en16931"
+			return fixture, filepath.Dir(e.cfg.XSDInvalidManifestPath), nil
+		}
+	}
+	return Fixture{}, "", fmt.Errorf("neither %s nor %s contains an XSD-invalid fixture", e.cfg.ManifestPath, e.cfg.XSDInvalidManifestPath)
+}
+
+// uploadAndAwait pushes one fixture through the public API and returns the
+// terminal API response together with the durable upload ID.
+func (e *issue65Env) uploadAndAwait(ctx context.Context, fixture Fixture) (string, apiResponse, error) {
+	return e.uploadAndAwaitFrom(ctx, e.corpusRoot, fixture)
+}
+
+func (e *issue65Env) uploadAndAwaitFrom(ctx context.Context, corpusRoot string, fixture Fixture) (string, apiResponse, error) {
+	content, err := readFixtureFrom(corpusRoot, fixture)
+	if err != nil {
+		return "", apiResponse{}, err
+	}
+	fixtureCtx, cancel := context.WithTimeout(ctx, e.cfg.FixtureTimeout)
+	defer cancel()
+	id, err := uploadFixture(fixtureCtx, http.DefaultClient, e.baseURL, e.cfg.Token, fixture, content)
+	if err != nil {
+		return "", apiResponse{}, err
+	}
+	response, err := pollFixture(fixtureCtx, http.DefaultClient, e.baseURL, e.cfg.Token, id, e.cfg.PollInterval)
+	if err != nil {
+		return id, apiResponse{}, err
+	}
+	return id, response, nil
+}
+
+func (e *issue65Env) awaitTerminal(ctx context.Context, uploadID string) (apiResponse, error) {
+	fixtureCtx, cancel := context.WithTimeout(ctx, e.cfg.FixtureTimeout)
+	defer cancel()
+	return pollFixture(fixtureCtx, http.DefaultClient, e.baseURL, e.cfg.Token, uploadID, e.cfg.PollInterval)
+}
+
+// Scenario 1: valid document travels XSD -> EN through the real workers and
+// finalizes valid with both stage results present.
+func scenarioValidPlan(ctx context.Context, e *issue65Env) error {
+	fixture, err := e.findFixture(fixtureIsValidTwoStage, "expected-valid with XSD and EN stages")
+	if err != nil {
+		return err
+	}
+	_, response, err := e.uploadAndAwait(ctx, fixture)
+	if err != nil {
+		return err
+	}
+	if response.Status != "valid" {
+		return fmt.Errorf("fixture %s: expected terminal valid, got %q", fixture.ID, response.Status)
+	}
+	if err := requireStageOutcomes(response, []expectedAPIStage{
+		{"ubl21-xsd", true}, {"en16931", true},
+	}); err != nil {
+		return fmt.Errorf("fixture %s: %w", fixture.ID, err)
+	}
+	fmt.Printf("  fixture %s finalized valid with XSD and EN evidence\n", fixture.ID)
+	return nil
+}
+
+// Scenario 2: XSD-invalid document finalizes invalid and the EN request
+// stream's last sequence never moves, proving EN was not asked to work.
+func scenarioXSDInvalidStopsBeforeEN(ctx context.Context, e *issue65Env) error {
+	fixture, corpusRoot, err := e.xsdInvalidFixture()
+	if err != nil {
+		return err
+	}
+	before, err := e.enRequestStreamState(ctx)
+	if err != nil {
+		return err
+	}
+	_, response, err := e.uploadAndAwaitFrom(ctx, corpusRoot, fixture)
+	if err != nil {
+		return err
+	}
+	if response.Status != "invalid" {
+		return fmt.Errorf("fixture %s: expected terminal invalid, got %q", fixture.ID, response.Status)
+	}
+	if err := requireStageOutcomes(response, []expectedAPIStage{{"ubl21-xsd", false}}); err != nil {
+		return fmt.Errorf("fixture %s: %w", fixture.ID, err)
+	}
+	after, err := e.enRequestStreamState(ctx)
+	if err != nil {
+		return err
+	}
+	if after.LastSeq != before.LastSeq {
+		return fmt.Errorf("fixture %s: EN request stream advanced from sequence %d to %d; EN must never be queued for an XSD-invalid document",
+			fixture.ID, before.LastSeq, after.LastSeq)
+	}
+	fmt.Printf("  fixture %s finalized invalid; EN request stream stayed at sequence %d\n", fixture.ID, after.LastSeq)
+	return nil
+}
+
+// Scenario 3: XSD-valid but EN-invalid document reaches EN and finalizes invalid.
+func scenarioENInvalidAfterXSDPass(ctx context.Context, e *issue65Env) error {
+	fixture, err := e.findFixture(fixtureIsENInvalid, "expected XSD-pass and EN standards-invalid")
+	if err != nil {
+		return err
+	}
+	_, response, err := e.uploadAndAwait(ctx, fixture)
+	if err != nil {
+		return err
+	}
+	if response.Status != "invalid" {
+		return fmt.Errorf("fixture %s: expected terminal invalid, got %q", fixture.ID, response.Status)
+	}
+	if err := requireStageOutcomes(response, []expectedAPIStage{
+		{"ubl21-xsd", true}, {"en16931", false},
+	}); err != nil {
+		return fmt.Errorf("fixture %s: %w", fixture.ID, err)
+	}
+	fmt.Printf("  fixture %s: XSD passed, EN reported standards-invalid, final invalid\n", fixture.ID)
+	return nil
+}
+
+// Scenario 4: with the EN deployment scaled to zero, XSD keeps draining and
+// EN requests accumulate durably; restoring the deployment drains the backlog
+// and every outage upload reaches its expected terminal state.
+func scenarioENScaleToZero(ctx context.Context, e *issue65Env) error {
+	const outageUploads = 3
+	fixture, err := e.findFixture(fixtureIsValidTwoStage, "expected-valid with XSD and EN stages")
+	if err != nil {
+		return err
+	}
+	content, err := e.readFixture(fixture)
+	if err != nil {
+		return err
+	}
+
+	if err := e.kubectl(ctx, "scale", "deployment/"+e.cfg.ENDeployment, "--replicas=0"); err != nil {
+		return fmt.Errorf("scale EN deployment to zero: %w", err)
+	}
+	// Always restore the deployment, even when the scenario fails midway.
+	defer func() {
+		restoreCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		_ = e.kubectl(restoreCtx, "scale", "deployment/"+e.cfg.ENDeployment, "--replicas=1")
+	}()
+	if err := e.awaitENPodsGone(ctx); err != nil {
+		return err
+	}
+
+	uploadIDs := make([]string, 0, outageUploads)
+	for i := 0; i < outageUploads; i++ {
+		uploadCtx, cancel := context.WithTimeout(ctx, e.cfg.FixtureTimeout)
+		id, err := uploadFixture(uploadCtx, http.DefaultClient, e.baseURL, e.cfg.Token, fixture, content)
+		cancel()
+		if err != nil {
+			return fmt.Errorf("upload %d during EN outage: %w", i+1, err)
+		}
+		uploadIDs = append(uploadIDs, id)
+	}
+
+	// XSD must keep draining: the EN request stream has to accumulate one
+	// durable request per outage upload while no EN worker is running.
+	if err := e.awaitENBacklog(ctx, outageUploads); err != nil {
+		return err
+	}
+
+	if err := e.kubectl(ctx, "scale", "deployment/"+e.cfg.ENDeployment, "--replicas=1"); err != nil {
+		return fmt.Errorf("restore EN deployment: %w", err)
+	}
+	if err := e.kubectl(ctx, "rollout", "status", "deployment/"+e.cfg.ENDeployment, "--timeout=5m"); err != nil {
+		return fmt.Errorf("wait for restored EN deployment: %w", err)
+	}
+
+	// Recovery is proven per upload: every document submitted during the
+	// outage must reach its expected terminal state, not merely leave the queue.
+	for index, uploadID := range uploadIDs {
+		response, err := e.awaitTerminal(ctx, uploadID)
+		if err != nil {
+			return fmt.Errorf("outage upload %d (%s) did not reach a terminal state after EN restore: %w", index+1, uploadID, err)
+		}
+		if response.Status != fixture.ExpectedFinal {
+			return fmt.Errorf("outage upload %d (%s): expected terminal %q after EN restore, got %q",
+				index+1, uploadID, fixture.ExpectedFinal, response.Status)
+		}
+	}
+
+	// The durable backlog itself must also drain to zero.
+	if err := e.awaitENDrain(ctx); err != nil {
+		return err
+	}
+	fmt.Printf("  %d uploads accumulated during EN outage, drained and finalized %q after restore\n", outageUploads, fixture.ExpectedFinal)
+	return nil
+}
+
+// Scenario 5: the full frozen corpus runs through the split deployment and
+// the normalized results must be semantically equivalent to the monolithic
+// baseline. A missing baseline fails the gate.
+func scenarioSemanticEquivalence(ctx context.Context, e *issue65Env) error {
+	if _, err := os.Stat(e.cfg.EquivalenceBaseline); err != nil {
+		return fmt.Errorf("frozen equivalence baseline %s is not readable: %w", e.cfg.EquivalenceBaseline, err)
+	}
+	corpusOutput := filepath.Join(e.cfg.OutputDir, "equivalence-corpus")
+	summary, err := RunCorpus(ctx, RunnerConfig{
+		BaseURL:        e.cfg.BaseURL,
+		Token:          e.cfg.Token,
+		ManifestPath:   e.cfg.ManifestPath,
+		OutputDir:      corpusOutput,
+		Profile:        "all",
+		PollInterval:   e.cfg.PollInterval,
+		FixtureTimeout: e.cfg.FixtureTimeout,
+	})
+	if err != nil {
+		return fmt.Errorf("corpus run against split deployment: %w", err)
+	}
+	equivalence, err := CompareResultSets(e.cfg.EquivalenceBaseline, filepath.Join(corpusOutput, "results.jsonl"))
+	if summaryPath := filepath.Join(e.cfg.OutputDir, "equivalence.json"); true {
+		if writeErr := WriteEquivalenceSummary(summaryPath, equivalence); writeErr != nil {
+			fmt.Printf("  warning: could not write equivalence summary: %v\n", writeErr)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("semantic equivalence against frozen baseline: %w", err)
+	}
+	fmt.Printf("  corpus %d/%d fixtures passed; %d results equivalent to frozen baseline\n",
+		summary.Passed, summary.Total, equivalence.Equivalent)
+	return nil
+}
+
+type expectedAPIStage struct {
+	layer string
+	valid bool
+}
+
+func requireStageOutcomes(response apiResponse, expected []expectedAPIStage) error {
+	if len(response.Stages) != len(expected) {
+		layers := make([]string, 0, len(response.Stages))
+		for _, stage := range response.Stages {
+			layers = append(layers, stage.Layer)
+		}
+		return fmt.Errorf("expected %d stage results, got %d (%s)", len(expected), len(response.Stages), strings.Join(layers, ", "))
+	}
+	for index, want := range expected {
+		got := response.Stages[index]
+		if got.Layer != want.layer || got.Valid != want.valid {
+			return fmt.Errorf("stage %d: expected layer %q valid=%t, got layer %q valid=%t",
+				index, want.layer, want.valid, got.Layer, got.Valid)
 		}
 	}
 	return nil
 }
 
-type Issue65FixtureManifest struct {
-	Fixtures []Issue65Fixture `json:"fixtures"`
+type streamState struct {
+	Msgs    uint64
+	LastSeq uint64
 }
 
-type Issue65Fixture struct {
-	Path string `json:"path"`
-	Name string `json:"name,omitempty"`
+// enRequestStreamState reads the live JetStream state of the EN 16931 stage
+// request stream. LastSeq counts every request ever published (it does not
+// decrease when work-queue messages are consumed), so it detects EN requests
+// even if a worker would consume them quickly. Msgs counts the durable backlog.
+func (e *issue65Env) enRequestStreamState(ctx context.Context) (streamState, error) {
+	names, err := queue.Namespace(e.cfg.QueueNamespace).StageQueue(queue.ValidationLayerEN16931)
+	if err != nil {
+		return streamState{}, err
+	}
+	connection, err := nats.Connect(e.cfg.NATSURL)
+	if err != nil {
+		return streamState{}, fmt.Errorf("connect to NATS %s: %w", e.cfg.NATSURL, err)
+	}
+	defer connection.Close()
+	js, err := jetstream.New(connection)
+	if err != nil {
+		return streamState{}, err
+	}
+	stream, err := js.Stream(ctx, names.RequestStream)
+	if err != nil {
+		return streamState{}, fmt.Errorf("open stream %s: %w", names.RequestStream, err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		return streamState{}, fmt.Errorf("read stream %s info: %w", names.RequestStream, err)
+	}
+	return streamState{Msgs: info.State.Msgs, LastSeq: info.State.LastSeq}, nil
+}
+
+func (e *issue65Env) awaitENBacklog(ctx context.Context, minimum int) error {
+	deadline := time.Now().Add(e.cfg.FixtureTimeout)
+	var last streamState
+	for time.Now().Before(deadline) {
+		state, err := e.enRequestStreamState(ctx)
+		if err != nil {
+			return err
+		}
+		last = state
+		if state.Msgs >= uint64(minimum) {
+			fmt.Printf("  EN request stream accumulated %d durable requests during outage\n", state.Msgs)
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
+	return fmt.Errorf("EN request stream never accumulated %d requests during the outage (last saw %d)", minimum, last.Msgs)
+}
+
+func (e *issue65Env) awaitENDrain(ctx context.Context) error {
+	deadline := time.Now().Add(e.cfg.FixtureTimeout)
+	var last streamState
+	for time.Now().Before(deadline) {
+		state, err := e.enRequestStreamState(ctx)
+		if err != nil {
+			return err
+		}
+		last = state
+		if state.Msgs == 0 {
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
+	return fmt.Errorf("EN request stream did not drain after restore; %d requests still pending", last.Msgs)
+}
+
+// awaitENPodsGone waits until no EN worker pod remains, so the outage is real
+// before any document is submitted.
+func (e *issue65Env) awaitENPodsGone(ctx context.Context) error {
+	deadline := time.Now().Add(2 * time.Minute)
+	selector := "app.kubernetes.io/component=worker-en16931"
+	for time.Now().Before(deadline) {
+		output, err := e.kubectlOutput(ctx, "get", "pods", "--selector", selector, "--no-headers", "--ignore-not-found")
+		if err != nil {
+			return fmt.Errorf("list EN worker pods: %w", err)
+		}
+		if strings.TrimSpace(output) == "" {
+			return nil
+		}
+		time.Sleep(2 * time.Second)
+	}
+	return errors.New("EN worker pods were still running two minutes after scaling to zero")
+}
+
+func (e *issue65Env) kubectl(ctx context.Context, args ...string) error {
+	_, err := e.kubectlOutput(ctx, args...)
+	return err
+}
+
+func (e *issue65Env) kubectlOutput(ctx context.Context, args ...string) (string, error) {
+	full := append([]string{"--namespace", e.cfg.Namespace}, args...)
+	output, err := exec.CommandContext(ctx, e.cfg.KubectlBin, full...).CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("kubectl %s: %w: %s", strings.Join(args, " "), err, strings.TrimSpace(string(output)))
+	}
+	return string(output), nil
 }

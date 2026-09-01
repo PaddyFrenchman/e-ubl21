@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -11,70 +10,43 @@ import (
 )
 
 func newIssue65Cmd(cfg *Config) *cobra.Command {
-	var baseURL, token, manifest, outputDir string
-	var natsURL, queueNamespace, kubectlBin, namespace string
-	var pollInterval, fixtureTimeout time.Duration
-
+	var gate regression.Issue65GateConfig
 	command := &cobra.Command{
 		Use:   "issue-65",
-		Short: "Issue #65 split-deployment end-to-end validation gate",
-		Long: `Prove issue #65 acceptance criteria:
-- Split architecture deploys independently (API, orchestrator, XSD worker, EN worker)
-- EN scale-to-zero with queue accumulation and recovery
-- All validation outcomes preserved (valid/invalid/errors)
-- Semantic equivalence from frozen corpus`,
+		Short: "Run the issue #65 split-deployment end-to-end validation gate",
+		Long: `Prove issue #65 acceptance against a live split deployment:
+- valid EN 16931 plan: public upload -> XSD PASS -> EN PASS -> final valid
+- XSD-invalid document finalizes invalid with zero EN requests
+- EN-invalid document: XSD PASS -> EN standards-invalid -> final invalid
+- EN scale-to-zero: durable accumulation, restore, drain, terminal results
+- frozen semantic-equivalence corpus against the monolithic baseline`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if token == "" {
-				token = os.Getenv("EUBL21_REGRESSION_TOKEN")
+			if gate.Token == "" {
+				gate.Token = os.Getenv("EUBL21_REGRESSION_TOKEN")
 			}
-			if token == "" {
-				return errors.New("token required (--token or EUBL21_REGRESSION_TOKEN)")
-			}
-			if manifest == "" {
-				return errors.New("manifest required (--manifest)")
-			}
-			if natsURL == "" {
-				return errors.New("NATS URL required (--nats-url)")
-			}
-			if kubectlBin == "" {
-				return errors.New("kubectl binary path required (--kubectl-bin)")
-			}
-			if namespace == "" {
-				return errors.New("Kubernetes namespace required (--namespace)")
-			}
-
-			// Invoke issue #65 test suite
-			summary, err := regression.RunIssue65Gate(cmd.Context(), regression.Issue65GateConfig{
-				BaseURL:           baseURL,
-				Token:             token,
-				ManifestPath:      manifest,
-				OutputDir:         outputDir,
-				NATSURL:           natsURL,
-				QueueNamespace:    queueNamespace,
-				KubectlBin:        kubectlBin,
-				Namespace:         namespace,
-				PollInterval:      pollInterval,
-				FixtureTimeout:    fixtureTimeout,
-			})
+			summary, err := regression.RunIssue65Gate(cmd.Context(), gate)
 			if summary != nil {
 				fmt.Fprintf(cmd.OutOrStdout(), "issue-65 total=%d passed=%d failed=%d artifacts=%s\n",
-					summary.Total, summary.Passed, summary.Failed, outputDir)
+					summary.Total, summary.Passed, summary.Failed, gate.OutputDir)
 			}
 			return err
 		},
 	}
 
-	command.Flags().StringVar(&baseURL, "base-url", "http://127.0.0.1:8080", "Base URL of the e-ubl21 public API")
-	command.Flags().StringVar(&token, "token", "", "OAuth bearer token (or set EUBL21_REGRESSION_TOKEN)")
-	command.Flags().StringVar(&manifest, "manifest", "", "Fixture manifest to execute (required)")
-	command.Flags().StringVar(&outputDir, "output", "regression-results/issue-65/latest", "Directory for test artifacts")
-	command.Flags().StringVar(&natsURL, "nats-url", "", "NATS connection URL (required)")
-	command.Flags().StringVar(&queueNamespace, "queue-namespace", "eubl21.i65", "Queue namespace for validation requests")
-	command.Flags().StringVar(&kubectlBin, "kubectl-bin", "", "Path to kubectl binary (required)")
-	command.Flags().StringVar(&namespace, "namespace", "", "Kubernetes namespace with split deployment (required)")
-	command.Flags().DurationVar(&pollInterval, "poll-interval", 100*time.Millisecond, "Delay between durable status polls")
-	command.Flags().DurationVar(&fixtureTimeout, "fixture-timeout", 60*time.Second, "Maximum upload-to-terminal time per fixture")
+	command.Flags().StringVar(&gate.BaseURL, "base-url", "http://127.0.0.1:8080", "Base URL of the e-ubl21 public API")
+	command.Flags().StringVar(&gate.Token, "token", "", "OAuth bearer token (or set EUBL21_REGRESSION_TOKEN)")
+	command.Flags().StringVar(&gate.ManifestPath, "manifest", "", "Fixture manifest to execute (required)")
+	command.Flags().StringVar(&gate.XSDInvalidManifestPath, "xsd-invalid-manifest", "", "Secondary manifest searched for an XSD-invalid fixture when the primary has none")
+	command.Flags().StringVar(&gate.OutputDir, "output", "regression-results/issue-65/latest", "Directory for gate artifacts")
+	command.Flags().StringVar(&gate.NATSURL, "nats-url", "", "NATS URL for JetStream stream assertions (required)")
+	command.Flags().StringVar(&gate.QueueNamespace, "queue-namespace", "", "Queue namespace of the deployed topology (required)")
+	command.Flags().StringVar(&gate.KubectlBin, "kubectl-bin", "kubectl", "kubectl executable used for scaling operations")
+	command.Flags().StringVar(&gate.Namespace, "namespace", "", "Kubernetes namespace of the split deployment (required)")
+	command.Flags().StringVar(&gate.ENDeployment, "en-deployment", "e-ubl21-worker-en16931", "Name of the EN 16931 worker deployment")
+	command.Flags().StringVar(&gate.EquivalenceBaseline, "equivalence-baseline", "", "Frozen monolithic results.jsonl baseline (required)")
+	command.Flags().DurationVar(&gate.PollInterval, "poll-interval", 100*time.Millisecond, "Delay between durable status polls")
+	command.Flags().DurationVar(&gate.FixtureTimeout, "fixture-timeout", 120*time.Second, "Maximum upload-to-terminal time per fixture")
 
 	return command
 }
