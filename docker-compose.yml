@@ -83,7 +83,6 @@ services:
   worker:
     build: .
     image: e-ubl21:latest
-    container_name: e-ubl21-worker
     restart: unless-stopped
     command: ["worker"]
     depends_on:

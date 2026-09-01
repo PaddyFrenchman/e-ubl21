@@ -45,6 +45,8 @@ MANIFEST="${MANIFEST:-createsamples/samples-en16931/manifest.json}"
 XSD_INVALID_MANIFEST="${XSD_INVALID_MANIFEST:-createsamples/samples/manifest.json}"
 API_LOCAL_PORT="${API_LOCAL_PORT:-18081}"
 NATS_LOCAL_PORT="${NATS_LOCAL_PORT:-14223}"
+GATE_RATE_LIMIT_RPS="${GATE_RATE_LIMIT_RPS:-1000}"
+GATE_RATE_LIMIT_BURST="${GATE_RATE_LIMIT_BURST:-2000}"
 ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-5m}"
 ARTIFACT_DIR="${ARTIFACT_DIR:-regression-results/issue-65/$(date -u +%Y%m%dT%H%M%SZ)}"
 KUBECTL_BIN="${KUBECTL_BIN:-$ROOT_DIR/devsetup/minikube-kubectl.sh}"
@@ -115,6 +117,11 @@ echo "Artifacts: $ARTIFACT_DIR"
 if ! minikube status -p "$MINIKUBE_PROFILE" --format='{{.Host}}' 2>/dev/null | grep -qx Running; then
     minikube start -p "$MINIKUBE_PROFILE" --driver="$MINIKUBE_DRIVER"
 fi
+MINIKUBE_NODE_IP="$(minikube ip -p "$MINIKUBE_PROFILE")"
+if [[ -z "$MINIKUBE_NODE_IP" ]]; then
+    echo "ERROR: could not determine the Minikube node IP" >&2
+    exit 2
+fi
 
 echo "Building candidate image $IMAGE"
 docker build --tag "$IMAGE" . >"$ARTIFACT_DIR/docker-build.log" 2>&1
@@ -138,18 +145,38 @@ DEPLOYMENT_STARTED=1
 unset HMAC_SECRET
 
 # JetStream-enabled pinned NATS; deploy/kubernetes has no broker manifest.
+# A headless Service plus host-networked NATS is intentional here. Rootless
+# Podman Minikube does not reliably forward ClusterIP traffic, including the
+# DNS Service. The split workloads stay on pod networking and receive the
+# reachable node address below; production manifests retain normal Services.
 "$KUBECTL_BIN" -n "$NAMESPACE" apply -f - >>"$ARTIFACT_DIR/apply.log" 2>&1 <<'NATS'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-config
+data:
+  nats.conf: |
+    jetstream {
+      store_dir: /data
+    }
+    http: 8222
+    max_payload: 2097152
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: nats
 spec:
+  clusterIP: None
   selector:
     app.kubernetes.io/name: nats
   ports:
     - name: client
       port: 4222
       targetPort: 4222
+    - name: monitor
+      port: 8222
+      targetPort: 8222
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -165,33 +192,86 @@ spec:
       labels:
         app.kubernetes.io/name: nats
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: nats
           image: nats:2.10-alpine
-          args: ["-js", "-sd", "/data"]
+          args: ["-c", "/etc/nats/nats.conf"]
           ports:
-            - containerPort: 4222
+            - name: client
+              containerPort: 4222
+            - name: monitor
+              containerPort: 8222
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: monitor
+            periodSeconds: 2
+            failureThreshold: 30
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: config
+              mountPath: /etc/nats
+              readOnly: true
       volumes:
         - name: data
           emptyDir: {}
+        - name: config
+          configMap:
+            name: nats-config
 NATS
 
-echo "Applying split component manifests (autoscaling deliberately excluded)"
-# runtime-config.yaml pins EUBL21_QUEUE_NAMESPACE=eubl21.prod; override it for the gate.
-sed "s|EUBL21_QUEUE_NAMESPACE: .*|EUBL21_QUEUE_NAMESPACE: $QUEUE_NAMESPACE|" \
+echo "Applying runtime configuration and provisioning job"
+# runtime-config.yaml pins production values; override the disposable gate's
+# queue namespace and bypass rootless Podman's broken DNS/ClusterIP path.
+sed \
+    -e "s|EUBL21_QUEUE_NAMESPACE: .*|EUBL21_QUEUE_NAMESPACE: $QUEUE_NAMESPACE|" \
+    -e "s|EUBL21_NATS_URL: .*|EUBL21_NATS_URL: nats://$MINIKUBE_NODE_IP:4222|" \
     deploy/kubernetes/runtime-config.yaml | \
     "$KUBECTL_BIN" -n "$NAMESPACE" apply -f - >>"$ARTIFACT_DIR/apply.log" 2>&1
-for component in provision-job api orchestrator orchestrator-reconciler worker-xsd worker-en16931; do
-    sed "s|image: e-ubl21:replace-me|image: $IMAGE|g" "deploy/kubernetes/$component.yaml" | \
-        "$KUBECTL_BIN" -n "$NAMESPACE" apply -f - >>"$ARTIFACT_DIR/apply.log" 2>&1
-done
+sed "s|image: e-ubl21:replace-me|image: $IMAGE|g" deploy/kubernetes/provision-job.yaml | \
+    "$KUBECTL_BIN" -n "$NAMESPACE" apply -f - >>"$ARTIFACT_DIR/apply.log" 2>&1
 
 echo "Waiting for stream provisioning job"
 "$KUBECTL_BIN" -n "$NAMESPACE" rollout status deployment/nats --timeout="$ROLLOUT_TIMEOUT"
 "$KUBECTL_BIN" -n "$NAMESPACE" wait --for=condition=complete job/e-ubl21-provision --timeout="$ROLLOUT_TIMEOUT"
+
+echo "Activating split deployment barrier"
+"$KUBECTL_BIN" -n "$NAMESPACE" run e-ubl21-migration-begin \
+    --image="$IMAGE" \
+    --restart=Never \
+    --env="EUBL21_NATS_URL=nats://$MINIKUBE_NODE_IP:4222" \
+    --env="EUBL21_QUEUE_NAMESPACE=$QUEUE_NAMESPACE" \
+    -- migration begin-drain >>"$ARTIFACT_DIR/apply.log" 2>&1
+"$KUBECTL_BIN" -n "$NAMESPACE" wait \
+    --for=jsonpath='{.status.phase}'=Succeeded pod/e-ubl21-migration-begin \
+    --timeout="$ROLLOUT_TIMEOUT"
+"$KUBECTL_BIN" -n "$NAMESPACE" logs pod/e-ubl21-migration-begin >"$ARTIFACT_DIR/migration-begin.log"
+
+"$KUBECTL_BIN" -n "$NAMESPACE" run e-ubl21-migration-activate \
+    --image="$IMAGE" \
+    --restart=Never \
+    --env="EUBL21_NATS_URL=nats://$MINIKUBE_NODE_IP:4222" \
+    --env="EUBL21_QUEUE_NAMESPACE=$QUEUE_NAMESPACE" \
+    -- migration activate --allow-no-legacy-consumer >>"$ARTIFACT_DIR/apply.log" 2>&1
+"$KUBECTL_BIN" -n "$NAMESPACE" wait \
+    --for=jsonpath='{.status.phase}'=Succeeded pod/e-ubl21-migration-activate \
+    --timeout="$ROLLOUT_TIMEOUT"
+"$KUBECTL_BIN" -n "$NAMESPACE" logs pod/e-ubl21-migration-activate >"$ARTIFACT_DIR/migration-activate.log"
+
+echo "Applying split component manifests (autoscaling deliberately excluded)"
+for component in api orchestrator orchestrator-reconciler worker-xsd worker-en16931; do
+    sed "s|image: e-ubl21:replace-me|image: $IMAGE|g" "deploy/kubernetes/$component.yaml" | \
+        "$KUBECTL_BIN" -n "$NAMESPACE" apply -f - >>"$ARTIFACT_DIR/apply.log" 2>&1
+done
+# Regression polling and the parallel equivalence corpus intentionally exceed
+# production admission defaults. Raise only the disposable gate deployment.
+"$KUBECTL_BIN" -n "$NAMESPACE" set env deployment/e-ubl21-api \
+    "EUBL21_RATE_LIMIT_RPS=$GATE_RATE_LIMIT_RPS" \
+    "EUBL21_RATE_LIMIT_BURST=$GATE_RATE_LIMIT_BURST" \
+    >>"$ARTIFACT_DIR/apply.log" 2>&1
 
 echo "Waiting for split deployments"
 for deployment in e-ubl21-api e-ubl21-orchestrator e-ubl21-orchestrator-reconciler e-ubl21-worker-xsd e-ubl21-worker-en16931; do
@@ -201,7 +281,7 @@ done
 echo "Port-forwarding API and NATS"
 "$KUBECTL_BIN" -n "$NAMESPACE" port-forward service/e-ubl21-api "$API_LOCAL_PORT:8080" >"$ARTIFACT_DIR/port-forward/api.log" 2>&1 &
 PORT_FORWARD_PIDS+=("$!")
-"$KUBECTL_BIN" -n "$NAMESPACE" port-forward service/nats "$NATS_LOCAL_PORT:4222" >"$ARTIFACT_DIR/port-forward/nats.log" 2>&1 &
+"$KUBECTL_BIN" -n "$NAMESPACE" port-forward deployment/nats "$NATS_LOCAL_PORT:4222" >"$ARTIFACT_DIR/port-forward/nats.log" 2>&1 &
 PORT_FORWARD_PIDS+=("$!")
 
 wait_http() {
