@@ -68,6 +68,7 @@ func RunIssue65Gate(ctx context.Context, cfg Issue65GateConfig) (*Summary, error
 		{"XSD-invalid finalizes without any EN request", scenarioXSDInvalidStopsBeforeEN},
 		{"EN-invalid after XSD pass finalizes invalid", scenarioENInvalidAfterXSDPass},
 		{"EN scale-to-zero accumulates then drains", scenarioENScaleToZero},
+		{"EN worker crash mid-flight redelivers and finalizes exactly once", scenarioENWorkerCrashRedelivery},
 		{"frozen semantic-equivalence corpus", scenarioSemanticEquivalence},
 	}
 
@@ -378,7 +379,8 @@ func scenarioENScaleToZero(ctx context.Context, e *issue65Env) error {
 	}
 
 	// Recovery is proven per upload: every document submitted during the
-	// outage must reach its expected terminal state, not merely leave the queue.
+	// outage must reach its expected terminal state with both stage results
+	// present — none of them may skip EN after recovery.
 	for index, uploadID := range uploadIDs {
 		response, err := e.awaitTerminal(ctx, uploadID)
 		if err != nil {
@@ -387,6 +389,9 @@ func scenarioENScaleToZero(ctx context.Context, e *issue65Env) error {
 		if response.Status != fixture.ExpectedFinal {
 			return fmt.Errorf("outage upload %d (%s): expected terminal %q after EN restore, got %q",
 				index+1, uploadID, fixture.ExpectedFinal, response.Status)
+		}
+		if err := requireStageOutcomes(response, expectedStagesFromFixture(fixture)); err != nil {
+			return fmt.Errorf("outage upload %d (%s): %w", index+1, uploadID, err)
 		}
 	}
 
@@ -398,7 +403,78 @@ func scenarioENScaleToZero(ctx context.Context, e *issue65Env) error {
 	return nil
 }
 
-// Scenario 5: the full frozen corpus runs through the split deployment and
+// Scenario: an EN worker pod is force-deleted while a validation is in
+// flight. JetStream must redeliver the unacknowledged stage request to the
+// replacement pod, the validation must finalize with both stage results, and
+// the durable results stream must hold exactly one permanent final result
+// for the upload.
+func scenarioENWorkerCrashRedelivery(ctx context.Context, e *issue65Env) error {
+	fixture, err := e.findFixture(fixtureIsValidTwoStage, "expected-valid with XSD and EN stages")
+	if err != nil {
+		return err
+	}
+	content, err := e.readFixture(fixture)
+	if err != nil {
+		return err
+	}
+	before, err := e.enRequestStreamState(ctx)
+	if err != nil {
+		return err
+	}
+
+	uploadCtx, cancel := context.WithTimeout(ctx, e.cfg.FixtureTimeout)
+	uploadID, err := uploadFixture(uploadCtx, http.DefaultClient, e.baseURL, e.cfg.Token, fixture, content)
+	cancel()
+	if err != nil {
+		return err
+	}
+
+	// Wait for the EN stage request to be published (XSD passed, EN work is
+	// now in flight), then hard-kill the EN worker pod. EN validation takes
+	// on the order of seconds, so the kill lands while the request is
+	// unacknowledged in the common case; when the worker manages to finish
+	// first, the scenario still proves restart safety and result uniqueness.
+	if err := e.awaitENSequenceAdvance(ctx, before.LastSeq); err != nil {
+		return fmt.Errorf("upload %s: %w", uploadID, err)
+	}
+	if err := e.kubectl(ctx, "delete", "pods",
+		"--selector", "app.kubernetes.io/component=worker-en16931",
+		"--force", "--grace-period=0", "--wait=false"); err != nil {
+		return fmt.Errorf("force-delete EN worker pod: %w", err)
+	}
+	if err := e.kubectl(ctx, "rollout", "status", "deployment/"+e.cfg.ENDeployment, "--timeout=5m"); err != nil {
+		return fmt.Errorf("wait for replacement EN worker: %w", err)
+	}
+
+	// Redelivery of an unacknowledged request waits for the stage ack
+	// deadline (120s for EN 16931), so allow for it on top of normal
+	// validation time.
+	terminalCtx, cancelTerminal := context.WithTimeout(ctx, e.cfg.FixtureTimeout+150*time.Second)
+	response, err := pollFixture(terminalCtx, http.DefaultClient, e.baseURL, e.cfg.Token, uploadID, e.cfg.PollInterval)
+	cancelTerminal()
+	if err != nil {
+		return fmt.Errorf("upload %s did not reach a terminal state after the EN worker crash: %w", uploadID, err)
+	}
+	if response.Status != fixture.ExpectedFinal {
+		return fmt.Errorf("upload %s: expected terminal %q after EN worker crash, got %q", uploadID, fixture.ExpectedFinal, response.Status)
+	}
+	if err := requireStageOutcomes(response, expectedStagesFromFixture(fixture)); err != nil {
+		return fmt.Errorf("upload %s: %w", uploadID, err)
+	}
+
+	resultCount, err := e.countFinalResults(ctx, uploadID)
+	if err != nil {
+		return err
+	}
+	if resultCount != 1 {
+		return fmt.Errorf("upload %s: expected exactly one permanent final result, found %d", uploadID, resultCount)
+	}
+	fmt.Printf("  upload %s survived the EN worker crash, finalized %q with exactly one permanent result\n", uploadID, response.Status)
+	return nil
+}
+
+
+// Scenario: the full frozen corpus runs through the split deployment and
 // the normalized results must be semantically equivalent to the monolithic
 // baseline. A missing baseline fails the gate.
 func scenarioSemanticEquivalence(ctx context.Context, e *issue65Env) error {
@@ -435,6 +511,16 @@ func scenarioSemanticEquivalence(ctx context.Context, e *issue65Env) error {
 type expectedAPIStage struct {
 	layer string
 	valid bool
+}
+
+// expectedStagesFromFixture converts the manifest's declared stage outcomes
+// into the layer/valid pairs the public API reports.
+func expectedStagesFromFixture(fixture Fixture) []expectedAPIStage {
+	expected := make([]expectedAPIStage, 0, len(fixture.ExpectedStages))
+	for _, stage := range fixture.ExpectedStages {
+		expected = append(expected, expectedAPIStage{layer: stage.Stage, valid: stage.Outcome == "passed"})
+	}
+	return expected
 }
 
 func requireStageOutcomes(response apiResponse, expected []expectedAPIStage) error {
@@ -522,6 +608,72 @@ func (e *issue65Env) awaitENDrain(ctx context.Context) error {
 		time.Sleep(time.Second)
 	}
 	return fmt.Errorf("EN request stream did not drain after restore; %d requests still pending", last.Msgs)
+}
+
+// awaitENSequenceAdvance waits until the EN request stream publishes past the
+// given sequence, meaning an EN stage request for new work is in flight.
+func (e *issue65Env) awaitENSequenceAdvance(ctx context.Context, baseline uint64) error {
+	deadline := time.Now().Add(e.cfg.FixtureTimeout)
+	for time.Now().Before(deadline) {
+		state, err := e.enRequestStreamState(ctx)
+		if err != nil {
+			return err
+		}
+		if state.LastSeq > baseline {
+			return nil
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	return fmt.Errorf("EN request stream never advanced past sequence %d; XSD may not have passed", baseline)
+}
+
+// countFinalResults counts permanent final results recorded for one upload in
+// the durable results stream. The stream keeps at most one message per result
+// subject (MaxMsgsPerSubject=1), and every result message carries the upload
+// ID header, so counting messages with that header proves result uniqueness
+// across restarts and redeliveries.
+func (e *issue65Env) countFinalResults(ctx context.Context, uploadID string) (int, error) {
+	namespace := queue.Namespace(e.cfg.QueueNamespace)
+	connection, err := nats.Connect(e.cfg.NATSURL)
+	if err != nil {
+		return 0, fmt.Errorf("connect to NATS %s: %w", e.cfg.NATSURL, err)
+	}
+	defer connection.Close()
+	js, err := jetstream.New(connection)
+	if err != nil {
+		return 0, err
+	}
+	stream, err := js.Stream(ctx, namespace.ResultsStreamName())
+	if err != nil {
+		return 0, fmt.Errorf("open results stream %s: %w", namespace.ResultsStreamName(), err)
+	}
+	info, err := stream.Info(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("read results stream info: %w", err)
+	}
+	if info.State.Msgs == 0 {
+		return 0, nil
+	}
+	consumer, err := js.OrderedConsumer(ctx, namespace.ResultsStreamName(), jetstream.OrderedConsumerConfig{
+		FilterSubjects: []string{namespace.ResultsFilterSubject()},
+	})
+	if err != nil {
+		return 0, fmt.Errorf("create results inspection consumer: %w", err)
+	}
+	batch, err := consumer.FetchNoWait(int(info.State.Msgs))
+	if err != nil {
+		return 0, fmt.Errorf("fetch results for inspection: %w", err)
+	}
+	count := 0
+	for message := range batch.Messages() {
+		if message.Headers().Get(queue.HeaderUploadID) == uploadID {
+			count++
+		}
+	}
+	if err := batch.Error(); err != nil {
+		return 0, fmt.Errorf("read results for inspection: %w", err)
+	}
+	return count, nil
 }
 
 // awaitENPodsGone waits until no EN worker pod remains, so the outage is real
