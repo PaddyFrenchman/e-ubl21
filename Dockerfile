@@ -53,14 +53,16 @@ RUN apk add --no-cache \
         libxml2-utils=2.13.9-r1 \
         ca-certificates=20260413-r0 \
         openjdk21-jre-headless=21.0.10_p7-r0 && \
-    addgroup -S eubl21 && adduser -S -G eubl21 eubl21
+    addgroup -S -g 10001 eubl21 && adduser -S -u 10001 -G eubl21 eubl21
 
 COPY --from=build /out/e-ubl21 /usr/local/bin/e-ubl21
 COPY --from=build /out/validation-assets/ /opt/e-ubl21/validation-assets/
 COPY --from=build /out/saxon/ /opt/e-ubl21/saxon/
 COPY THIRD_PARTY_NOTICES.md /opt/e-ubl21/THIRD_PARTY_NOTICES.md
 
-USER eubl21
+# Numeric USER so Kubernetes runAsNonRoot can verify the UID; a named user
+# fails CreateContainerConfigError under that policy.
+USER 10001:10001
 WORKDIR /home/eubl21
 
 ENTRYPOINT ["/usr/local/bin/e-ubl21"]
