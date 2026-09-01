@@ -8,9 +8,10 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-// TestE2EValidPlanCompletes validates the full split-stage validation pipeline:
-// public upload -> XSD PASS -> EN PASS -> final valid.
-func TestE2EValidPlanCompletes(t *testing.T) {
+// TestOrchestratorValidPlanCompletes validates orchestrator sequencing when both stages pass.
+// This is orchestrator-level coverage, not deployment-level E2E. Stages are simulated via
+// direct StageResult injection; real worker deployment and API flows are tested elsewhere.
+func TestOrchestratorValidPlanCompletes(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 
 	// Start validation with standard UBL21+EN16931 plan.
@@ -55,9 +56,10 @@ func TestE2EValidPlanCompletes(t *testing.T) {
 	assertNoRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }
 
-// TestE2EXSDInvalidStopsBeforeEN validates that XSD-invalid documents
-// immediately finalize without queuing the EN stage.
-func TestE2EXSDInvalidStopsBeforeEN(t *testing.T) {
+// TestOrchestratorXSDInvalidStopsBeforeEN validates orchestrator early-stop when XSD fails.
+// EN stage must never be queued. This is orchestrator-level coverage; real worker and API
+// flows are tested at deployment level.
+func TestOrchestratorXSDInvalidStopsBeforeEN(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 
 	intent := testIntent(t, testPlan())
@@ -88,9 +90,9 @@ func TestE2EXSDInvalidStopsBeforeEN(t *testing.T) {
 	}
 }
 
-// TestE2EENInvalidAfterXSDPass validates that EN-invalid documents
-// complete after XSD PASS -> EN invalid.
-func TestE2EENInvalidAfterXSDPass(t *testing.T) {
+// TestOrchestratorENInvalidAfterXSDPass validates orchestrator state when XSD passes but EN fails.
+// This is orchestrator-level coverage; real worker and API flows are tested at deployment level.
+func TestOrchestratorENInvalidAfterXSDPass(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 
 	intent := testIntent(t, testPlan())
@@ -126,10 +128,11 @@ func TestE2EENInvalidAfterXSDPass(t *testing.T) {
 	}
 }
 
-// TestE2EENOutageAccumulatesWhileXSDDrains validates resilience to EN outage:
-// - XSD continues draining while EN queue accumulates
-// - Restoring EN drains the accumulated requests.
-func TestE2EENOutageAccumulatesWhileXSDDrains(t *testing.T) {
+// TestOrchestratorENOutageAccumulatesWhileXSDDrains validates orchestrator behavior when EN queue builds.
+// This test simulates EN outage by not consuming; it proves JetStream persistence of StageRequests
+// but does NOT test actual worker shutdown/restart. Real Kubernetes scale-to-zero is tested at
+// deployment level.
+func TestOrchestratorENOutageAccumulatesWhileXSDDrains(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	const outageCount = 5
 
@@ -206,9 +209,11 @@ func TestE2EENOutageAccumulatesWhileXSDDrains(t *testing.T) {
 	}
 }
 
-// TestE2EScaleENToZeroAccumulatesThenDrains validates that EN workers can scale to zero,
-// XSD continues queuing requests, then EN restores and drains accumulated work.
-func TestE2EScaleENToZeroAccumulatesThenDrains(t *testing.T) {
+// TestOrchestratorScaleENToZeroAccumulatesThenDrains validates orchestrator behavior when EN queue builds and drains.
+// This test simulates scale-to-zero by not consuming EN queue; it proves queue durability and recovery sequencing
+// but does NOT test actual Kubernetes replica scaling or worker lifecycle. Real scale-to-zero is tested at
+// deployment level.
+func TestOrchestratorScaleENToZeroAccumulatesThenDrains(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	const scaledCount = 3
 
@@ -272,10 +277,11 @@ func TestE2EScaleENToZeroAccumulatesThenDrains(t *testing.T) {
 	assertNoRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }
 
-// TestE2EOrchestrationPreservesSemanticEquivalence validates that the split deployment
-// preserves the existing validation contract: every valid document from the monolithic
-// validator is valid in the split deployment, and every invalid document remains invalid.
-func TestE2EOrchestrationPreservesSemanticEquivalence(t *testing.T) {
+// TestOrchestratorPreservesSemanticEquivalence validates orchestrator state transitions for synthetic outcome combinations.
+// This is orchestrator-level coverage of a small hand-written outcome matrix.
+// Real semantic equivalence against the frozen regression corpus is tested at deployment level with actual
+// validators and the issue #44 corpus baseline.
+func TestOrchestratorPreservesSemanticEquivalence(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 
 	// Test cases: (name, xsdOutcome, enOutcome, expectedFinalStatus)
