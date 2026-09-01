@@ -25,8 +25,8 @@ type Issue65GateConfig struct {
 	FixtureTimeout time.Duration
 }
 
-func RunIssue65Gate(ctx context.Context, cfg Issue65GateConfig) (*RunnerSummary, error) {
-	summary := &RunnerSummary{Total: 5}
+func RunIssue65Gate(ctx context.Context, cfg Issue65GateConfig) (*Summary, error) {
+	summary := &Summary{Total: 5}
 
 	fmt.Printf("Issue #65 split-deployment gate\n")
 	fmt.Printf("  API: %s\n", cfg.BaseURL)
@@ -92,7 +92,7 @@ func RunIssue65Gate(ctx context.Context, cfg Issue65GateConfig) (*RunnerSummary,
 }
 
 // Scenario 1: Upload a valid EN16931 document, verify it completes as valid
-func scenario1Valid(ctx context.Context, cfg Issue65GateConfig, manifest *FixtureManifest) error {
+func scenario1Valid(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
 	if len(manifest.Fixtures) == 0 {
 		return fmt.Errorf("no fixtures in manifest")
 	}
@@ -122,7 +122,7 @@ func scenario1Valid(ctx context.Context, cfg Issue65GateConfig, manifest *Fixtur
 }
 
 // Scenario 2: Upload XSD-invalid document, verify it's invalid and EN queue is empty
-func scenario2XSDInvalid(ctx context.Context, cfg Issue65GateConfig, manifest *FixtureManifest) error {
+func scenario2XSDInvalid(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
 	invalidFixture := getFixtureByName(manifest, "invalid")
 	if invalidFixture == nil {
 		return fmt.Errorf("no invalid fixture found in manifest")
@@ -162,7 +162,7 @@ func scenario2XSDInvalid(ctx context.Context, cfg Issue65GateConfig, manifest *F
 }
 
 // Scenario 3: Upload document that passes XSD but fails EN
-func scenario3ENInvalid(ctx context.Context, cfg Issue65GateConfig, manifest *FixtureManifest) error {
+func scenario3ENInvalid(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
 	// This would require a fixture that's XSD-valid but EN-invalid, or simulate it
 	// For now, test basic EN failure handling
 	if len(manifest.Fixtures) < 2 {
@@ -195,7 +195,7 @@ func scenario3ENInvalid(ctx context.Context, cfg Issue65GateConfig, manifest *Fi
 }
 
 // Scenario 4: Scale EN to zero, verify backlog accumulates, then restore and verify drain
-func scenario4ENScaleToZero(ctx context.Context, cfg Issue65GateConfig, manifest *FixtureManifest) error {
+func scenario4ENScaleToZero(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
 	// Scale EN to zero
 	if err := kubectl(ctx, cfg.KubectlBin, "-n", cfg.Namespace, "scale", "deployment/e-ubl21-worker-en16931", "--replicas=0"); err != nil {
 		return fmt.Errorf("scale EN to 0: %w", err)
@@ -255,7 +255,7 @@ func scenario4ENScaleToZero(ctx context.Context, cfg Issue65GateConfig, manifest
 }
 
 // Scenario 5: Verify semantic equivalence (basic check, full corpus not implemented yet)
-func scenario5SemanticEquivalence(ctx context.Context, cfg Issue65GateConfig, manifest *FixtureManifest) error {
+func scenario5SemanticEquivalence(ctx context.Context, cfg Issue65GateConfig, manifest *Issue65FixtureManifest) error {
 	// Load baseline if available
 	baselinePath := "regression/baselines/validation-split/en16931.results.jsonl"
 	if _, err := os.Stat(baselinePath); err != nil {
@@ -359,12 +359,12 @@ func getJetStreamMessageCount(ctx context.Context, natsURL, namespace, streamNam
 }
 
 // Helper: load fixture manifest
-func loadFixtureManifest(path string) (*FixtureManifest, error) {
+func loadFixtureManifest(path string) (*Issue65FixtureManifest, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var m FixtureManifest
+	var m Issue65FixtureManifest
 	if err := json.Unmarshal(data, &m); err != nil {
 		return nil, err
 	}
@@ -372,7 +372,7 @@ func loadFixtureManifest(path string) (*FixtureManifest, error) {
 }
 
 // Helper: find fixture by name pattern
-func getFixtureByName(m *FixtureManifest, pattern string) *Fixture {
+func getFixtureByName(m *Issue65FixtureManifest, pattern string) *Issue65Fixture {
 	for _, f := range m.Fixtures {
 		if bytes.Contains([]byte(f.Path), []byte(pattern)) {
 			return &f
@@ -381,11 +381,11 @@ func getFixtureByName(m *FixtureManifest, pattern string) *Fixture {
 	return nil
 }
 
-type FixtureManifest struct {
-	Fixtures []Fixture `json:"fixtures"`
+type Issue65FixtureManifest struct {
+	Fixtures []Issue65Fixture `json:"fixtures"`
 }
 
-type Fixture struct {
+type Issue65Fixture struct {
 	Path string `json:"path"`
 	Name string `json:"name,omitempty"`
 }
