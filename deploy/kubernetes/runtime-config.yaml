@@ -7,4 +7,4 @@ data:
   EUBL21_QUEUE_NAMESPACE: eubl21.prod
   EUBL21_UPLOAD_CONTENT_RETENTION: 720h
   EUBL21_UPLOAD_CONTENT_MAX_BYTES: "10737418240"
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318

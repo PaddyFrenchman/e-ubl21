@@ -11,8 +11,8 @@ and 8222 (monitoring), KEDA 2.20 or compatible is installed, the
 [Kubernetes Metrics Server](https://github.com/kubernetes-sigs/metrics-server)
 is installed for the
 [KEDA CPU/memory scaling signals](https://keda.sh/docs/2.20/scalers/cpu/), an
-OpenTelemetry collector is
-reachable as `otel-collector:4318`, and an `e-ubl21-auth` Secret contains
+OpenTelemetry collector is reachable as
+`otel-collector.observability.svc.cluster.local:4318`, and an `e-ubl21-auth` Secret contains
 `issuer`, `audience`, and `hmac-secret`. Metrics Server is not present by
 default on every managed Kubernetes platform; install it using the deployment
 platform's supported method and verify the resource metrics API before rollout:

@@ -27,6 +27,13 @@ MINIO_STORAGE_SIZE="${MINIO_STORAGE_SIZE:-100Gi}"
 PROMETHEUS_STORAGE_SIZE="${PROMETHEUS_STORAGE_SIZE:-30Gi}"
 GRAFANA_STORAGE_SIZE="${GRAFANA_STORAGE_SIZE:-10Gi}"
 MINIO_IMAGE="${MINIO_IMAGE:-quay.io/minio/minio:latest}"
+METALLB_CHART_VERSION="${METALLB_CHART_VERSION:-0.16.1}"
+CERT_MANAGER_CHART_VERSION="${CERT_MANAGER_CHART_VERSION:-v1.21.1}"
+KEDA_CHART_VERSION="${KEDA_CHART_VERSION:-2.20.2}"
+CLOUDNATIVEPG_CHART_VERSION="${CLOUDNATIVEPG_CHART_VERSION:-0.29.0}"
+NATS_CHART_VERSION="${NATS_CHART_VERSION:-2.14.6}"
+PROMETHEUS_STACK_CHART_VERSION="${PROMETHEUS_STACK_CHART_VERSION:-88.6.2}"
+OTEL_COLLECTOR_CHART_VERSION="${OTEL_COLLECTOR_CHART_VERSION:-0.172.0}"
 INSTALL_PLATFORM="${INSTALL_PLATFORM:-1}"
 DISABLE_SWAP="${DISABLE_SWAP:-1}"
 K3S_VERSION="${K3S_VERSION:-}"
@@ -236,6 +243,7 @@ install_metallb() {
   # to keep the MetalLB footprint small and avoid unnecessary BGP components.
   helm upgrade --install metallb metallb/metallb \
     --namespace metallb-system \
+    --version "${METALLB_CHART_VERSION}" \
     --set speaker.frr.enabled=false \
     --set frrk8s.enabled=false \
     --wait \
@@ -274,6 +282,7 @@ install_cert_manager() {
     oci://quay.io/jetstack/charts/cert-manager \
     --namespace cert-manager \
     --create-namespace \
+    --version "${CERT_MANAGER_CHART_VERSION}" \
     --set crds.enabled=true \
     --wait \
     --timeout 10m
@@ -284,6 +293,7 @@ install_keda() {
   helm upgrade --install keda kedacore/keda \
     --namespace keda \
     --create-namespace \
+    --version "${KEDA_CHART_VERSION}" \
     --wait \
     --timeout 10m
 }
@@ -293,6 +303,7 @@ install_cloudnativepg() {
   helm upgrade --install cnpg cnpg/cloudnative-pg \
     --namespace cnpg-system \
     --create-namespace \
+    --version "${CLOUDNATIVEPG_CHART_VERSION}" \
     --wait \
     --timeout 10m
 }
@@ -341,8 +352,12 @@ install_nats() {
   helm upgrade --install nats nats/nats \
     --namespace "${EUBL21_NAMESPACE}" \
     --create-namespace \
+    --version "${NATS_CHART_VERSION}" \
+    --set fullnameOverride=nats \
     --set config.jetstream.enabled=true \
     --set config.jetstream.fileStore.pvc.size="${NATS_STORAGE_SIZE}" \
+    --set config.merge.max_payload=2097152 \
+    --set service.ports.monitor.enabled=true \
     --wait \
     --timeout 10m
 }
@@ -448,6 +463,7 @@ install_monitoring() {
   helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
     --namespace monitoring \
     --create-namespace \
+    --version "${PROMETHEUS_STACK_CHART_VERSION}" \
     --set 'prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]=ReadWriteOnce' \
     --set "prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=${PROMETHEUS_STORAGE_SIZE}" \
     --set grafana.persistence.enabled=true \
@@ -461,6 +477,8 @@ install_opentelemetry() {
   helm upgrade --install otel-collector open-telemetry/opentelemetry-collector \
     --namespace observability \
     --create-namespace \
+    --version "${OTEL_COLLECTOR_CHART_VERSION}" \
+    --set fullnameOverride=otel-collector \
     --set mode=deployment \
     --set image.repository=otel/opentelemetry-collector-k8s \
     --wait \
