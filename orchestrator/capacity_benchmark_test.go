@@ -3,6 +3,7 @@ package orchestrator_test
 import (
 	"context"
 	"math"
+	"os"
 	"runtime"
 	"sort"
 	"strconv"
@@ -16,7 +17,10 @@ import (
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 )
 
-const maxOrchestratorCapacityIterations = 24
+const (
+	defaultOrchestratorCapacitySamples = 100
+	maxOrchestratorCapacitySamples     = 500
+)
 
 type orchestratorCapacityOperation struct {
 	run     func(context.Context) (queue.VersionedValidationExecution, error)
@@ -66,9 +70,8 @@ func BenchmarkOrchestratorCapacity(b *testing.B) {
 
 func benchmarkOrchestratorReconcileScan(b *testing.B, historySize int, scan func(context.Context, *orchestrator.Machine) error) {
 	b.Helper()
-	if b.N > maxOrchestratorCapacityIterations {
-		b.Fatalf("orchestrator capacity benchmarks require fixed -benchtime no greater than %dx; got %d", maxOrchestratorCapacityIterations, b.N)
-	}
+	requireSingleOrchestratorBenchmarkIteration(b)
+	samples := orchestratorCapacitySampleCount(b)
 	server := queuetest.StartServer(b)
 	client, err := queue.ConnectWithOptions(server.URL, queue.MustNamespace("orchestrator.reconciler.capacity"), server.Options...)
 	if err != nil {
@@ -93,12 +96,13 @@ func benchmarkOrchestratorReconcileScan(b *testing.B, historySize int, scan func
 		}
 	}
 	runtime.GC()
+	var memoryBefore runtime.MemStats
+	runtime.ReadMemStats(&memoryBefore)
 	cpuBefore := orchestratorCPU(b)
-	durations := make([]time.Duration, b.N)
-	b.ReportAllocs()
+	durations := make([]time.Duration, samples)
 	b.ResetTimer()
 	started := time.Now()
-	for index := range b.N {
+	for index := range samples {
 		operationStarted := time.Now()
 		if err := scan(ctx, machine); err != nil {
 			b.Fatal(err)
@@ -108,19 +112,22 @@ func benchmarkOrchestratorReconcileScan(b *testing.B, historySize int, scan func
 	elapsed := time.Since(started)
 	b.StopTimer()
 	cpuAfter := orchestratorCPU(b)
-	b.ReportMetric(float64(historySize*b.N)/elapsed.Seconds(), "history_entries/s")
+	var memoryAfter runtime.MemStats
+	runtime.ReadMemStats(&memoryAfter)
+	b.ReportMetric(float64(historySize*samples)/elapsed.Seconds(), "history_entries/s")
 	b.ReportMetric(orchestratorPercentile(durations, 0.50), "service_p50_ms")
 	b.ReportMetric(orchestratorPercentile(durations, 0.95), "service_p95_ms")
 	b.ReportMetric(orchestratorPercentile(durations, 0.99), "service_p99_ms")
-	b.ReportMetric((cpuAfter-cpuBefore)*1000/float64(b.N), "cpu_ms/scan")
+	b.ReportMetric((cpuAfter-cpuBefore)*1000/float64(samples), "cpu_ms/scan")
+	b.ReportMetric(float64(memoryAfter.TotalAlloc-memoryBefore.TotalAlloc)/float64(samples), "alloc_B/scan")
+	b.ReportMetric(float64(memoryAfter.Mallocs-memoryBefore.Mallocs)/float64(samples), "allocs/scan")
 	b.ReportMetric(float64(historySize), "history_entries")
 }
 
 func benchmarkOrchestratorTransition(b *testing.B, concurrency int, prepare func(*testing.B, context.Context, *queue.Client, int) []orchestratorCapacityOperation) {
 	b.Helper()
-	if b.N > maxOrchestratorCapacityIterations {
-		b.Fatalf("orchestrator capacity benchmarks require fixed -benchtime no greater than %dx; got %d", maxOrchestratorCapacityIterations, b.N)
-	}
+	requireSingleOrchestratorBenchmarkIteration(b)
+	samples := orchestratorCapacitySampleCount(b)
 	server := queuetest.StartServer(b)
 	client, err := queue.ConnectWithOptions(server.URL, queue.MustNamespace("orchestrator.capacity"), server.Options...)
 	if err != nil {
@@ -138,15 +145,16 @@ func benchmarkOrchestratorTransition(b *testing.B, concurrency int, prepare func
 	if err := client.ProvisionStageQueueInfra(ctx, queue.DefaultStageQueueInfraConfig()); err != nil {
 		b.Fatal(err)
 	}
-	operations := prepare(b, ctx, client, b.N)
+	operations := prepare(b, ctx, client, samples)
 	runtime.GC()
+	var memoryBefore runtime.MemStats
+	runtime.ReadMemStats(&memoryBefore)
 	cpuBefore := orchestratorCPU(b)
 	durations := make([]time.Duration, len(operations))
 	states := make([]queue.VersionedValidationExecution, len(operations))
 	errorsByIndex := make([]error, len(operations))
 	jobs := make(chan int)
 	var workers sync.WaitGroup
-	b.ReportAllocs()
 	b.ResetTimer()
 	started := time.Now()
 	for range concurrency {
@@ -171,6 +179,8 @@ func benchmarkOrchestratorTransition(b *testing.B, concurrency int, prepare func
 	elapsed := time.Since(started)
 	b.StopTimer()
 	cpuAfter := orchestratorCPU(b)
+	var memoryAfter runtime.MemStats
+	runtime.ReadMemStats(&memoryAfter)
 	for index, operation := range operations {
 		if errorsByIndex[index] != nil {
 			b.Fatal(errorsByIndex[index])
@@ -188,7 +198,29 @@ func benchmarkOrchestratorTransition(b *testing.B, concurrency int, prepare func
 	b.ReportMetric(orchestratorPercentile(durations, 0.95), "service_p95_ms")
 	b.ReportMetric(orchestratorPercentile(durations, 0.99), "service_p99_ms")
 	b.ReportMetric((cpuAfter-cpuBefore)*1000/count, "cpu_ms/transition")
+	b.ReportMetric(float64(memoryAfter.TotalAlloc-memoryBefore.TotalAlloc)/count, "alloc_B/transition")
+	b.ReportMetric(float64(memoryAfter.Mallocs-memoryBefore.Mallocs)/count, "allocs/transition")
 	b.ReportMetric(float64(concurrency), "concurrency")
+}
+
+func requireSingleOrchestratorBenchmarkIteration(b *testing.B) {
+	b.Helper()
+	if b.N != 1 {
+		b.Fatalf("orchestrator capacity benchmarks require -benchtime=1x; got %d Go benchmark iterations", b.N)
+	}
+}
+
+func orchestratorCapacitySampleCount(b *testing.B) int {
+	b.Helper()
+	value := os.Getenv("EUBL21_CAPACITY_SAMPLES")
+	if value == "" {
+		return defaultOrchestratorCapacitySamples
+	}
+	count, err := strconv.Atoi(value)
+	if err != nil || count < 1 || count > maxOrchestratorCapacitySamples {
+		b.Fatalf("EUBL21_CAPACITY_SAMPLES must be between 1 and %d; got %q", maxOrchestratorCapacitySamples, value)
+	}
+	return count
 }
 
 func prepareStartDispatch(b *testing.B, _ context.Context, client *queue.Client, count int) []orchestratorCapacityOperation {

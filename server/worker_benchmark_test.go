@@ -153,27 +153,51 @@ func BenchmarkEN16931ProcessCost(b *testing.B) {
 		b.Fatal(err)
 	}
 	b.Run("java_startup", func(b *testing.B) {
-		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		requireSingleCapacityBenchmarkIteration(b)
+		samples := stageCapacitySampleCount(b)
+		durations := make([]time.Duration, samples)
+		b.ResetTimer()
+		started := time.Now()
+		for index := range samples {
+			operationStarted := time.Now()
 			cmd := exec.Command(saxonRuntime.javaExecutable, "-version")
 			cmd.Stdout = io.Discard
 			cmd.Stderr = io.Discard
 			if err := cmd.Run(); err != nil {
 				b.Fatal(err)
 			}
+			durations[index] = time.Since(operationStarted)
 		}
+		b.StopTimer()
+		reportProcessCapacityMetrics(b, durations, time.Since(started))
 	})
 	b.Run("saxon_transform", func(b *testing.B) {
+		requireSingleCapacityBenchmarkIteration(b)
+		samples := stageCapacitySampleCount(b)
 		validator := newSaxonEN16931Validator(saxonRuntime, 30*time.Second)
-		b.ReportAllocs()
-		b.SetBytes(int64(len(validInvoice)))
-		for i := 0; i < b.N; i++ {
+		durations := make([]time.Duration, samples)
+		b.SetBytes(int64(len(validInvoice) * samples))
+		b.ResetTimer()
+		started := time.Now()
+		for index := range samples {
+			operationStarted := time.Now()
 			result, err := validator.Validate(context.Background(), strings.NewReader(validInvoice))
 			if err != nil || !result.Valid {
 				b.Fatalf("Saxon validation result/error = %+v / %v", result, err)
 			}
+			durations[index] = time.Since(operationStarted)
 		}
+		b.StopTimer()
+		reportProcessCapacityMetrics(b, durations, time.Since(started))
 	})
+}
+
+func reportProcessCapacityMetrics(b *testing.B, durations []time.Duration, elapsed time.Duration) {
+	b.Helper()
+	b.ReportMetric(float64(len(durations))/elapsed.Seconds(), "processes/s")
+	b.ReportMetric(durationPercentile(durations, 0.50), "service_p50_ms")
+	b.ReportMetric(durationPercentile(durations, 0.95), "service_p95_ms")
+	b.ReportMetric(durationPercentile(durations, 0.99), "service_p99_ms")
 }
 
 // BenchmarkWorkerDeepBacklogMemory is an opt-in stress benchmark for peak

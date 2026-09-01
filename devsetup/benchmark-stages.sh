@@ -31,10 +31,10 @@ fi
 
 go run ./tools/verify-validation-assets -saxon-dir "$SAXON_DIR"
 
-BENCHTIME="${BENCHTIME:-12x}"
+CAPACITY_SAMPLES="${CAPACITY_SAMPLES:-100}"
 MEASURE_TREE_RSS="${MEASURE_TREE_RSS:-0}"
-if [[ ! "$BENCHTIME" =~ ^([1-9][0-9]*)x$ ]] || (( BASH_REMATCH[1] > 24 )); then
-    echo "ERROR: BENCHTIME must be a fixed iteration count from 1x through 24x." >&2
+if [[ ! "$CAPACITY_SAMPLES" =~ ^[0-9]+$ ]] || (( CAPACITY_SAMPLES < 100 || CAPACITY_SAMPLES > 500 )); then
+    echo "ERROR: CAPACITY_SAMPLES must be from 100 through 500." >&2
     exit 2
 fi
 if [[ "$MEASURE_TREE_RSS" != "0" && "$MEASURE_TREE_RSS" != "1" ]]; then
@@ -56,7 +56,7 @@ echo "  os=$(uname -srm)"
 echo "  cpu_count=${CPU_COUNT}"
 echo "  memory_kib=${MEMORY_KIB}"
 echo "  gomaxprocs=${GOMAXPROCS:-go-default}"
-echo "  benchtime=${BENCHTIME}"
+echo "  capacity_samples=${CAPACITY_SAMPLES}"
 echo "  measure_tree_rss=${MEASURE_TREE_RSS}"
 echo "  $(go version)"
 java -version 2>&1 | sed -n '1,3p'
@@ -67,8 +67,7 @@ BENCHMARK_ARGS=(
     -p 1
     -run '^$'
     -bench '^(BenchmarkXSDStageCapacity|BenchmarkEN16931StageCapacity|BenchmarkEN16931ProcessCost|BenchmarkOrchestratorCapacity)$'
-    -benchtime "$BENCHTIME"
-    -benchmem
+    -benchtime 1x
     -count 1
     -timeout 30m
 )
@@ -89,11 +88,11 @@ benchmark_tree_rss_kib() {
 
 set +e
 if [[ -x /usr/bin/time ]]; then
-    EUBL21_REQUIRE_EN16931_TEST_RUNTIME=1 /usr/bin/time \
+    EUBL21_CAPACITY_SAMPLES="$CAPACITY_SAMPLES" EUBL21_REQUIRE_EN16931_TEST_RUNTIME=1 /usr/bin/time \
         -f $'capacity_wall_seconds=%e\ncapacity_max_single_process_rss_kib=%M\ncapacity_user_seconds=%U\ncapacity_system_seconds=%S' \
         "${BENCHMARK_ARGS[@]}" &
 else
-    EUBL21_REQUIRE_EN16931_TEST_RUNTIME=1 "${BENCHMARK_ARGS[@]}" &
+    EUBL21_CAPACITY_SAMPLES="$CAPACITY_SAMPLES" EUBL21_REQUIRE_EN16931_TEST_RUNTIME=1 "${BENCHMARK_ARGS[@]}" &
 fi
 BENCHMARK_PID=$!
 PEAK_TREE_RSS_KIB=0

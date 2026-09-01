@@ -15,7 +15,7 @@ resource or scaling defaults.
 Run the fixed-count matrix:
 
 ```sh
-BENCHTIME=12x make benchmark-stages
+CAPACITY_SAMPLES=100 make benchmark-stages
 ```
 
 The runner verifies the pinned Saxon and EN 16931 assets and prints the host,
@@ -34,15 +34,20 @@ split-worker boundaries:
 - Java/Saxon process cost: launch-only Java startup and full stylesheet
   compilation, transform, bounded SVRL capture, and parse.
 
-The benchmark refuses more than 24 iterations per case because every iteration
-creates durable state. Fixed counts make concurrency comparisons use the same
-document count. Twelve observations provide a useful local p50/p95/p99 shape;
-production telemetry over a much larger sample remains authoritative.
+Each case runs as a single Go benchmark iteration (`-benchtime 1x`) that
+internally drives `CAPACITY_SAMPLES` durable observations (100 through 500,
+default 100), set with the `EUBL21_CAPACITY_SAMPLES` environment variable and
+enforced independently of Go's own iteration count. This decouples the sample
+size that determines p95/p99 quality from `testing.B`'s iteration-scaling
+behavior: with nearest-rank percentiles, fewer than 100 observations cannot
+usefully separate p95 from p99 (12 observations puts both at the same maximum
+sample). Production telemetry over a much larger sample remains authoritative;
+this baseline exists for initial sizing, not as a substitute for it.
 
 For a separate process-tree memory diagnostic, run:
 
 ```sh
-MEASURE_TREE_RSS=1 BENCHTIME=12x make benchmark-stages
+MEASURE_TREE_RSS=1 CAPACITY_SAMPLES=100 make benchmark-stages
 ```
 
 Sampling with `ps` perturbs latency, so do not use that run for timing
@@ -56,38 +61,66 @@ are made durable before the timer begins. They demonstrate the effect of
 service time and concurrency on an existing backlog, not broker publication
 latency under a live arrival stream.
 
-## Baseline recorded 2026-08-31
+### Constrained EN 16931 measurement
+
+The host run above is unconstrained: it can use every core the machine
+offers, which a Kubernetes CPU **limit** forbids at the cgroup level. A
+Kubernetes CPU **request** is scheduling/entitlement metadata, not an
+execution ceiling by itself; only the **limit** imposes hard CFS throttling.
+Because the EN worker's measured host CPU-seconds per document is several
+times its wall-clock service time (the Saxon transform is internally
+multi-threaded), the EN worker must additionally be measured inside the same
+hard CPU and memory cgroup limits as the deployed pod before its resource
+defaults are set from benchmark evidence:
+
+```sh
+CAPACITY_SAMPLES=100 make benchmark-stages-cgroup
+```
+
+This builds the `capacity-benchmark` container target and runs the EN
+capacity and process-cost cases under a `--cpus=2 --memory=2g` container,
+matching the worker's `limits.cpu: "2"` / `limits.memory: 2Gi`. It prints
+`cpu.max`, `memory.max`, `memory.peak`, and `cpu.stat` from the container's
+own cgroup alongside the same service-time percentiles as the host run. Use
+this run, not the unconstrained host run, to decide the EN worker's CPU
+request and limit.
+
+## Baseline recorded 2026-09-01
 
 Environment: Linux x86-64, Intel i7-11800H, 16 logical CPUs, 15.3 GiB RAM,
 Go 1.26.2, OpenJDK 21.0.11, Saxon-HE 12.7, XML Resolver 6.0.17, and libxml
-2.9.14. The table records twelve documents per case.
+2.9.14. The table records 100 documents per case.
 
 | Stage/workload | Concurrency | Throughput (items/s) | Service p50 / p95 / p99 | CPU per operation | Go allocated bytes/op |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| XSD, valid 112 KiB Order | 1 | 14.43 | 68 / 79 / 79 ms | 72 ms | 430 KiB |
-| XSD, valid small Invoice | 1 | 14.98 | 67 / 69 / 69 ms | 69 ms | 269 KiB |
-| XSD, valid small Invoice | 2 | 24.71 | 80 / 84 / 84 ms | 82 ms | 279 KiB |
-| XSD, valid small Invoice | 4 | 32.32 | 124 / 126 / 126 ms | 124 ms | 288 KiB |
-| XSD, valid 1 MiB Invoice | 2 | 23.25 | 85 / 94 / 94 ms | 93 ms | 3.57 MiB |
-| XSD, valid 1,000-line Invoice | 2 | 19.88 | 99 / 110 / 110 ms | 106 ms | 2.63 MiB |
-| XSD, malformed Invoice | 2 | 24.32 | 82 / 84 / 84 ms | 83 ms | 244 KiB |
-| EN, valid small Invoice | 1 | 0.699 | 1,443 / 1,522 / 1,522 ms | 5,513 ms | 383 KiB |
-| EN, valid small Invoice | 2 | 0.985 | 1,988 / 2,207 / 2,207 ms | 7,952 ms | 386 KiB |
-| EN, valid small Invoice | 4 | 0.925 | 4,295 / 4,501 / 4,501 ms | 12,955 ms | 388 KiB |
-| EN, valid 1,000-line Invoice | 1 | 0.471 | 2,138 / 2,392 / 2,392 ms | 9,961 ms | 19.54 MiB |
-| EN, semantically invalid Invoice | 1 | 0.713 | 1,373 / 1,514 / 1,514 ms | 6,064 ms | 438 KiB |
-| Orchestrator, start/dispatch | 1 | 1,671 | 0.44 / 1.06 / 1.06 ms | 1.09 ms | 139 KiB |
-| Orchestrator, XSD-to-EN | 1 | 1,800 | 0.43 / 0.92 / 0.92 ms | 0.71 ms | 168 KiB |
-| Orchestrator, operational retry | 1 | 2,517 | 0.31 / 1.12 / 1.12 ms | 0.50 ms | 130 KiB |
-| Orchestrator, terminal projection | 1 | 1,418 | 0.65 / 1.05 / 1.05 ms | 0.88 ms | 218 KiB |
-| Orchestrator, terminal projection | 4 | 2,504 | 1.43 / 1.93 / 1.93 ms | 1.02 ms | 218 KiB |
-| Reconciler, dispatch scan, 1,000 entries | 1 | 22,226 | 44.8 / 48.1 / 48.1 ms | 66.8 ms | 15.26 MiB |
-| Reconciler, final-result scan, 1,000 entries | 1 | 22,527 | 43.6 / 48.7 / 48.7 ms | 67.0 ms | 15.37 MiB |
+| XSD, valid 112 KiB Order | 1 | 12.79 | 74.60 / 92.13 / 121.8 ms | 81.33 ms | 375 KiB |
+| XSD, valid small Invoice | 1 | 16.44 | 64.71 / 79.48 / 87.34 ms | 62.57 ms | 231 KiB |
+| XSD, valid small Invoice | 2 | 32.59 | 55.62 / 92.41 / 110.5 ms | 61.90 ms | 230 KiB |
+| XSD, valid small Invoice | 4 | 28.68 | 132.4 / 170.6 / 180.7 ms | 136.9 ms | 229 KiB |
+| XSD, valid 1 MiB Invoice | 2 | 20.47 | 95.26 / 110.2 / 112.6 ms | 102.5 ms | 2.79 MiB |
+| XSD, valid 1,000-line Invoice | 2 | 18.63 | 105.1 / 118.5 / 143.9 ms | 112.0 ms | 1.91 MiB |
+| XSD, valid near-limit 2,950-line Invoice | 1 | 7.289 | 133.8 / 159.9 / 175.8 ms | 191.2 ms | 30.7 MiB |
+| XSD, malformed Invoice | 2 | 26.80 | 74.56 / 79.64 / 92.84 ms | 75.27 ms | 220 KiB |
+| EN, valid small Invoice | 1 | 0.5007 | 1,849 / 2,747 / 4,474 ms | 8,856 ms | 401 KiB |
+| EN, valid small Invoice | 2 | 0.7254 | 2,869 / 3,271 / 3,768 ms | 12,470 ms | 393 KiB |
+| EN, valid small Invoice | 4 | 0.6725 | 5,879 / 6,433 / 6,523 ms | 16,908 ms | 382 KiB |
+| EN, valid 1,000-line Invoice | 1 | 0.3589 | 2,699 / 3,770 / 4,648 ms | 13,855 ms | 16.68 MiB |
+| EN, valid near-limit 2,950-line Invoice | 1 | 0.2577 | 3,899 / 4,588 / 4,735 ms | 21,097 ms | 85.0 MiB |
+| EN, semantically invalid Invoice | 1 | 0.4920 | 2,039 / 2,412 / 2,862 ms | 10,073 ms | 437 KiB |
+| Orchestrator, start/dispatch | 1 | 1,800 | 0.4608 / 1.144 / 1.929 ms | 0.910 ms | 110 KiB |
+| Orchestrator, XSD-to-EN | 1 | 1,447 | 0.5152 / 1.124 / 2.683 ms | 0.959 ms | 127 KiB |
+| Orchestrator, operational retry | 1 | 2,240 | 0.4042 / 0.6813 / 0.9083 ms | 0.657 ms | 109 KiB |
+| Orchestrator, terminal projection | 1 | 1,131 | 0.7874 / 1.465 / 2.169 ms | 1.314 ms | 177 KiB |
+| Orchestrator, terminal projection | 4 | 1,754 | 1.781 / 3.420 / 11.06 ms | 1.515 ms | 178 KiB |
+| Reconciler, dispatch scan, 100 entries | 1 | 17,623 | 5.500 / 7.414 / 10.05 ms | 9.609 ms | 1.65 MiB |
+| Reconciler, final-result scan, 100 entries | 1 | 17,864 | 5.481 / 7.295 / 8.390 ms | 9.309 ms | 1.65 MiB |
+| Reconciler, dispatch scan, 1,000 entries | 1 | 18,805 | 50.89 / 66.05 / 68.34 ms | 81.72 ms | 15.9 MiB |
+| Reconciler, final-result scan, 1,000 entries | 1 | 16,858 | 57.50 / 70.40 / 85.18 ms | 92.90 ms | 16.0 MiB |
 
-The isolated process cases measured 27 ms for `java -version` startup and
-1,532 ms for JVM launch, stylesheet compilation, transform, bounded SVRL
-capture, and parse. Bare JVM startup is therefore under 2% of the full
-operation on this host; compilation and transformation dominate.
+Process cost (100 samples each): Java startup (`java -version`) averaged 34.25 ms
+p50, 41.87 ms p95, 44.49 ms p99. Full Saxon JVM launch with stylesheet
+compilation, transform, bounded SVRL capture, and parse averaged 1,781 ms p50,
+2,180 ms p95, 2,268 ms p99.
 
 The complete timing run observed 449 MiB maximum RSS for one process. A
 separate four-document sampled run observed 977 MiB peak aggregate RSS for the
@@ -121,16 +154,24 @@ concurrent subprocesses use multiple cores.
   throughput by about 41%, not 100%, while increasing per-document latency and
   simultaneous CPU/memory pressure; four reduced throughput. Prefer horizontal
   replicas for isolation and predictable memory.
-- Request 1 CPU / 768 MiB and limit at 2 CPU / 2 GiB. The higher CPU request is
-  intentional: a single Saxon transform is multi-threaded enough that a 500m
-  request would make CPU throttling likely. Memory limits must still be checked
-  with pod working-set measurements and near-limit documents.
+- The measurements above are unconstrained: the host has many cores, but the
+  Kubernetes pod will have a 2 CPU hard limit. A CPU **request** is scheduling
+  metadata and does not itself enforce an execution ceiling; only the **limit**
+  causes hard CFS throttling. Therefore: benchmark the EN worker again under the
+  same 2 CPU / 2 GiB cgroup limits as the deployment (`make
+  benchmark-stages-cgroup`) before deciding the CPU request and limit. The
+  constrained result, not the unconstrained host run, determines safe concurrency
+  and valid resource defaults.
+- In the interim, retain 500m CPU request / 2 CPU limit and 768 MiB request / 2
+  GiB limit. Memory must still be checked with pod working-set measurements and
+  near-limit documents.
 - Keep the KEDA lag threshold at 4. At the measured single-worker rate this is
   several seconds of work, close to one 10-second scaler polling interval while
   remaining responsive to low-volume traffic.
 - Valid and semantically invalid invoices have comparable cost; do not size on
-  an assumption that invalid traffic exits cheaply. The 1,000-line case captures
-  the material effect of semantic complexity.
+  an assumption that invalid traffic exits cheaply. The 1,000-line and
+  near-limit cases capture the material effect of semantic complexity and
+  document size.
 
 ### Orchestrator
 

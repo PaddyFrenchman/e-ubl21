@@ -30,6 +30,19 @@ RUN go run ./tools/verify-validation-assets \
 # no libc/toolchain compatibility concerns.
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/e-ubl21 .
 
+# ---- Capacity benchmark ----------------------------------------------------
+# This opt-in target is not part of the production image. It supplies the Go
+# toolchain and validator runtimes needed to execute the EN worker benchmarks
+# inside the same hard CPU and memory cgroup limits used by the deployment.
+FROM build AS capacity-benchmark
+
+RUN apk add --no-cache libxml2-utils openjdk21-jre-headless procps && \
+    mkdir -p /src/devsetup/tools/saxon && \
+    cp /out/saxon/*.jar /src/devsetup/tools/saxon/ && \
+    go test -c ./server -o /usr/local/bin/stage-capacity.test
+
+WORKDIR /src
+
 # ---- Runtime stage ----------------------------------------------------------
 FROM docker.io/library/alpine:3.21
 

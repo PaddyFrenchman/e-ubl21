@@ -57,7 +57,7 @@ kubectl -n e-ubl21 wait --for=condition=complete job/e-ubl21-provision --timeout
 | Orchestrator consumers | KEDA 0–10 | one loop per result stream | 8 per stage | n/a | stage result consumer | 100m CPU / 128Mi |
 | Orchestrator reconciler | fixed 1 | two repair loops | n/a | reconciliation 10s | n/a | 250m CPU / 128Mi |
 | XSD | KEDA 0–20 | 2 | 2 | 30s | 90s | 250m CPU / 256Mi |
-| EN 16931 | KEDA 0–30 | 1 | 1 | 45s | 120s | 1 CPU / 768Mi |
+| EN 16931 | KEDA 0–30 | 1 | 1 | 45s | 120s | 500m CPU / 768Mi |
 
 The initial worker and orchestrator values are supported by the reproducible
 measurements and decision record in
