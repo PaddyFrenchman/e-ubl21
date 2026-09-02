@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/PaddyFrenchman/e-ubl21/createsamples/en16931"
 	peppolsamples "github.com/PaddyFrenchman/e-ubl21/createsamples/peppol"
@@ -78,7 +79,7 @@ func generatePeppolPositiveCorpus(xsdDir, generatorVersion string) (generatedCor
 		if err != nil {
 			return generatedCorpus{}, fmt.Errorf("build %s: %w", variant.id, err)
 		}
-		content := []byte(contentText)
+		content := []byte(strings.TrimRight(contentText, "\n") + "\n")
 		processTag := "profile-" + string(variant.processProfile)
 		fixtures = append(fixtures, generatedFixture{
 			entry: fixtureManifestEntry{
