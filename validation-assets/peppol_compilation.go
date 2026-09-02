@@ -24,7 +24,26 @@ const (
 	svrlNamespace       = "http://purl.oclc.org/dsdl/svrl"
 	xsltNamespace       = "http://www.w3.org/1999/XSL/Transform"
 	peppolSmokeExample  = "examples/base-example.xml"
+	diagnosticProbeID   = "DIAGNOSTIC-PROBE"
+	diagnosticProbeRef  = "DIAGNOSTIC-PROBE-CONTENT"
+	diagnosticProbeText = "Diagnostic code: ABC"
 )
+
+const diagnosticProbeSchematron = `<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://purl.oclc.org/dsdl/schematron" queryBinding="xslt2">
+  <title>Diagnostic compilation probe</title>
+  <pattern id="diagnostic-probe">
+    <rule context="probe">
+      <assert id="DIAGNOSTIC-PROBE" flag="fatal" test="@ok = 'true'"
+        diagnostics="DIAGNOSTIC-PROBE-CONTENT">Probe must pass.</assert>
+    </rule>
+  </pattern>
+  <diagnostics>
+    <diagnostic id="DIAGNOSTIC-PROBE-CONTENT">Diagnostic code: <value-of select="@code"/></diagnostic>
+  </diagnostics>
+</schema>`
+
+const diagnosticProbeDocument = `<probe code="ABC"/>`
 
 // PeppolCompilationConfig identifies the local, checksum-verified tools used
 // for one deterministic compilation.
@@ -59,7 +78,7 @@ type peppolCompilerMetadata struct {
 
 // CompilePeppolSchematron compiles the pinned source twice, requires
 // byte-identical output, verifies the accepted digest and rule metadata, and
-// runs an offline SVRL smoke transform through the resulting stylesheet.
+// runs offline positive and diagnostic-content SVRL smoke transforms.
 func CompilePeppolSchematron(ctx context.Context, cfg PeppolCompilationConfig) ([]byte, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -158,7 +177,39 @@ func CompilePeppolSchematron(ctx context.Context, cfg PeppolCompilationConfig) (
 	if err := verifyPassingSVRL(svrl); err != nil {
 		return nil, fmt.Errorf("verify Peppol SVRL smoke output: %w", err)
 	}
+	if err := runDiagnosticConformanceProbe(ctx, javaPath, cfg, workDir, compilerPath); err != nil {
+		return nil, err
+	}
 	return first, nil
+}
+
+func runDiagnosticConformanceProbe(ctx context.Context, javaPath string, cfg PeppolCompilationConfig, workDir, compilerPath string) error {
+	schemaPath := filepath.Join(workDir, "diagnostic-probe.sch")
+	documentPath := filepath.Join(workDir, "diagnostic-probe.xml")
+	stylesheetPath := filepath.Join(workDir, "diagnostic-probe.xslt")
+	svrlPath := filepath.Join(workDir, "diagnostic-probe.svrl.xml")
+	if err := os.WriteFile(schemaPath, []byte(diagnosticProbeSchematron), 0o600); err != nil {
+		return fmt.Errorf("write Schematron diagnostic probe: %w", err)
+	}
+	if err := os.WriteFile(documentPath, []byte(diagnosticProbeDocument), 0o600); err != nil {
+		return fmt.Errorf("write diagnostic probe document: %w", err)
+	}
+	if err := runSaxon(ctx, javaPath, cfg.SaxonDirectory, cfg.SaxonConfigurationPath,
+		schemaPath, compilerPath, stylesheetPath, schxslt.CompileMetadataParameter); err != nil {
+		return fmt.Errorf("compile Schematron diagnostic probe: %w", err)
+	}
+	if err := runSaxon(ctx, javaPath, cfg.SaxonDirectory, cfg.SaxonConfigurationPath,
+		documentPath, stylesheetPath, svrlPath, ""); err != nil {
+		return fmt.Errorf("run Schematron diagnostic probe: %w", err)
+	}
+	content, err := os.ReadFile(svrlPath)
+	if err != nil {
+		return fmt.Errorf("read Schematron diagnostic probe SVRL: %w", err)
+	}
+	if err := verifyDiagnosticSVRL(content); err != nil {
+		return fmt.Errorf("verify Schematron diagnostic probe SVRL: %w", err)
+	}
+	return nil
 }
 
 func runSaxon(ctx context.Context, javaPath, saxonDirectory, configurationPath, sourcePath, stylesheetPath, outputPath, parameter string) error {
@@ -193,6 +244,7 @@ func runSaxon(ctx context.Context, javaPath, saxonDirectory, configurationPath, 
 func verifyPassingSVRL(content []byte) error {
 	decoder := xml.NewDecoder(bytes.NewReader(content))
 	rootSeen := false
+	firedRules := 0
 	for {
 		token, err := decoder.Token()
 		if errors.Is(err, io.EOF) {
@@ -214,11 +266,104 @@ func verifyPassingSVRL(content []byte) error {
 		if start.Name.Space == svrlNamespace && start.Name.Local == "failed-assert" {
 			return fmt.Errorf("official positive example emitted failed assertion %q", xmlAttribute(start.Attr, "id"))
 		}
+		if start.Name.Space == svrlNamespace && start.Name.Local == "fired-rule" {
+			firedRules++
+		}
 	}
 	if !rootSeen {
 		return fmt.Errorf("SVRL document is empty")
 	}
+	if firedRules == 0 {
+		return fmt.Errorf("SVRL document contains no fired rules")
+	}
 	return nil
+}
+
+func verifyDiagnosticSVRL(content []byte) error {
+	decoder := xml.NewDecoder(bytes.NewReader(content))
+	rootSeen := false
+	firedRuleSeen := false
+	assertionSeen := false
+	diagnosticSeen := false
+	for {
+		token, err := decoder.Token()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		start, ok := token.(xml.StartElement)
+		if !ok {
+			continue
+		}
+		if !rootSeen {
+			rootSeen = true
+			if start.Name.Space != svrlNamespace || start.Name.Local != "schematron-output" {
+				return fmt.Errorf("root is {%s}%s, want {%s}schematron-output", start.Name.Space, start.Name.Local, svrlNamespace)
+			}
+		}
+		if start.Name.Space != svrlNamespace {
+			continue
+		}
+		switch start.Name.Local {
+		case "fired-rule":
+			firedRuleSeen = true
+		case "failed-assert":
+			if xmlAttribute(start.Attr, "id") == diagnosticProbeID {
+				assertionSeen = true
+			}
+		case "diagnostic-reference":
+			if xmlAttribute(start.Attr, "diagnostic") != diagnosticProbeRef {
+				continue
+			}
+			text, err := xmlElementText(decoder)
+			if err != nil {
+				return fmt.Errorf("read diagnostic reference content: %w", err)
+			}
+			if normalizedXMLText(text) != diagnosticProbeText {
+				return fmt.Errorf("diagnostic %q content = %q, want %q", diagnosticProbeRef, normalizedXMLText(text), diagnosticProbeText)
+			}
+			diagnosticSeen = true
+		}
+	}
+	if !rootSeen {
+		return fmt.Errorf("SVRL document is empty")
+	}
+	if !firedRuleSeen {
+		return fmt.Errorf("diagnostic probe contains no fired rule")
+	}
+	if !assertionSeen {
+		return fmt.Errorf("diagnostic probe assertion %q did not fail", diagnosticProbeID)
+	}
+	if !diagnosticSeen {
+		return fmt.Errorf("diagnostic probe reference %q is missing", diagnosticProbeRef)
+	}
+	return nil
+}
+
+func xmlElementText(decoder *xml.Decoder) (string, error) {
+	var text strings.Builder
+	depth := 1
+	for depth > 0 {
+		token, err := decoder.Token()
+		if err != nil {
+			return "", err
+		}
+		switch value := token.(type) {
+		case xml.StartElement:
+			depth++
+		case xml.EndElement:
+			depth--
+		case xml.CharData:
+			text.Write(value)
+		}
+	}
+	return text.String(), nil
+}
+
+func normalizedXMLText(value string) string {
+	return strings.Join(strings.Fields(value), " ")
 }
 
 func verifyPeppolCompilationFS(fsys fs.FS, profile PeppolProfile) error {

@@ -39,9 +39,12 @@ dependencies into the ignored `devsetup/tools/` directory. It compiles the
 official Schematron twice with compilation timestamps disabled, requires
 byte-identical output, compares that output with the accepted
 `PEPPOL-EN16931-UBL-validation.xslt`, and executes the official positive example
-offline to produce SVRL. The production image repeats this compilation check
-but contains only the accepted XSLT and runtime Saxon dependencies; SchXslt and
-all download tools remain build-only.
+offline to produce SVRL with fired-rule evidence. Because this Peppol source
+release defines no diagnostics, the gate separately compiles and executes a
+minimal diagnostic probe through the same toolchain and checks both its
+diagnostic ID and dynamically rendered content. The production image repeats
+this compilation check but contains only the accepted XSLT and runtime Saxon
+dependencies; SchXslt and all download tools remain build-only.
 
 The files are copied unchanged from OpenPeppol repository commit
 `806866bd2bd91d7e9623b68f08164e8fbe9e67a0`. Their upstream terms and the CEN

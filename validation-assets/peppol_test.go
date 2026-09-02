@@ -165,6 +165,54 @@ func TestCompiledPeppolXSLTContainsNoVolatileTimestamp(t *testing.T) {
 	}
 }
 
+func TestVerifyPassingSVRLRequiresRuleExecution(t *testing.T) {
+	valid := []byte(`<svrl:schematron-output xmlns:svrl="http://purl.oclc.org/dsdl/svrl">
+  <svrl:fired-rule context="Invoice"/>
+</svrl:schematron-output>`)
+	if err := verifyPassingSVRL(valid); err != nil {
+		t.Fatal(err)
+	}
+
+	empty := []byte(`<svrl:schematron-output xmlns:svrl="http://purl.oclc.org/dsdl/svrl"/>`)
+	if err := verifyPassingSVRL(empty); err == nil || !strings.Contains(err.Error(), "no fired rules") {
+		t.Fatalf("empty SVRL error = %v, want no fired rules", err)
+	}
+
+	failed := []byte(`<svrl:schematron-output xmlns:svrl="http://purl.oclc.org/dsdl/svrl">
+  <svrl:fired-rule context="Invoice"/>
+  <svrl:failed-assert id="PEPPOL-TEST"/>
+</svrl:schematron-output>`)
+	if err := verifyPassingSVRL(failed); err == nil || !strings.Contains(err.Error(), "PEPPOL-TEST") {
+		t.Fatalf("failed SVRL error = %v, want failed assertion ID", err)
+	}
+}
+
+func TestVerifyDiagnosticSVRLRequiresRenderedDiagnostic(t *testing.T) {
+	valid := []byte(`<svrl:schematron-output xmlns:svrl="http://purl.oclc.org/dsdl/svrl">
+  <svrl:fired-rule context="probe"/>
+  <svrl:failed-assert id="DIAGNOSTIC-PROBE">
+    <svrl:diagnostic-reference diagnostic="DIAGNOSTIC-PROBE-CONTENT">
+      Diagnostic code: ABC
+    </svrl:diagnostic-reference>
+  </svrl:failed-assert>
+</svrl:schematron-output>`)
+	if err := verifyDiagnosticSVRL(valid); err != nil {
+		t.Fatal(err)
+	}
+
+	wrongContent := bytes.Replace(valid, []byte("Diagnostic code: ABC"), []byte("Diagnostic code: WRONG"), 1)
+	if err := verifyDiagnosticSVRL(wrongContent); err == nil || !strings.Contains(err.Error(), "Diagnostic code: WRONG") {
+		t.Fatalf("wrong diagnostic content error = %v, want rendered-content mismatch", err)
+	}
+	missingReference := bytes.Replace(valid,
+		[]byte(`<svrl:diagnostic-reference diagnostic="DIAGNOSTIC-PROBE-CONTENT">
+      Diagnostic code: ABC
+    </svrl:diagnostic-reference>`), nil, 1)
+	if err := verifyDiagnosticSVRL(missingReference); err == nil || !strings.Contains(err.Error(), "reference") {
+		t.Fatalf("missing diagnostic reference error = %v, want missing reference", err)
+	}
+}
+
 func TestSemanticPreservationChecksRulesDiagnosticsAndNamespaces(t *testing.T) {
 	source := []byte(`<schema xmlns="http://purl.oclc.org/dsdl/schematron">
 	  <ns prefix="cbc" uri="urn:example:cbc"/>
