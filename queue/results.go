@@ -20,6 +20,9 @@ type ValidationStatus string
 type ValidationProfile string
 
 const (
+	// ValidationProfileAuto is a requested-profile value only. A durable
+	// execution must persist the concrete profile produced by resolution.
+	ValidationProfileAuto         ValidationProfile = "auto"
 	ValidationProfileUBL21        ValidationProfile = "ubl21"
 	ValidationProfileUBL21EN16931 ValidationProfile = "ubl21-en16931"
 	// ValidationProfilePeppolBISBilling is available to frozen execution and

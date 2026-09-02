@@ -81,6 +81,10 @@ func TestPeppolProfileIsDurableButNotYetPublic(t *testing.T) {
 	if queue.ValidPublicValidationProfile(queue.ValidationProfilePeppolBISBilling) {
 		t.Fatal("public validation API enabled Peppol before issue #75")
 	}
+	if queue.ValidValidationProfile(queue.ValidationProfileAuto) ||
+		queue.ValidPublicValidationProfile(queue.ValidationProfileAuto) {
+		t.Fatal("unresolved auto profile was accepted as a durable or public profile")
+	}
 }
 
 func TestLegacyValidationPayloadWithoutStagesRemainsCompatible(t *testing.T) {

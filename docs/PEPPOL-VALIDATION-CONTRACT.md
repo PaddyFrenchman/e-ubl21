@@ -114,6 +114,15 @@ fallback to EN-only validity. Applying `ubl21-en16931` or
 `peppol-bis-billing` explicitly to any other UBL document type is rejected at
 request acceptance because no applicable plan exists.
 
+The implementation keeps resolution independent from Schematron execution.
+Its bounded XML scanner reads only unambiguous top-level UBL
+`cbc:CustomizationID` and `cbc:ProfileID` values, applies XPath-compatible XML
+whitespace normalization, and performs case-sensitive comparisons without URI
+decoding or Unicode substitution. It returns a concrete frozen-plan profile
+plus normalized identifiers and, for explicit invalid Peppol requests,
+structured R001/R004/R007 evidence. This resolver and plan builder do not
+enable the public HTTP selector; that API wiring remains owned by issue #75.
+
 ## Final status semantics
 
 The final status belongs to the resolved frozen plan:

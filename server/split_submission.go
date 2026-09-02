@@ -9,6 +9,7 @@ import (
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
 	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/orchestrator"
+	"github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 )
@@ -28,20 +29,52 @@ func FrozenValidationPlanFor(documentType string, profile queue.ValidationProfil
 	if !queue.ValidPublicValidationProfile(profile) {
 		return "", queue.FrozenValidationPlan{}, fmt.Errorf("unsupported validation profile %q", profile)
 	}
-	if profile == queue.ValidationProfileUBL21EN16931 && !requiresEN16931(documentType) {
-		return "", queue.FrozenValidationPlan{}, fmt.Errorf("validation profile %q is not applicable to %s", profile, documentType)
+	plan, err := frozenValidationPlanForResolvedProfile(documentType, profile)
+	if err != nil {
+		return "", queue.FrozenValidationPlan{}, err
+	}
+	return profile, plan, nil
+}
+
+// ResolveFrozenValidationPlanFor resolves automatic or explicit Peppol
+// applicability and builds the immutable concrete plan. It is intentionally
+// separate from the public HTTP selector, which remains owned by issue #75.
+func ResolveFrozenValidationPlanFor(documentType string, requested queue.ValidationProfile, document []byte) (peppol.Resolution, queue.FrozenValidationPlan, error) {
+	resolution, err := peppol.Resolve(documentType, requested, document)
+	if err != nil {
+		return peppol.Resolution{}, queue.FrozenValidationPlan{}, err
+	}
+	plan, err := frozenValidationPlanForResolvedProfile(documentType, resolution.ResolvedProfile)
+	if err != nil {
+		return peppol.Resolution{}, queue.FrozenValidationPlan{}, err
+	}
+	return resolution, plan, nil
+}
+
+func frozenValidationPlanForResolvedProfile(documentType string, profile queue.ValidationProfile) (queue.FrozenValidationPlan, error) {
+	if !queue.ValidValidationProfile(profile) {
+		return queue.FrozenValidationPlan{}, fmt.Errorf("unsupported resolved validation profile %q", profile)
+	}
+	if profile != queue.ValidationProfileUBL21 && !requiresEN16931(documentType) {
+		return queue.FrozenValidationPlan{}, fmt.Errorf("validation profile %q is not applicable to %s", profile, documentType)
 	}
 	stages := []queue.FrozenValidationStage{{
 		ID: queue.ValidationLayerUBL21XSD, Ordinal: 1,
 		Requirement: queue.ValidationStageRequired, RulesetVersion: xsdschemas.Version,
 	}}
-	if profile == queue.ValidationProfileUBL21EN16931 {
+	if profile == queue.ValidationProfileUBL21EN16931 || profile == queue.ValidationProfilePeppolBISBilling {
 		stages = append(stages, queue.FrozenValidationStage{
 			ID: queue.ValidationLayerEN16931, Ordinal: 2,
 			Requirement: queue.ValidationStageRequired, RulesetVersion: validationassets.EN16931().Version,
 		})
 	}
-	return profile, queue.FrozenValidationPlan{ID: string(profile), Version: splitValidationPlanVersion, Stages: stages}, nil
+	if profile == queue.ValidationProfilePeppolBISBilling {
+		stages = append(stages, queue.FrozenValidationStage{
+			ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3,
+			Requirement: queue.ValidationStageRequired, RulesetVersion: validationassets.Peppol().ValidationArtefactsVersion,
+		})
+	}
+	return queue.FrozenValidationPlan{ID: string(profile), Version: splitValidationPlanVersion, Stages: stages}, nil
 }
 
 func startSplitValidation(ctx context.Context, client *queue.Client, record queue.UploadRecord, receivedAt time.Time) error {
