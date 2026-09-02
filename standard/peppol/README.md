@@ -38,9 +38,10 @@ name. The two published UBL Schematron files have these identities:
 The CEN Schematron supplies the adopted EN 16931 layer and the Peppol
 Schematron supplies Peppol and country-qualified rules. The optional SBDH
 envelope rules are excluded from this product milestone and belong to issue
-#82. Later asset-packaging work will place the exact runtime inputs under
-`validation-assets/peppol/`; this standards directory must link to that
-location rather than hold a second runtime copy.
+#82. The selected Schematron, code lists, and official examples are packaged
+once under [`validation-assets/peppol/`](../../validation-assets/peppol/);
+this standards directory links to that controlled bundle rather than holding
+a second runtime copy.
 
 ### Code-list edition
 
@@ -102,12 +103,13 @@ To start over after a reported mismatch, remove only
 
 The OpenPeppol repository and rendered site do not provide a repository-level
 licence grant that permits this project to redistribute the complete rendered
-documentation. Consequently none of the downloaded files are committed, and
-the entire `downloaded/` tree is ignored by Git. Users must comply with the
-terms attached to OpenPeppol material and obtain any required membership or
-permission directly from OpenPeppol.
+documentation. Consequently the complete downloaded tree remains ignored by
+Git. Only the narrow validation source bundle required by the controlled asset
+lifecycle is committed under `validation-assets/peppol/`. Users must comply
+with the terms attached to OpenPeppol material and obtain any required
+membership or permission directly from OpenPeppol.
 
 The official Schematron headers state that business terms derived from CEN
 EN 16931 are reproduced with permission and that CEN provides no warranty.
-Keeping locally downloaded material does not grant a right to republish either
-OpenPeppol or CEN content.
+Keeping or packaging these selected inputs does not grant a broader right to
+republish OpenPeppol or CEN content.

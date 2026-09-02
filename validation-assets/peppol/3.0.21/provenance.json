@@ -1,0 +1,30 @@
+{
+  "profile": "peppol-bis-billing",
+  "bis_version": "3.0.21",
+  "publication_date": "2026-05-20",
+  "mandatory_from": "2026-08-17",
+  "validation_artefacts_version": "1.3.16",
+  "validation_artefacts_publication_date": "2026-04-10",
+  "code_list_publication_date": "2026-03-06",
+  "source_repository": "OpenPEPPOL/peppol-bis-invoice-3",
+  "source_commit": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+  "source_tree": "a8acc94f1216279839547e1670585fac62dfc122",
+  "source_archive_url": "https://codeload.github.com/OpenPEPPOL/peppol-bis-invoice-3/tar.gz/806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+  "source_archive_sha256": "a843cd3808c6e95565eded1a535a5a40a88ad6f92e009d2b1816a4818a82299e",
+  "source_paths": {
+    "schematron": "rules/sch/PEPPOL-EN16931-UBL.sch",
+    "code_lists": "structure/codelist/*.xml",
+    "examples": "rules/examples/*.xml"
+  },
+  "asset_counts": {
+    "schematron": 1,
+    "code_lists": 17,
+    "examples": 10
+  },
+  "excluded": [
+    "CEN Schematron already owned by the separate EN 16931 stage",
+    "CII artefacts outside the UBL 2.1 product scope",
+    "SBDH envelope artefacts reserved for issue #82",
+    "unit and national test fixtures reserved for conformity-corpus issues"
+  ]
+}

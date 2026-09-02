@@ -1,0 +1,3 @@
+# Preserve byte-identical vendored OpenPeppol inputs. Upstream XML/Schematron
+# contains intentional historical trailing whitespace covered by SHA-256.
+validation-assets/peppol/** -text -whitespace

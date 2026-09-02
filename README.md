@@ -680,6 +680,6 @@ For deeper detail, start with:
 
 ## Standards and design philosophy
 
-The project treats authoritative standards assets as inputs, not suggestions. UBL schemas, EN 16931 artefacts, and future Peppol artefacts are pinned, checksummed, and tested. Generated fixtures carry provenance. Regression expectations are explicit. Runtime failures remain operational failures. Validation stages are ordered evidence rather than a single opaque boolean.
+The project treats authoritative standards assets as inputs, not suggestions. UBL schemas, EN 16931 artefacts, and Peppol validation source assets are pinned, checksummed, and tested. Generated fixtures carry provenance. Regression expectations are explicit. Runtime failures remain operational failures. Validation stages are ordered evidence rather than a single opaque boolean.
 
 That discipline is central to the project: the goal is not simply to say that an XML file “looks valid,” but to be able to explain **which standards profile was applied, which exact rule assets were used, which stages passed or failed, and whether the result can be reproduced later**.

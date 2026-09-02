@@ -30,12 +30,24 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	if err := validationassets.VerifyPeppol(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	fmt.Printf("verified profile=%s version=%s release=%s sha256=%s xslt=%s\n",
 		profile.Name,
 		profile.Version,
 		profile.SourceRelease,
 		profile.XSLTSHA256,
 		profile.RuntimeXSLTPath,
+	)
+	peppol := validationassets.Peppol()
+	fmt.Printf("verified profile=%s version=%s artefacts=%s manifest_sha256=%s schematron=%s\n",
+		peppol.Name,
+		peppol.Version,
+		peppol.ValidationArtefactsVersion,
+		peppol.ManifestSHA256,
+		peppol.SchematronPath,
 	)
 	for _, path := range staged {
 		fmt.Printf("staged=%s\n", path)

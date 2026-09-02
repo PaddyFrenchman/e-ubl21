@@ -19,8 +19,9 @@ authoritative repository location:
 
 - UBL schemas: [`XSD/`](../XSD/);
 - EN 16931 runtime stylesheet: [`validation-assets/en16931/`](../validation-assets/en16931/);
-- future Peppol runtime assets: `validation-assets/peppol/`, introduced by the
-  asset-packaging issue rather than duplicated here.
+- Peppol validation source bundle:
+  [`validation-assets/peppol/`](../validation-assets/peppol/), verified here by
+  reference rather than duplicated under `standard/`.
 
 OpenPeppol documentation and other material whose redistribution permission is
 not established are downloaded only into the ignored
@@ -36,9 +37,10 @@ not established are downloaded only into the ignored
 3. Changing a version, source, filename, or digest is a reviewed standards
    upgrade. It must follow the relevant upgrade contract and regression gates.
 4. Normative CEN publications, rendered OpenPeppol documentation, and other
-   restricted material are not copied into Git without explicit redistribution
-   rights. A source link and reproducible acquisition procedure are recorded
-   instead.
+   restricted material are not copied wholesale into Git. Only the narrowly
+   selected validation inputs tracked by the controlled asset lifecycle are
+   vendored unchanged; broader sources use a reproducible acquisition
+   procedure instead.
 5. The component's own licence and terms continue to apply. See
    [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) for material packaged
    in the runtime image.
