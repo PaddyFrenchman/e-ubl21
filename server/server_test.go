@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -494,6 +495,19 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 		}
 	}
 	stageSchema := spec["components"].(map[string]any)["schemas"].(map[string]any)["ValidationStageResult"].(map[string]any)
+	stageProperties := stageSchema["properties"].(map[string]any)
+	for _, field := range []string{
+		"bisVersion", "bisReleaseDate", "bisMandatoryFrom", "customizationId",
+		"profileId", "processProfile", "outcome", "reason", "diagnostic",
+	} {
+		if _, ok := stageProperties[field]; !ok {
+			t.Fatalf("validation stage schema missing %s", field)
+		}
+	}
+	layerValues := stageProperties["layer"].(map[string]any)["enum"].([]any)
+	if !slices.Contains(layerValues, any("peppol-bis-billing")) {
+		t.Fatal("validation stage schema does not expose the Peppol layer")
+	}
 	requiredStageFields := stageSchema["required"].([]any)
 	for _, want := range []string{"layer", "version", "valid", "validatedAt"} {
 		found := false

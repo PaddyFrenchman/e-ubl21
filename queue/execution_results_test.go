@@ -174,6 +174,145 @@ func TestExecutionValidationResultAcceptsInvalidAndProcessingFailedOutcomes(t *t
 	}
 }
 
+func TestExecutionValidationResultRepresentsPeppolFailureIndependently(t *testing.T) {
+	result := peppolInvalidExecutionResult(t)
+	if err := result.ValidateExecutionResult(); err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := json.Marshal(result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var decoded queue.ValidationResult
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	xsd, xsdOK := decoded.ValidationStages.Find(queue.ValidationLayerUBL21XSD)
+	en16931, enOK := decoded.ValidationStages.Find(queue.ValidationLayerEN16931)
+	peppol, peppolOK := decoded.ValidationStages.Find(queue.ValidationLayerPeppolBISBilling)
+	if !xsdOK || !xsd.Valid || !enOK || !en16931.Valid || !peppolOK || peppol.Valid {
+		t.Fatalf("layered Peppol result = %+v", decoded.ValidationStages)
+	}
+	if peppol.Version != "1.3.16" || peppol.BISVersion != "3.0.21" ||
+		peppol.CustomizationID != peppolCustomizationID || peppol.ProfileID != peppolProfile01ID ||
+		peppol.ProcessProfile != queue.PeppolProcessProfile01 ||
+		len(peppol.Issues) != 1 || peppol.Issues[0].Layer != queue.ValidationLayerPeppolBISBilling ||
+		peppol.Issues[0].Rule != "PEPPOL-EN16931-R001" {
+		t.Fatalf("Peppol identity or rule evidence was flattened/lost: %+v", peppol)
+	}
+}
+
+func TestExecutionValidationResultAcceptsPeppolProfile02Identity(t *testing.T) {
+	result := peppolInvalidExecutionResult(t)
+	result.ValidationStages[2].ProfileID = peppolProfile02ID
+	result.ValidationStages[2].ProcessProfile = queue.PeppolProcessProfile02
+	if err := result.ValidateExecutionResult(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExecutionValidationResultRejectsMalformedPeppolIdentity(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*queue.ValidationResult)
+	}{
+		{"missing BIS version", func(result *queue.ValidationResult) {
+			result.ValidationStages[2].BISVersion = ""
+		}},
+		{"non-normalized BIS version", func(result *queue.ValidationResult) {
+			result.ValidationStages[2].BISVersion = " 3.0.21"
+		}},
+		{"invalid release date", func(result *queue.ValidationResult) {
+			result.ValidationStages[2].BISReleaseDate = "20 May 2026"
+		}},
+		{"mandatory before release", func(result *queue.ValidationResult) {
+			result.ValidationStages[2].BISMandatoryFrom = "2026-05-19"
+		}},
+		{"non-normalized profile", func(result *queue.ValidationResult) {
+			result.ValidationStages[2].ProfileID = " " + peppolProfile01ID
+		}},
+		{"invalid process profile", func(result *queue.ValidationResult) {
+			result.ValidationStages[2].ProcessProfile = "03"
+		}},
+		{"process without profile ID", func(result *queue.ValidationResult) {
+			result.ValidationStages[2].ProfileID = ""
+		}},
+		{"Peppol identity on XSD", func(result *queue.ValidationResult) {
+			result.ValidationStages[0].BISVersion = "3.0.21"
+		}},
+		{"passed without resolved profile", func(result *queue.ValidationResult) {
+			stage := &result.ValidationStages[2]
+			stage.Valid = true
+			stage.Outcome = queue.StageOutcomePassed
+			stage.Issues = nil
+			stage.ProfileID = ""
+			result.Status = queue.StatusValid
+		}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result := peppolInvalidExecutionResult(t)
+			test.mutate(&result)
+			if err := result.ValidateExecutionResult(); err == nil {
+				t.Fatalf("malformed Peppol identity was accepted: %+v", result.ValidationStages[2])
+			}
+		})
+	}
+}
+
+func TestPeppolWarningEvidenceDoesNotInvalidateStage(t *testing.T) {
+	warning := queue.ValidationIssue{
+		Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerPeppolBISBilling,
+		Rule: "PEPPOL-WARN", Severity: "warning", Message: "Advisory warning.",
+	}
+	if queue.StageIssuesContainStandardsFailure([]queue.ValidationIssue{warning}) {
+		t.Fatal("Peppol warning was treated as standards-invalid")
+	}
+	warning.Severity = "fatal"
+	if !queue.StageIssuesContainStandardsFailure([]queue.ValidationIssue{warning}) {
+		t.Fatal("Peppol fatal assertion was not treated as standards-invalid")
+	}
+}
+
+func peppolInvalidExecutionResult(t *testing.T) queue.ValidationResult {
+	t.Helper()
+	result := validExecutionResult(t, 1)
+	result.Profile = queue.ValidationProfilePeppolBISBilling
+	result.Plan = "ubl21-en16931-peppol"
+	result.DocumentType = "Invoice"
+	result.Status = queue.StatusInvalid
+	result.PlanStages = []queue.FrozenValidationStage{
+		{ID: queue.ValidationLayerUBL21XSD, Ordinal: 1, Requirement: queue.ValidationStageRequired, RulesetVersion: "2.1"},
+		{ID: queue.ValidationLayerEN16931, Ordinal: 2, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"},
+		{ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"},
+	}
+	result.ValidationStages = queue.ValidationStages{
+		{
+			Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: true,
+			Outcome: queue.StageOutcomePassed, ValidatedAt: "2026-08-29T10:59:57Z", DurationMS: 4,
+		},
+		{
+			Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: true,
+			Outcome: queue.StageOutcomePassed, ValidatedAt: "2026-08-29T10:59:58Z", DurationMS: 31,
+		},
+		{
+			Layer: queue.ValidationLayerPeppolBISBilling, Version: "1.3.16",
+			BISVersion: "3.0.21", BISReleaseDate: "2026-05-20", BISMandatoryFrom: "2026-08-17",
+			CustomizationID: peppolCustomizationID, ProfileID: peppolProfile01ID,
+			ProcessProfile: queue.PeppolProcessProfile01,
+			Valid:          false, Outcome: queue.StageOutcomeStandardsInvalid,
+			Issues: []queue.ValidationIssue{{
+				Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerPeppolBISBilling,
+				Rule: "PEPPOL-EN16931-R001", Severity: "fatal", Location: "/ubl:Invoice",
+				Test: "cbc:ProfileID", Message: "Business process MUST be provided.",
+				Diagnostic: "Profile 01 mismatch.",
+			}},
+			ValidatedAt: "2026-08-29T10:59:59Z", DurationMS: 43,
+		},
+	}
+	return result
+}
+
 func validExecutionResult(t *testing.T, generation uint64) queue.ValidationResult {
 	t.Helper()
 	uploadID, err := queue.NewID()

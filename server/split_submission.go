@@ -25,7 +25,7 @@ func FrozenValidationPlanFor(documentType string, profile queue.ValidationProfil
 			profile = queue.ValidationProfileUBL21
 		}
 	}
-	if !queue.ValidValidationProfile(profile) {
+	if !queue.ValidPublicValidationProfile(profile) {
 		return "", queue.FrozenValidationPlan{}, fmt.Errorf("unsupported validation profile %q", profile)
 	}
 	if profile == queue.ValidationProfileUBL21EN16931 && !requiresEN16931(documentType) {

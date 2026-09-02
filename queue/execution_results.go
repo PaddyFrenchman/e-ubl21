@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -78,6 +79,9 @@ func (result ValidationResult) ValidateExecutionResult() error {
 		if !utf8.ValidString(stage.Diagnostic) || len(stage.Diagnostic) > MaxStageDiagnosticBytes {
 			return fmt.Errorf("validation result stage %d diagnostic exceeds %d bytes or is not UTF-8", index, MaxStageDiagnosticBytes)
 		}
+		if err := validateValidationStageIdentity(stage); err != nil {
+			return fmt.Errorf("validation result stage %d: %w", index, err)
+		}
 		if err := ValidateStageIssues(stage.Layer, stage.Issues); err != nil {
 			return fmt.Errorf("validation result stage %d: %w", index, err)
 		}
@@ -127,6 +131,73 @@ func (result ValidationResult) ValidateExecutionResult() error {
 		return fmt.Errorf("validation result has non-terminal status %q", result.Status)
 	}
 	return nil
+}
+
+const maxPeppolIdentifierBytes = 1024
+
+func validateValidationStageIdentity(stage ValidationStageResult) error {
+	hasPeppolIdentity := stage.BISVersion != "" || stage.BISReleaseDate != "" ||
+		stage.BISMandatoryFrom != "" || stage.CustomizationID != "" ||
+		stage.ProfileID != "" || stage.ProcessProfile != ""
+	if stage.Layer != ValidationLayerPeppolBISBilling {
+		if hasPeppolIdentity {
+			return errors.New("non-Peppol validation layer cannot contain Peppol identity")
+		}
+		return nil
+	}
+	if err := validateStageVersion("Peppol BIS version", stage.BISVersion); err != nil {
+		return err
+	}
+	if stage.BISVersion != strings.TrimSpace(stage.BISVersion) {
+		return errors.New("Peppol BIS version is not normalized")
+	}
+	releaseDate, err := parsePeppolDate("Peppol BIS release date", stage.BISReleaseDate)
+	if err != nil {
+		return err
+	}
+	mandatoryFrom, err := parsePeppolDate("Peppol BIS mandatory-from date", stage.BISMandatoryFrom)
+	if err != nil {
+		return err
+	}
+	if mandatoryFrom.Before(releaseDate) {
+		return errors.New("Peppol BIS mandatory-from date precedes release date")
+	}
+	for _, field := range []struct {
+		name  string
+		value string
+	}{
+		{name: "customizationId", value: stage.CustomizationID},
+		{name: "profileId", value: stage.ProfileID},
+	} {
+		name, value := field.name, field.value
+		if !utf8.ValidString(value) || len(value) > maxPeppolIdentifierBytes {
+			return fmt.Errorf("Peppol %s exceeds %d bytes or is not UTF-8", name, maxPeppolIdentifierBytes)
+		}
+		if value != strings.TrimSpace(value) {
+			return fmt.Errorf("Peppol %s is not normalized", name)
+		}
+	}
+	switch stage.ProcessProfile {
+	case "", PeppolProcessProfile01, PeppolProcessProfile02:
+	default:
+		return fmt.Errorf("invalid Peppol process profile %q", stage.ProcessProfile)
+	}
+	if stage.ProcessProfile != "" && stage.ProfileID == "" {
+		return errors.New("resolved Peppol process profile requires profileId")
+	}
+	if stage.Outcome == StageOutcomePassed &&
+		(stage.CustomizationID == "" || stage.ProfileID == "" || stage.ProcessProfile == "") {
+		return errors.New("passed Peppol stage requires resolved customization, profile, and process identifiers")
+	}
+	return nil
+}
+
+func parsePeppolDate(name, value string) (time.Time, error) {
+	parsed, err := time.Parse(time.DateOnly, value)
+	if err != nil || value != parsed.Format(time.DateOnly) {
+		return time.Time{}, fmt.Errorf("%s %q is not a canonical date", name, value)
+	}
+	return parsed, nil
 }
 
 // SemanticallyEqualValidationResults compares complete canonical payloads.
