@@ -502,6 +502,73 @@ func TestTrackedEN16931CorpusMatchesFreshGeneration(t *testing.T) {
 	}
 }
 
+func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
+	root := "samples-peppol"
+	manifestBytes, err := os.ReadFile(filepath.Join(root, "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifestBytes); err != nil {
+		t.Fatalf("tracked Peppol manifest rejected: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) != 4 {
+		t.Fatalf("tracked Peppol manifest fixtures = %d, want 4", len(manifest.Fixtures))
+	}
+	generatorVersion := manifest.Fixtures[0].Provenance.GeneratorVersion
+	if !immutableGeneratorVersion.MatchString(generatorVersion) {
+		t.Fatalf("tracked Peppol generator version = %q", generatorVersion)
+	}
+	for _, fixture := range manifest.Fixtures {
+		if fixture.Provenance.Kind != "generated" ||
+			fixture.Provenance.GeneratorVersion != generatorVersion {
+			t.Fatalf("tracked fixture %s provenance = %+v", fixture.ID, fixture.Provenance)
+		}
+	}
+
+	files := snapshotGeneratedDirectory(t, root)
+	if len(files) != 6 {
+		t.Fatalf("tracked Peppol corpus files = %d, want 6 including manifest and ownership marker", len(files))
+	}
+	for _, fixture := range manifest.Fixtures {
+		content, ok := files[fixture.File]
+		if !ok {
+			t.Errorf("manifest fixture %s references missing file %s", fixture.ID, fixture.File)
+			continue
+		}
+		actual := fmt.Sprintf("%x", sha256.Sum256(content))
+		if actual != fixture.SHA256 {
+			t.Errorf("tracked fixture %s SHA-256 = %s, manifest has %s", fixture.ID, actual, fixture.SHA256)
+		}
+	}
+
+	fresh, err := generatePeppolPositiveCorpus(filepath.Join("..", "XSD"), generatorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	freshDir := filepath.Join(t.TempDir(), "samples-peppol")
+	if err := writeGeneratedCorpus(freshDir, fresh); err != nil {
+		t.Fatal(err)
+	}
+	freshFiles := snapshotGeneratedDirectory(t, freshDir)
+	if len(freshFiles) != len(files) {
+		t.Fatalf("fresh/tracked Peppol corpus file counts = %d/%d", len(freshFiles), len(files))
+	}
+	for path, trackedBytes := range files {
+		freshBytes, ok := freshFiles[path]
+		if !ok {
+			t.Errorf("fresh Peppol generation is missing tracked file %s", path)
+			continue
+		}
+		if !bytes.Equal(freshBytes, trackedBytes) {
+			t.Errorf("fresh Peppol generation differs from tracked corpus at %s", path)
+		}
+	}
+}
+
 func snapshotGeneratedDirectory(t *testing.T, root string) map[string][]byte {
 	t.Helper()
 	files := map[string][]byte{}
