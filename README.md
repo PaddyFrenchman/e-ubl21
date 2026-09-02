@@ -51,6 +51,9 @@ The following are explicitly **not yet part of the current production validity c
 
 See [`TODO-VALIDATION-SPLIT.md`](TODO-VALIDATION-SPLIT.md) and [`TODO-PEPPOL.md`](TODO-PEPPOL.md) for the next major architecture milestones.
 
+Standards versions, authoritative sources, checksums, acquisition procedures,
+and redistribution constraints are indexed under [`standard/`](standard/).
+
 ## Validation model
 
 Validation is layered. A failure at an earlier standards layer prevents later standards layers from running.

@@ -92,6 +92,11 @@ Official reference points:
 
 The implementation must pin immutable bytes and digests before the Peppol validator becomes part of production validity.
 
+The pinned source identity, checksums, licensing constraints, and reproducible
+download procedure are maintained under [`standard/peppol/`](standard/peppol/).
+The corresponding EN 16931 provenance is under
+[`standard/en16931/`](standard/en16931/).
+
 ---
 
 ## 3. Scope

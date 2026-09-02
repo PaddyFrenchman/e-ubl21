@@ -549,6 +549,10 @@ standard/
 
 **Acceptance:** A clean checkout can identify exactly which Peppol release bytes the server is intended to validate against, exposes `standard/` as the canonical Peppol/EN 16931 documentation and provenance entry point, contains sufficient EN 16931 references/provenance/permitted local material to identify the implemented release, contains a version-controlled reproducible Peppol downloader rather than redistribution-restricted documentation, records licences/source URLs/checksums for audit, and prevents downloaded restricted material from being committed.
 
+**Provenance:** [`standard/README.md`](standard/README.md), with detailed
+[`EN 16931`](standard/en16931/README.md) and
+[`Peppol`](standard/peppol/README.md) records.
+
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/67
 
 ### 31. #68 — TODO-PEPPOL-003 — Package Peppol Schematron, code lists and example assets

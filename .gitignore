@@ -48,3 +48,7 @@ regression-results/
 # reproducible from a pinned version + checksum; not committed as binaries)
 devsetup/tools/
 e-ubl21
+
+# Checksum-verified OpenPeppol documentation and validation inputs. The source
+# terms do not establish redistribution rights for committing these files.
+/standard/peppol/downloaded/
