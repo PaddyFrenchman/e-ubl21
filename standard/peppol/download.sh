@@ -4,11 +4,13 @@ set -eu
 
 BIS_VERSION=3.0.21
 SOURCE_COMMIT=806866bd2bd91d7e9623b68f08164e8fbe9e67a0
-DOCS_BASE=https://docs.peppol.eu/poacc/billing/3.0
-RAW_BASE=https://raw.githubusercontent.com/OpenPEPPOL/peppol-bis-invoice-3/$SOURCE_COMMIT
+ARCHIVE_NAME=peppol-bis-invoice-3-$SOURCE_COMMIT.tar.gz
+ARCHIVE_SHA256=a843cd3808c6e95565eded1a535a5a40a88ad6f92e009d2b1816a4818a82299e
+ARCHIVE_URL=https://codeload.github.com/OpenPEPPOL/peppol-bis-invoice-3/tar.gz/$SOURCE_COMMIT
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 MANIFEST=$SCRIPT_DIR/sha256.txt
+OFFLINE_INDEX=$SCRIPT_DIR/offline-index.html
 DOWNLOAD_ROOT=$SCRIPT_DIR/downloaded
 DESTINATION=$DOWNLOAD_ROOT/$BIS_VERSION
 LOCK_DIR=$DOWNLOAD_ROOT/.download-$BIS_VERSION.lock
@@ -20,7 +22,12 @@ fail() {
 
 command -v curl >/dev/null 2>&1 || fail "curl is required"
 command -v sha256sum >/dev/null 2>&1 || fail "sha256sum is required"
+command -v tar >/dev/null 2>&1 || fail "tar is required"
+command -v cmp >/dev/null 2>&1 || fail "cmp is required"
+command -v awk >/dev/null 2>&1 || fail "awk is required"
+command -v cp >/dev/null 2>&1 || fail "cp is required"
 [ -r "$MANIFEST" ] || fail "checksum manifest is missing: $MANIFEST"
+[ -r "$OFFLINE_INDEX" ] || fail "offline source index is missing: $OFFLINE_INDEX"
 
 verify_download() {
     verify_root=$1
@@ -29,13 +36,44 @@ verify_download() {
         sha256sum --check "$MANIFEST"
     ) || fail "checksum mismatch under $verify_root"
 
-    grep -Fq 'version 3.0.21' "$verify_root/docs/bis-index.html" ||
-        fail "BIS documentation does not identify version 3.0.21"
-    grep -Fq 'Version 3.0.21' "$verify_root/docs/release-notes-index.html" ||
+    cmp -s "$OFFLINE_INDEX" "$verify_root/index.html" ||
+        fail "offline source index differs from the version-controlled index"
+
+    release_notes=$verify_root/source/guide/release-notes/v3.0.21.adoc
+    grep -Fq '= Version 3.0.21' "$release_notes" ||
         fail "release notes do not identify version 3.0.21"
+    grep -Fq 'Date of publication: 2026-05-20' "$release_notes" ||
+        fail "release notes have an unexpected publication date"
+    grep -Fq 'Mandatory to use from: 2026-08-17' "$release_notes" ||
+        fail "release notes have an unexpected mandatory date"
+    grep -Fq 'Validation artefacts UBL and CII 1.3.16 publication date: 2026-04-10' \
+        "$release_notes" ||
+        fail "release notes have an unexpected validation artefact identity"
     grep -Fq 'Last update: 2026 May release 3.0.21.' \
-        "$verify_root/assets/PEPPOL-EN16931-UBL.sch" ||
+        "$verify_root/source/rules/sch/PEPPOL-EN16931-UBL.sch" ||
         fail "Peppol Schematron has an unexpected release identity"
+
+    for required_path in \
+        source/README.adoc \
+        source/project.xml \
+        source/guide/bis/main.adoc \
+        source/guide/compliance/main.adoc \
+        source/guide/transaction-spec \
+        source/guide/syntax \
+        source/guide/profile \
+        source/guide/cius \
+        source/guide/national-rules \
+        source/structure/syntax/ubl-invoice.xml \
+        source/structure/syntax/ubl-creditnote.xml \
+        source/rules/examples \
+        source/rules/national-examples \
+        source/mapping \
+        source/stylesheet \
+        source/tools
+    do
+        [ -e "$verify_root/$required_path" ] ||
+            fail "complete source tree is missing $required_path"
+    done
 }
 
 if [ -d "$DESTINATION" ]; then
@@ -60,7 +98,7 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 
 [ ! -e "$STAGING" ] || fail "staging path already exists: $STAGING"
-mkdir -p "$STAGING/assets/codelists" "$STAGING/docs"
+mkdir -p "$STAGING/archive" "$STAGING/source"
 
 download() {
     source_url=$1
@@ -71,35 +109,16 @@ download() {
         fail "could not download $source_url"
 }
 
-download "$RAW_BASE/rules/sch/CEN-EN16931-UBL.sch" \
-    assets/CEN-EN16931-UBL.sch
-download "$RAW_BASE/rules/sch/PEPPOL-EN16931-UBL.sch" \
-    assets/PEPPOL-EN16931-UBL.sch
-for codelist in \
-    ISO3166-1_Alpha2.xml \
-    ISO4217_2015.xml \
-    MimeCode.xml \
-    SEPA.xml \
-    UNCL1001-cn.xml \
-    UNCL1001-inv.xml \
-    UNCL1153.xml \
-    UNCL2005.xml \
-    UNCL4461.xml \
-    UNCL5189.xml \
-    UNCL5305.xml \
-    UNCL7143.xml \
-    UNCL7161.xml \
-    UNECERec20-11e.xml \
-    VATEX.xml \
-    eas.xml \
-    icd.xml
-do
-    download "$RAW_BASE/structure/codelist/$codelist" \
-        "assets/codelists/$codelist"
-done
-download "$DOCS_BASE/bis/" docs/bis-index.html
-download "$DOCS_BASE/" docs/index.html
-download "$DOCS_BASE/release-notes/" docs/release-notes-index.html
+download "$ARCHIVE_URL" "archive/$ARCHIVE_NAME"
+
+actual_archive_sha256=$(sha256sum "$STAGING/archive/$ARCHIVE_NAME" | awk '{print $1}')
+[ "$actual_archive_sha256" = "$ARCHIVE_SHA256" ] ||
+    fail "archive checksum mismatch: expected $ARCHIVE_SHA256, got $actual_archive_sha256"
+
+tar -xzf "$STAGING/archive/$ARCHIVE_NAME" \
+    --strip-components=1 -C "$STAGING/source" ||
+    fail "could not extract the pinned source archive"
+cp "$OFFLINE_INDEX" "$STAGING/index.html"
 
 verify_download "$STAGING"
 [ ! -e "$DESTINATION" ] || fail "destination appeared during download: $DESTINATION"

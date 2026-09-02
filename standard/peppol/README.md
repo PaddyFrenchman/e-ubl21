@@ -14,6 +14,8 @@ The first Peppol payload profile supported by e-ubl21 is frozen as follows:
 | Official repository | `OpenPEPPOL/peppol-bis-invoice-3` |
 | Immutable source commit | `806866bd2bd91d7e9623b68f08164e8fbe9e67a0` |
 | Source tree | `a8acc94f1216279839547e1670585fac62dfc122` |
+| Immutable archive URL | <https://codeload.github.com/OpenPEPPOL/peppol-bis-invoice-3/tar.gz/806866bd2bd91d7e9623b68f08164e8fbe9e67a0> |
+| Archive SHA-256 | `a843cd3808c6e95565eded1a535a5a40a88ad6f92e009d2b1816a4818a82299e` |
 
 The dates and versions are stated by the official
 [3.0.21 release notes](https://docs.peppol.eu/poacc/billing/3.0/release-notes/).
@@ -60,27 +62,38 @@ Run:
 ./standard/peppol/download.sh
 ```
 
-The script requires `curl` and `sha256sum`. It downloads official rendered
-documentation plus the two UBL Schematron inputs into:
+The script requires `curl`, `sha256sum`, and `tar`. It downloads the complete
+official repository archive for the immutable commit, verifies it, and
+extracts the full documentation and supporting source tree into:
 
 ```text
 standard/peppol/downloaded/3.0.21/
-├── assets/
-│   ├── CEN-EN16931-UBL.sch
-│   ├── PEPPOL-EN16931-UBL.sch
-│   └── codelists/
-│       └── ... 17 pinned XML source files
-└── docs/
-    ├── bis-index.html
-    ├── index.html
-    └── release-notes-index.html
+├── index.html
+├── archive/
+│   └── peppol-bis-invoice-3-806866bd...tar.gz
+└── source/
+    ├── guide/                 # complete AsciiDoc documentation sources
+    ├── structure/             # syntax structures and all code lists
+    ├── rules/                 # Schematron, examples and national examples
+    ├── mapping/               # UBL/CII mapping support
+    ├── stylesheet/            # viewer sources and support files
+    ├── tools/                 # rule/document generation sources
+    └── project.xml            # publication build metadata
 ```
 
-Every byte is checked against [`sha256.txt`](sha256.txt). Artefacts and code
-lists are fetched from raw URLs containing the immutable commit. The rendered
-documentation is served at OpenPeppol's official stable 3.0 location, so its
-pinned checksums prevent a later site update from being mistaken for 3.0.21.
-A repeat run verifies the existing directory and performs no download.
+[`offline-index.html`](offline-index.html) is copied to the download root as a
+local navigation page. It links to the complete BIS, compliance, transaction,
+syntax, profile, CIUS, national-rule, code-list, mapping, example, stylesheet,
+and tooling sources. The sources are not pre-rendered HTML; rendering would
+require OpenPeppol's separately versioned publication toolchain. They remain a
+self-contained, immutable reference even after the public 3.0 site advances.
+
+Every acquired byte is covered by the archive digest in
+[`sha256.txt`](sha256.txt). That manifest additionally verifies the two UBL
+Schematrons and all 17 code-list files after extraction. The only network URL
+contains the full source commit; the downloader never reads mutable
+`docs.peppol.eu`, branch, or latest-release paths. A repeat run verifies the
+existing archive and extracted tree and performs no download.
 
 To start over after a reported mismatch, remove only
 `standard/peppol/downloaded/3.0.21/` and rerun the script.

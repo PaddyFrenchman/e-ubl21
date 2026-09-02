@@ -19,28 +19,26 @@ func TestPeppolChecksumManifest(t *testing.T) {
 	defer manifest.Close()
 
 	want := map[string]bool{
-		"assets/CEN-EN16931-UBL.sch":            false,
-		"assets/PEPPOL-EN16931-UBL.sch":         false,
-		"assets/codelists/ISO3166-1_Alpha2.xml": false,
-		"assets/codelists/ISO4217_2015.xml":     false,
-		"assets/codelists/MimeCode.xml":         false,
-		"assets/codelists/SEPA.xml":             false,
-		"assets/codelists/UNCL1001-cn.xml":      false,
-		"assets/codelists/UNCL1001-inv.xml":     false,
-		"assets/codelists/UNCL1153.xml":         false,
-		"assets/codelists/UNCL2005.xml":         false,
-		"assets/codelists/UNCL4461.xml":         false,
-		"assets/codelists/UNCL5189.xml":         false,
-		"assets/codelists/UNCL5305.xml":         false,
-		"assets/codelists/UNCL7143.xml":         false,
-		"assets/codelists/UNCL7161.xml":         false,
-		"assets/codelists/UNECERec20-11e.xml":   false,
-		"assets/codelists/VATEX.xml":            false,
-		"assets/codelists/eas.xml":              false,
-		"assets/codelists/icd.xml":              false,
-		"docs/bis-index.html":                   false,
-		"docs/index.html":                       false,
-		"docs/release-notes-index.html":         false,
+		"archive/peppol-bis-invoice-3-" + peppolCommit + ".tar.gz": false,
+		"source/rules/sch/CEN-EN16931-UBL.sch":                     false,
+		"source/rules/sch/PEPPOL-EN16931-UBL.sch":                  false,
+		"source/structure/codelist/ISO3166-1_Alpha2.xml":           false,
+		"source/structure/codelist/ISO4217_2015.xml":               false,
+		"source/structure/codelist/MimeCode.xml":                   false,
+		"source/structure/codelist/SEPA.xml":                       false,
+		"source/structure/codelist/UNCL1001-cn.xml":                false,
+		"source/structure/codelist/UNCL1001-inv.xml":               false,
+		"source/structure/codelist/UNCL1153.xml":                   false,
+		"source/structure/codelist/UNCL2005.xml":                   false,
+		"source/structure/codelist/UNCL4461.xml":                   false,
+		"source/structure/codelist/UNCL5189.xml":                   false,
+		"source/structure/codelist/UNCL5305.xml":                   false,
+		"source/structure/codelist/UNCL7143.xml":                   false,
+		"source/structure/codelist/UNCL7161.xml":                   false,
+		"source/structure/codelist/UNECERec20-11e.xml":             false,
+		"source/structure/codelist/VATEX.xml":                      false,
+		"source/structure/codelist/eas.xml":                        false,
+		"source/structure/codelist/icd.xml":                        false,
 	}
 	digestLine := regexp.MustCompile(`^([0-9a-f]{64})  ([^/][^ ]*)$`)
 	seen := make(map[string]struct{})
@@ -87,8 +85,11 @@ func TestPeppolDownloaderPinsFullCommit(t *testing.T) {
 	if !strings.Contains(script, "SOURCE_COMMIT="+peppolCommit) {
 		t.Fatalf("download script does not pin source commit %s", peppolCommit)
 	}
-	if !strings.Contains(script, "RAW_BASE=https://raw.githubusercontent.com/OpenPEPPOL/peppol-bis-invoice-3/$SOURCE_COMMIT") {
-		t.Fatal("download script does not derive immutable raw URLs from SOURCE_COMMIT")
+	if !strings.Contains(script, "ARCHIVE_URL=https://codeload.github.com/OpenPEPPOL/peppol-bis-invoice-3/tar.gz/$SOURCE_COMMIT") {
+		t.Fatal("download script does not derive its immutable archive URL from SOURCE_COMMIT")
+	}
+	if strings.Contains(script, "docs.peppol.eu") {
+		t.Fatal("download script reads mutable rendered documentation")
 	}
 	for _, moving := range []string{"/main/", "/master/", "/upcoming/"} {
 		if strings.Contains(script, moving) {
@@ -101,6 +102,30 @@ func TestPeppolDownloaderPinsFullCommit(t *testing.T) {
 	}
 	if info.Mode().Perm()&0o111 == 0 {
 		t.Fatal("download script is not executable")
+	}
+}
+
+func TestPeppolOfflineIndexCoversCompleteSourceAreas(t *testing.T) {
+	content, err := os.ReadFile(filepath.Join("peppol", "offline-index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	index := string(content)
+	for _, sourceArea := range []string{
+		"source/guide/bis/main.adoc",
+		"source/guide/transaction-spec/",
+		"source/guide/syntax/",
+		"source/guide/cius/",
+		"source/guide/national-rules/",
+		"source/structure/codelist/",
+		"source/rules/sch/PEPPOL-EN16931-UBL.sch",
+		"source/rules/examples/",
+		"source/mapping/",
+		"source/stylesheet/",
+	} {
+		if !strings.Contains(index, sourceArea) {
+			t.Errorf("offline index does not link to %s", sourceArea)
+		}
 	}
 }
 
