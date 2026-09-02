@@ -37,14 +37,16 @@ func orchestrationTestExecution(t *testing.T, stages int) ValidationExecution {
 	planStages := []FrozenValidationStage{{
 		ID: ValidationLayerUBL21XSD, Ordinal: 1, Requirement: ValidationStageRequired, RulesetVersion: "2.1",
 	}}
+	profile := ValidationProfileUBL21
 	if stages == 2 {
 		planStages = append(planStages, FrozenValidationStage{
 			ID: ValidationLayerEN16931, Ordinal: 2, Requirement: ValidationStageRequired, RulesetVersion: "1.3.16",
 		})
+		profile = ValidationProfileUBL21EN16931
 	}
 	execution, err := NewValidationExecution(ValidationExecutionIntent{
 		IntentID: intentID, UploadID: uploadID, DocumentType: "Invoice", Trigger: ValidationTriggerInitial,
-		RequestedProfile: ValidationProfileUBL21EN16931,
+		RequestedProfile: profile,
 		Plan:             FrozenValidationPlan{ID: "coverage-plan", Version: "1", Stages: planStages},
 		CreatedAt:        orchestrationTestTime,
 	})

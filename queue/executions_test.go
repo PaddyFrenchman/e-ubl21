@@ -84,10 +84,40 @@ func testID(t *testing.T) string {
 func testInitialIntent(t *testing.T, uploadID string, plan queue.FrozenValidationPlan, createdAt time.Time) queue.ValidationExecutionIntent {
 	t.Helper()
 	plan.Stages = append([]queue.FrozenValidationStage(nil), plan.Stages...)
+	profile := queue.ValidationProfileUBL21
+	if len(plan.Stages) > 1 {
+		profile = queue.ValidationProfileUBL21EN16931
+	}
 	return queue.ValidationExecutionIntent{
 		IntentID: testID(t), UploadID: uploadID, DocumentType: "Invoice",
-		Trigger: queue.ValidationTriggerInitial, RequestedProfile: queue.ValidationProfileUBL21EN16931,
+		Trigger: queue.ValidationTriggerInitial, RequestedProfile: profile,
 		Plan: plan, CreatedAt: createdAt,
+	}
+}
+
+func TestValidationExecutionRejectsProfilePlanMismatch(t *testing.T) {
+	intent := testInitialIntent(t, testID(t), testFrozenPlan(), time.Now().UTC())
+	execution, err := queue.NewValidationExecution(intent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	execution.RequestedProfile = queue.ValidationProfilePeppolBISBilling
+	err = execution.Validate()
+	if err == nil || !strings.Contains(err.Error(), "requires stages") {
+		t.Fatalf("Peppol execution without Peppol stage error = %v, want profile-plan mismatch", err)
+	}
+}
+
+func TestValidationExecutionAcceptsPeppolProfilePlan(t *testing.T) {
+	plan := testFrozenPlan()
+	plan.Stages = append(plan.Stages, queue.FrozenValidationStage{
+		ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3,
+		Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16",
+	})
+	intent := testInitialIntent(t, testID(t), plan, time.Now().UTC())
+	intent.RequestedProfile = queue.ValidationProfilePeppolBISBilling
+	if _, err := queue.NewValidationExecution(intent); err != nil {
+		t.Fatal(err)
 	}
 }
 

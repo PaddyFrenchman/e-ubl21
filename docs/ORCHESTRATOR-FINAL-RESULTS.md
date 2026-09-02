@@ -60,6 +60,12 @@ advisory evidence without changing a passing verdict.
 This durable model support does not enable Peppol as a public upload selector.
 The HTTP request/resolution contract remains owned by issue #75.
 
+Durable executions and canonical results bind each profile to its stage
+sequence: `ubl21` requires XSD, `ubl21-en16931` requires XSD then EN 16931, and
+`peppol-bis-billing` requires XSD then EN 16931 then Peppol. Profile and plan
+cannot be validated independently, so a record cannot claim Peppol conformity
+while omitting the Peppol stage.
+
 ## Crash recovery and concurrency
 
 `ReconcilePendingFinalResults` scans terminal executions whose outbox is absent

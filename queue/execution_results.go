@@ -49,6 +49,9 @@ func (result ValidationResult) ValidateExecutionResult() error {
 	if err := plan.validate(); err != nil {
 		return err
 	}
+	if err := validateProfilePlan(result.Profile, plan); err != nil {
+		return err
+	}
 	if _, err := parseCanonicalStageTime("validation result validatedAt", result.ValidatedAt); err != nil {
 		return err
 	}

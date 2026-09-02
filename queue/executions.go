@@ -360,6 +360,9 @@ func (execution ValidationExecution) Validate() error {
 	if err := execution.Plan.validate(); err != nil {
 		return err
 	}
+	if err := validateProfilePlan(execution.RequestedProfile, execution.Plan); err != nil {
+		return err
+	}
 	if err := execution.RetryPolicy.validate(); err != nil {
 		return err
 	}
@@ -425,6 +428,34 @@ func (plan FrozenValidationPlan) validate() error {
 		}
 		if err := validateStageVersion("validation plan stage "+string(stage.ID)+" ruleset version", stage.RulesetVersion); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+func validateProfilePlan(profile ValidationProfile, plan FrozenValidationPlan) error {
+	var expected []ValidationLayer
+	switch profile {
+	case ValidationProfileUBL21:
+		expected = []ValidationLayer{ValidationLayerUBL21XSD}
+	case ValidationProfileUBL21EN16931:
+		expected = []ValidationLayer{ValidationLayerUBL21XSD, ValidationLayerEN16931}
+	case ValidationProfilePeppolBISBilling:
+		expected = []ValidationLayer{
+			ValidationLayerUBL21XSD,
+			ValidationLayerEN16931,
+			ValidationLayerPeppolBISBilling,
+		}
+	default:
+		return fmt.Errorf("invalid validation profile %q", profile)
+	}
+	if len(plan.Stages) != len(expected) {
+		return fmt.Errorf("validation profile %q requires stages %v", profile, expected)
+	}
+	for index, layer := range expected {
+		stage := plan.Stages[index]
+		if stage.ID != layer {
+			return fmt.Errorf("validation profile %q requires stage %d to be layer %q", profile, index, layer)
 		}
 	}
 	return nil
