@@ -42,6 +42,13 @@ func leafAttr(prefix, name, value, attrKey, attrVal string) xmlnode.Node {
 	return xmlnode.Node{Prefix: prefix, Name: name, Value: value, Attributes: map[string]string{attrKey: attrVal}}
 }
 
+func leafOptionalAttr(prefix, name, value, attrKey, attrVal string) xmlnode.Node {
+	if attrVal == "" {
+		return leaf(prefix, name, value)
+	}
+	return leafAttr(prefix, name, value, attrKey, attrVal)
+}
+
 // parent builds an element with nested children.
 func parent(prefix, name string, children ...xmlnode.Node) xmlnode.Node {
 	return xmlnode.Node{Prefix: prefix, Name: name, Children: children}
@@ -77,14 +84,23 @@ func formatQuantity(qty float64) string {
 // buildPartyNode renders one cac:AccountingSupplierParty /
 // cac:AccountingCustomerParty block (BG-4 / BG-7) from a Party.
 func buildPartyNode(containerName string, p Party) xmlnode.Node {
-	partyChildren := []xmlnode.Node{
+	var partyChildren []xmlnode.Node
+	if p.EndpointID != "" {
+		partyChildren = append(partyChildren,
+			leafOptionalAttr("cbc", "EndpointID", p.EndpointID, "schemeID", p.EndpointSchemeID))
+	}
+	if p.PartyIdentificationID != "" {
+		partyChildren = append(partyChildren, cacParent("PartyIdentification",
+			leafOptionalAttr("cbc", "ID", p.PartyIdentificationID, "schemeID", p.PartyIdentificationSchemeID)))
+	}
+	partyChildren = append(partyChildren,
 		cacParent("PostalAddress",
 			cbcLeaf("StreetName", p.StreetName),
 			cbcLeaf("CityName", p.CityName),
 			cbcLeaf("PostalZone", p.PostalZone),
 			cacParent("Country", cbcLeaf("IdentificationCode", p.CountryCode)),
 		),
-	}
+	)
 
 	if p.VATSchemeID != "" {
 		partyChildren = append(partyChildren, cacParent("PartyTaxScheme",
@@ -95,7 +111,8 @@ func buildPartyNode(containerName string, p Party) xmlnode.Node {
 
 	legalChildren := []xmlnode.Node{cbcLeaf("RegistrationName", p.Name)}
 	if p.LegalRegistrationID != "" {
-		legalChildren = append(legalChildren, cbcLeaf("CompanyID", p.LegalRegistrationID))
+		legalChildren = append(legalChildren,
+			leafOptionalAttr("cbc", "CompanyID", p.LegalRegistrationID, "schemeID", p.LegalRegistrationSchemeID))
 	}
 	partyChildren = append(partyChildren, cacParent("PartyLegalEntity", legalChildren...))
 
@@ -175,15 +192,22 @@ func BuildInvoiceXML(doc InvoiceDocument) (string, error) {
 
 	children := []xmlnode.Node{
 		cbcLeaf("CustomizationID", doc.CustomizationID),
-		cbcLeaf("ID", doc.ID),
-		cbcLeaf("IssueDate", doc.IssueDate),
 	}
+	if doc.ProfileID != "" {
+		children = append(children, cbcLeaf("ProfileID", doc.ProfileID))
+	}
+	children = append(children, cbcLeaf("ID", doc.ID), cbcLeaf("IssueDate", doc.IssueDate))
 	if doc.DueDate != "" {
 		children = append(children, cbcLeaf("DueDate", doc.DueDate))
 	}
 	children = append(children,
 		cbcLeaf("InvoiceTypeCode", doc.InvoiceTypeCode),
 		cbcLeaf("DocumentCurrencyCode", doc.DocumentCurrencyCode),
+	)
+	if doc.BuyerReference != "" {
+		children = append(children, cbcLeaf("BuyerReference", doc.BuyerReference))
+	}
+	children = append(children,
 		buildPartyNode("AccountingSupplierParty", doc.Seller),
 		buildPartyNode("AccountingCustomerParty", doc.Buyer),
 	)
@@ -250,13 +274,23 @@ func BuildCreditNoteXML(doc CreditNoteDocument) (string, error) {
 
 	children := []xmlnode.Node{
 		cbcLeaf("CustomizationID", doc.CustomizationID),
+	}
+	if doc.ProfileID != "" {
+		children = append(children, cbcLeaf("ProfileID", doc.ProfileID))
+	}
+	children = append(children,
 		cbcLeaf("ID", doc.ID),
 		cbcLeaf("IssueDate", doc.IssueDate),
 		cbcLeaf("CreditNoteTypeCode", doc.CreditNoteTypeCode),
 		cbcLeaf("DocumentCurrencyCode", doc.DocumentCurrencyCode),
+	)
+	if doc.BuyerReference != "" {
+		children = append(children, cbcLeaf("BuyerReference", doc.BuyerReference))
+	}
+	children = append(children,
 		buildPartyNode("AccountingSupplierParty", doc.Seller),
 		buildPartyNode("AccountingCustomerParty", doc.Buyer),
-	}
+	)
 	for _, pm := range doc.PaymentMeans {
 		children = append(children, buildPaymentMeansNode(pm))
 	}

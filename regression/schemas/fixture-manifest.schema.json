@@ -150,7 +150,8 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "en16931": {"$ref": "#/$defs/ruleset"}
+        "en16931": {"$ref": "#/$defs/ruleset"},
+        "peppol": {"$ref": "#/$defs/ruleset"}
       }
     },
     "fixture": {
@@ -287,12 +288,16 @@
         {
           "if": {"properties": {"profile": {"const": "peppol-bis-billing"}}, "required": ["profile"]},
           "then": {
+            "required": ["rulesets"],
             "properties": {
               "standards": {
                 "properties": {
                   "en16931": {"type": "string", "minLength": 1},
                   "peppol": {"type": "string", "minLength": 1}
                 }
+              },
+              "rulesets": {
+                "required": ["en16931", "peppol"]
               },
               "expectedStages": {
                 "minItems": 3,

@@ -55,6 +55,14 @@ func (m Money) String() string {
 // registration. Not every field is required for every VAT-category variant
 // (see plan §7); build.go decides which to emit based on VATCategoryID.
 type Party struct {
+	// EndpointID and EndpointSchemeID identify the party's electronic address.
+	// They are optional for EN 16931 and populated by Peppol variants.
+	EndpointID       string
+	EndpointSchemeID string
+	// PartyIdentificationID is an optional business identifier. Its scheme is
+	// required by the generated Peppol variants.
+	PartyIdentificationID       string
+	PartyIdentificationSchemeID string
 	// Name is the party's legal/registered name (BT-27 Seller name / BT-44
 	// Buyer name), rendered as cac:PartyLegalEntity/cbc:RegistrationName -
 	// EN 16931's official UBL mapping uses that element for the party's
@@ -76,6 +84,9 @@ type Party struct {
 	// (BT-30 Seller legal registration identifier), rendered as
 	// cac:PartyLegalEntity/cbc:CompanyID. Empty means omitted.
 	LegalRegistrationID string
+	// LegalRegistrationSchemeID qualifies LegalRegistrationID when a profile
+	// requires a scheme. Empty preserves the EN 16931 baseline rendering.
+	LegalRegistrationSchemeID string
 }
 
 // PaymentMeans models cac:PaymentMeans (BG-16): a payment means type code
@@ -158,15 +169,19 @@ type Totals struct {
 }
 
 // InvoiceDocument models the EN 16931 baseline business terms for a UBL
-// Invoice (per plan §5). CustomizationID must be the fixed EN 16931
-// specification identifier; DocumentCurrencyCode, InvoiceTypeCode and the
-// VAT category codes used across Lines/TaxBreakdown must come from
-// codelists.go, not arbitrary placeholder strings, or the document will
-// fail BR-CL-* code-list rules even though it remains XSD-valid.
+// Invoice (per plan §5). EN constructors use the fixed EN 16931
+// CustomizationID; Peppol constructors deliberately replace it and populate
+// the optional profile/party fields. DocumentCurrencyCode, InvoiceTypeCode and
+// the VAT category codes used across Lines/TaxBreakdown must come from
+// codelists.go, not arbitrary placeholder strings.
 type InvoiceDocument struct {
-	// CustomizationID is BT-24, fixed to "urn:cen.eu:en16931:2017" for
-	// every document this package generates.
+	// CustomizationID is BT-24. EN variants use EN16931CustomizationID;
+	// profile-specific packages may replace it with a stricter identifier.
 	CustomizationID string
+	// ProfileID and BuyerReference are optional for the EN 16931 baseline and
+	// populated by Peppol Billing variants.
+	ProfileID      string
+	BuyerReference string
 	// ID is BT-1, IssueDate is BT-2, DueDate is BT-9 (optional),
 	// InvoiceTypeCode is BT-3, DocumentCurrencyCode is BT-5.
 	ID                   string
@@ -198,6 +213,8 @@ type InvoiceDocument struct {
 // place of Line (see plan §5).
 type CreditNoteDocument struct {
 	CustomizationID      string
+	ProfileID            string
+	BuyerReference       string
 	ID                   string
 	IssueDate            string
 	CreditNoteTypeCode   string
@@ -210,7 +227,6 @@ type CreditNoteDocument struct {
 	Totals               Totals
 }
 
-// EN16931CustomizationID is the fixed BT-24 value (plan §2, verified against
-// the official guide-example1.xml fixture in testdata/official/) that every
-// document produced by this package must declare.
+// EN16931CustomizationID is the baseline BT-24 value (plan §2, verified
+// against the official guide-example1.xml fixture in testdata/official/).
 const EN16931CustomizationID = "urn:cen.eu:en16931:2017"

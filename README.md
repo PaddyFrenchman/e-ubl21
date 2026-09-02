@@ -290,7 +290,23 @@ go run ./createsamples generate \
   --output createsamples/samples-en16931
 ```
 
-The regression contract lives under [`regression/`](regression/) and defines stable fixture-manifest and normalized-result schemas. The current tracked corpora cover UBL positives and targeted negatives plus EN 16931 positives and rule-targeted negatives; future work adds Peppol fixtures.
+The regression contract lives under [`regression/`](regression/) and defines stable fixture-manifest and normalized-result schemas. The current tracked corpora cover UBL positives and targeted negatives, EN 16931 positives and rule-targeted negatives, and Peppol candidate positives.
+
+Generate deterministic Peppol BIS Billing Profile 01/02 Invoice and CreditNote
+candidates with:
+
+```bash
+go run ./createsamples generate \
+  --profile peppol-bis-billing \
+  --set positive \
+  --xsd XSD \
+  --output createsamples/samples-peppol
+```
+
+The candidates reuse the EN 16931 exact-arithmetic model and add pinned Peppol
+3.0.21 identifiers, legal EAS/ICD `0088` endpoint and party schemes, and ordered
+XSD/EN/Peppol expectations. Targeted Peppol negative generation remains owned
+by issue #38.
 
 Run a tracked manifest through the authenticated public API and durable result
 path with `go run . regression`; see [`regression/README.md`](regression/README.md)

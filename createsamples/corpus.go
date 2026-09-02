@@ -26,6 +26,9 @@ const (
 var generatorSourcePathspecs = []string{
 	":(glob)createsamples/**/*.go",
 	":(exclude,glob)createsamples/**/*_test.go",
+	":(glob)peppol/*.go",
+	":(exclude,glob)peppol/*_test.go",
+	"validation-assets/peppol.go",
 	"regression/manifest.go",
 	"regression/schemas/fixture-manifest.schema.json",
 	":(glob)XSD/**/*.xsd",
@@ -72,6 +75,7 @@ type fixtureProvenance struct {
 
 type fixtureRulesets struct {
 	EN16931 *fixtureRuleset `json:"en16931,omitempty"`
+	Peppol  *fixtureRuleset `json:"peppol,omitempty"`
 }
 
 type fixtureRuleset struct {

@@ -196,6 +196,40 @@ func TestGenerateEN16931UsesProfileDefaultOutput(t *testing.T) {
 	}
 }
 
+func TestGeneratePeppolUsesProfileDefaultOutput(t *testing.T) {
+	xsdDir, err := filepath.Abs(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	workingDir := t.TempDir()
+	t.Chdir(workingDir)
+	if err := run([]string{
+		"generate", "--profile", "peppol-bis-billing", "--xsd", xsdDir,
+		"--generator-version", testGeneratorVersion,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	manifestPath := filepath.Join("createsamples", "samples-peppol", "manifest.json")
+	manifestBytes, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("Peppol corpus was not written to its profile default: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) != 4 {
+		t.Fatalf("Peppol generated fixtures = %d, want 4", len(manifest.Fixtures))
+	}
+	if err := run([]string{
+		"generate", "--profile", "peppol-bis-billing", "--set", "negative",
+		"--xsd", xsdDir, "--output", filepath.Join(workingDir, "negative"),
+		"--generator-version", testGeneratorVersion,
+	}); err == nil || !strings.Contains(err.Error(), "TODO-REGRESSION-007") {
+		t.Fatalf("Peppol negative generation error = %v", err)
+	}
+}
+
 func TestGenerateUBLNegativeSet(t *testing.T) {
 	output := filepath.Join(t.TempDir(), "negative")
 	if err := run([]string{

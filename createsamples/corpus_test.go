@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 
+	peppolprofile "github.com/PaddyFrenchman/e-ubl21/peppol"
+	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/regression"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 )
@@ -206,6 +208,77 @@ func TestEN16931PositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *testin
 	}
 	if generated != 8 || official != 2 || invoices != 9 || creditNotes != 1 {
 		t.Fatalf("EN fixture coverage generated=%d official=%d invoices=%d creditNotes=%d", generated, official, invoices, creditNotes)
+	}
+}
+
+func TestPeppolPositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	first, err := generatePeppolPositiveCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := generatePeppolPositiveCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := verifyCorpusDeterminism(first, second); err != nil {
+		t.Fatal(err)
+	}
+	if len(first.fixtures) != 4 {
+		t.Fatalf("Peppol fixtures = %d, want 4", len(first.fixtures))
+	}
+	if err := regression.ValidateFixtureManifest(first.manifestJSON); err != nil {
+		t.Fatalf("Peppol manifest rejected: %v", err)
+	}
+	xmllintPath, err := exec.LookPath("xmllint")
+	if err != nil {
+		t.Fatal("xmllint is required for the Peppol positive-corpus acceptance test")
+	}
+	if err := validateGeneratedCorpus(xmllintPath, first); err != nil {
+		t.Fatal(err)
+	}
+
+	enProfile := validationassets.EN16931()
+	peppolProfile := validationassets.Peppol()
+	profiles := map[queue.PeppolProcessProfile]int{}
+	documentTypes := map[string]int{}
+	for _, fixture := range first.fixtures {
+		entry := fixture.entry
+		if entry.Profile != "peppol-bis-billing" || entry.ExpectedFinal != "valid" ||
+			entry.Provenance.Kind != "generated" || entry.Provenance.Generator != "createsamples/peppol" ||
+			entry.Provenance.GeneratorVersion != testGeneratorVersion {
+			t.Errorf("fixture %s has incorrect profile/provenance: %+v", entry.ID, entry)
+		}
+		if entry.Standards.EN16931 == nil || *entry.Standards.EN16931 != enProfile.Version ||
+			entry.Standards.Peppol == nil || *entry.Standards.Peppol != peppolProfile.Version ||
+			entry.Rulesets == nil || entry.Rulesets.EN16931 == nil || entry.Rulesets.Peppol == nil ||
+			entry.Rulesets.EN16931.Version != enProfile.Version ||
+			entry.Rulesets.EN16931.SHA256 != enProfile.XSLTSHA256 ||
+			entry.Rulesets.Peppol.Version != peppolProfile.ValidationArtefactsVersion ||
+			entry.Rulesets.Peppol.SHA256 != peppolProfile.XSLTSHA256 {
+			t.Errorf("fixture %s lacks pinned EN/Peppol metadata", entry.ID)
+		}
+		if len(entry.ExpectedStages) != 3 ||
+			entry.ExpectedStages[0].Stage != "ubl21-xsd" || entry.ExpectedStages[0].Outcome != "passed" ||
+			entry.ExpectedStages[1].Stage != "en16931" || entry.ExpectedStages[1].Outcome != "passed" ||
+			entry.ExpectedStages[2].Stage != "peppol-bis-billing" || entry.ExpectedStages[2].Outcome != "passed" {
+			t.Errorf("fixture %s has wrong stage contract: %+v", entry.ID, entry.ExpectedStages)
+		}
+		resolution, err := peppolprofile.Resolve(
+			entry.DocumentType, queue.ValidationProfileAuto, fixture.content,
+		)
+		if err != nil {
+			t.Fatalf("resolve generated fixture %s: %v", entry.ID, err)
+		}
+		if !resolution.PeppolIdentifiersValid() {
+			t.Errorf("fixture %s does not positively resolve to Peppol: %+v", entry.ID, resolution)
+		}
+		profiles[resolution.Identifiers.ProcessProfile]++
+		documentTypes[entry.DocumentType]++
+	}
+	if profiles[queue.PeppolProcessProfile01] != 2 || profiles[queue.PeppolProcessProfile02] != 2 ||
+		documentTypes["Invoice"] != 2 || documentTypes["CreditNote"] != 2 {
+		t.Fatalf("Peppol coverage profiles=%v documents=%v", profiles, documentTypes)
 	}
 }
 

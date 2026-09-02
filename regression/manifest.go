@@ -53,11 +53,15 @@ func ValidateFixtureManifest(data []byte) error {
 			ID        string `json:"id"`
 			Standards struct {
 				EN16931 *string `json:"en16931"`
+				Peppol  *string `json:"peppol"`
 			} `json:"standards"`
 			Rulesets struct {
 				EN16931 *struct {
 					Version string `json:"version"`
 				} `json:"en16931"`
+				Peppol *struct {
+					Version string `json:"version"`
+				} `json:"peppol"`
 			} `json:"rulesets"`
 			ExpectedStages []stageRuleIDs `json:"expectedStages"`
 		} `json:"fixtures"`
@@ -74,6 +78,9 @@ func ValidateFixtureManifest(data []byte) error {
 		if fixture.Rulesets.EN16931 != nil && fixture.Standards.EN16931 != nil &&
 			fixture.Rulesets.EN16931.Version != *fixture.Standards.EN16931 {
 			return fmt.Errorf("fixture %s EN 16931 ruleset version %q does not match standards version %q", fixture.ID, fixture.Rulesets.EN16931.Version, *fixture.Standards.EN16931)
+		}
+		if fixture.Standards.Peppol != nil && fixture.Rulesets.Peppol == nil {
+			return fmt.Errorf("fixture %s declares Peppol standard %q without a Peppol ruleset", fixture.ID, *fixture.Standards.Peppol)
 		}
 		if err := validateSortedRuleIDs("fixture "+fixture.ID+" expected", fixture.ExpectedStages); err != nil {
 			return err
