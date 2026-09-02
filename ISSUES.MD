@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #65, the **next actionable issue is #66 — TODO-PEPPOL-001 — Freeze Peppol validation scope and contract**. Issues #48 through #63 and #65 are complete. Issue #64 remains open but is intentionally downstream of the Peppol validator/asset work, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+After completion of #66, the **next actionable issue is #67 — TODO-PEPPOL-002 — Pin official Peppol release and provenance**. Issues #48 through #63, #65, and #66 are complete. Issue #64 remains open but is intentionally downstream of the Peppol validator/asset work, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -333,7 +333,7 @@ Freeze that stage workers cannot finalize whole-document validity or choose the 
 
 **Acceptance:** A written ownership table leaves no state mutation shared by unrelated roles without an explicit CAS/idempotency contract.
 
-**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44. **#48 through #63 and #65 are complete; #66 is the current next actionable issue. #64 remains open for later Peppol-stage integration.**
+**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44. **#48 through #63, #65, and #66 are complete; #67 is the current next actionable issue. #64 remains open for later Peppol-stage integration.**
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/48
 
@@ -517,6 +517,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/65
 **Acceptance:** A documented truth table maps document type + requested profile + stage outcomes to final status.
 
 **Contract:** [`docs/PEPPOL-VALIDATION-CONTRACT.md`](docs/PEPPOL-VALIDATION-CONTRACT.md)
+
+**Status:** Complete / closed.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/66
 
@@ -902,7 +904,7 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 
 - Issues #64 and #73 are closely related and should be implemented as one coordinated Peppol-stage integration effort, while preserving both acceptance contracts.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
-- Issues #44, #48–#63, and #65 are complete; **#66 is therefore the current next actionable issue.** #64 remains open and intentionally follows the Peppol engine work because it integrates `worker-peppol` into the asynchronous runtime.
+- Issues #44, #48–#63, #65, and #66 are complete; **#67 is therefore the current next actionable issue.** #64 remains open and intentionally follows the Peppol engine work because it integrates `worker-peppol` into the asynchronous runtime.
 - Issue #45 is the safety rail for declaring the first Peppol release supported and remains blocked until its real Peppol prerequisites are complete.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
