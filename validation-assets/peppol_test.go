@@ -1,6 +1,7 @@
 package validationassets
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"io/fs"
@@ -27,6 +28,10 @@ func TestPeppolPinnedMetadata(t *testing.T) {
 		ManifestSHA256:                     "705e83fa494c052254c5cd4cbd2fb42baa975d559774f6cc928dbdddd10ab29e",
 		EmbeddedRoot:                       "peppol/3.0.21",
 		SchematronPath:                     "peppol/3.0.21/rules/PEPPOL-EN16931-UBL.sch",
+		EmbeddedXSLTPath:                   "peppol/3.0.21/runtime/PEPPOL-EN16931-UBL-validation.xslt",
+		RuntimeXSLTPath:                    "/opt/e-ubl21/validation-assets/peppol/3.0.21/runtime/PEPPOL-EN16931-UBL-validation.xslt",
+		XSLTSHA256:                         "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa",
+		CompilerMetadataPath:               "peppol/3.0.21/runtime/compiler.json",
 	}
 	if Peppol() != want {
 		t.Fatalf("Peppol metadata = %#v, want %#v", Peppol(), want)
@@ -47,6 +52,16 @@ func TestVerifyPeppol(t *testing.T) {
 
 func TestOpenPeppolSchematron(t *testing.T) {
 	file, err := OpenPeppolSchematron()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestOpenPeppolXSLT(t *testing.T) {
+	file, err := OpenPeppolXSLT()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,6 +122,78 @@ func TestVerifyPeppolRejectsUnmanifestedAsset(t *testing.T) {
 	err := verifyPeppolFS(mapFS, Peppol())
 	if err == nil || !strings.Contains(err.Error(), "unmanifested asset") {
 		t.Fatalf("verifyPeppolFS() error = %v, want unmanifested asset error", err)
+	}
+}
+
+func TestVerifyPeppolRejectsChangedCompiledXSLT(t *testing.T) {
+	mapFS := copyPeppolFS(t)
+	mapFS[Peppol().EmbeddedXSLTPath].Data = append(mapFS[Peppol().EmbeddedXSLTPath].Data, '\n')
+	err := verifyPeppolFS(mapFS, Peppol())
+	if err == nil || !strings.Contains(err.Error(), "compiled XSLT: SHA-256 mismatch") {
+		t.Fatalf("verifyPeppolFS() error = %v, want compiled XSLT SHA-256 mismatch", err)
+	}
+}
+
+func TestVerifyPeppolRejectsMissingCompilerMetadata(t *testing.T) {
+	mapFS := copyPeppolFS(t)
+	delete(mapFS, Peppol().CompilerMetadataPath)
+	err := verifyPeppolFS(mapFS, Peppol())
+	if err == nil || !strings.Contains(err.Error(), "missing file \"compiler.json\"") {
+		t.Fatalf("verifyPeppolFS() error = %v, want missing compiler metadata", err)
+	}
+}
+
+func TestVerifyPeppolRejectsCompilerMetadataMismatch(t *testing.T) {
+	mapFS := copyPeppolFS(t)
+	metadata := mapFS[Peppol().CompilerMetadataPath]
+	metadata.Data = bytes.Replace(metadata.Data, []byte(`"compiler_version": "1.10.1"`), []byte(`"compiler_version": "changed"`), 1)
+	err := verifyPeppolFS(mapFS, Peppol())
+	if err == nil || !strings.Contains(err.Error(), "values do not match pinned compiler profile") {
+		t.Fatalf("verifyPeppolFS() error = %v, want compiler metadata mismatch", err)
+	}
+}
+
+func TestCompiledPeppolXSLTContainsNoVolatileTimestamp(t *testing.T) {
+	compiled, err := fs.ReadFile(files, Peppol().EmbeddedXSLTPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, forbidden := range [][]byte{[]byte("current-dateTime()"), []byte("<svrl:metadata")} {
+		if bytes.Contains(compiled, forbidden) {
+			t.Fatalf("compiled XSLT contains volatile metadata marker %q", forbidden)
+		}
+	}
+}
+
+func TestSemanticPreservationChecksRulesDiagnosticsAndNamespaces(t *testing.T) {
+	source := []byte(`<schema xmlns="http://purl.oclc.org/dsdl/schematron">
+	  <ns prefix="cbc" uri="urn:example:cbc"/>
+	  <pattern><rule context="/">
+	    <assert id="R-1" flag="fatal" role="error" diagnostics="D-1">required</assert>
+	  </rule></pattern>
+	  <diagnostics><diagnostic id="D-1">detail</diagnostic></diagnostics>
+	</schema>`)
+	compiled := []byte(`<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	  xmlns:svrl="http://purl.oclc.org/dsdl/svrl" xmlns:cbc="urn:example:cbc" version="2.0">
+	  <svrl:failed-assert id="R-1" flag="fatal" role="error">
+	    <svrl:diagnostic-reference diagnostic="D-1">detail</svrl:diagnostic-reference>
+	  </svrl:failed-assert>
+	</xsl:transform>`)
+	if err := verifyPeppolSemanticPreservation(source, compiled); err != nil {
+		t.Fatal(err)
+	}
+
+	withoutSeverity := bytes.Replace(compiled, []byte(` flag="fatal"`), nil, 1)
+	if err := verifyPeppolSemanticPreservation(source, withoutSeverity); err == nil || !strings.Contains(err.Error(), "rules differ") {
+		t.Fatalf("severity-loss error = %v, want rules differ", err)
+	}
+	withoutDiagnostic := bytes.Replace(compiled, []byte(`<svrl:diagnostic-reference diagnostic="D-1">detail</svrl:diagnostic-reference>`), nil, 1)
+	if err := verifyPeppolSemanticPreservation(source, withoutDiagnostic); err == nil || !strings.Contains(err.Error(), "diagnostic references differ") {
+		t.Fatalf("diagnostic-loss error = %v, want diagnostic references differ", err)
+	}
+	withoutNamespace := bytes.Replace(compiled, []byte(` xmlns:cbc="urn:example:cbc"`), nil, 1)
+	if err := verifyPeppolSemanticPreservation(source, withoutNamespace); err == nil || !strings.Contains(err.Error(), "namespace") {
+		t.Fatalf("namespace-loss error = %v, want namespace mismatch", err)
 	}
 }
 

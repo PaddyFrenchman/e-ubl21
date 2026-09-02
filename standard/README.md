@@ -21,7 +21,8 @@ authoritative repository location:
 - EN 16931 runtime stylesheet: [`validation-assets/en16931/`](../validation-assets/en16931/);
 - Peppol validation source bundle:
   [`validation-assets/peppol/`](../validation-assets/peppol/), verified here by
-  reference rather than duplicated under `standard/`.
+  reference rather than duplicated under `standard/`; this bundle also contains
+  the reproducibly compiled, checksum-pinned Peppol runtime XSLT.
 
 OpenPeppol documentation and other material whose redistribution permission is
 not established are downloaded only into the ignored

@@ -63,7 +63,7 @@ func EN16931() Profile {
 // Embed versioned stylesheets without selecting a version here. The profile
 // above is the only version selector and verification rejects any mismatch.
 //
-//go:embed en16931/*/*.xslt peppol saxon/saxon-config.xml
+//go:embed en16931/*/*.xslt peppol saxon/saxon-config.xml schematron
 var files embed.FS
 
 // OpenEN16931XSLT opens the exact stylesheet represented by EN16931. The
@@ -111,14 +111,32 @@ func StageEN16931(root string) (string, error) {
 	return destination, nil
 }
 
+// StagePeppol writes the checksum-verified compiled Peppol XSLT beneath root.
+func StagePeppol(root string) (string, error) {
+	if root == "" {
+		return "", fmt.Errorf("stage %s profile: destination root is empty", peppol.Name)
+	}
+	if err := VerifyPeppol(); err != nil {
+		return "", err
+	}
+	content, err := files.ReadFile(peppol.EmbeddedXSLTPath)
+	if err != nil {
+		return "", fmt.Errorf("read staged %s stylesheet: %w", peppol.Name, err)
+	}
+	destination := filepath.Join(root, filepath.FromSlash(peppol.EmbeddedXSLTPath))
+	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
+		return "", fmt.Errorf("create %s asset directory: %w", peppol.Name, err)
+	}
+	if err := os.WriteFile(destination, content, 0o644); err != nil {
+		return "", fmt.Errorf("stage %s stylesheet: %w", peppol.Name, err)
+	}
+	return destination, nil
+}
+
 // StageRuntimeAssets stages every source-controlled file needed by the
 // semantic runtime. Downloaded JARs are handled separately and are also
 // checksum-verified before entering the image.
 func StageRuntimeAssets(root string) ([]string, error) {
-	xslt, err := StageEN16931(root)
-	if err != nil {
-		return nil, err
-	}
 	configPath := "saxon/saxon-config.xml"
 	content, err := files.ReadFile(configPath)
 	if err != nil {
@@ -128,6 +146,14 @@ func StageRuntimeAssets(root string) ([]string, error) {
 	if actualConfigSHA256 != saxon.ConfigurationSHA256 {
 		return nil, fmt.Errorf("verify Saxon configuration: SHA-256 mismatch: expected %s, got %s", saxon.ConfigurationSHA256, actualConfigSHA256)
 	}
+	xslt, err := StageEN16931(root)
+	if err != nil {
+		return nil, err
+	}
+	peppolXSLT, err := StagePeppol(root)
+	if err != nil {
+		return nil, err
+	}
 	destination := filepath.Join(root, filepath.FromSlash(configPath))
 	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
 		return nil, fmt.Errorf("create Saxon configuration directory: %w", err)
@@ -135,5 +161,5 @@ func StageRuntimeAssets(root string) ([]string, error) {
 	if err := os.WriteFile(destination, content, 0o644); err != nil {
 		return nil, fmt.Errorf("stage Saxon configuration: %w", err)
 	}
-	return []string{xslt, destination}, nil
+	return []string{xslt, peppolXSLT, destination}, nil
 }

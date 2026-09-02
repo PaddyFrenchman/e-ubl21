@@ -15,11 +15,12 @@ const (
 	peppolSchematronRelativePath = "rules/PEPPOL-EN16931-UBL.sch"
 	peppolProvenanceRelativePath = "provenance.json"
 	peppolManifestRelativePath   = "sha256.txt"
+	peppolRuntimeDirectory       = "runtime"
 )
 
-// PeppolProfile identifies the complete immutable source bundle used to build
-// the Peppol BIS Billing validation artefact. Compilation is deliberately a
-// separate lifecycle step; this profile freezes its inputs.
+// PeppolProfile identifies the complete immutable source bundle and accepted
+// executable XSLT for Peppol BIS Billing. Compilation remains a separate,
+// reproducible lifecycle step whose inputs and output are frozen here.
 type PeppolProfile struct {
 	Name                               string
 	Version                            string
@@ -36,6 +37,10 @@ type PeppolProfile struct {
 	ManifestSHA256                     string
 	EmbeddedRoot                       string
 	SchematronPath                     string
+	EmbeddedXSLTPath                   string
+	RuntimeXSLTPath                    string
+	XSLTSHA256                         string
+	CompilerMetadataPath               string
 }
 
 var peppol = newPeppolProfile(
@@ -62,10 +67,14 @@ func newPeppolProfile(version, manifestSHA256 string) PeppolProfile {
 		ManifestSHA256:                     manifestSHA256,
 		EmbeddedRoot:                       embeddedRoot,
 		SchematronPath:                     path.Join(embeddedRoot, peppolSchematronRelativePath),
+		EmbeddedXSLTPath:                   path.Join(embeddedRoot, peppolRuntimeDirectory, "PEPPOL-EN16931-UBL-validation.xslt"),
+		RuntimeXSLTPath:                    path.Join("/opt/e-ubl21/validation-assets", embeddedRoot, peppolRuntimeDirectory, "PEPPOL-EN16931-UBL-validation.xslt"),
+		XSLTSHA256:                         "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa",
+		CompilerMetadataPath:               path.Join(embeddedRoot, peppolRuntimeDirectory, "compiler.json"),
 	}
 }
 
-// Peppol returns a copy of the immutable Peppol source-bundle metadata.
+// Peppol returns a copy of the immutable Peppol asset metadata.
 func Peppol() PeppolProfile {
 	return peppol
 }
@@ -76,9 +85,19 @@ func OpenPeppolSchematron() (fs.File, error) {
 	return files.Open(peppol.SchematronPath)
 }
 
-// VerifyPeppol verifies the pinned manifest, every selected source asset, the
-// exact bundle inventory, and the release/provenance metadata without network
-// access.
+// OpenPeppolXSLT opens the accepted deterministic runtime artefact.
+func OpenPeppolXSLT() (fs.File, error) {
+	return files.Open(peppol.EmbeddedXSLTPath)
+}
+
+// VerifyPeppolSources verifies the immutable official source bundle without
+// considering the separately generated runtime artefact.
+func VerifyPeppolSources() error {
+	return verifyPeppolSourcesFS(files, peppol)
+}
+
+// VerifyPeppol verifies both the official source bundle and the deterministic
+// executable XSLT derived from it.
 func VerifyPeppol() error {
 	return verifyPeppolFS(files, peppol)
 }
@@ -102,6 +121,13 @@ type peppolProvenance struct {
 }
 
 func verifyPeppolFS(fsys fs.FS, profile PeppolProfile) error {
+	if err := verifyPeppolSourcesFS(fsys, profile); err != nil {
+		return err
+	}
+	return verifyPeppolCompilationFS(fsys, profile)
+}
+
+func verifyPeppolSourcesFS(fsys fs.FS, profile PeppolProfile) error {
 	manifestPath := path.Join(profile.EmbeddedRoot, peppolManifestRelativePath)
 	manifest, err := fs.ReadFile(fsys, manifestPath)
 	if err != nil {
@@ -186,7 +212,7 @@ func verifyPeppolEmbeddedInventory(fsys fs.FS, profile PeppolProfile, entries ma
 			return nil
 		}
 		relativePath := strings.TrimPrefix(filePath, profile.EmbeddedRoot+"/")
-		if relativePath == peppolManifestRelativePath {
+		if relativePath == peppolManifestRelativePath || strings.HasPrefix(relativePath, peppolRuntimeDirectory+"/") {
 			return nil
 		}
 		seen++

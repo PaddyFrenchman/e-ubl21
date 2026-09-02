@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "compiler": "SchXslt",
+  "compiler_version": "1.10.1",
+  "compiler_release_url": "https://codeberg.org/SchXslt/schxslt/releases/tag/v1.10.1",
+  "compiler_archive_url": "https://codeberg.org/SchXslt/schxslt/releases/download/v1.10.1/schxslt-1.10.1-xslt-only.zip",
+  "compiler_archive_sha256": "e141fabd4804a0ea527945dc7253dd38f9ef8957d9b219b94e13d16859cff7f0",
+  "compiler_distribution_manifest_sha256": "27d6c0549c211e8847e278fe5d53153f0d9ba0494fe5d8e83c19bd1caada1fc7",
+  "compiler_entrypoint": "schxslt-1.10.1/2.0/pipeline-for-svrl.xsl",
+  "compile_parameters": {
+    "schxslt.compile.metadata": "false()"
+  },
+  "processor": "Saxon-HE",
+  "processor_version": "12.7",
+  "processor_sha256": "c607e8b395d4ee237495ad163183971ca3453d491534c847ebb55e0462772086",
+  "processor_resolver_version": "6.0.17",
+  "processor_resolver_sha256": "b52e89a81fe86161bf2422997c041856791b3a78dd13824d958170b443b88c56",
+  "processor_configuration_sha256": "ac0c9071bb5b4040029ac009a54183bebec1399dcdbbdbaa27591fbe9d2bbe4a",
+  "source_schematron": "rules/PEPPOL-EN16931-UBL.sch",
+  "source_schematron_sha256": "62e5b67892f12755352d78b06f63229a02cc2eccc748677c56efbc8dbcb336e3",
+  "compiled_xslt": "runtime/PEPPOL-EN16931-UBL-validation.xslt",
+  "compiled_xslt_sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+}

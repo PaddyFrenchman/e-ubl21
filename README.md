@@ -597,6 +597,13 @@ make test-en16931-image
 
 The image gate builds the production container and verifies the checksum-controlled Saxon smoke transform with networking disabled.
 
+Reproduce the accepted Peppol Schematron runtime XSLT, verify its pinned
+SchXslt/Saxon inputs, and run the offline SVRL smoke transform with:
+
+```bash
+make test-peppol-schematron
+```
+
 Run the EN worker capacity matrix with:
 
 ```bash

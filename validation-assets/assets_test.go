@@ -140,14 +140,43 @@ func TestStageEN16931RejectsEmptyRoot(t *testing.T) {
 	}
 }
 
+func TestStagePeppolUsesSelectedProfilePath(t *testing.T) {
+	root := t.TempDir()
+	got, err := StagePeppol(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(root, filepath.FromSlash(Peppol().EmbeddedXSLTPath))
+	if got != want {
+		t.Fatalf("StagePeppol() path = %q, want %q", got, want)
+	}
+	staged, err := os.ReadFile(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	embedded, err := files.ReadFile(Peppol().EmbeddedXSLTPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(staged, embedded) {
+		t.Fatal("staged Peppol stylesheet differs from verified embedded stylesheet")
+	}
+}
+
+func TestStagePeppolRejectsEmptyRoot(t *testing.T) {
+	if _, err := StagePeppol(""); err == nil {
+		t.Fatal("StagePeppol() accepted an empty destination root")
+	}
+}
+
 func TestStageRuntimeAssetsIncludesRestrictedSaxonConfiguration(t *testing.T) {
 	root := t.TempDir()
 	staged, err := StageRuntimeAssets(root)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(staged) != 2 {
-		t.Fatalf("StageRuntimeAssets() staged %d files, want 2", len(staged))
+	if len(staged) != 3 {
+		t.Fatalf("StageRuntimeAssets() staged %d files, want 3", len(staged))
 	}
 	configuration, err := os.ReadFile(filepath.Join(root, "saxon", "saxon-config.xml"))
 	if err != nil {

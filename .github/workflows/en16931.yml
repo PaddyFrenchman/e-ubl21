@@ -31,6 +31,8 @@ jobs:
           java-version: "21"
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Reproduce pinned Peppol Schematron XSLT
+        run: make test-peppol-schematron
       - name: Run mandatory corpora and end-to-end compliance gate
         run: make test-en16931-compliance
       - name: Build and verify the production image offline

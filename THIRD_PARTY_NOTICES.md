@@ -1,4 +1,4 @@
-# Third-party notices for the EN 16931 validation runtime
+# Third-party notices for standards validation runtimes
 
 The production image redistributes the following pinned validation components.
 The component licenses apply to those components; they do not replace the
@@ -33,6 +33,46 @@ redistributed unchanged.
 
 Saxon-HE is redistributed as the unmodified upstream binary downloaded from
 Maven Central and verified before packaging.
+
+## Peppol BIS Billing 3.0.21 compiled validation artefact
+
+- Component: `PEPPOL-EN16931-UBL-validation.xslt`
+- Source: `OpenPEPPOL/peppol-bis-invoice-3`, immutable commit
+  `806866bd2bd91d7e9623b68f08164e8fbe9e67a0`
+- Source Schematron SHA-256:
+  `62e5b67892f12755352d78b06f63229a02cc2eccc748677c56efbc8dbcb336e3`
+- Packaged XSLT SHA-256:
+  `56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa`
+- Compiler: SchXslt 1.10.1, MIT License
+- Compiler release: <https://codeberg.org/SchXslt/schxslt/releases/tag/v1.10.1>
+- Compiler license: <https://codeberg.org/SchXslt/schxslt/src/tag/v1.10.1/LICENSE>
+
+The XSLT is generated deterministically from the pinned OpenPeppol Schematron.
+The OpenPeppol/CEN notices in that source continue to apply. SchXslt is used
+only during build/release verification, but portions of its MIT-licensed
+templates are represented in the generated XSLT.
+
+SchXslt MIT license:
+
+> Copyright (c) 2018-2021 David Maus
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
 
 ## XML Resolver 6.0.17
 

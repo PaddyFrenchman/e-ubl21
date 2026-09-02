@@ -13,6 +13,7 @@ import (
 func main() {
 	stageDir := flag.String("stage-dir", "", "optional directory beneath which to stage verified runtime assets")
 	saxonDir := flag.String("saxon-dir", "", "optional directory containing downloaded Saxon and xmlresolver JARs to verify")
+	schxsltDir := flag.String("schxslt-dir", "", "optional directory containing the extracted SchXslt distribution to verify")
 	flag.Parse()
 
 	profile := validationassets.EN16931()
@@ -42,12 +43,14 @@ func main() {
 		profile.RuntimeXSLTPath,
 	)
 	peppol := validationassets.Peppol()
-	fmt.Printf("verified profile=%s version=%s artefacts=%s manifest_sha256=%s schematron=%s\n",
+	fmt.Printf("verified profile=%s version=%s artefacts=%s manifest_sha256=%s schematron=%s xslt_sha256=%s xslt=%s\n",
 		peppol.Name,
 		peppol.Version,
 		peppol.ValidationArtefactsVersion,
 		peppol.ManifestSHA256,
 		peppol.SchematronPath,
+		peppol.XSLTSHA256,
+		peppol.RuntimeXSLTPath,
 	)
 	for _, path := range staged {
 		fmt.Printf("staged=%s\n", path)
@@ -59,5 +62,14 @@ func main() {
 		}
 		saxon := validationassets.Saxon()
 		fmt.Printf("verified saxon=%s xmlresolver=%s directory=%s\n", saxon.SaxonVersion, saxon.XMLResolverVersion, *saxonDir)
+	}
+	if *schxsltDir != "" {
+		if err := validationassets.VerifySchXslt(*schxsltDir); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		compiler := validationassets.SchXslt()
+		fmt.Printf("verified schematron_compiler=%s version=%s archive_sha256=%s directory=%s\n",
+			compiler.Name, compiler.Version, compiler.ArchiveSHA256, *schxsltDir)
 	}
 }

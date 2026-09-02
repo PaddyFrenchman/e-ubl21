@@ -9,6 +9,7 @@ devsetup/
 !devsetup/
 devsetup/*
 !devsetup/download_saxon_he.sh
+!devsetup/download_schxslt.sh
 docs/
 ideas/
 createsamples/samples/

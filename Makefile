@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -13,6 +13,11 @@ test-en16931-compliance: test-en16931
 # transform succeeds with networking disabled. Override IMAGE if required.
 test-en16931-image:
 	./devsetup/test-en16931-image.sh "$(or $(IMAGE),e-ubl21:en16931-check)"
+
+# Recompile the pinned Peppol Schematron twice, compare it with the accepted
+# executable XSLT, and run the offline SVRL smoke transform.
+test-peppol-schematron:
+	./devsetup/test-peppol-schematron.sh
 
 # Run the deterministic JetStream chaos/crash/replay integration gate. The
 # scenario-to-test mapping is documented in docs/CHAOS-CRASH-REPLAY.md.

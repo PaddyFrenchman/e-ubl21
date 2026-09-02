@@ -7,9 +7,9 @@ FROM docker.io/library/golang:1.25-alpine AS build
 
 WORKDIR /src
 
-# curl is build-only: it retrieves checksum-pinned Saxon dependencies. The
-# final image contains no downloader and performs no runtime dependency fetch.
-RUN apk add --no-cache bash curl
+# Java, curl, and unzip are build-only: they retrieve and execute the pinned
+# Schematron toolchain. The final image contains neither compiler nor downloader.
+RUN apk add --no-cache bash curl unzip openjdk21-jre-headless
 
 # Cache module downloads separately from source changes.
 COPY go.mod go.sum ./
@@ -21,9 +21,15 @@ COPY . .
 # release metadata. This verification is entirely offline and runs before the
 # application binary or runtime image is produced.
 RUN ./devsetup/download_saxon_he.sh /out/saxon
+RUN ./devsetup/download_schxslt.sh /out/schxslt
+RUN go run ./tools/compile-peppol-schematron \
+        -saxon-dir /out/saxon \
+        -schxslt-dir /out/schxslt \
+        -check validation-assets/peppol/3.0.21/runtime/PEPPOL-EN16931-UBL-validation.xslt
 RUN go run ./tools/verify-validation-assets \
         -stage-dir /out/validation-assets \
-        -saxon-dir /out/saxon
+        -saxon-dir /out/saxon \
+        -schxslt-dir /out/schxslt
 
 # CGO is disabled: none of e-ubl21's dependencies require it, and a static
 # binary lets the runtime stage be a plain Alpine image plus xmllint, with
