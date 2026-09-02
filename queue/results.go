@@ -14,25 +14,40 @@ import (
 // ValidationStatus describes the lifecycle state of an uploaded document.
 type ValidationStatus string
 
-// ValidationProfile identifies the standards pipeline selected when an
-// upload is accepted. It is persisted with the upload so asynchronous workers
-// cannot accidentally apply a different profile later.
+// ValidationProfile identifies the standards pipeline selected for one
+// validation execution. It is persisted so asynchronous workers cannot
+// accidentally apply a different profile later.
 type ValidationProfile string
 
 const (
 	ValidationProfileUBL21        ValidationProfile = "ubl21"
 	ValidationProfileUBL21EN16931 ValidationProfile = "ubl21-en16931"
+	// ValidationProfilePeppolBISBilling is available to frozen execution and
+	// result contracts before the public HTTP selector is enabled by issue #75.
+	ValidationProfilePeppolBISBilling ValidationProfile = "peppol-bis-billing"
 )
 
-// ValidValidationProfile reports whether profile is a supported public API
-// selection.
+// ValidValidationProfile reports whether profile is supported by durable
+// execution and result contracts.
 func ValidValidationProfile(profile ValidationProfile) bool {
+	return profile == ValidationProfileUBL21 ||
+		profile == ValidationProfileUBL21EN16931 ||
+		profile == ValidationProfilePeppolBISBilling
+}
+
+// ValidPublicValidationProfile reports whether the current HTTP API may accept
+// profile. Peppol remains internal until its API contract is implemented.
+func ValidPublicValidationProfile(profile ValidationProfile) bool {
 	return profile == ValidationProfileUBL21 || profile == ValidationProfileUBL21EN16931
 }
 
 // ValidationLayer is a stable identifier for one independently reportable
 // standards-validation stage.
 type ValidationLayer string
+
+// PeppolProcessProfile is the stable code for the Billing process profile
+// resolved from the document's normalized ProfileID.
+type PeppolProcessProfile string
 
 // ValidationIssueKind identifies the standards mechanism that emitted an
 // issue. Kind is independent of severity: in particular, an SVRL
@@ -47,6 +62,9 @@ const (
 	// queue topology for the future Peppol worker. It does not enable the
 	// public Peppol validation profile or runtime validator.
 	ValidationLayerPeppolBISBilling ValidationLayer = "peppol-bis-billing"
+
+	PeppolProcessProfile01 PeppolProcessProfile = "01"
+	PeppolProcessProfile02 PeppolProcessProfile = "02"
 
 	ValidationIssueXSDReport        ValidationIssueKind = "xsd-report"
 	ValidationIssueFailedAssert     ValidationIssueKind = "failed-assert"
@@ -84,17 +102,24 @@ func (issue *ValidationIssue) UnmarshalJSON(data []byte) error {
 }
 
 // ValidationStageResult records the outcome of one validation layer. Version
-// identifies the exact schema or semantic profile that produced the result.
+// identifies the exact schema or machine validation artefact that produced the
+// result. Peppol fields retain its independent BIS and process identity.
 type ValidationStageResult struct {
-	Layer       ValidationLayer        `json:"layer"`
-	Version     string                 `json:"version,omitempty"`
-	Valid       bool                   `json:"valid"`
-	Outcome     StageOutcome           `json:"outcome,omitempty"`
-	Reason      StageOperationalReason `json:"reason,omitempty"`
-	Issues      []ValidationIssue      `json:"issues,omitempty"`
-	Diagnostic  string                 `json:"diagnostic,omitempty"`
-	ValidatedAt string                 `json:"validatedAt"`
-	DurationMS  int64                  `json:"durationMs,omitempty"`
+	Layer            ValidationLayer        `json:"layer"`
+	Version          string                 `json:"version,omitempty"`
+	BISVersion       string                 `json:"bisVersion,omitempty"`
+	BISReleaseDate   string                 `json:"bisReleaseDate,omitempty"`
+	BISMandatoryFrom string                 `json:"bisMandatoryFrom,omitempty"`
+	CustomizationID  string                 `json:"customizationId,omitempty"`
+	ProfileID        string                 `json:"profileId,omitempty"`
+	ProcessProfile   PeppolProcessProfile   `json:"processProfile,omitempty"`
+	Valid            bool                   `json:"valid"`
+	Outcome          StageOutcome           `json:"outcome,omitempty"`
+	Reason           StageOperationalReason `json:"reason,omitempty"`
+	Issues           []ValidationIssue      `json:"issues,omitempty"`
+	Diagnostic       string                 `json:"diagnostic,omitempty"`
+	ValidatedAt      string                 `json:"validatedAt"`
+	DurationMS       int64                  `json:"durationMs,omitempty"`
 }
 
 // ValidationStages is the ordered set of completed validation layers.

@@ -318,7 +318,7 @@ func requestedValidationProfile(r *http.Request, documentType string) (queue.Val
 		return queue.ValidationProfileUBL21, nil
 	}
 	profile := queue.ValidationProfile(raw)
-	if !queue.ValidValidationProfile(profile) {
+	if !queue.ValidPublicValidationProfile(profile) {
 		return "", fmt.Errorf("unsupported validation profile %q", raw)
 	}
 	if profile == queue.ValidationProfileUBL21EN16931 && !requiresEN16931(documentType) {

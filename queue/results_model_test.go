@@ -11,21 +11,32 @@ import (
 
 func TestLayeredValidationModelRoundTripsAllSemanticFields(t *testing.T) {
 	stages := queue.ValidationStages{
-		{Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: true, ValidatedAt: "2026-08-25T12:00:00Z", DurationMS: 7},
 		{
-			Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: false,
-			ValidatedAt: "2026-08-25T12:00:01Z", DurationMS: 31,
+			Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: true,
+			Outcome: queue.StageOutcomePassed, ValidatedAt: "2026-08-25T12:00:00Z", DurationMS: 7,
+		},
+		{
+			Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: true,
+			Outcome: queue.StageOutcomePassed, ValidatedAt: "2026-08-25T12:00:01Z", DurationMS: 31,
+		},
+		{
+			Layer: queue.ValidationLayerPeppolBISBilling, Version: "1.3.16",
+			BISVersion: "3.0.21", BISReleaseDate: "2026-05-20", BISMandatoryFrom: "2026-08-17",
+			CustomizationID: peppolCustomizationID, ProfileID: peppolProfile01ID,
+			ProcessProfile: queue.PeppolProcessProfile01,
+			Valid:          false, Outcome: queue.StageOutcomeStandardsInvalid,
+			ValidatedAt: "2026-08-25T12:00:02Z", DurationMS: 43,
 			Issues: []queue.ValidationIssue{{
 				Kind:  queue.ValidationIssueFailedAssert,
-				Layer: queue.ValidationLayerEN16931, Rule: "BR-CO-10", Severity: "error",
-				Location: "/ubl:Invoice/cac:LegalMonetaryTotal", Test: "sum(cac:InvoiceLine) = cbc:LineExtensionAmount",
-				Message: "Invoice line net amounts do not reconcile.", Diagnostic: "BT-106 mismatch.",
+				Layer: queue.ValidationLayerPeppolBISBilling, Rule: "PEPPOL-EN16931-R001", Severity: "fatal",
+				Location: "/ubl:Invoice", Test: "cbc:ProfileID",
+				Message: "Business process MUST be provided.", Diagnostic: "Profile 01 mismatch.",
 			}},
 		},
 	}
 	record := queue.UploadRecord{
 		ID: "0123456789abcdef0123456789abcdef", DocumentType: "Invoice", Status: queue.StatusInvalid,
-		ReceivedAt: "2026-08-25T11:59:59Z", ValidatedAt: "2026-08-25T12:00:01Z", ValidationStages: stages,
+		ReceivedAt: "2026-08-25T11:59:59Z", ValidatedAt: "2026-08-25T12:00:02Z", ValidationStages: stages,
 	}
 	encoded, err := json.Marshal(record)
 	if err != nil {
@@ -46,8 +57,29 @@ func TestLayeredValidationModelRoundTripsAllSemanticFields(t *testing.T) {
 		t.Fatalf("XSD stage = %#v, present %t", xsd, ok)
 	}
 	en16931, ok := decoded.ValidationStages.Find(queue.ValidationLayerEN16931)
-	if !ok || en16931.Valid || en16931.Version != "1.3.16" || en16931.Issues[0].Rule != "BR-CO-10" {
+	if !ok || !en16931.Valid || en16931.Version != "1.3.16" {
 		t.Fatalf("EN 16931 stage = %#v, present %t", en16931, ok)
+	}
+	peppol, ok := decoded.ValidationStages.Find(queue.ValidationLayerPeppolBISBilling)
+	if !ok || peppol.Valid || peppol.BISVersion != "3.0.21" ||
+		peppol.ProfileID != peppolProfile01ID || peppol.ProcessProfile != queue.PeppolProcessProfile01 ||
+		len(peppol.Issues) != 1 || peppol.Issues[0].Rule != "PEPPOL-EN16931-R001" {
+		t.Fatalf("Peppol stage = %#v, present %t", peppol, ok)
+	}
+}
+
+const (
+	peppolCustomizationID = "urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0"
+	peppolProfile01ID     = "urn:fdc:peppol.eu:2017:poacc:billing:01:1.0"
+	peppolProfile02ID     = "urn:peppol:bis:billing_with_response"
+)
+
+func TestPeppolProfileIsDurableButNotYetPublic(t *testing.T) {
+	if !queue.ValidValidationProfile(queue.ValidationProfilePeppolBISBilling) {
+		t.Fatal("durable validation contracts reject the Peppol profile")
+	}
+	if queue.ValidPublicValidationProfile(queue.ValidationProfilePeppolBISBilling) {
+		t.Fatal("public validation API enabled Peppol before issue #75")
 	}
 }
 

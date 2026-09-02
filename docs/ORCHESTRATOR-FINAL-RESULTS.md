@@ -40,6 +40,26 @@ states have no final-result outbox and `EnsureFinalResult` rejects them. The
 canonical payload carries the frozen plan entries, allowing its own validation
 to reject a partial `valid` result even outside the orchestrator.
 
+## Peppol layer identity
+
+The canonical layered result model reserves `peppol-bis-billing` independently
+from UBL XSD and EN 16931. Its `version` identifies the executable machine
+validation artefact, while `bisVersion`, `bisReleaseDate`, and
+`bisMandatoryFrom` identify the Peppol publication. `customizationId` and
+`profileId` retain the normalized document identifiers actually inspected, and
+`processProfile` records stable process code `01` or `02` when resolution
+succeeds.
+
+A passing Peppol stage requires all resolved identifiers. A standards-invalid
+stage may omit identifiers that were missing from the document but still
+retains its BIS identity and structured Peppol issues. Peppol identity fields
+are rejected on unrelated layers. Fatal/error assertions remain standards
+failures; warning/warn assertions and successful reports remain visible
+advisory evidence without changing a passing verdict.
+
+This durable model support does not enable Peppol as a public upload selector.
+The HTTP request/resolution contract remains owned by issue #75.
+
 ## Crash recovery and concurrency
 
 `ReconcilePendingFinalResults` scans terminal executions whose outbox is absent

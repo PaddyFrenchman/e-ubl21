@@ -507,7 +507,7 @@ components:
           example: failed-assert
         layer:
           type: string
-          enum: [ubl21-xsd, en16931]
+          enum: [ubl21-xsd, en16931, peppol-bis-billing]
           example: en16931
         rule:
           type: string
@@ -532,21 +532,67 @@ components:
     ValidationStageResult:
       description: >-
         Outcome of one completed validation layer. Version identifies the UBL
-        schema or semantic profile release used for that result.
+        schema or machine validation artefact used for that result. Peppol
+        layers additionally carry the BIS release and resolved process identity.
       type: object
       properties:
         layer:
           type: string
-          enum: [ubl21-xsd, en16931]
+          enum: [ubl21-xsd, en16931, peppol-bis-billing]
         version:
           type: string
           example: 1.3.16
+        bisVersion:
+          type: string
+          description: Peppol BIS Billing release; present only on the Peppol layer.
+          example: 3.0.21
+        bisReleaseDate:
+          type: string
+          format: date
+          description: Publication date of the Peppol BIS release.
+          example: '2026-05-20'
+        bisMandatoryFrom:
+          type: string
+          format: date
+          description: Mandatory-from date of the Peppol BIS release.
+          example: '2026-08-17'
+        customizationId:
+          type: string
+          maxLength: 1024
+          description: Normalized Peppol CustomizationID actually inspected.
+          example: urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0
+        profileId:
+          type: string
+          maxLength: 1024
+          description: Normalized Peppol ProfileID actually inspected.
+          example: urn:fdc:peppol.eu:2017:poacc:billing:01:1.0
+        processProfile:
+          type: string
+          description: Stable Peppol Billing process code when ProfileID resolved.
+          enum: ['01', '02']
         valid:
           type: boolean
+        outcome:
+          type: string
+          enum: [passed, standards-invalid, operational-failure]
+        reason:
+          type: string
+          enum:
+            - timeout
+            - cancelled
+            - content-unavailable
+            - runtime-unavailable
+            - runtime-failure
+            - malformed-output
+            - resource-limit
+            - internal-error
         issues:
           type: array
           items:
             $ref: '#/components/schemas/ValidationIssue'
+        diagnostic:
+          type: string
+          description: Bounded operational or standards detail; never raw SVRL.
         validatedAt:
           type: string
           format: date-time

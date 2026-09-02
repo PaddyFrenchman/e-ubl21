@@ -488,15 +488,16 @@ func ValidateStageIssues(stage ValidationLayer, issues []ValidationIssue) error 
 
 // StageIssuesContainStandardsFailure reports whether normalized evidence
 // invalidates a validation stage. XSD reports are failures. EN 16931 failed
-// assertions at warning/warn severity are retained advisory evidence; all
-// other failed-assert severities fail closed as standards failures.
+// assertions from semantic layers at warning/warn severity are retained
+// advisory evidence; all other failed-assert severities fail closed as
+// standards failures.
 func StageIssuesContainStandardsFailure(issues []ValidationIssue) bool {
 	for _, issue := range issues {
 		if issue.Kind == ValidationIssueXSDReport {
 			return true
 		}
 		if issue.Kind == ValidationIssueFailedAssert {
-			if issue.Layer == ValidationLayerEN16931 {
+			if issue.Layer == ValidationLayerEN16931 || issue.Layer == ValidationLayerPeppolBISBilling {
 				switch strings.ToLower(strings.TrimSpace(issue.Severity)) {
 				case "warning", "warn":
 					continue
