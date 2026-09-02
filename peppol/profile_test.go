@@ -63,7 +63,7 @@ func TestResolveAutoFallsBackWithoutPositiveCaseSensitiveMatch(t *testing.T) {
 				t.Fatal(err)
 			}
 			if resolution.ResolvedProfile != queue.ValidationProfileUBL21EN16931 ||
-				resolution.PeppolIdentifiersValid() || len(resolution.Issues) != 0 {
+				resolution.PeppolIdentifiersValid() || len(resolution.Failures) != 0 {
 				t.Fatalf("auto fallback resolution = %+v", resolution)
 			}
 		})
@@ -74,22 +74,28 @@ func TestResolveExplicitPeppolNeverFallsBack(t *testing.T) {
 	tests := []struct {
 		name      string
 		document  []byte
-		wantRules []string
+		wantCodes []peppol.ProfileFailureCode
 	}{
 		{
-			name:      "missing identifiers",
-			document:  billingDocument("Invoice", "", ""),
-			wantRules: []string{"PEPPOL-EN16931-R004", "PEPPOL-EN16931-R001"},
+			name:     "missing identifiers",
+			document: billingDocument("Invoice", "", ""),
+			wantCodes: []peppol.ProfileFailureCode{
+				peppol.FailureCustomizationIDMissing,
+				peppol.FailureProfileIDMissing,
+			},
 		},
 		{
-			name:      "unsupported identifiers",
-			document:  billingDocument("Invoice", "urn:unsupported", "urn:peppol:unsupported"),
-			wantRules: []string{"PEPPOL-EN16931-R004", "PEPPOL-EN16931-R007"},
+			name:     "unsupported identifiers",
+			document: billingDocument("Invoice", "urn:unsupported", "urn:peppol:unsupported"),
+			wantCodes: []peppol.ProfileFailureCode{
+				peppol.FailureCustomizationIDUnsupported,
+				peppol.FailureProfileIDUnsupported,
+			},
 		},
 		{
 			name:      "invalid customization format",
 			document:  billingDocument("Invoice", peppol.CustomizationIDBase+"::invalid", peppol.ProfileID01),
-			wantRules: []string{"PEPPOL-EN16931-R004"},
+			wantCodes: []peppol.ProfileFailureCode{peppol.FailureCustomizationIDUnsupported},
 		},
 		{
 			name: "structured customization identifier",
@@ -98,7 +104,7 @@ func TestResolveExplicitPeppolNeverFallsBack(t *testing.T) {
 			  <cbc:CustomizationID><cbc:ID>` + peppol.CustomizationIDBase + `</cbc:ID></cbc:CustomizationID>
 			  <cbc:ProfileID>` + peppol.ProfileID01 + `</cbc:ProfileID>
 			</Invoice>`),
-			wantRules: []string{"PEPPOL-EN16931-R004"},
+			wantCodes: []peppol.ProfileFailureCode{peppol.FailureCustomizationIDInvalid},
 		},
 	}
 	for _, test := range tests {
@@ -111,11 +117,41 @@ func TestResolveExplicitPeppolNeverFallsBack(t *testing.T) {
 				resolution.PeppolIdentifiersValid() {
 				t.Fatalf("explicit Peppol resolution downgraded or passed: %+v", resolution)
 			}
-			if got := issueRules(resolution.Issues); strings.Join(got, ",") != strings.Join(test.wantRules, ",") {
-				t.Fatalf("rules = %v, want %v", got, test.wantRules)
+			got := failureCodes(resolution.Failures)
+			if strings.Join(got, ",") != joinFailureCodes(test.wantCodes) {
+				t.Fatalf("failure codes = %v, want %v", got, test.wantCodes)
 			}
-			if err := queue.ValidateStageIssues(queue.ValidationLayerPeppolBISBilling, resolution.Issues); err != nil {
-				t.Fatalf("identifier issues violate stage contract: %v", err)
+			for _, code := range got {
+				if strings.HasPrefix(code, "PEPPOL-") {
+					t.Fatalf("resolver manufactured official rule ID %q", code)
+				}
+			}
+		})
+	}
+}
+
+func TestResolverProductRestrictionsNeverClaimOfficialRuleEvidence(t *testing.T) {
+	tests := []struct {
+		name      string
+		profileID string
+		wantCode  peppol.ProfileFailureCode
+	}{
+		{"French regulated Profile 01", "urn:peppol:france:billing:regulated", peppol.FailureProfileIDUnsupported},
+		{"French non-regulated Profile 01", "urn:peppol:france:billing:non-regulated", peppol.FailureProfileIDUnsupported},
+		{"missing ProfileID", "", peppol.FailureProfileIDMissing},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			resolution, err := peppol.Resolve("Invoice", queue.ValidationProfilePeppolBISBilling,
+				billingDocument("Invoice", peppol.CustomizationIDBase, test.profileID))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(resolution.Failures) != 1 || resolution.Failures[0].Code != test.wantCode {
+				t.Fatalf("product applicability failures = %+v, want %q", resolution.Failures, test.wantCode)
+			}
+			if strings.HasPrefix(string(resolution.Failures[0].Code), "PEPPOL-") {
+				t.Fatalf("resolver manufactured official rule ID %q", resolution.Failures[0].Code)
 			}
 		})
 	}
@@ -128,7 +164,7 @@ func TestResolveAutoSelectsPeppolThenRetainsIdentifierFailure(t *testing.T) {
 		t.Fatal(err)
 	}
 	if resolution.ResolvedProfile != queue.ValidationProfilePeppolBISBilling ||
-		strings.Join(issueRules(resolution.Issues), ",") != "PEPPOL-EN16931-R004" {
+		strings.Join(failureCodes(resolution.Failures), ",") != string(peppol.FailureCustomizationIDUnsupported) {
 		t.Fatalf("auto resolution did not preserve fail-closed Peppol check: %+v", resolution)
 	}
 }
@@ -144,7 +180,7 @@ func TestResolveExplicitUBLAndENProfilesIgnorePeppolIdentifiers(t *testing.T) {
 			t.Fatal(err)
 		}
 		if resolution.ResolvedProfile != requested || resolution.Identifiers != (peppol.Identifiers{}) ||
-			len(resolution.Issues) != 0 {
+			len(resolution.Failures) != 0 {
 			t.Fatalf("explicit profile %q acquired Peppol applicability: %+v", requested, resolution)
 		}
 	}
@@ -225,7 +261,8 @@ func TestResolveBoundsIdentifiersAndDocuments(t *testing.T) {
 		t.Fatal(err)
 	}
 	if resolution.Identifiers.CustomizationID != "" || resolution.Identifiers.ProfileID != "" ||
-		strings.Join(issueRules(resolution.Issues), ",") != "PEPPOL-EN16931-R004,PEPPOL-EN16931-R007" {
+		strings.Join(failureCodes(resolution.Failures), ",") !=
+			string(peppol.FailureCustomizationIDInvalid)+","+string(peppol.FailureProfileIDInvalid) {
 		t.Fatalf("oversized identifiers were retained or accepted: %+v", resolution)
 	}
 
@@ -314,10 +351,18 @@ func fmtWrite(builder *strings.Builder, format string, values ...any) {
 	}
 }
 
-func issueRules(issues []queue.ValidationIssue) []string {
-	rules := make([]string, len(issues))
-	for index, issue := range issues {
-		rules[index] = issue.Rule
+func failureCodes(failures []peppol.ProfileFailure) []string {
+	codes := make([]string, len(failures))
+	for index, failure := range failures {
+		codes[index] = string(failure.Code)
 	}
-	return rules
+	return codes
+}
+
+func joinFailureCodes(codes []peppol.ProfileFailureCode) string {
+	values := make([]string, len(codes))
+	for index, code := range codes {
+		values[index] = string(code)
+	}
+	return strings.Join(values, ",")
 }

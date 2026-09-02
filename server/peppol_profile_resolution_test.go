@@ -79,9 +79,9 @@ func TestResolveFrozenValidationPlanForExplicitPeppolDoesNotDowngrade(t *testing
 		t.Fatal(err)
 	}
 	if resolution.ResolvedProfile != queue.ValidationProfilePeppolBISBilling ||
-		len(resolution.Issues) != 2 ||
-		resolution.Issues[0].Rule != "PEPPOL-EN16931-R004" ||
-		resolution.Issues[1].Rule != "PEPPOL-EN16931-R001" {
+		len(resolution.Failures) != 2 ||
+		resolution.Failures[0].Code != peppol.FailureCustomizationIDMissing ||
+		resolution.Failures[1].Code != peppol.FailureProfileIDMissing {
 		t.Fatalf("explicit Peppol resolution = %+v", resolution)
 	}
 	assertPlanLayers(t, plan, queue.ValidationProfilePeppolBISBilling, []queue.ValidationLayer{

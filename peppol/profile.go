@@ -27,6 +27,21 @@ const (
 	creditNoteNamespace = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2"
 )
 
+// ProfileFailureCode identifies an e-ubl21 product applicability failure.
+// Official PEPPOL-* rule IDs are reserved for evidence emitted by Schematron.
+type ProfileFailureCode string
+
+const (
+	FailureCustomizationIDMissing     ProfileFailureCode = "EUBL21-PEPPOL-CUSTOMIZATION-ID-MISSING"
+	FailureCustomizationIDAmbiguous   ProfileFailureCode = "EUBL21-PEPPOL-CUSTOMIZATION-ID-AMBIGUOUS"
+	FailureCustomizationIDInvalid     ProfileFailureCode = "EUBL21-PEPPOL-CUSTOMIZATION-ID-INVALID"
+	FailureCustomizationIDUnsupported ProfileFailureCode = "EUBL21-PEPPOL-CUSTOMIZATION-ID-UNSUPPORTED"
+	FailureProfileIDMissing           ProfileFailureCode = "EUBL21-PEPPOL-PROFILE-ID-MISSING"
+	FailureProfileIDAmbiguous         ProfileFailureCode = "EUBL21-PEPPOL-PROFILE-ID-AMBIGUOUS"
+	FailureProfileIDInvalid           ProfileFailureCode = "EUBL21-PEPPOL-PROFILE-ID-INVALID"
+	FailureProfileIDUnsupported       ProfileFailureCode = "EUBL21-PEPPOL-PROFILE-ID-UNSUPPORTED"
+)
+
 var (
 	ErrUnsupportedProfile   = errors.New("unsupported requested validation profile")
 	ErrProfileNotApplicable = errors.New("requested validation profile is not applicable")
@@ -42,21 +57,29 @@ type Identifiers struct {
 	ProcessProfile  queue.PeppolProcessProfile
 }
 
+// ProfileFailure is bounded product-specific evidence from applicability
+// resolution. It must never be presented as an official Schematron rule.
+type ProfileFailure struct {
+	Code    ProfileFailureCode `json:"code"`
+	Field   string             `json:"field"`
+	Message string             `json:"message"`
+}
+
 // Resolution records a requested profile, its concrete durable profile, the
 // identifiers inspected during automatic or explicit Peppol resolution, and
-// any fail-closed Peppol standards evidence.
+// any fail-closed e-ubl21 product applicability failures.
 type Resolution struct {
 	RequestedProfile queue.ValidationProfile
 	ResolvedProfile  queue.ValidationProfile
 	Identifiers      Identifiers
-	Issues           []queue.ValidationIssue
+	Failures         []ProfileFailure
 }
 
 // PeppolIdentifiersValid reports whether the resolution selected Peppol and
 // all supported identifier checks passed.
 func (resolution Resolution) PeppolIdentifiersValid() bool {
 	return resolution.ResolvedProfile == queue.ValidationProfilePeppolBISBilling &&
-		len(resolution.Issues) == 0 &&
+		len(resolution.Failures) == 0 &&
 		resolution.Identifiers.CustomizationID != "" &&
 		resolution.Identifiers.ProfileID != "" &&
 		resolution.Identifiers.ProcessProfile != ""
@@ -65,7 +88,7 @@ func (resolution Resolution) PeppolIdentifiersValid() bool {
 // Resolve selects a concrete durable profile. An empty requested profile is
 // the same as auto. Explicit UBL/EN requests ignore Peppol identifiers.
 // Explicit Peppol never falls back: unsupported identifiers remain a Peppol
-// resolution with structured standards-invalid evidence.
+// resolution with typed product applicability failures.
 func Resolve(documentType string, requested queue.ValidationProfile, document []byte) (Resolution, error) {
 	if requested == "" {
 		requested = queue.ValidationProfileAuto
@@ -106,12 +129,12 @@ func Resolve(documentType string, requested queue.ValidationProfile, document []
 		}, nil
 	}
 
-	issues := parsed.validationIssues()
+	failures := parsed.profileFailures()
 	return Resolution{
 		RequestedProfile: requested,
 		ResolvedProfile:  queue.ValidationProfilePeppolBISBilling,
 		Identifiers:      identifiers,
-		Issues:           issues,
+		Failures:         failures,
 	}, nil
 }
 
@@ -145,37 +168,35 @@ func (parsed parsedIdentifiers) customizationAmbiguous() bool {
 	return parsed.customizationCount != 1 || parsed.customizationInvalid
 }
 
-func (parsed parsedIdentifiers) validationIssues() []queue.ValidationIssue {
+func (parsed parsedIdentifiers) profileFailures() []ProfileFailure {
 	identifiers := parsed.identifiers()
-	var issues []queue.ValidationIssue
-	if parsed.customizationAmbiguous() ||
-		!strings.HasPrefix(identifiers.CustomizationID, CustomizationIDBase) ||
-		strings.Contains(identifiers.CustomizationID, "::") {
-		issues = append(issues, queue.ValidationIssue{
-			Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerPeppolBISBilling,
-			Rule: "PEPPOL-EN16931-R004", Severity: "fatal",
-			Location: "ubl-creditnote:CreditNote | ubl-invoice:Invoice",
-			Test:     "starts-with(normalize-space(cbc:CustomizationID/text()), '" + CustomizationIDBase + "') and not(contains(normalize-space(cbc:CustomizationID/text()), '::'))",
-			Message:  "Specification identifier MUST begin with the value '" + CustomizationIDBase + "' and follow the format rules for the identifier.",
-		})
+	var failures []ProfileFailure
+	switch {
+	case parsed.customizationCount == 0:
+		failures = append(failures, profileFailure(FailureCustomizationIDMissing, "customizationId", "Peppol Billing requires a CustomizationID."))
+	case parsed.customizationCount != 1:
+		failures = append(failures, profileFailure(FailureCustomizationIDAmbiguous, "customizationId", "Peppol Billing requires one unambiguous top-level CustomizationID."))
+	case parsed.customizationInvalid:
+		failures = append(failures, profileFailure(FailureCustomizationIDInvalid, "customizationId", "Peppol Billing CustomizationID must be simple bounded text."))
+	case !strings.HasPrefix(identifiers.CustomizationID, CustomizationIDBase) ||
+		strings.Contains(identifiers.CustomizationID, "::"):
+		failures = append(failures, profileFailure(FailureCustomizationIDUnsupported, "customizationId", "CustomizationID is not supported by the Peppol Billing product profile."))
 	}
 	switch {
 	case parsed.profileCount == 0:
-		issues = append(issues, queue.ValidationIssue{
-			Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerPeppolBISBilling,
-			Rule: "PEPPOL-EN16931-R001", Severity: "fatal",
-			Location: "ubl-creditnote:CreditNote | ubl-invoice:Invoice", Test: "cbc:ProfileID",
-			Message: "Business process MUST be provided.",
-		})
-	case parsed.profileCount != 1 || parsed.profileInvalid || identifiers.ProcessProfile == "":
-		issues = append(issues, queue.ValidationIssue{
-			Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerPeppolBISBilling,
-			Rule: "PEPPOL-EN16931-R007", Severity: "fatal",
-			Location: "ubl-creditnote:CreditNote | ubl-invoice:Invoice", Test: "$profile != 'Unknown'",
-			Message: "Business process MUST have an approved identifier.",
-		})
+		failures = append(failures, profileFailure(FailureProfileIDMissing, "profileId", "Peppol Billing requires a ProfileID."))
+	case parsed.profileCount != 1:
+		failures = append(failures, profileFailure(FailureProfileIDAmbiguous, "profileId", "Peppol Billing requires one unambiguous top-level ProfileID."))
+	case parsed.profileInvalid:
+		failures = append(failures, profileFailure(FailureProfileIDInvalid, "profileId", "Peppol Billing ProfileID must be simple bounded text."))
+	case identifiers.ProcessProfile == "":
+		failures = append(failures, profileFailure(FailureProfileIDUnsupported, "profileId", "ProfileID is not supported by the Peppol Billing product profile."))
 	}
-	return issues
+	return failures
+}
+
+func profileFailure(code ProfileFailureCode, field, message string) ProfileFailure {
+	return ProfileFailure{Code: code, Field: field, Message: message}
 }
 
 func parseIdentifiers(documentType string, document []byte) (parsedIdentifiers, error) {
