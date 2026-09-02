@@ -909,9 +909,13 @@ func testIntent(t *testing.T, plan queue.FrozenValidationPlan, maxAttempts ...ui
 	if len(maxAttempts) != 0 {
 		retryPolicy.MaxAttempts = maxAttempts[0]
 	}
+	profile := queue.ValidationProfileUBL21
+	if len(plan.Stages) > 1 {
+		profile = queue.ValidationProfileUBL21EN16931
+	}
 	return queue.ValidationExecutionIntent{
 		IntentID: newID(t), UploadID: newID(t), DocumentType: "Invoice",
-		Trigger: queue.ValidationTriggerInitial, RequestedProfile: queue.ValidationProfileUBL21EN16931,
+		Trigger: queue.ValidationTriggerInitial, RequestedProfile: profile,
 		Plan: plan, RetryPolicy: retryPolicy, CreatedAt: time.Date(2026, 8, 28, 19, 0, 0, 0, time.UTC),
 	}
 }

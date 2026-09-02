@@ -19,17 +19,30 @@ func splitWorkerRequest(t *testing.T, stage queue.ValidationLayer, documentType,
 	t.Helper()
 	uploadID, _ := queue.NewID()
 	intentID, _ := queue.NewID()
+	profile := queue.ValidationProfileUBL21
+	stages := []queue.FrozenValidationStage{{
+		ID: queue.ValidationLayerUBL21XSD, Ordinal: 1,
+		Requirement: queue.ValidationStageRequired, RulesetVersion: ruleset,
+	}}
+	ordinal := uint32(1)
+	if stage == queue.ValidationLayerEN16931 {
+		profile = queue.ValidationProfileUBL21EN16931
+		stages[0].RulesetVersion = xsdschemas.Version
+		stages = append(stages, queue.FrozenValidationStage{
+			ID: queue.ValidationLayerEN16931, Ordinal: 2,
+			Requirement: queue.ValidationStageRequired, RulesetVersion: ruleset,
+		})
+		ordinal = 2
+	}
 	execution, err := queue.NewValidationExecution(queue.ValidationExecutionIntent{
 		IntentID: intentID, UploadID: uploadID, DocumentType: documentType, Trigger: queue.ValidationTriggerInitial,
-		RequestedProfile: queue.ValidationProfileUBL21EN16931, CreatedAt: time.Now().UTC(),
-		Plan: queue.FrozenValidationPlan{ID: "worker-coverage", Version: "1", Stages: []queue.FrozenValidationStage{{
-			ID: stage, Ordinal: 1, Requirement: queue.ValidationStageRequired, RulesetVersion: ruleset,
-		}}},
+		RequestedProfile: profile, CreatedAt: time.Now().UTC(),
+		Plan: queue.FrozenValidationPlan{ID: "worker-coverage", Version: "1", Stages: stages},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	request, err := queue.NewStageRequest(execution, 1, 1, time.Now().UTC())
+	request, err := queue.NewStageRequest(execution, ordinal, 1, time.Now().UTC())
 	if err != nil {
 		t.Fatal(err)
 	}

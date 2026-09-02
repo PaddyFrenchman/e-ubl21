@@ -15,8 +15,18 @@ func TestExecutionValidationResultRequiresCompleteFrozenPlanForValid(t *testing.
 	result.PlanStages = append(result.PlanStages, queue.FrozenValidationStage{
 		ID: queue.ValidationLayerEN16931, Ordinal: 2, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16",
 	})
+	result.Profile = queue.ValidationProfileUBL21EN16931
 	if err := result.ValidateExecutionResult(); err == nil || !strings.Contains(err.Error(), "every frozen-plan stage") {
 		t.Fatalf("partial valid result error = %v", err)
+	}
+}
+
+func TestExecutionValidationResultRejectsProfilePlanMismatch(t *testing.T) {
+	result := validExecutionResult(t, 1)
+	result.Profile = queue.ValidationProfilePeppolBISBilling
+	err := result.ValidateExecutionResult()
+	if err == nil || !strings.Contains(err.Error(), "requires stages") {
+		t.Fatalf("Peppol result without Peppol stage error = %v, want profile-plan mismatch", err)
 	}
 }
 
