@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #63, the **next actionable issue is #65 — TODO-VALIDATION-SPLIT-018 — Final end-to-end distributed validation gate**. Issues #48 through #63 are complete. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+After completion of #65, the **next actionable issue is #66 — TODO-PEPPOL-001 — Freeze Peppol validation scope and contract**. Issues #48 through #63 and #65 are complete. Issue #64 remains open but is intentionally downstream of the Peppol validator/asset work, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -333,7 +333,7 @@ Freeze that stage workers cannot finalize whole-document validity or choose the 
 
 **Acceptance:** A written ownership table leaves no state mutation shared by unrelated roles without an explicit CAS/idempotency contract.
 
-**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44. **#48 through #63 are complete; #65 is the current next actionable issue.**
+**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44. **#48 through #63 and #65 are complete; #66 is the current next actionable issue. #64 remains open for later Peppol-stage integration.**
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/48
 
@@ -477,6 +477,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/63
 
 ### 28. #65 — TODO-VALIDATION-SPLIT-018 — Final end-to-end distributed validation gate
 
+**Status:** Complete / closed.
+
 **Goal:** Prove the split deployment preserves the existing validation contract while adding independent scaling and fault isolation.
 
 **Required scenarios:**
@@ -518,13 +520,32 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/66
 
 ### 30. #67 — TODO-PEPPOL-002 — Pin official Peppol release and provenance
 
-**Goal:** Make the exact Peppol standards implementation reproducible.
+**Goal:** Make the exact Peppol standards implementation reproducible and establish `standard/` as the repository-local standards documentation/provenance entry point for Peppol and EN 16931.
 
-Pin the immutable official OpenPeppol release/tag/archive and record BIS version, publication date, mandatory-from date, source URL/tag/archive, Schematron filename, SHA-256 validation-asset digests, code-list versions/publication date, and licence/provenance.
+**Scope:**
 
-Never use a moving `main`, `master`, or `upcoming` branch as production truth.
+- Pin the immutable official OpenPeppol release/tag/archive and record BIS version, publication date, mandatory-from date, authoritative source URL/tag/archive, Schematron filenames, SHA-256 validation-asset digests, code-list versions/publication date, and licence/provenance.
+- Never use a moving `main`, `master`, or `upcoming` branch as production truth.
+- Create at least:
 
-**Acceptance:** A clean checkout can identify exactly which Peppol release bytes the server validates against.
+```text
+standard/
+├── README.md
+├── en16931/
+│   └── README.md
+└── peppol/
+    ├── README.md
+    └── download.sh
+```
+
+- Make `standard/README.md` the canonical guide to implemented standards, committed versus downloaded material, runtime asset locations, versioning/provenance rules, and licensing constraints.
+- Under `standard/en16931/`, document the implemented EN 16931 standard/version, authoritative CEN/EC access references, the pinned official ConnectingEurope/CEN-TC434 validation release, provenance, licence, checksums, and links to existing repository validation assets. Commit local documentation or validation-source material only where redistribution is permitted; do not commit copyrighted normative CEN documents without established redistribution rights.
+- Do not mirror OpenPeppol rendered documentation in Git. Version `standard/peppol/download.sh` instead. It must retrieve only the authoritative pinned OpenPeppol release into a deterministic local subdirectory, verify version/provenance and SHA-256 where applicable, fail clearly on mismatch, and be safe to rerun.
+- Document the pinned BIS release, authoritative sources, licence/redistribution constraints, downloader usage, expected local layout, and relationship to runtime Peppol validation assets in `standard/peppol/README.md`.
+- Update `.gitignore` as necessary so downloaded non-redistributable Peppol documentation cannot be accidentally committed.
+- Do not duplicate large runtime validation assets under `standard/` when they already live under an authoritative path such as `validation-assets/`; link and document them instead.
+
+**Acceptance:** A clean checkout can identify exactly which Peppol release bytes the server is intended to validate against, exposes `standard/` as the canonical Peppol/EN 16931 documentation and provenance entry point, contains sufficient EN 16931 references/provenance/permitted local material to identify the implemented release, contains a version-controlled reproducible Peppol downloader rather than redistribution-restricted documentation, records licences/source URLs/checksums for audit, and prevents downloaded restricted material from being committed.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/67
 
@@ -879,7 +900,7 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 
 - Issues #64 and #73 are closely related and should be implemented as one coordinated Peppol-stage integration effort, while preserving both acceptance contracts.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
-- Issues #44 and #48–#62 are complete; **#63 is therefore the next dependency-unblocked validation-split issue.**
+- Issues #44, #48–#63, and #65 are complete; **#66 is therefore the current next actionable issue.** #64 remains open and intentionally follows the Peppol engine work because it integrates `worker-peppol` into the asynchronous runtime.
 - Issue #45 is the safety rail for declaring the first Peppol release supported and remains blocked until its real Peppol prerequisites are complete.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
