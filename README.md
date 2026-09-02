@@ -636,7 +636,7 @@ Replace the current combined worker with a durable validation orchestrator and i
 
 ### 3. Peppol BIS Billing
 
-Add a separately versioned Peppol BIS Billing 3.0 stage after UBL XSD and EN 16931, using pinned official OpenPeppol validation artefacts. This project targets **payload conformity**, not operation of a Peppol access point. See [`TODO-PEPPOL.md`](TODO-PEPPOL.md).
+Add a separately versioned Peppol BIS Billing 3.0 stage after UBL XSD and EN 16931, using pinned official OpenPeppol validation artefacts. This project targets **payload conformity**, not operation of a Peppol access point. The exact product meaning and truth table are frozen in [`docs/PEPPOL-VALIDATION-CONTRACT.md`](docs/PEPPOL-VALIDATION-CONTRACT.md); see [`TODO-PEPPOL.md`](TODO-PEPPOL.md) for the implementation sequence.
 
 ### 4. Comprehensive document API
 

@@ -6,6 +6,11 @@
 **Baseline:** current server already validates UBL 2.1 and EN 16931 for `Invoice` and `CreditNote`  
 **TODO namespace:** `TODO-PEPPOL-###`
 
+The normative product decisions for `TODO-PEPPOL-001` are frozen in
+[`docs/PEPPOL-VALIDATION-CONTRACT.md`](docs/PEPPOL-VALIDATION-CONTRACT.md).
+Later roadmap items must implement that contract without silently broadening
+the meaning of Peppol-valid.
+
 ## 1. Objective
 
 Extend the existing e-ubl21 validation server so it can determine whether a UBL `Invoice` or `CreditNote` conforms to the applicable **Peppol BIS Billing 3.0** rules in addition to the validation already performed against:
@@ -82,7 +87,7 @@ The authoritative release source must be OpenPeppol documentation/download artef
 Official reference points:
 
 - `https://docs.peppol.eu/poacc/billing/3.0/`
-- `https://docs.peppol.eu/poacc/billing/3.0/upcoming/release-notes/`
+- `https://docs.peppol.eu/poacc/billing/3.0/release-notes/`
 - OpenPeppol BIS Billing source repository: `OpenPEPPOL/peppol-bis-invoice-3`
 
 The implementation must pin immutable bytes and digests before the Peppol validator becomes part of production validity.

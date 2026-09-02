@@ -516,6 +516,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/65
 
 **Acceptance:** A documented truth table maps document type + requested profile + stage outcomes to final status.
 
+**Contract:** [`docs/PEPPOL-VALIDATION-CONTRACT.md`](docs/PEPPOL-VALIDATION-CONTRACT.md)
+
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/66
 
 ### 30. #67 — TODO-PEPPOL-002 — Pin official Peppol release and provenance
