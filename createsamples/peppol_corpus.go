@@ -39,7 +39,7 @@ func generatePeppolNegativeCorpus(xsdDir, generatorVersion string) (generatedCor
 	}
 	fixtures := make([]generatedFixture, 0, len(negative))
 	for _, fixture := range negative {
-		content := []byte(fixture.XML)
+		content := []byte(strings.TrimRight(fixture.XML, "\n") + "\n")
 		ruleIDs := append([]string(nil), fixture.ExpectedRuleIDs...)
 		sort.Strings(ruleIDs)
 		fixtures = append(fixtures, generatedFixture{
