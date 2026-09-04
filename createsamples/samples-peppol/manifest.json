@@ -15,7 +15,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -63,7 +63,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -111,7 +111,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -167,7 +167,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -223,7 +223,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -279,7 +279,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -335,7 +335,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -383,7 +383,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -431,7 +431,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:74eeb4aa0f27f32071853fe76ef9063a7cf98d63"
+        "generatorVersion": "git:2a0fcca51bae78283b9ddcb09d3170018b8c0f7a"
       },
       "rulesets": {
         "en16931": {
@@ -471,6 +471,603 @@
         "peppol",
         "profile",
         "unsupported-profile-id"
+      ]
+    },
+    {
+      "id": "peppol.official.creditnote.base-creditnote-correction",
+      "documentType": "CreditNote",
+      "profile": "peppol-bis-billing",
+      "file": "official/CreditNote/OpenPeppol-base-creditnote-correction.xml",
+      "sha256": "08e0ad82e0dbe7e16d7533c01761843343a56954ea24881d0f7f1cce06f8879e",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/base-creditnote-correction.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "08e0ad82e0dbe7e16d7533c01761843343a56954ea24881d0f7f1cce06f8879e",
+        "sourceMember": "rules/examples/base-creditnote-correction.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "billing-reference",
+        "creditnote",
+        "eas-0002",
+        "eas-0088",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.allowance-example",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-Allowance-example.xml",
+      "sha256": "aa3df18eb8c634624637eb229891d989c5cfb7cd0d08894ff8e58c58f247ea5b",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/Allowance-example.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "aa3df18eb8c634624637eb229891d989c5cfb7cd0d08894ff8e58c58f247ea5b",
+        "sourceMember": "rules/examples/Allowance-example.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "allowance",
+        "attachment",
+        "charge",
+        "eas-0002",
+        "eas-0088",
+        "invoice",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "reference",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.base-example",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-base-example.xml",
+      "sha256": "1b7cc3ff1834c8963f2c93f30f171b58002cbf0b2c52dc8765e7e83aebb9f7c9",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/base-example.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "1b7cc3ff1834c8963f2c93f30f171b58002cbf0b2c52dc8765e7e83aebb9f7c9",
+        "sourceMember": "rules/examples/base-example.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "allowance",
+        "eas-0002",
+        "eas-0088",
+        "invoice",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.base-example-profile02",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-base-example_profile02.xml",
+      "sha256": "97e9dd5fc1747a9a2447b38bae8d1de3317d2636714369bdd99ba7dd1fb0ee1a",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/base-example_profile02.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "97e9dd5fc1747a9a2447b38bae8d1de3317d2636714369bdd99ba7dd1fb0ee1a",
+        "sourceMember": "rules/examples/base-example_profile02.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "allowance",
+        "eas-0002",
+        "eas-0088",
+        "invoice",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-02",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.base-negative-inv-correction",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-base-negative-inv-correction.xml",
+      "sha256": "000781ee8cb7794a140bb1308f7f7a2c9ded3623571b4297aef38423971ab5a4",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/base-negative-inv-correction.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "000781ee8cb7794a140bb1308f7f7a2c9ded3623571b4297aef38423971ab5a4",
+        "sourceMember": "rules/examples/base-negative-inv-correction.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "allowance",
+        "billing-reference",
+        "eas-0002",
+        "eas-0088",
+        "invoice",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.sales-order-example",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-sales-order-example.xml",
+      "sha256": "cdb84e4ce1a770f6e4a8949dcbe37493bc37aeded5232b592a1a48feb221a504",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/sales-order-example.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "cdb84e4ce1a770f6e4a8949dcbe37493bc37aeded5232b592a1a48feb221a504",
+        "sourceMember": "rules/examples/sales-order-example.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "allowance",
+        "eas-0002",
+        "eas-0088",
+        "invoice",
+        "official",
+        "order-reference",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.vat-category-e",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-vat-category-E.xml",
+      "sha256": "4f2f20de65a8c088bba6c43177c75b5066bf30f54b996bc1729a82097a6591db",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/vat-category-E.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "4f2f20de65a8c088bba6c43177c75b5066bf30f54b996bc1729a82097a6591db",
+        "sourceMember": "rules/examples/vat-category-E.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "country-dk",
+        "eas-0088",
+        "eas-0184",
+        "invoice",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "vat-e"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.vat-category-o",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-vat-category-O.xml",
+      "sha256": "212c4eede960a775f8e79dca6cd6430e6f8c105560fbfdeaa03d5e6587eaa1ec",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/vat-category-O.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "212c4eede960a775f8e79dca6cd6430e6f8c105560fbfdeaa03d5e6587eaa1ec",
+        "sourceMember": "rules/examples/vat-category-O.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "country-no",
+        "country-se",
+        "eas-0088",
+        "eas-0192",
+        "invoice",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "vat-o"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.vat-category-s",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-Vat-category-S.xml",
+      "sha256": "59f96ae9a77ed3eda4ac17f499994fbd1b050432edf3bb8c117d7f3bca8d5f95",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/Vat-category-S.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "59f96ae9a77ed3eda4ac17f499994fbd1b050432edf3bb8c117d7f3bca8d5f95",
+        "sourceMember": "rules/examples/Vat-category-S.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "allowance",
+        "charge",
+        "eas-0002",
+        "eas-0088",
+        "invoice",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "vat-s"
+      ]
+    },
+    {
+      "id": "peppol.official.invoice.vat-category-z",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "official/Invoice/OpenPeppol-vat-category-Z.xml",
+      "sha256": "fed3f3f393591e1c628f2da4a3aa77e8c66e4ed8ed4368e18837782beab60daa",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "official-import",
+        "publisher": "OpenPeppol",
+        "sourceUrl": "https://github.com/OpenPEPPOL/peppol-bis-invoice-3/blob/806866bd2bd91d7e9623b68f08164e8fbe9e67a0/rules/examples/vat-category-Z.xml",
+        "sourceVersion": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+        "sourceSha256": "fed3f3f393591e1c628f2da4a3aa77e8c66e4ed8ed4368e18837782beab60daa",
+        "sourceMember": "rules/examples/vat-category-Z.xml",
+        "extraction": "Vendored byte-for-byte from the pinned upstream commit.",
+        "license": "Redistribution terms under review; see standard/peppol/Peppol-licensing.md."
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "expectedFinal": "valid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "passed"
+        }
+      ],
+      "tags": [
+        "country-dk",
+        "eas-0088",
+        "eas-0184",
+        "invoice",
+        "official",
+        "payment-30",
+        "peppol",
+        "positive",
+        "profile-01",
+        "vat-z"
       ]
     }
   ]
