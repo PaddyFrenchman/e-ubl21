@@ -218,8 +218,8 @@ func TestGeneratePeppolUsesProfileDefaultOutput(t *testing.T) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if len(manifest.Fixtures) != 4 {
-		t.Fatalf("Peppol generated fixtures = %d, want 4", len(manifest.Fixtures))
+	if len(manifest.Fixtures) != 14 {
+		t.Fatalf("Peppol generated fixtures = %d, want 14", len(manifest.Fixtures))
 	}
 	if err := run([]string{
 		"generate", "--profile", "peppol-bis-billing", "--set", "negative",

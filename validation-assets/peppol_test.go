@@ -70,6 +70,31 @@ func TestOpenPeppolXSLT(t *testing.T) {
 	}
 }
 
+func TestPeppolExamplesExposePinnedIndependentCopies(t *testing.T) {
+	examples, err := PeppolExamples()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(examples) != 10 {
+		t.Fatalf("official Peppol examples = %d, want 10", len(examples))
+	}
+	for index, example := range examples {
+		if example.Name != peppolExampleNames[index] || example.SourceVersion != Peppol().SourceCommit ||
+			example.SourceURL == "" || example.SourceSHA256 != fmt.Sprintf("%x", sha256.Sum256(example.XML)) ||
+			example.License == "" {
+			t.Errorf("official Peppol example %d has incomplete provenance: %+v", index, example)
+		}
+	}
+	examples[0].XML[0] = 'X'
+	again, err := PeppolExamples()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again[0].XML[0] == 'X' {
+		t.Fatal("caller mutated embedded official Peppol example")
+	}
+}
+
 func TestVerifyPeppolRejectsManifestChecksumMismatch(t *testing.T) {
 	profile := Peppol()
 	profile.ManifestSHA256 = strings.Repeat("0", 64)

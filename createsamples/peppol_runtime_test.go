@@ -7,10 +7,16 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/svrl"
 )
 
-func TestPeppolNegativeCorpusPassesENAndTriggersOnlyCataloguedPeppolRule(t *testing.T) {
+type peppolTestRuntime struct {
+	javaPath, classpath, configuration, enXSLT, peppolXSLT string
+}
+
+func peppolRuntimeForTest(t *testing.T) peppolTestRuntime {
+	t.Helper()
 	javaPath, err := exec.LookPath("java")
 	if err != nil {
 		t.Skip("Java is unavailable; the Peppol compilation gate supplies the real runtime")
@@ -22,46 +28,75 @@ func TestPeppolNegativeCorpusPassesENAndTriggersOnlyCataloguedPeppolRule(t *test
 			t.Skip("local Saxon build dependencies are unavailable; run make test-peppol-schematron")
 		}
 	}
+	return peppolTestRuntime{
+		javaPath: javaPath, classpath: saxonJAR + string(os.PathListSeparator) + resolverJAR,
+		configuration: filepath.Join("..", "validation-assets", "saxon", "saxon-config.xml"),
+		enXSLT:        filepath.Join("..", "validation-assets", "en16931", "1.3.16", "EN16931-UBL-validation.xslt"),
+		peppolXSLT:    filepath.Join("..", "validation-assets", "peppol", "3.0.21", "runtime", "PEPPOL-EN16931-UBL-validation.xslt"),
+	}
+}
 
+func (runtime peppolTestRuntime) transform(t *testing.T, input []byte, stylesheet string) svrl.Report {
+	t.Helper()
+	command := exec.Command(runtime.javaPath, "-cp", runtime.classpath, "net.sf.saxon.Transform",
+		"-config:"+runtime.configuration, "-ext:off", "-s:-", "-xsl:"+stylesheet)
+	command.Stdin = bytes.NewReader(input)
+	output, err := command.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Saxon transform with %s: %v: %s", stylesheet, err, output)
+	}
+	report, err := svrl.Parse(bytes.NewReader(output))
+	if err != nil {
+		t.Fatalf("parse SVRL from %s: %v", stylesheet, err)
+	}
+	return report
+}
+
+func TestPeppolPositiveCorpusPassesENAndPeppolWithRealRuntime(t *testing.T) {
+	runtime := peppolRuntimeForTest(t)
+	corpus, err := generatePeppolPositiveCorpus(filepath.Join("..", "XSD"), testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fixture := range corpus.fixtures {
+		fixture := fixture
+		t.Run(fixture.entry.ID, func(t *testing.T) {
+			if report := runtime.transform(t, fixture.content, runtime.enXSLT); report.FailedAssertions != 0 {
+				t.Fatalf("positive fixture emitted %d EN 16931 failed assertions: %+v", report.FailedAssertions, report.Issues)
+			}
+			if report := runtime.transform(t, fixture.content, runtime.peppolXSLT); report.FailedAssertions != 0 {
+				t.Fatalf("positive fixture emitted %d Peppol failed assertions: %+v", report.FailedAssertions, report.Issues)
+			}
+		})
+	}
+}
+
+func TestPeppolNegativeCorpusPassesENAndTriggersOnlyCataloguedPeppolRule(t *testing.T) {
+	runtime := peppolRuntimeForTest(t)
 	corpus, err := generatePeppolNegativeCorpus(filepath.Join("..", "XSD"), testGeneratorVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
-	configuration := filepath.Join("..", "validation-assets", "saxon", "saxon-config.xml")
-	enXSLT := filepath.Join("..", "validation-assets", "en16931", "1.3.16", "EN16931-UBL-validation.xslt")
-	peppolXSLT := filepath.Join("..", "validation-assets", "peppol", "3.0.21", "runtime", "PEPPOL-EN16931-UBL-validation.xslt")
-	classpath := saxonJAR + string(os.PathListSeparator) + resolverJAR
-
-	transform := func(t *testing.T, input []byte, stylesheet string) svrl.Report {
-		t.Helper()
-		command := exec.Command(javaPath, "-cp", classpath, "net.sf.saxon.Transform",
-			"-config:"+configuration, "-ext:off", "-s:-", "-xsl:"+stylesheet)
-		command.Stdin = bytes.NewReader(input)
-		output, err := command.CombinedOutput()
-		if err != nil {
-			t.Fatalf("Saxon transform with %s: %v: %s", stylesheet, err, output)
-		}
-		report, err := svrl.Parse(bytes.NewReader(output))
-		if err != nil {
-			t.Fatalf("parse SVRL from %s: %v", stylesheet, err)
-		}
-		return report
-	}
-
 	for _, fixture := range corpus.fixtures {
 		fixture := fixture
 		t.Run(fixture.entry.Mutation.ID, func(t *testing.T) {
-			enReport := transform(t, fixture.content, enXSLT)
+			enReport := runtime.transform(t, fixture.content, runtime.enXSLT)
 			if enReport.FailedAssertions != 0 {
 				t.Fatalf("mutation introduced %d EN 16931 failed assertions: %+v", enReport.FailedAssertions, enReport.Issues)
 			}
-			peppolReport := transform(t, fixture.content, peppolXSLT)
+			peppolReport := runtime.transform(t, fixture.content, runtime.peppolXSLT)
 			wantRules := fixture.entry.ExpectedStages[2].RuleIDs
-			if peppolReport.FailedAssertions != len(wantRules) {
-				t.Fatalf("Peppol failed assertions = %d, want %d: %+v", peppolReport.FailedAssertions, len(wantRules), peppolReport.Issues)
+			var failedRules []string
+			for _, issue := range peppolReport.Issues {
+				if issue.Kind == queue.ValidationIssueFailedAssert {
+					failedRules = append(failedRules, issue.Rule)
+				}
+			}
+			if len(failedRules) != len(wantRules) {
+				t.Fatalf("Peppol failed rules = %v, want %v", failedRules, wantRules)
 			}
 			for index, wantRule := range wantRules {
-				if got := peppolReport.Issues[index].Rule; got != wantRule {
+				if got := failedRules[index]; got != wantRule {
 					t.Errorf("Peppol rule = %q, want %q", got, wantRule)
 				}
 			}

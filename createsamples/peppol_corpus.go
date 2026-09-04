@@ -74,6 +74,55 @@ type peppolPositiveVariant struct {
 	build          func() (string, error)
 }
 
+type peppolOfficialExampleMetadata struct {
+	documentType   string
+	processProfile peppolsamples.ProcessProfile
+	tags           []string
+}
+
+var peppolOfficialExamples = map[string]peppolOfficialExampleMetadata{
+	"Allowance-example.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile01,
+		tags: []string{"allowance", "attachment", "charge", "eas-0002", "eas-0088", "payment-30", "reference", "vat-s"},
+	},
+	"Vat-category-S.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile01,
+		tags: []string{"allowance", "charge", "eas-0002", "eas-0088", "payment-30", "vat-s"},
+	},
+	"base-creditnote-correction.xml": {
+		documentType: "CreditNote", processProfile: peppolsamples.Profile01,
+		tags: []string{"billing-reference", "eas-0002", "eas-0088", "payment-30", "vat-s"},
+	},
+	"base-example.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile01,
+		tags: []string{"allowance", "eas-0002", "eas-0088", "payment-30", "vat-s"},
+	},
+	"base-example_profile02.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile02,
+		tags: []string{"allowance", "eas-0002", "eas-0088", "payment-30", "vat-s"},
+	},
+	"base-negative-inv-correction.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile01,
+		tags: []string{"allowance", "billing-reference", "eas-0002", "eas-0088", "payment-30", "vat-s"},
+	},
+	"sales-order-example.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile01,
+		tags: []string{"allowance", "eas-0002", "eas-0088", "order-reference", "payment-30", "vat-s"},
+	},
+	"vat-category-E.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile01,
+		tags: []string{"country-dk", "eas-0088", "eas-0184", "payment-30", "vat-e"},
+	},
+	"vat-category-O.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile01,
+		tags: []string{"country-no", "country-se", "eas-0088", "eas-0192", "payment-30", "vat-o"},
+	},
+	"vat-category-Z.xml": {
+		documentType: "Invoice", processProfile: peppolsamples.Profile01,
+		tags: []string{"country-dk", "eas-0088", "eas-0184", "payment-30", "vat-z"},
+	},
+}
+
 func generatePeppolPositiveCorpus(xsdDir, generatorVersion string) (generatedCorpus, error) {
 	if err := validationassets.VerifyEN16931(); err != nil {
 		return generatedCorpus{}, err
@@ -128,7 +177,7 @@ func generatePeppolPositiveCorpus(xsdDir, generatorVersion string) (generatedCor
 		)
 	}
 
-	fixtures := make([]generatedFixture, 0, len(variants))
+	fixtures := make([]generatedFixture, 0, len(variants)+len(peppolOfficialExamples))
 	for _, variant := range variants {
 		contentText, err := variant.build()
 		if err != nil {
@@ -160,6 +209,47 @@ func generatePeppolPositiveCorpus(xsdDir, generatorVersion string) (generatedCor
 			schemaPath: filepath.Join(
 				xsdDir, "maindoc", "UBL-"+variant.documentType+"-2.1.xsd",
 			),
+		})
+	}
+
+	official, err := validationassets.PeppolExamples()
+	if err != nil {
+		return generatedCorpus{}, err
+	}
+	for _, example := range official {
+		metadata, ok := peppolOfficialExamples[example.Name]
+		if !ok {
+			return generatedCorpus{}, fmt.Errorf("official Peppol example %s lacks corpus metadata", example.Name)
+		}
+		base := strings.TrimSuffix(example.Name, filepath.Ext(example.Name))
+		tags := []string{lowerDocumentType(metadata.documentType), "official", "peppol", "positive", "profile-" + string(metadata.processProfile)}
+		tags = append(tags, metadata.tags...)
+		sort.Strings(tags)
+		content := append([]byte(nil), example.XML...)
+		sourceMember := "rules/examples/" + example.Name
+		fixtures = append(fixtures, generatedFixture{
+			entry: fixtureManifestEntry{
+				ID:           "peppol.official." + lowerDocumentType(metadata.documentType) + "." + strings.ToLower(strings.ReplaceAll(base, "_", "-")),
+				DocumentType: metadata.documentType, Profile: "peppol-bis-billing",
+				File:      filepath.ToSlash(filepath.Join("official", metadata.documentType, "OpenPeppol-"+example.Name)),
+				SHA256:    example.SourceSHA256,
+				Standards: fixtureStandards{UBL: "2.1", EN16931: &enVersion, Peppol: &bisVersion},
+				Provenance: fixtureProvenance{
+					Kind: "official-import", Publisher: "OpenPeppol",
+					SourceURL: example.SourceURL, SourceVersion: example.SourceVersion,
+					SourceSHA256: example.SourceSHA256, SourceMember: sourceMember,
+					Extraction: "Vendored byte-for-byte from the pinned upstream commit.", License: example.License,
+				},
+				Rulesets: rulesets, ExpectedFinal: "valid",
+				ExpectedStages: []fixtureExpectedStage{
+					{Stage: "ubl21-xsd", Outcome: "passed"},
+					{Stage: "en16931", Outcome: "passed"},
+					{Stage: "peppol-bis-billing", Outcome: "passed"},
+				},
+				Tags: tags,
+			},
+			content:    content,
+			schemaPath: filepath.Join(xsdDir, "maindoc", "UBL-"+metadata.documentType+"-2.1.xsd"),
 		})
 	}
 	return buildGeneratedCorpus(fixtures)

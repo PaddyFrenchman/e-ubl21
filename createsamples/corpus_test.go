@@ -224,8 +224,8 @@ func TestPeppolPositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 	if err := verifyCorpusDeterminism(first, second); err != nil {
 		t.Fatal(err)
 	}
-	if len(first.fixtures) != 4 {
-		t.Fatalf("Peppol fixtures = %d, want 4", len(first.fixtures))
+	if len(first.fixtures) != 14 {
+		t.Fatalf("Peppol fixtures = %d, want 14", len(first.fixtures))
 	}
 	if err := regression.ValidateFixtureManifest(first.manifestJSON); err != nil {
 		t.Fatalf("Peppol manifest rejected: %v", err)
@@ -242,12 +242,26 @@ func TestPeppolPositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 	peppolProfile := validationassets.Peppol()
 	profiles := map[queue.PeppolProcessProfile]int{}
 	documentTypes := map[string]int{}
+	provenanceKinds := map[string]int{}
+	coverage := map[string]bool{}
 	for _, fixture := range first.fixtures {
 		entry := fixture.entry
-		if entry.Profile != "peppol-bis-billing" || entry.ExpectedFinal != "valid" ||
-			entry.Provenance.Kind != "generated" || entry.Provenance.Generator != "createsamples/peppol" ||
-			entry.Provenance.GeneratorVersion != testGeneratorVersion {
+		if entry.Profile != "peppol-bis-billing" || entry.ExpectedFinal != "valid" {
 			t.Errorf("fixture %s has incorrect profile/provenance: %+v", entry.ID, entry)
+		}
+		provenanceKinds[entry.Provenance.Kind]++
+		switch entry.Provenance.Kind {
+		case "generated":
+			if entry.Provenance.Generator != "createsamples/peppol" || entry.Provenance.GeneratorVersion != testGeneratorVersion {
+				t.Errorf("fixture %s has incorrect generated provenance: %+v", entry.ID, entry.Provenance)
+			}
+		case "official-import":
+			if entry.Provenance.Publisher != "OpenPeppol" || entry.Provenance.SourceVersion != peppolProfile.SourceCommit ||
+				entry.Provenance.SourceSHA256 != entry.SHA256 || entry.Provenance.SourceMember == nil {
+				t.Errorf("fixture %s has incorrect official provenance: %+v", entry.ID, entry.Provenance)
+			}
+		default:
+			t.Errorf("fixture %s has unexpected provenance kind %q", entry.ID, entry.Provenance.Kind)
 		}
 		if entry.Standards.EN16931 == nil || *entry.Standards.EN16931 != enProfile.Version ||
 			entry.Standards.Peppol == nil || *entry.Standards.Peppol != peppolProfile.Version ||
@@ -275,10 +289,23 @@ func TestPeppolPositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 		}
 		profiles[resolution.Identifiers.ProcessProfile]++
 		documentTypes[entry.DocumentType]++
+		for _, tag := range entry.Tags {
+			coverage[tag] = true
+		}
 	}
-	if profiles[queue.PeppolProcessProfile01] != 2 || profiles[queue.PeppolProcessProfile02] != 2 ||
-		documentTypes["Invoice"] != 2 || documentTypes["CreditNote"] != 2 {
-		t.Fatalf("Peppol coverage profiles=%v documents=%v", profiles, documentTypes)
+	if profiles[queue.PeppolProcessProfile01] != 11 || profiles[queue.PeppolProcessProfile02] != 3 ||
+		documentTypes["Invoice"] != 11 || documentTypes["CreditNote"] != 3 ||
+		provenanceKinds["generated"] != 4 || provenanceKinds["official-import"] != 10 {
+		t.Fatalf("Peppol coverage profiles=%v documents=%v provenance=%v", profiles, documentTypes, provenanceKinds)
+	}
+	for _, required := range []string{
+		"allowance", "attachment", "billing-reference", "charge", "country-dk", "country-no",
+		"country-se", "eas-0002", "eas-0088", "eas-0184", "eas-0192", "order-reference",
+		"payment-30", "profile-01", "profile-02", "reference", "vat-e", "vat-o", "vat-s", "vat-z",
+	} {
+		if !coverage[required] {
+			t.Errorf("Peppol positive corpus lacks %s coverage", required)
+		}
 	}
 }
 
@@ -569,23 +596,25 @@ func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if len(manifest.Fixtures) != 9 {
-		t.Fatalf("tracked Peppol manifest fixtures = %d, want 9", len(manifest.Fixtures))
+	if len(manifest.Fixtures) != 19 {
+		t.Fatalf("tracked Peppol manifest fixtures = %d, want 19", len(manifest.Fixtures))
 	}
 	generatorVersion := manifest.Fixtures[0].Provenance.GeneratorVersion
 	if !immutableGeneratorVersion.MatchString(generatorVersion) {
 		t.Fatalf("tracked Peppol generator version = %q", generatorVersion)
 	}
 	for _, fixture := range manifest.Fixtures {
-		if fixture.Provenance.Kind != "generated" ||
-			fixture.Provenance.GeneratorVersion != generatorVersion {
+		if fixture.Provenance.Kind == "generated" && fixture.Provenance.GeneratorVersion != generatorVersion {
 			t.Fatalf("tracked fixture %s provenance = %+v", fixture.ID, fixture.Provenance)
+		}
+		if fixture.Provenance.Kind != "generated" && fixture.Provenance.Kind != "official-import" {
+			t.Fatalf("tracked fixture %s provenance kind = %q", fixture.ID, fixture.Provenance.Kind)
 		}
 	}
 
 	files := snapshotGeneratedDirectory(t, root)
-	if len(files) != 11 {
-		t.Fatalf("tracked Peppol corpus files = %d, want 11 including manifest and ownership marker", len(files))
+	if len(files) != 21 {
+		t.Fatalf("tracked Peppol corpus files = %d, want 21 including manifest and ownership marker", len(files))
 	}
 	for _, fixture := range manifest.Fixtures {
 		content, ok := files[fixture.File]

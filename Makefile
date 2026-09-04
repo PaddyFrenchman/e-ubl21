@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-peppol-positive test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -19,6 +19,11 @@ test-en16931-image:
 # targeted-negative fixture passes EN before emitting its catalogued rule.
 test-peppol-schematron:
 	./devsetup/test-peppol-schematron.sh
+
+# Run every positive Peppol corpus fixture through UBL XSD, the pinned EN
+# ruleset, and the pinned Peppol ruleset. Runtime dependencies are mandatory.
+test-peppol-positive:
+	./devsetup/test-peppol-positive.sh
 
 # Run the deterministic JetStream chaos/crash/replay integration gate. The
 # scenario-to-test mapping is documented in docs/CHAOS-CRASH-REPLAY.md.

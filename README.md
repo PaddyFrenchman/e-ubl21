@@ -292,8 +292,7 @@ go run ./createsamples generate \
 
 The regression contract lives under [`regression/`](regression/) and defines stable fixture-manifest and normalized-result schemas. The current tracked corpora cover UBL positives and targeted negatives, EN 16931 positives and rule-targeted negatives, and Peppol candidate positives.
 
-Generate deterministic Peppol BIS Billing Profile 01/02 Invoice and CreditNote
-candidates with:
+Generate the deterministic Peppol BIS Billing positive corpus with:
 
 ```bash
 go run ./createsamples generate \
@@ -303,10 +302,21 @@ go run ./createsamples generate \
   --output createsamples/samples-peppol
 ```
 
-The candidates reuse the EN 16931 exact-arithmetic model and add pinned Peppol
-3.0.21 identifiers, legal EAS/ICD `0088` endpoint and party schemes, and ordered
-XSD/EN/Peppol expectations. Targeted Peppol negative generation remains owned
-by issue #38.
+The corpus combines generated Profile 01/02 Invoice and CreditNote fixtures
+with all ten byte-for-byte official examples from the pinned OpenPeppol source
+commit. It covers representative VAT categories, payment means, identifier
+schemes, allowances/charges, attachments/references, and country-specific
+rules. Every manifest entry requires ordered XSD, EN 16931, and Peppol passes.
+
+Run the mandatory positive-conformity gate with:
+
+```bash
+make test-peppol-positive
+```
+
+The gate verifies the pinned runtime dependencies and executes every positive
+fixture through real `xmllint` and Saxon transforms. Missing dependencies fail
+the gate rather than skipping it.
 
 Run a tracked manifest through the authenticated public API and durable result
 path with `go run . regression`; see [`regression/README.md`](regression/README.md)

@@ -43,6 +43,31 @@ type PeppolProfile struct {
 	CompilerMetadataPath               string
 }
 
+// PeppolExample is one byte-for-byte official example from the pinned
+// OpenPeppol source commit. The examples are validation inputs, not locally
+// authored substitutes for external conformity evidence.
+type PeppolExample struct {
+	Name          string
+	XML           []byte
+	SourceURL     string
+	SourceVersion string
+	SourceSHA256  string
+	License       string
+}
+
+var peppolExampleNames = []string{
+	"Allowance-example.xml",
+	"Vat-category-S.xml",
+	"base-creditnote-correction.xml",
+	"base-example.xml",
+	"base-example_profile02.xml",
+	"base-negative-inv-correction.xml",
+	"sales-order-example.xml",
+	"vat-category-E.xml",
+	"vat-category-O.xml",
+	"vat-category-Z.xml",
+}
+
 var peppol = newPeppolProfile(
 	"3.0.21",
 	"705e83fa494c052254c5cd4cbd2fb42baa975d559774f6cc928dbdddd10ab29e",
@@ -88,6 +113,31 @@ func OpenPeppolSchematron() (fs.File, error) {
 // OpenPeppolXSLT opens the accepted deterministic runtime artefact.
 func OpenPeppolXSLT() (fs.File, error) {
 	return files.Open(peppol.EmbeddedXSLTPath)
+}
+
+// PeppolExamples returns verified independent copies of every official UBL
+// example packaged from the pinned release. Redistribution terms remain under
+// review and are recorded explicitly rather than inferred from public access.
+func PeppolExamples() ([]PeppolExample, error) {
+	if err := VerifyPeppolSources(); err != nil {
+		return nil, err
+	}
+	examples := make([]PeppolExample, 0, len(peppolExampleNames))
+	for _, name := range peppolExampleNames {
+		examplePath := path.Join(peppol.EmbeddedRoot, "examples", name)
+		content, err := files.ReadFile(examplePath)
+		if err != nil {
+			return nil, fmt.Errorf("read official Peppol example %s: %w", name, err)
+		}
+		digest := fmt.Sprintf("%x", sha256.Sum256(content))
+		examples = append(examples, PeppolExample{
+			Name: name, XML: append([]byte(nil), content...),
+			SourceURL:     "https://github.com/" + peppol.SourceRepository + "/blob/" + peppol.SourceCommit + "/rules/examples/" + name,
+			SourceVersion: peppol.SourceCommit, SourceSHA256: digest,
+			License: "Redistribution terms under review; see standard/peppol/Peppol-licensing.md.",
+		})
+	}
+	return examples, nil
 }
 
 // VerifyPeppolSources verifies the immutable official source bundle without
