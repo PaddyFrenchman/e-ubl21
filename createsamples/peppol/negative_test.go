@@ -20,10 +20,11 @@ func TestNegativeInvoiceFixturesCoverRequiredRuleFamiliesDeterministically(t *te
 	if !reflect.DeepEqual(first, second) {
 		t.Fatal("Peppol negative catalogue changed between consecutive generations")
 	}
-	if len(first) != 15 {
-		t.Fatalf("Peppol negative fixtures = %d, want 15", len(first))
+	if len(first) != 16 {
+		t.Fatalf("Peppol negative fixtures = %d, want 16", len(first))
 	}
 	wantRules := map[string][]string{
+		"control-en-missing-customization-id":    {"BR-01"},
 		"control-en-unsupported-attachment-mime": {"BR-CL-24"},
 		"control-xsd-missing-invoice-id":         nil,
 		"danish-payment-means-restriction":       {"DK-R-005"},
@@ -68,7 +69,7 @@ func TestNegativeInvoiceFixturesCoverRequiredRuleFamiliesDeterministically(t *te
 		if fixture.ID != "missing-profile-id" && !strings.Contains(fixture.XML, "<cbc:ProfileID>") {
 			t.Errorf("fixture %s unexpectedly lacks ProfileID", fixture.ID)
 		}
-		if !strings.Contains(fixture.XML, "<cbc:CustomizationID>") {
+		if fixture.ID != "control-en-missing-customization-id" && !strings.Contains(fixture.XML, "<cbc:CustomizationID>") {
 			t.Errorf("fixture %s does not retain the top-level identifier structure", fixture.ID)
 		}
 	}

@@ -40,6 +40,14 @@ func NegativeInvoiceFixtures() ([]NegativeFixture, error) {
 			},
 		},
 		{
+			id: "control-en-missing-customization-id", family: "stage-control",
+			description: "remove the specification identifier to prove the missing case stops at EN 16931",
+			rules:       []string{"BR-01"},
+			mutateXML: func(content string) (string, error) {
+				return replaceExactlyOnce(content, "    <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:CustomizationID>\n", "")
+			},
+		},
+		{
 			id: "invalid-customization-id", family: "identifier",
 			description: "replace the Peppol specification identifier with the EN 16931 base identifier",
 			rules:       []string{"PEPPOL-EN16931-R004"},
@@ -203,7 +211,7 @@ func NegativeInvoiceFixtures() ([]NegativeFixture, error) {
 		case "control-xsd-missing-invoice-id":
 			fixtures[index].FailureStage = "ubl21-xsd"
 			fixtures[index].ExpectedDiagnostic = "CommonBasicComponents-2}ID"
-		case "control-en-unsupported-attachment-mime":
+		case "control-en-missing-customization-id", "control-en-unsupported-attachment-mime":
 			fixtures[index].FailureStage = "en16931"
 		}
 	}

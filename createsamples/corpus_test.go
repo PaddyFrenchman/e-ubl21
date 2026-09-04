@@ -323,8 +323,8 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 	if err := verifyCorpusDeterminism(first, second); err != nil {
 		t.Fatal(err)
 	}
-	if len(first.fixtures) != 15 {
-		t.Fatalf("Peppol negative fixtures = %d, want 15", len(first.fixtures))
+	if len(first.fixtures) != 16 {
+		t.Fatalf("Peppol negative fixtures = %d, want 16", len(first.fixtures))
 	}
 	if err := regression.ValidateFixtureManifest(first.manifestJSON); err != nil {
 		t.Fatalf("Peppol negative manifest rejected: %v", err)
@@ -339,6 +339,10 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 
 	peppolFamilies := map[string]bool{}
 	controls := map[string]bool{}
+	enControls := map[string][]string{
+		"control-en-missing-customization-id":    {"BR-01"},
+		"control-en-unsupported-attachment-mime": {"BR-CL-24"},
+	}
 	for _, fixture := range first.fixtures {
 		entry := fixture.entry
 		if entry.Mutation == nil || entry.Mutation.ID == "" || entry.Mutation.Description == "" {
@@ -353,10 +357,10 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 			if len(entry.ExpectedStages) != 1 || entry.ExpectedStages[0].Stage != "ubl21-xsd" {
 				t.Errorf("XSD control reaches a later stage: %+v", entry.ExpectedStages)
 			}
-		} else if entry.Mutation.ID == "control-en-unsupported-attachment-mime" {
+		} else if wantRules, ok := enControls[entry.Mutation.ID]; ok {
 			controls[entry.Mutation.ID] = true
 			if len(entry.ExpectedStages) != 2 || entry.ExpectedStages[1].Stage != "en16931" ||
-				!reflect.DeepEqual(entry.ExpectedStages[1].RuleIDs, []string{"BR-CL-24"}) {
+				!reflect.DeepEqual(entry.ExpectedStages[1].RuleIDs, wantRules) {
 				t.Errorf("EN control has wrong stop contract: %+v", entry.ExpectedStages)
 			}
 		} else if len(entry.ExpectedStages) != 3 || entry.ExpectedStages[0].Outcome != "passed" ||
@@ -379,7 +383,7 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 	if len(peppolFamilies) != 11 {
 		t.Fatalf("Peppol-targeted negative family coverage = %v", peppolFamilies)
 	}
-	if len(controls) != 2 {
+	if len(controls) != 3 {
 		t.Fatalf("earlier-stage controls = %v", controls)
 	}
 }
@@ -617,8 +621,8 @@ func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if len(manifest.Fixtures) != 29 {
-		t.Fatalf("tracked Peppol manifest fixtures = %d, want 29", len(manifest.Fixtures))
+	if len(manifest.Fixtures) != 30 {
+		t.Fatalf("tracked Peppol manifest fixtures = %d, want 30", len(manifest.Fixtures))
 	}
 	generatorVersion := manifest.Fixtures[0].Provenance.GeneratorVersion
 	if !immutableGeneratorVersion.MatchString(generatorVersion) {
@@ -634,8 +638,8 @@ func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
 	}
 
 	files := snapshotGeneratedDirectory(t, root)
-	if len(files) != 31 {
-		t.Fatalf("tracked Peppol corpus files = %d, want 31 including manifest and ownership marker", len(files))
+	if len(files) != 32 {
+		t.Fatalf("tracked Peppol corpus files = %d, want 32 including manifest and ownership marker", len(files))
 	}
 	for _, fixture := range manifest.Fixtures {
 		content, ok := files[fixture.File]

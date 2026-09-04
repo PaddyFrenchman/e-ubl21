@@ -549,6 +549,11 @@ Each fixture must record the expected Peppol rule ID(s).
 
 Prefer one deliberate semantic defect per fixture.
 
+A missing `CustomizationID` is already rejected by EN 16931 rule `BR-01`.
+Retain it as an EN-invalid short-circuit control alongside the EN-valid invalid
+`CustomizationID` Peppol target; do not count the missing case as
+Peppol-targeted coverage.
+
 Also retain controls proving:
 
 - XSD-invalid input never reaches EN/Peppol;

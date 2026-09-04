@@ -323,10 +323,11 @@ include it beside the positive fixtures with `--set all`. The negative set has
 13 XSD-valid and EN-valid Peppol mutations spanning identifiers, endpoints,
 party schemes, code lists, payment, cardinality, currency, arithmetic,
 `PEPPOL-COMMON-*`, and country rules. Each records the exact official rule IDs
-expected from the pinned runtime. Two additional controls stop at XSD and EN;
-the EN control documents that the unsupported attachment MIME restriction is
-already enforced by EN 16931 rather than misrepresenting it as Peppol-only.
-The attachment control is excluded from Peppol-targeted family coverage.
+expected from the pinned runtime. Three additional controls stop at XSD or EN.
+The EN controls document that missing `CustomizationID` is rejected by `BR-01`
+and unsupported attachment MIME is rejected by `BR-CL-24`, rather than
+misrepresenting either as Peppol-only. Both EN controls are excluded from
+Peppol-targeted family coverage.
 
 Run the mandatory negative-conformity gate with:
 
