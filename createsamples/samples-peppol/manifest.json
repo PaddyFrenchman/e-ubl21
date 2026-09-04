@@ -15,7 +15,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -63,7 +63,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -98,6 +98,54 @@
       ]
     },
     {
+      "id": "peppol.invoice.control-en-unsupported-attachment-mime",
+      "documentType": "Invoice",
+      "profile": "ubl21-en16931",
+      "file": "negative/Invoice/control-en-unsupported-attachment-mime.xml",
+      "sha256": "bf59620a50c02268503b5155c4510ea68bbeca44cf3ecd383ebf360036b8121d",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": null
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/peppol",
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        }
+      },
+      "mutation": {
+        "id": "control-en-unsupported-attachment-mime",
+        "description": "attach an embedded application/zip document to prove the shared MIME restriction stops at EN 16931"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "BR-CL-24"
+          ]
+        }
+      ],
+      "tags": [
+        "invoice",
+        "negative",
+        "peppol",
+        "stage-control",
+        "control-en-unsupported-attachment-mime"
+      ]
+    },
+    {
       "id": "peppol.invoice.control-xsd-missing-invoice-id",
       "documentType": "Invoice",
       "profile": "ubl21",
@@ -111,7 +159,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "mutation": {
         "id": "control-xsd-missing-invoice-id",
@@ -146,7 +194,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -202,7 +250,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -258,7 +306,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -314,7 +362,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -370,7 +418,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -426,7 +474,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -482,7 +530,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -538,7 +586,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -594,7 +642,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -651,7 +699,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -707,7 +755,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -763,7 +811,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -811,7 +859,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -859,7 +907,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
@@ -902,54 +950,6 @@
       ]
     },
     {
-      "id": "peppol.invoice.unsupported-attachment-mime",
-      "documentType": "Invoice",
-      "profile": "ubl21-en16931",
-      "file": "negative/Invoice/unsupported-attachment-mime.xml",
-      "sha256": "bf59620a50c02268503b5155c4510ea68bbeca44cf3ecd383ebf360036b8121d",
-      "standards": {
-        "ubl": "2.1",
-        "en16931": "1.3.16",
-        "peppol": null
-      },
-      "provenance": {
-        "kind": "generated",
-        "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
-      },
-      "rulesets": {
-        "en16931": {
-          "version": "1.3.16",
-          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
-        }
-      },
-      "mutation": {
-        "id": "unsupported-attachment-mime",
-        "description": "attach an embedded application/zip document to prove the shared MIME restriction stops at EN 16931"
-      },
-      "expectedFinal": "invalid",
-      "expectedStages": [
-        {
-          "stage": "ubl21-xsd",
-          "outcome": "passed"
-        },
-        {
-          "stage": "en16931",
-          "outcome": "standards-invalid",
-          "ruleIds": [
-            "BR-CL-24"
-          ]
-        }
-      ],
-      "tags": [
-        "invoice",
-        "negative",
-        "peppol",
-        "attachment",
-        "unsupported-attachment-mime"
-      ]
-    },
-    {
       "id": "peppol.invoice.unsupported-profile-id",
       "documentType": "Invoice",
       "profile": "peppol-bis-billing",
@@ -963,7 +963,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:eeab6a281c66137983d4797ede3d12f09f4a7898"
+        "generatorVersion": "git:2d5f3b76b0a34c9063fd2d5df17ba83bcd1f11f2"
       },
       "rulesets": {
         "en16931": {
