@@ -282,6 +282,60 @@ func TestPeppolPositiveCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 	}
 }
 
+func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	first, err := generatePeppolNegativeCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := generatePeppolNegativeCorpus(xsdDir, testGeneratorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := verifyCorpusDeterminism(first, second); err != nil {
+		t.Fatal(err)
+	}
+	if len(first.fixtures) != 5 {
+		t.Fatalf("Peppol negative fixtures = %d, want 5", len(first.fixtures))
+	}
+	if err := regression.ValidateFixtureManifest(first.manifestJSON); err != nil {
+		t.Fatalf("Peppol negative manifest rejected: %v", err)
+	}
+	xmllintPath, err := exec.LookPath("xmllint")
+	if err != nil {
+		t.Fatal("xmllint is required for the Peppol negative-corpus acceptance test")
+	}
+	if err := validateGeneratedCorpus(xmllintPath, first); err != nil {
+		t.Fatal(err)
+	}
+
+	families := map[string]bool{}
+	for _, fixture := range first.fixtures {
+		entry := fixture.entry
+		if entry.Mutation == nil || entry.Mutation.ID == "" || entry.Mutation.Description == "" {
+			t.Errorf("fixture %s lacks mutation provenance: %+v", entry.ID, entry.Mutation)
+		}
+		if entry.ExpectedFinal != "invalid" || len(entry.ExpectedStages) != 3 ||
+			entry.ExpectedStages[0].Stage != "ubl21-xsd" || entry.ExpectedStages[0].Outcome != "passed" ||
+			entry.ExpectedStages[1].Stage != "en16931" || entry.ExpectedStages[1].Outcome != "passed" ||
+			entry.ExpectedStages[2].Stage != "peppol-bis-billing" ||
+			entry.ExpectedStages[2].Outcome != "standards-invalid" ||
+			len(entry.ExpectedStages[2].RuleIDs) == 0 {
+			t.Errorf("fixture %s has wrong negative-stage contract: %+v", entry.ID, entry)
+		}
+		for _, family := range []string{"identifier", "profile", "code-list", "common", "country"} {
+			for _, tag := range entry.Tags {
+				if tag == family {
+					families[family] = true
+				}
+			}
+		}
+	}
+	if len(families) != 5 {
+		t.Fatalf("Peppol negative family coverage = %v", families)
+	}
+}
+
 func TestEN16931NegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing.T) {
 	xsdDir := filepath.Join("..", "XSD")
 	first, err := generateEN16931NegativeCorpus(xsdDir, testGeneratorVersion)
@@ -515,8 +569,8 @@ func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if len(manifest.Fixtures) != 4 {
-		t.Fatalf("tracked Peppol manifest fixtures = %d, want 4", len(manifest.Fixtures))
+	if len(manifest.Fixtures) != 9 {
+		t.Fatalf("tracked Peppol manifest fixtures = %d, want 9", len(manifest.Fixtures))
 	}
 	generatorVersion := manifest.Fixtures[0].Provenance.GeneratorVersion
 	if !immutableGeneratorVersion.MatchString(generatorVersion) {
@@ -530,8 +584,8 @@ func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
 	}
 
 	files := snapshotGeneratedDirectory(t, root)
-	if len(files) != 6 {
-		t.Fatalf("tracked Peppol corpus files = %d, want 6 including manifest and ownership marker", len(files))
+	if len(files) != 11 {
+		t.Fatalf("tracked Peppol corpus files = %d, want 11 including manifest and ownership marker", len(files))
 	}
 	for _, fixture := range manifest.Fixtures {
 		content, ok := files[fixture.File]
@@ -545,7 +599,15 @@ func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
 		}
 	}
 
-	fresh, err := generatePeppolPositiveCorpus(filepath.Join("..", "XSD"), generatorVersion)
+	positive, err := generatePeppolPositiveCorpus(filepath.Join("..", "XSD"), generatorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	negative, err := generatePeppolNegativeCorpus(filepath.Join("..", "XSD"), generatorVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fresh, err := combineGeneratedCorpora(positive, negative)
 	if err != nil {
 		t.Fatal(err)
 	}

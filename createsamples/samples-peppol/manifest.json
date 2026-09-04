@@ -15,7 +15,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:d78938dee2262282b6974b5e521ec93bc0aa842e"
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
       },
       "rulesets": {
         "en16931": {
@@ -63,7 +63,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:d78938dee2262282b6974b5e521ec93bc0aa842e"
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
       },
       "rulesets": {
         "en16931": {
@@ -98,6 +98,230 @@
       ]
     },
     {
+      "id": "peppol.invoice.danish-supplier-legal-scheme",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "negative/Invoice/danish-supplier-legal-scheme.xml",
+      "sha256": "ffd3a51b090c26ae087cd8a412caeb7fe3f2e0200920f47be6b78d4502f8bb73",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/peppol",
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "mutation": {
+        "id": "danish-supplier-legal-scheme",
+        "description": "make the supplier Danish without the mandatory 0184 legal-registration scheme"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "DK-R-014"
+          ]
+        }
+      ],
+      "tags": [
+        "invoice",
+        "negative",
+        "peppol",
+        "country",
+        "danish-supplier-legal-scheme"
+      ]
+    },
+    {
+      "id": "peppol.invoice.invalid-customization-id",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "negative/Invoice/invalid-customization-id.xml",
+      "sha256": "7fcdafd3e8a629a761f85429e2b91f416bc61fe5858f62396bfae538f1021b31",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/peppol",
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "mutation": {
+        "id": "invalid-customization-id",
+        "description": "replace the Peppol specification identifier with the EN 16931 base identifier"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "PEPPOL-EN16931-R004"
+          ]
+        }
+      ],
+      "tags": [
+        "invoice",
+        "negative",
+        "peppol",
+        "identifier",
+        "invalid-customization-id"
+      ]
+    },
+    {
+      "id": "peppol.invoice.invalid-endpoint-scheme",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "negative/Invoice/invalid-endpoint-scheme.xml",
+      "sha256": "1e0f386fd3265a2f9a5f2d97935c8823f576c5b5dc0f9c7c317dd1545f8a5661",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/peppol",
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "mutation": {
+        "id": "invalid-endpoint-scheme",
+        "description": "replace the seller electronic-address scheme with 0037, allowed by EN 16931 but excluded from the Peppol EAS subset"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "PEPPOL-EN16931-CL008"
+          ]
+        }
+      ],
+      "tags": [
+        "invoice",
+        "negative",
+        "peppol",
+        "code-list",
+        "invalid-endpoint-scheme"
+      ]
+    },
+    {
+      "id": "peppol.invoice.invalid-gln-check-digit",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "negative/Invoice/invalid-gln-check-digit.xml",
+      "sha256": "29017229e1e619fbf896ea27828311b0d34d8559f333c5f1bd625ff37951cb25",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/peppol",
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "mutation": {
+        "id": "invalid-gln-check-digit",
+        "description": "change the seller GLN check digit while retaining the GLN identifier scheme"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "PEPPOL-COMMON-R040"
+          ]
+        }
+      ],
+      "tags": [
+        "invoice",
+        "negative",
+        "peppol",
+        "common",
+        "invalid-gln-check-digit"
+      ]
+    },
+    {
       "id": "peppol.invoice.profile-01",
       "documentType": "Invoice",
       "profile": "peppol-bis-billing",
@@ -111,7 +335,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:d78938dee2262282b6974b5e521ec93bc0aa842e"
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
       },
       "rulesets": {
         "en16931": {
@@ -159,7 +383,7 @@
       "provenance": {
         "kind": "generated",
         "generator": "createsamples/peppol",
-        "generatorVersion": "git:d78938dee2262282b6974b5e521ec93bc0aa842e"
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
       },
       "rulesets": {
         "en16931": {
@@ -191,6 +415,62 @@
         "peppol",
         "positive",
         "profile-02"
+      ]
+    },
+    {
+      "id": "peppol.invoice.unsupported-profile-id",
+      "documentType": "Invoice",
+      "profile": "peppol-bis-billing",
+      "file": "negative/Invoice/unsupported-profile-id.xml",
+      "sha256": "80b4cb47eccfbf2417f1f6dc7b5c6b9015529f229ae449e5fefa082c52159a37",
+      "standards": {
+        "ubl": "2.1",
+        "en16931": "1.3.16",
+        "peppol": "3.0.21"
+      },
+      "provenance": {
+        "kind": "generated",
+        "generator": "createsamples/peppol",
+        "generatorVersion": "git:6e5fc48d986ca8749ba637a2bf8c392049209447"
+      },
+      "rulesets": {
+        "en16931": {
+          "version": "1.3.16",
+          "sha256": "39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd"
+        },
+        "peppol": {
+          "version": "1.3.16",
+          "sha256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+        }
+      },
+      "mutation": {
+        "id": "unsupported-profile-id",
+        "description": "replace the approved Peppol process identifier with an unknown process"
+      },
+      "expectedFinal": "invalid",
+      "expectedStages": [
+        {
+          "stage": "ubl21-xsd",
+          "outcome": "passed"
+        },
+        {
+          "stage": "en16931",
+          "outcome": "passed"
+        },
+        {
+          "stage": "peppol-bis-billing",
+          "outcome": "standards-invalid",
+          "ruleIds": [
+            "PEPPOL-EN16931-R007"
+          ]
+        }
+      ],
+      "tags": [
+        "invoice",
+        "negative",
+        "peppol",
+        "profile",
+        "unsupported-profile-id"
       ]
     }
   ]

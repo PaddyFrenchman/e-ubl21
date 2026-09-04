@@ -30,3 +30,4 @@ go run ./tools/compile-peppol-schematron \
     -schxslt-dir "$SCHXSLT_DIR" \
     -check "$ACCEPTED_XSLT"
 go test ./validation-assets
+go test ./createsamples -run '^TestPeppolNegativeCorpusPassesENAndTriggersOnlyCataloguedPeppolRule$' -count=1

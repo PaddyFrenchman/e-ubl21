@@ -225,8 +225,19 @@ func TestGeneratePeppolUsesProfileDefaultOutput(t *testing.T) {
 		"generate", "--profile", "peppol-bis-billing", "--set", "negative",
 		"--xsd", xsdDir, "--output", filepath.Join(workingDir, "negative"),
 		"--generator-version", testGeneratorVersion,
-	}); err == nil || !strings.Contains(err.Error(), "TODO-REGRESSION-007") {
-		t.Fatalf("Peppol negative generation error = %v", err)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	negativeManifest, err := os.ReadFile(filepath.Join(workingDir, "negative", "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var negative fixtureManifest
+	if err := json.Unmarshal(negativeManifest, &negative); err != nil {
+		t.Fatal(err)
+	}
+	if len(negative.Fixtures) != 5 {
+		t.Fatalf("Peppol negative generated fixtures = %d, want 5", len(negative.Fixtures))
 	}
 }
 

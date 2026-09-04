@@ -4,12 +4,67 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/PaddyFrenchman/e-ubl21/createsamples/en16931"
 	peppolsamples "github.com/PaddyFrenchman/e-ubl21/createsamples/peppol"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 )
+
+func generatePeppolNegativeCorpus(xsdDir, generatorVersion string) (generatedCorpus, error) {
+	if err := validationassets.VerifyEN16931(); err != nil {
+		return generatedCorpus{}, err
+	}
+	if err := validationassets.VerifyPeppol(); err != nil {
+		return generatedCorpus{}, err
+	}
+	enProfile := validationassets.EN16931()
+	peppolProfile := validationassets.Peppol()
+	enVersion := enProfile.Version
+	bisVersion := peppolProfile.Version
+	rulesets := &fixtureRulesets{
+		EN16931: &fixtureRuleset{Version: enVersion, SHA256: enProfile.XSLTSHA256},
+		Peppol: &fixtureRuleset{
+			Version: peppolProfile.ValidationArtefactsVersion,
+			SHA256:  peppolProfile.XSLTSHA256,
+		},
+	}
+	provenance := fixtureProvenance{
+		Kind: "generated", Generator: "createsamples/peppol", GeneratorVersion: generatorVersion,
+	}
+	negative, err := peppolsamples.NegativeInvoiceFixtures()
+	if err != nil {
+		return generatedCorpus{}, err
+	}
+	fixtures := make([]generatedFixture, 0, len(negative))
+	for _, fixture := range negative {
+		content := []byte(fixture.XML)
+		ruleIDs := append([]string(nil), fixture.ExpectedRuleIDs...)
+		sort.Strings(ruleIDs)
+		fixtures = append(fixtures, generatedFixture{
+			entry: fixtureManifestEntry{
+				ID: "peppol.invoice." + fixture.ID, DocumentType: "Invoice",
+				Profile:    "peppol-bis-billing",
+				File:       filepath.ToSlash(filepath.Join("negative", "Invoice", fixture.ID+".xml")),
+				SHA256:     fmt.Sprintf("%x", sha256.Sum256(content)),
+				Standards:  fixtureStandards{UBL: "2.1", EN16931: &enVersion, Peppol: &bisVersion},
+				Provenance: provenance, Rulesets: rulesets,
+				Mutation:      &fixtureMutation{ID: fixture.ID, Description: fixture.Mutation},
+				ExpectedFinal: "invalid",
+				ExpectedStages: []fixtureExpectedStage{
+					{Stage: "ubl21-xsd", Outcome: "passed"},
+					{Stage: "en16931", Outcome: "passed"},
+					{Stage: "peppol-bis-billing", Outcome: "standards-invalid", RuleIDs: ruleIDs},
+				},
+				Tags: []string{"invoice", "negative", "peppol", fixture.Family, fixture.ID},
+			},
+			content:    content,
+			schemaPath: filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd"),
+		})
+	}
+	return buildGeneratedCorpus(fixtures)
+}
 
 type peppolPositiveVariant struct {
 	id             string

@@ -94,10 +94,22 @@ func runGenerate(args []string) error {
 			if *count != 1 {
 				return generatedCorpus{}, errors.New("count is only supported for profile ubl21")
 			}
-			if *set != "positive" {
-				return generatedCorpus{}, errors.New("Peppol negative generation is owned by TODO-REGRESSION-007; use --set positive")
+			switch *set {
+			case "positive":
+				return generatePeppolPositiveCorpus(*xsdDir, version)
+			case "negative":
+				return generatePeppolNegativeCorpus(*xsdDir, version)
+			default:
+				positive, err := generatePeppolPositiveCorpus(*xsdDir, version)
+				if err != nil {
+					return generatedCorpus{}, err
+				}
+				negative, err := generatePeppolNegativeCorpus(*xsdDir, version)
+				if err != nil {
+					return generatedCorpus{}, err
+				}
+				return combineGeneratedCorpora(positive, negative)
 			}
-			return generatePeppolPositiveCorpus(*xsdDir, version)
 		}
 		if *profile == "en16931" {
 			if *count != 1 {

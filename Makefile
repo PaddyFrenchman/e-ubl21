@@ -15,7 +15,8 @@ test-en16931-image:
 	./devsetup/test-en16931-image.sh "$(or $(IMAGE),e-ubl21:en16931-check)"
 
 # Recompile the pinned Peppol Schematron twice, compare it with the accepted
-# executable XSLT, and run the offline SVRL smoke transform.
+# executable XSLT, run the offline SVRL smoke transform, and prove every
+# targeted-negative fixture passes EN before emitting its catalogued rule.
 test-peppol-schematron:
 	./devsetup/test-peppol-schematron.sh
 
