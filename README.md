@@ -326,6 +326,7 @@ party schemes, code lists, payment, cardinality, currency, arithmetic,
 expected from the pinned runtime. Two additional controls stop at XSD and EN;
 the EN control documents that the unsupported attachment MIME restriction is
 already enforced by EN 16931 rather than misrepresenting it as Peppol-only.
+The attachment control is excluded from Peppol-targeted family coverage.
 
 Run the mandatory negative-conformity gate with:
 

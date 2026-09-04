@@ -141,7 +141,7 @@ func NegativeInvoiceFixtures() ([]NegativeFixture, error) {
 			},
 		},
 		{
-			id: "unsupported-attachment-mime", family: "attachment",
+			id: "control-en-unsupported-attachment-mime", family: "stage-control",
 			description: "attach an embedded application/zip document to prove the shared MIME restriction stops at EN 16931",
 			rules:       []string{"BR-CL-24"},
 			mutateXML: func(content string) (string, error) {
@@ -203,7 +203,7 @@ func NegativeInvoiceFixtures() ([]NegativeFixture, error) {
 		case "control-xsd-missing-invoice-id":
 			fixtures[index].FailureStage = "ubl21-xsd"
 			fixtures[index].ExpectedDiagnostic = "CommonBasicComponents-2}ID"
-		case "unsupported-attachment-mime":
+		case "control-en-unsupported-attachment-mime":
 			fixtures[index].FailureStage = "en16931"
 		}
 	}

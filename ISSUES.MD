@@ -655,7 +655,9 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/76
 
 **Goal:** Prove the Peppol layer catches profile-specific failures that UBL XSD + EN 16931 alone accept.
 
-Create deterministic XSD-valid and EN-valid mutations for identifiers, endpoint/EAS and party schemes, code lists, payment restrictions, syntax/cardinality, currency consistency, arithmetic rules, attachment/MIME restrictions, common rules, and selected country rules.
+Create deterministic XSD-valid and EN-valid mutations for identifiers, endpoint/EAS and party schemes, code lists, payment restrictions, syntax/cardinality, currency consistency, arithmetic rules, common rules, and selected country rules.
+
+**Pinned-layer boundary:** The Peppol attachment MIME assertion uses the same allowed set already enforced by EN 16931 rule `BR-CL-24`. Retain unsupported MIME as the EN-invalid short-circuit control, but do not count it as a Peppol-targeted family; no fabricated Peppol-only MIME fixture may bypass the required EN-valid precondition.
 
 Retain controls proving XSD-invalid input never reaches EN/Peppol and EN-invalid input never reaches Peppol.
 

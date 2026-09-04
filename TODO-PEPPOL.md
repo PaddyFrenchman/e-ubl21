@@ -536,9 +536,14 @@ Create or mutate XSD-valid, EN-valid documents to trigger representative categor
 - Peppol syntax/cardinality restrictions;
 - currency consistency rules;
 - line arithmetic/slack rules;
-- attachment/MIME restrictions;
 - `PEPPOL-COMMON-*` identifier validation;
 - selected country-specific rules bundled in the release.
+
+For the pinned release, the Peppol attachment MIME assertion uses the same
+allowed set that EN 16931 rule `BR-CL-24` already rejects. An unsupported MIME
+fixture must therefore remain an EN-invalid short-circuit control and must not
+be counted as Peppol-targeted coverage; manufacturing a Peppol-only MIME case
+would violate the required XSD-valid and EN-valid preconditions.
 
 Each fixture must record the expected Peppol rule ID(s).
 

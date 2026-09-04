@@ -337,7 +337,8 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 		t.Fatal(err)
 	}
 
-	families := map[string]bool{}
+	peppolFamilies := map[string]bool{}
+	controls := map[string]bool{}
 	for _, fixture := range first.fixtures {
 		entry := fixture.entry
 		if entry.Mutation == nil || entry.Mutation.ID == "" || entry.Mutation.Description == "" {
@@ -348,10 +349,12 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 			t.Errorf("fixture %s has wrong negative-stage contract: %+v", entry.ID, entry)
 		}
 		if entry.Mutation.ID == "control-xsd-missing-invoice-id" {
+			controls[entry.Mutation.ID] = true
 			if len(entry.ExpectedStages) != 1 || entry.ExpectedStages[0].Stage != "ubl21-xsd" {
 				t.Errorf("XSD control reaches a later stage: %+v", entry.ExpectedStages)
 			}
-		} else if entry.Mutation.ID == "unsupported-attachment-mime" {
+		} else if entry.Mutation.ID == "control-en-unsupported-attachment-mime" {
+			controls[entry.Mutation.ID] = true
 			if len(entry.ExpectedStages) != 2 || entry.ExpectedStages[1].Stage != "en16931" ||
 				!reflect.DeepEqual(entry.ExpectedStages[1].RuleIDs, []string{"BR-CL-24"}) {
 				t.Errorf("EN control has wrong stop contract: %+v", entry.ExpectedStages)
@@ -360,20 +363,24 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 			entry.ExpectedStages[1].Stage != "en16931" || entry.ExpectedStages[1].Outcome != "passed" ||
 			entry.ExpectedStages[2].Stage != "peppol-bis-billing" || len(entry.ExpectedStages[2].RuleIDs) == 0 {
 			t.Errorf("Peppol target does not reach the Peppol stage: %+v", entry.ExpectedStages)
-		}
-		for _, family := range []string{
-			"arithmetic", "attachment", "cardinality", "code-list", "common", "country",
-			"currency", "endpoint", "identifier", "party-scheme", "payment", "profile", "stage-control",
-		} {
-			for _, tag := range entry.Tags {
-				if tag == family {
-					families[family] = true
+		} else {
+			for _, family := range []string{
+				"arithmetic", "cardinality", "code-list", "common", "country", "currency",
+				"endpoint", "identifier", "party-scheme", "payment", "profile",
+			} {
+				for _, tag := range entry.Tags {
+					if tag == family {
+						peppolFamilies[family] = true
+					}
 				}
 			}
 		}
 	}
-	if len(families) != 13 {
-		t.Fatalf("Peppol negative family coverage = %v", families)
+	if len(peppolFamilies) != 11 {
+		t.Fatalf("Peppol-targeted negative family coverage = %v", peppolFamilies)
+	}
+	if len(controls) != 2 {
+		t.Fatalf("earlier-stage controls = %v", controls)
 	}
 }
 
