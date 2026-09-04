@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -322,8 +323,8 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 	if err := verifyCorpusDeterminism(first, second); err != nil {
 		t.Fatal(err)
 	}
-	if len(first.fixtures) != 5 {
-		t.Fatalf("Peppol negative fixtures = %d, want 5", len(first.fixtures))
+	if len(first.fixtures) != 15 {
+		t.Fatalf("Peppol negative fixtures = %d, want 15", len(first.fixtures))
 	}
 	if err := regression.ValidateFixtureManifest(first.manifestJSON); err != nil {
 		t.Fatalf("Peppol negative manifest rejected: %v", err)
@@ -342,15 +343,28 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 		if entry.Mutation == nil || entry.Mutation.ID == "" || entry.Mutation.Description == "" {
 			t.Errorf("fixture %s lacks mutation provenance: %+v", entry.ID, entry.Mutation)
 		}
-		if entry.ExpectedFinal != "invalid" || len(entry.ExpectedStages) != 3 ||
-			entry.ExpectedStages[0].Stage != "ubl21-xsd" || entry.ExpectedStages[0].Outcome != "passed" ||
-			entry.ExpectedStages[1].Stage != "en16931" || entry.ExpectedStages[1].Outcome != "passed" ||
-			entry.ExpectedStages[2].Stage != "peppol-bis-billing" ||
-			entry.ExpectedStages[2].Outcome != "standards-invalid" ||
-			len(entry.ExpectedStages[2].RuleIDs) == 0 {
+		if entry.ExpectedFinal != "invalid" || len(entry.ExpectedStages) == 0 ||
+			entry.ExpectedStages[len(entry.ExpectedStages)-1].Outcome != "standards-invalid" {
 			t.Errorf("fixture %s has wrong negative-stage contract: %+v", entry.ID, entry)
 		}
-		for _, family := range []string{"identifier", "profile", "code-list", "common", "country"} {
+		if entry.Mutation.ID == "control-xsd-missing-invoice-id" {
+			if len(entry.ExpectedStages) != 1 || entry.ExpectedStages[0].Stage != "ubl21-xsd" {
+				t.Errorf("XSD control reaches a later stage: %+v", entry.ExpectedStages)
+			}
+		} else if entry.Mutation.ID == "unsupported-attachment-mime" {
+			if len(entry.ExpectedStages) != 2 || entry.ExpectedStages[1].Stage != "en16931" ||
+				!reflect.DeepEqual(entry.ExpectedStages[1].RuleIDs, []string{"BR-CL-24"}) {
+				t.Errorf("EN control has wrong stop contract: %+v", entry.ExpectedStages)
+			}
+		} else if len(entry.ExpectedStages) != 3 || entry.ExpectedStages[0].Outcome != "passed" ||
+			entry.ExpectedStages[1].Stage != "en16931" || entry.ExpectedStages[1].Outcome != "passed" ||
+			entry.ExpectedStages[2].Stage != "peppol-bis-billing" || len(entry.ExpectedStages[2].RuleIDs) == 0 {
+			t.Errorf("Peppol target does not reach the Peppol stage: %+v", entry.ExpectedStages)
+		}
+		for _, family := range []string{
+			"arithmetic", "attachment", "cardinality", "code-list", "common", "country",
+			"currency", "endpoint", "identifier", "party-scheme", "payment", "profile", "stage-control",
+		} {
 			for _, tag := range entry.Tags {
 				if tag == family {
 					families[family] = true
@@ -358,7 +372,7 @@ func TestPeppolNegativeCorpusIsDeterministicManifestDrivenAndXSDValid(t *testing
 			}
 		}
 	}
-	if len(families) != 5 {
+	if len(families) != 13 {
 		t.Fatalf("Peppol negative family coverage = %v", families)
 	}
 }
@@ -596,8 +610,8 @@ func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		t.Fatal(err)
 	}
-	if len(manifest.Fixtures) != 19 {
-		t.Fatalf("tracked Peppol manifest fixtures = %d, want 19", len(manifest.Fixtures))
+	if len(manifest.Fixtures) != 29 {
+		t.Fatalf("tracked Peppol manifest fixtures = %d, want 29", len(manifest.Fixtures))
 	}
 	generatorVersion := manifest.Fixtures[0].Provenance.GeneratorVersion
 	if !immutableGeneratorVersion.MatchString(generatorVersion) {
@@ -613,8 +627,8 @@ func TestTrackedPeppolCorpusMatchesFreshGeneration(t *testing.T) {
 	}
 
 	files := snapshotGeneratedDirectory(t, root)
-	if len(files) != 21 {
-		t.Fatalf("tracked Peppol corpus files = %d, want 21 including manifest and ownership marker", len(files))
+	if len(files) != 31 {
+		t.Fatalf("tracked Peppol corpus files = %d, want 31 including manifest and ownership marker", len(files))
 	}
 	for _, fixture := range manifest.Fixtures {
 		content, ok := files[fixture.File]

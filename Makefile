@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-peppol-positive test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-peppol-positive test-peppol-negative test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -15,8 +15,7 @@ test-en16931-image:
 	./devsetup/test-en16931-image.sh "$(or $(IMAGE),e-ubl21:en16931-check)"
 
 # Recompile the pinned Peppol Schematron twice, compare it with the accepted
-# executable XSLT, run the offline SVRL smoke transform, and prove every
-# targeted-negative fixture passes EN before emitting its catalogued rule.
+# executable XSLT, and run the offline SVRL smoke transform.
 test-peppol-schematron:
 	./devsetup/test-peppol-schematron.sh
 
@@ -24,6 +23,12 @@ test-peppol-schematron:
 # ruleset, and the pinned Peppol ruleset. Runtime dependencies are mandatory.
 test-peppol-positive:
 	./devsetup/test-peppol-positive.sh
+
+# Prove every targeted negative is XSD/EN valid before it reaches Peppol and
+# emits exactly its catalogued official rule evidence. Earlier-stage controls
+# prove XSD-invalid and EN-invalid documents stop before later runtimes.
+test-peppol-negative:
+	./devsetup/test-peppol-negative.sh
 
 # Run the deterministic JetStream chaos/crash/replay integration gate. The
 # scenario-to-test mapping is documented in docs/CHAOS-CRASH-REPLAY.md.

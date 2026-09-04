@@ -318,6 +318,25 @@ The gate verifies the pinned runtime dependencies and executes every positive
 fixture through real `xmllint` and Saxon transforms. Missing dependencies fail
 the gate rather than skipping it.
 
+Generate the rule-targeted negative Peppol corpus with `--set negative`, or
+include it beside the positive fixtures with `--set all`. The negative set has
+13 XSD-valid and EN-valid Peppol mutations spanning identifiers, endpoints,
+party schemes, code lists, payment, cardinality, currency, arithmetic,
+`PEPPOL-COMMON-*`, and country rules. Each records the exact official rule IDs
+expected from the pinned runtime. Two additional controls stop at XSD and EN;
+the EN control documents that the unsupported attachment MIME restriction is
+already enforced by EN 16931 rather than misrepresenting it as Peppol-only.
+
+Run the mandatory negative-conformity gate with:
+
+```bash
+make test-peppol-negative
+```
+
+The gate treats runtime dependencies as mandatory, validates each fixture only
+through its declared ordered stages, and verifies exact rule evidence at the
+first failing stage.
+
 Run a tracked manifest through the authenticated public API and durable result
 path with `go run . regression`; see [`regression/README.md`](regression/README.md)
 for token, profile, polling, and artifact options. Each run emits deterministic

@@ -42,25 +42,46 @@ func generatePeppolNegativeCorpus(xsdDir, generatorVersion string) (generatedCor
 		content := []byte(strings.TrimRight(fixture.XML, "\n") + "\n")
 		ruleIDs := append([]string(nil), fixture.ExpectedRuleIDs...)
 		sort.Strings(ruleIDs)
+		profile := "peppol-bis-billing"
+		standards := fixtureStandards{UBL: "2.1", EN16931: &enVersion, Peppol: &bisVersion}
+		entryRulesets := rulesets
+		expectedStages := []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}}
+		switch fixture.FailureStage {
+		case "ubl21-xsd":
+			profile = "ubl21"
+			standards = fixtureStandards{UBL: "2.1"}
+			entryRulesets = nil
+			expectedStages[0].Outcome = "standards-invalid"
+		case "en16931":
+			profile = "ubl21-en16931"
+			standards = fixtureStandards{UBL: "2.1", EN16931: &enVersion}
+			entryRulesets = &fixtureRulesets{EN16931: rulesets.EN16931}
+			expectedStages = append(expectedStages, fixtureExpectedStage{
+				Stage: "en16931", Outcome: "standards-invalid", RuleIDs: ruleIDs,
+			})
+		case "peppol-bis-billing":
+			expectedStages = append(expectedStages,
+				fixtureExpectedStage{Stage: "en16931", Outcome: "passed"},
+				fixtureExpectedStage{Stage: "peppol-bis-billing", Outcome: "standards-invalid", RuleIDs: ruleIDs},
+			)
+		default:
+			return generatedCorpus{}, fmt.Errorf("fixture %s has unsupported failure stage %q", fixture.ID, fixture.FailureStage)
+		}
 		fixtures = append(fixtures, generatedFixture{
 			entry: fixtureManifestEntry{
 				ID: "peppol.invoice." + fixture.ID, DocumentType: "Invoice",
-				Profile:    "peppol-bis-billing",
+				Profile:    profile,
 				File:       filepath.ToSlash(filepath.Join("negative", "Invoice", fixture.ID+".xml")),
 				SHA256:     fmt.Sprintf("%x", sha256.Sum256(content)),
-				Standards:  fixtureStandards{UBL: "2.1", EN16931: &enVersion, Peppol: &bisVersion},
-				Provenance: provenance, Rulesets: rulesets,
-				Mutation:      &fixtureMutation{ID: fixture.ID, Description: fixture.Mutation},
-				ExpectedFinal: "invalid",
-				ExpectedStages: []fixtureExpectedStage{
-					{Stage: "ubl21-xsd", Outcome: "passed"},
-					{Stage: "en16931", Outcome: "passed"},
-					{Stage: "peppol-bis-billing", Outcome: "standards-invalid", RuleIDs: ruleIDs},
-				},
-				Tags: []string{"invoice", "negative", "peppol", fixture.Family, fixture.ID},
+				Standards:  standards,
+				Provenance: provenance, Rulesets: entryRulesets,
+				Mutation:       &fixtureMutation{ID: fixture.ID, Description: fixture.Mutation},
+				ExpectedFinal:  "invalid",
+				ExpectedStages: expectedStages,
+				Tags:           []string{"invoice", "negative", "peppol", fixture.Family, fixture.ID},
 			},
-			content:    content,
-			schemaPath: filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd"),
+			content: content, schemaPath: filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd"),
+			expectedDiagnostic: fixture.ExpectedDiagnostic,
 		})
 	}
 	return buildGeneratedCorpus(fixtures)

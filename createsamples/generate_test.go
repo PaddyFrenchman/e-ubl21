@@ -236,8 +236,8 @@ func TestGeneratePeppolUsesProfileDefaultOutput(t *testing.T) {
 	if err := json.Unmarshal(negativeManifest, &negative); err != nil {
 		t.Fatal(err)
 	}
-	if len(negative.Fixtures) != 5 {
-		t.Fatalf("Peppol negative generated fixtures = %d, want 5", len(negative.Fixtures))
+	if len(negative.Fixtures) != 15 {
+		t.Fatalf("Peppol negative generated fixtures = %d, want 15", len(negative.Fixtures))
 	}
 }
 

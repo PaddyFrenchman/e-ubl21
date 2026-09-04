@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
@@ -71,7 +72,7 @@ func TestPeppolPositiveCorpusPassesENAndPeppolWithRealRuntime(t *testing.T) {
 	}
 }
 
-func TestPeppolNegativeCorpusPassesENAndTriggersOnlyCataloguedPeppolRule(t *testing.T) {
+func TestPeppolNegativeCorpusStopsAtCataloguedStageWithRealRuntime(t *testing.T) {
 	runtime := peppolRuntimeForTest(t)
 	corpus, err := generatePeppolNegativeCorpus(filepath.Join("..", "XSD"), testGeneratorVersion)
 	if err != nil {
@@ -80,26 +81,33 @@ func TestPeppolNegativeCorpusPassesENAndTriggersOnlyCataloguedPeppolRule(t *test
 	for _, fixture := range corpus.fixtures {
 		fixture := fixture
 		t.Run(fixture.entry.Mutation.ID, func(t *testing.T) {
+			stages := fixture.entry.ExpectedStages
+			if stages[0].Outcome == "standards-invalid" {
+				return // Independent XSD validation is asserted by the corpus test.
+			}
 			enReport := runtime.transform(t, fixture.content, runtime.enXSLT)
+			if len(stages) == 2 {
+				assertFailedRules(t, enReport, stages[1].RuleIDs)
+				return // The manifest stop contract deliberately prevents Peppol execution.
+			}
 			if enReport.FailedAssertions != 0 {
 				t.Fatalf("mutation introduced %d EN 16931 failed assertions: %+v", enReport.FailedAssertions, enReport.Issues)
 			}
 			peppolReport := runtime.transform(t, fixture.content, runtime.peppolXSLT)
-			wantRules := fixture.entry.ExpectedStages[2].RuleIDs
-			var failedRules []string
-			for _, issue := range peppolReport.Issues {
-				if issue.Kind == queue.ValidationIssueFailedAssert {
-					failedRules = append(failedRules, issue.Rule)
-				}
-			}
-			if len(failedRules) != len(wantRules) {
-				t.Fatalf("Peppol failed rules = %v, want %v", failedRules, wantRules)
-			}
-			for index, wantRule := range wantRules {
-				if got := failedRules[index]; got != wantRule {
-					t.Errorf("Peppol rule = %q, want %q", got, wantRule)
-				}
-			}
+			assertFailedRules(t, peppolReport, stages[2].RuleIDs)
 		})
+	}
+}
+
+func assertFailedRules(t *testing.T, report svrl.Report, wantRules []string) {
+	t.Helper()
+	var failedRules []string
+	for _, issue := range report.Issues {
+		if issue.Kind == queue.ValidationIssueFailedAssert {
+			failedRules = append(failedRules, issue.Rule)
+		}
+	}
+	if !slices.Equal(failedRules, wantRules) {
+		t.Fatalf("failed rules = %v, want %v", failedRules, wantRules)
 	}
 }
