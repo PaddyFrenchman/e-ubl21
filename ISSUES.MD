@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #37, the **next actionable issue is #38 — TODO-REGRESSION-007 — Add Peppol targeted-negative mutation catalogue**. Issue #37, issues #48 through #63, and issues #65 through #71 are complete. Issue #64 remains open but is intentionally downstream of the Peppol validator/asset work, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+After completion of #38, the **next actionable issue is #76 — TODO-PEPPOL-011 — Build positive Peppol conformity corpus**. Issues #37, #38, issues #48 through #63, and issues #65 through #71 are complete. Issue #64 remains open but is intentionally downstream of the Peppol validator/asset work, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -627,6 +627,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/37
 
 ### 36. #38 — TODO-REGRESSION-007 — Add Peppol targeted-negative mutation catalogue
 
+**Status:** Complete / closed.
+
 **Goal:** Generate Peppol-specific failures that still pass UBL XSD and EN 16931.
 
 Define deterministic one-defect mutations for identifier, profile, code-list, common, and country-specific rule families and record verified expected Peppol rule IDs.
@@ -920,7 +922,7 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 
 - Issues #64 and #73 are closely related and should be implemented as one coordinated Peppol-stage integration effort, while preserving both acceptance contracts.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
-- Issues #37, #44, #48–#63, and #65–#71 are complete; **#38 is therefore the current next actionable issue.** #64 remains open and intentionally follows the Peppol engine work because it integrates `worker-peppol` into the asynchronous runtime.
+- Issues #37, #38, #44, #48–#63, and #65–#71 are complete; **#76 is therefore the current next actionable issue.** #64 remains open and intentionally follows the Peppol engine work because it integrates `worker-peppol` into the asynchronous runtime.
 - Issue #45 is the safety rail for declaring the first Peppol release supported and remains blocked until its real Peppol prerequisites are complete.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
