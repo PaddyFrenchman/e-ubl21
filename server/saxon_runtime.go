@@ -54,8 +54,20 @@ type saxonRuntimeOverrides struct {
 }
 
 func resolveSaxonRuntimeOverrides(overrides saxonRuntimeOverrides) saxonRuntimeConfig {
-	runtime := validationassets.Saxon()
 	profile := validationassets.EN16931()
+	return resolveProfileSaxonRuntimeOverrides(overrides, profile.RuntimeXSLTPath, profile.XSLTSHA256)
+}
+
+// resolvePeppolSaxonRuntimeOverrides selects the pinned Peppol executable while
+// retaining the same Java, Saxon, resolver and restricted configuration
+// resolution used by EN 16931.
+func resolvePeppolSaxonRuntimeOverrides(overrides saxonRuntimeOverrides) saxonRuntimeConfig {
+	profile := validationassets.Peppol()
+	return resolveProfileSaxonRuntimeOverrides(overrides, profile.RuntimeXSLTPath, profile.XSLTSHA256)
+}
+
+func resolveProfileSaxonRuntimeOverrides(overrides saxonRuntimeOverrides, defaultXSLTPath, xsltSHA256 string) saxonRuntimeConfig {
+	runtime := validationassets.Saxon()
 	resolved := saxonRuntimeConfig{
 		javaExecutable:      overrides.javaExecutable,
 		saxonJARPath:        overrides.saxonJARPath,
@@ -65,7 +77,7 @@ func resolveSaxonRuntimeOverrides(overrides saxonRuntimeOverrides) saxonRuntimeC
 		saxonJARSHA256:      runtime.SaxonJARSHA256,
 		xmlResolverSHA256:   runtime.XMLResolverSHA256,
 		configurationSHA256: runtime.ConfigurationSHA256,
-		xsltSHA256:          profile.XSLTSHA256,
+		xsltSHA256:          xsltSHA256,
 		startupTimeout:      overrides.startupTimeout,
 	}
 	if resolved.javaExecutable == "" {
@@ -81,7 +93,7 @@ func resolveSaxonRuntimeOverrides(overrides saxonRuntimeOverrides) saxonRuntimeC
 		resolved.configurationPath = runtime.ConfigurationPath
 	}
 	if resolved.xsltPath == "" {
-		resolved.xsltPath = profile.RuntimeXSLTPath
+		resolved.xsltPath = defaultXSLTPath
 	}
 	if resolved.startupTimeout <= 0 {
 		resolved.startupTimeout = defaultSaxonStartupTimeout
@@ -94,9 +106,17 @@ func resolveSaxonRuntimeOverrides(overrides saxonRuntimeOverrides) saxonRuntimeC
 // xmlresolver, compile the official stylesheet, and emit SVRL under the
 // no-network Saxon configuration.
 func ensureSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig) error {
+	return ensureProfileSaxonRuntime(ctx, cfg, "EN 16931")
+}
+
+func ensurePeppolSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig) error {
+	return ensureProfileSaxonRuntime(ctx, cfg, "Peppol")
+}
+
+func ensureProfileSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig, profileName string) error {
 	javaPath, err := exec.LookPath(cfg.javaExecutable)
 	if err != nil {
-		return fmt.Errorf("EN 16931 runtime: Java executable %q is unavailable: %w", cfg.javaExecutable, err)
+		return fmt.Errorf("%s runtime: Java executable %q is unavailable: %w", profileName, cfg.javaExecutable, err)
 	}
 	for _, asset := range []struct {
 		name, path, sha256 string
@@ -104,10 +124,10 @@ func ensureSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig) error {
 		{"Saxon-HE JAR", cfg.saxonJARPath, cfg.saxonJARSHA256},
 		{"xmlresolver JAR", cfg.xmlResolverJARPath, cfg.xmlResolverSHA256},
 		{"Saxon configuration", cfg.configurationPath, cfg.configurationSHA256},
-		{"EN 16931 XSLT", cfg.xsltPath, cfg.xsltSHA256},
+		{profileName + " XSLT", cfg.xsltPath, cfg.xsltSHA256},
 	} {
 		if err := verifyReadableFileSHA256(asset.path, asset.sha256); err != nil {
-			return fmt.Errorf("EN 16931 runtime: verify %s: %w", asset.name, err)
+			return fmt.Errorf("%s runtime: verify %s: %w", profileName, asset.name, err)
 		}
 	}
 
@@ -129,22 +149,22 @@ func ensureSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig) error {
 	cmd.Stderr = diagnostics
 	if err := cmd.Run(); err != nil {
 		if smokeCtx.Err() != nil {
-			return fmt.Errorf("EN 16931 runtime: Saxon smoke transform timed out after %s: %w", cfg.startupTimeout, smokeCtx.Err())
+			return fmt.Errorf("%s runtime: Saxon smoke transform timed out after %s: %w", profileName, cfg.startupTimeout, smokeCtx.Err())
 		}
-		return fmt.Errorf("EN 16931 runtime: Saxon smoke transform failed: %w: %s", err, diagnostics.String())
+		return fmt.Errorf("%s runtime: Saxon smoke transform failed: %w: %s", profileName, err, diagnostics.String())
 	}
 	decoder := xml.NewDecoder(bytes.NewReader(output.Bytes()))
 	for {
 		token, err := decoder.Token()
 		if err != nil {
 			if err == io.EOF {
-				return fmt.Errorf("EN 16931 runtime: Saxon smoke transform emitted no SVRL document")
+				return fmt.Errorf("%s runtime: Saxon smoke transform emitted no SVRL document", profileName)
 			}
-			return fmt.Errorf("EN 16931 runtime: parse Saxon smoke output: %w", err)
+			return fmt.Errorf("%s runtime: parse Saxon smoke output: %w", profileName, err)
 		}
 		if start, ok := token.(xml.StartElement); ok {
 			if start.Name.Space != svrlNamespace || start.Name.Local != "schematron-output" {
-				return fmt.Errorf("EN 16931 runtime: Saxon smoke transform emitted root {%s}%s, want {%s}schematron-output", start.Name.Space, start.Name.Local, svrlNamespace)
+				return fmt.Errorf("%s runtime: Saxon smoke transform emitted root {%s}%s, want {%s}schematron-output", profileName, start.Name.Space, start.Name.Local, svrlNamespace)
 			}
 			return nil
 		}

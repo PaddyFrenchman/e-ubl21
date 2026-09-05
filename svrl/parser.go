@@ -63,15 +63,33 @@ type Report struct {
 
 // Parse decodes SVRL using production bounds.
 func Parse(reader io.Reader) (Report, error) {
-	return ParseWithLimits(reader, DefaultLimits())
+	return ParseForLayer(reader, queue.ValidationLayerEN16931)
+}
+
+// ParseForLayer decodes SVRL and attributes every normalized issue to the
+// semantic validation layer that executed the Schematron. Only the two SVRL
+// backed layers are accepted so callers cannot manufacture ambiguous issue
+// provenance.
+func ParseForLayer(reader io.Reader, layer queue.ValidationLayer) (Report, error) {
+	return ParseWithLimitsForLayer(reader, DefaultLimits(), layer)
 }
 
 // ParseWithLimits decodes one complete SVRL document. Malformed XML, an
 // unexpected root, read failures, and limit violations return errors and no
 // partial report, allowing callers to classify them as operational failures.
 func ParseWithLimits(reader io.Reader, limits Limits) (Report, error) {
+	return ParseWithLimitsForLayer(reader, limits, queue.ValidationLayerEN16931)
+}
+
+// ParseWithLimitsForLayer is ParseForLayer with caller-supplied resource
+// bounds. The legacy Parse and ParseWithLimits entry points retain EN 16931 as
+// their default layer for compatibility.
+func ParseWithLimitsForLayer(reader io.Reader, limits Limits, layer queue.ValidationLayer) (Report, error) {
 	if reader == nil {
 		return Report{}, fmt.Errorf("read SVRL: reader is nil")
+	}
+	if layer != queue.ValidationLayerEN16931 && layer != queue.ValidationLayerPeppolBISBilling {
+		return Report{}, fmt.Errorf("parse SVRL: unsupported validation layer %q", layer)
 	}
 	if err := validateLimits(limits); err != nil {
 		return Report{}, err
@@ -117,7 +135,7 @@ func ParseWithLimits(reader io.Reader, limits Limits) (Report, error) {
 		if err != nil {
 			return Report{}, fmt.Errorf("%w: decode %s: %v", ErrMalformed, start.Name.Local, err)
 		}
-		issue := assertion.issue()
+		issue := assertion.issue(layer)
 		if err := validateIssue(issue, limits, &totalTextBytes); err != nil {
 			return Report{}, err
 		}
@@ -211,7 +229,7 @@ func decodeElementText(decoder *xml.Decoder, start xml.StartElement) (string, er
 	return normalizeWhitespace(text.String()), nil
 }
 
-func (assertion assertion) issue() queue.ValidationIssue {
+func (assertion assertion) issue(layer queue.ValidationLayer) queue.ValidationIssue {
 	severity := normalizeWhitespace(assertion.Flag)
 	if severity == "" {
 		severity = normalizeWhitespace(assertion.Role)
@@ -231,7 +249,7 @@ func (assertion assertion) issue() queue.ValidationIssue {
 	}
 	return queue.ValidationIssue{
 		Kind:       assertion.Kind,
-		Layer:      queue.ValidationLayerEN16931,
+		Layer:      layer,
 		Rule:       normalizeWhitespace(assertion.ID),
 		Severity:   severity,
 		Location:   normalizeWhitespace(assertion.Location),

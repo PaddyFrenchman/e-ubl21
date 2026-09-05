@@ -22,6 +22,22 @@ func TestParsePassingReport(t *testing.T) {
 	}
 }
 
+func TestParseForLayerAttributesPeppolEvidence(t *testing.T) {
+	report, err := svrl.ParseForLayer(strings.NewReader(prefix+`<svrl:failed-assert id="PEPPOL-COMMON-R040" flag="fatal"><svrl:text>Invalid GLN.</svrl:text></svrl:failed-assert>`+suffix), queue.ValidationLayerPeppolBISBilling)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(report.Issues) != 1 || report.Issues[0].Layer != queue.ValidationLayerPeppolBISBilling || report.Issues[0].Rule != "PEPPOL-COMMON-R040" {
+		t.Fatalf("Peppol issue provenance = %+v", report.Issues)
+	}
+}
+
+func TestParseForLayerRejectsNonSVRLLayer(t *testing.T) {
+	if _, err := svrl.ParseForLayer(strings.NewReader(prefix+suffix), queue.ValidationLayerUBL21XSD); err == nil {
+		t.Fatal("ParseForLayer accepted a non-SVRL validation layer")
+	}
+}
+
 func TestParseFatalFailurePreservesOfficialFields(t *testing.T) {
 	document := prefix + `
 <svrl:failed-assert id="BR-CO-10" flag="fatal"

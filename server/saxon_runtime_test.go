@@ -28,6 +28,22 @@ func TestResolveSaxonRuntimeConfigUsesPinnedDefaults(t *testing.T) {
 	}
 }
 
+func TestResolvePeppolSaxonRuntimeUsesPinnedStylesheet(t *testing.T) {
+	got := resolvePeppolSaxonRuntimeOverrides(saxonRuntimeOverrides{})
+	profile := validationassets.Peppol()
+	if got.xsltPath != profile.RuntimeXSLTPath || got.xsltSHA256 != profile.XSLTSHA256 {
+		t.Fatalf("resolved Peppol Saxon runtime = %+v", got)
+	}
+}
+
+func TestEnsurePeppolSaxonRuntimeLabelsAssetFailures(t *testing.T) {
+	cfg := fakeSaxonRuntime(t, `exit 0`)
+	cfg.xsltPath = filepath.Join(t.TempDir(), "missing-peppol.xslt")
+	if err := ensurePeppolSaxonRuntime(context.Background(), cfg); err == nil || !strings.Contains(err.Error(), "Peppol runtime: verify Peppol XSLT") {
+		t.Fatalf("ensurePeppolSaxonRuntime() error = %v", err)
+	}
+}
+
 func TestEnsureSaxonRuntimeAcceptsSuccessfulSVRLSmokeTransform(t *testing.T) {
 	cfg := fakeSaxonRuntime(t, `
 case "$*" in
