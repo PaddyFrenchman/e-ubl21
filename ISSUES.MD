@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #75, the **next actionable issue is #79 — TODO-PEPPOL-014 — Harden, observe and benchmark the Peppol stage**. Issues #37, #38, #72 through #77, issues #48 through #63, and issues #65 through #71 are complete. Issue #64 remains open as a separately tracked Peppol-stage acceptance contract, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+After completion of #78, the **next actionable issue is #79 — TODO-PEPPOL-014 — Harden, observe and benchmark the Peppol stage**. Issues #37, #38, #72 through #78, issues #48 through #63, and issues #65 through #71 are complete. Issue #64 remains open as a separately tracked Peppol-stage acceptance contract, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
