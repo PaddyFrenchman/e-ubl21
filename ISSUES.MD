@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #73, the **next actionable issue is #75 — TODO-PEPPOL-010 — Extend HTTP/OpenAPI validation profile contract**. Issues #37, #38, #72, #73, #76, #77, issues #48 through #63, and issues #65 through #71 are complete. Issue #64 remains open as a separately tracked Peppol-stage acceptance contract, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+After completion of #74, the **next actionable issue is #75 — TODO-PEPPOL-010 — Extend HTTP/OpenAPI validation profile contract**. Issues #37, #38, #72, #73, #74, #76, #77, issues #48 through #63, and issues #65 through #71 are complete. Issue #64 remains open as a separately tracked Peppol-stage acceptance contract, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -717,6 +717,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/73
 
 ### 43. #74 — TODO-PEPPOL-009 — Integrate durable replay, failure and migration semantics
 
+**Status:** Complete / closed.
+
 **Goal:** Make Peppol validation safe under retries, worker replacement, duplicate delivery, replay, and upgrades in the asynchronous stage architecture.
 
 Require Peppol stage evidence when the frozen ValidationPlan includes it; never reinterpret legacy EN-only results as Peppol-valid. Define upgrade/migration barriers, stage-specific retry/DLQ/replay, shutdown behavior, stale-generation handling, and duplicate request/result behavior while preserving exactly one permanent final result.
@@ -932,7 +934,7 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 
 - Issues #64 and #73 are closely related; #73 is complete, while #64 remains open as a separately tracked Peppol-stage acceptance contract.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
-- Issues #37, #38, #44, #48–#63, #65–#73, #76, and #77 are complete; **#75 is therefore the current next actionable issue.** #64 remains open as a separately tracked Peppol-stage acceptance contract.
+- Issues #37, #38, #44, #48–#63, #65–#74, #76, and #77 are complete; **#75 is therefore the current next actionable issue.** #64 remains open as a separately tracked Peppol-stage acceptance contract.
 - Issue #45 is the safety rail for declaring the first Peppol release supported and remains blocked until its real Peppol prerequisites are complete.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
