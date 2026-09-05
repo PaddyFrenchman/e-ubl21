@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 )
@@ -63,8 +64,10 @@ func TestUploadHandlerPersistsExplicitRegressionProfile(t *testing.T) {
 		t.Fatalf("upload status = %d body=%s", res.Code, res.Body.String())
 	}
 	var accepted struct {
-		ID      string                  `json:"id"`
-		Profile queue.ValidationProfile `json:"profile"`
+		ID               string                  `json:"id"`
+		Profile          queue.ValidationProfile `json:"profile"`
+		RequestedProfile queue.ValidationProfile `json:"requestedProfile"`
+		ResolvedProfile  queue.ValidationProfile `json:"resolvedProfile"`
 	}
 	if err := json.Unmarshal(res.Body.Bytes(), &accepted); err != nil {
 		t.Fatal(err)
@@ -73,16 +76,108 @@ func TestUploadHandlerPersistsExplicitRegressionProfile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if accepted.Profile != queue.ValidationProfileUBL21 || record.Profile != queue.ValidationProfileUBL21 {
-		t.Fatalf("accepted/record profiles = %q/%q", accepted.Profile, record.Profile)
+	if accepted.Profile != queue.ValidationProfileUBL21 || accepted.RequestedProfile != queue.ValidationProfileUBL21 ||
+		accepted.ResolvedProfile != queue.ValidationProfileUBL21 || record.Profile != queue.ValidationProfileUBL21 ||
+		record.RequestedProfile != queue.ValidationProfileUBL21 || record.ResolvedProfile != queue.ValidationProfileUBL21 {
+		t.Fatalf("accepted/record profiles = %+v/%+v", accepted, record)
 	}
 
-	req = httptest.NewRequest(http.MethodPost, "/upload?profile=peppol-bis-billing", strings.NewReader(`<Invoice xmlns="urn:test"/>`))
+	req = httptest.NewRequest(http.MethodPost, "/upload?validationProfile=peppol-bis-billing", strings.NewReader(`<Invoice xmlns="urn:test"/>`))
 	req.Header.Set("Content-Type", "application/xml")
 	res = httptest.NewRecorder()
 	h.handleUpload(res, req)
-	if res.Code != http.StatusBadRequest {
-		t.Fatalf("unsupported profile status = %d", res.Code)
+	if res.Code != http.StatusAccepted {
+		t.Fatalf("Peppol profile status = %d body=%s", res.Code, res.Body.String())
+	}
+	if err := json.Unmarshal(res.Body.Bytes(), &accepted); err != nil {
+		t.Fatal(err)
+	}
+	if accepted.RequestedProfile != queue.ValidationProfilePeppolBISBilling || accepted.ResolvedProfile != queue.ValidationProfilePeppolBISBilling {
+		t.Fatalf("Peppol accepted profiles = %+v", accepted)
+	}
+}
+
+func TestRequestedValidationProfileResolvesAutoAndPreservesLegacyAlias(t *testing.T) {
+	tests := []struct {
+		name, target, documentType  string
+		document                    []byte
+		wantRequested, wantResolved queue.ValidationProfile
+		wantError                   bool
+	}{
+		{
+			name: "omitted auto detects Peppol", target: "/upload", documentType: "Invoice",
+			document:      peppolBillingDocument("Invoice", peppol.CustomizationIDBase, peppol.ProfileID01),
+			wantRequested: queue.ValidationProfileAuto, wantResolved: queue.ValidationProfilePeppolBISBilling,
+		},
+		{
+			name: "auto falls back to EN", target: "/upload?validationProfile=auto", documentType: "Invoice",
+			document:      peppolBillingDocument("Invoice", "urn:not-peppol", "urn:not-supported"),
+			wantRequested: queue.ValidationProfileAuto, wantResolved: queue.ValidationProfileUBL21EN16931,
+		},
+		{
+			name: "explicit Peppol never downgrades", target: "/upload?validationProfile=peppol-bis-billing", documentType: "Invoice",
+			document:      peppolBillingDocument("Invoice", peppol.CustomizationIDBase, "urn:unsupported-profile"),
+			wantRequested: queue.ValidationProfilePeppolBISBilling, wantResolved: queue.ValidationProfilePeppolBISBilling,
+		},
+		{
+			name: "legacy query alias", target: "/upload?profile=ubl21-en16931", documentType: "Invoice",
+			document:      peppolBillingDocument("Invoice", peppol.CustomizationIDBase, peppol.ProfileID01),
+			wantRequested: queue.ValidationProfileUBL21EN16931, wantResolved: queue.ValidationProfileUBL21EN16931,
+		},
+		{name: "conflicting aliases", target: "/upload?validationProfile=ubl21&profile=ubl21-en16931", documentType: "Invoice", wantError: true},
+		{name: "inapplicable Peppol", target: "/upload?validationProfile=peppol-bis-billing", documentType: "Order", wantError: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodPost, test.target, nil)
+			resolution, err := requestedValidationProfile(request, test.documentType, test.document)
+			if (err != nil) != test.wantError {
+				t.Fatalf("resolution = %+v, err=%v", resolution, err)
+			}
+			if err == nil && (resolution.RequestedProfile != test.wantRequested || resolution.ResolvedProfile != test.wantResolved) {
+				t.Fatalf("resolution = %+v", resolution)
+			}
+		})
+	}
+}
+
+func TestPeppolHTTPSelectionRequiresSplitAndFreezesThreeStageProfile(t *testing.T) {
+	handler, client := directUploadHandler(t)
+	handler.deploymentMode = func(context.Context) (queue.DeploymentMode, error) {
+		return queue.DeploymentModeLegacy, nil
+	}
+	document := string(peppolBillingDocument("Invoice", peppol.CustomizationIDBase, peppol.ProfileID01))
+	request := httptest.NewRequest(http.MethodPost, "/upload?validationProfile=auto&documentType=Invoice", strings.NewReader(document))
+	request.Header.Set("Content-Type", "application/xml")
+	response := httptest.NewRecorder()
+	handler.handleUpload(response, request)
+	if response.Code != http.StatusServiceUnavailable || !strings.Contains(response.Body.String(), "split validation deployment") {
+		t.Fatalf("legacy Peppol response = %d %s", response.Code, response.Body.String())
+	}
+	keys, err := client.UploadRecordKeys(context.Background())
+	if err != nil || len(keys) != 0 {
+		t.Fatalf("legacy Peppol request persisted uploads = %v, err=%v", keys, err)
+	}
+
+	var accepted queue.UploadRecord
+	handler.deploymentMode = func(context.Context) (queue.DeploymentMode, error) {
+		return queue.DeploymentModeSplit, nil
+	}
+	handler.publishWork = func(_ context.Context, record queue.UploadRecord, _ time.Time) error {
+		accepted = record
+		return nil
+	}
+	request = httptest.NewRequest(http.MethodPost, "/upload?validationProfile=auto&documentType=Invoice", strings.NewReader(document))
+	request.Header.Set("Content-Type", "application/xml")
+	response = httptest.NewRecorder()
+	handler.handleUpload(response, request)
+	if response.Code != http.StatusAccepted || accepted.RequestedProfile != queue.ValidationProfileAuto ||
+		accepted.ResolvedProfile != queue.ValidationProfilePeppolBISBilling || accepted.Profile != accepted.ResolvedProfile {
+		t.Fatalf("split Peppol acceptance = %d record=%+v body=%s", response.Code, accepted, response.Body.String())
+	}
+	_, plan, err := FrozenValidationPlanFor(accepted.DocumentType, accepted.ResolvedProfile)
+	if err != nil || len(plan.Stages) != 3 || plan.Stages[2].ID != queue.ValidationLayerPeppolBISBilling {
+		t.Fatalf("split Peppol plan = %+v, err=%v", plan, err)
 	}
 }
 
@@ -102,6 +197,8 @@ func TestUploadHandlerStorageFailuresAndContentResponse(t *testing.T) {
 	validatedAt := time.Now().UTC().Format(time.RFC3339)
 	record := queue.UploadRecord{
 		ID: id, DocumentType: "Invoice", Status: queue.StatusInvalid, Error: "bad",
+		RequestedProfile: queue.ValidationProfileAuto, ResolvedProfile: queue.ValidationProfileUBL21EN16931,
+		Profile:    queue.ValidationProfileUBL21EN16931,
 		ReceivedAt: validatedAt, ValidatedAt: validatedAt,
 		ValidationStages: queue.ValidationStages{
 			{Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: true, ValidatedAt: validatedAt},
@@ -129,10 +226,17 @@ func TestUploadHandlerStorageFailuresAndContentResponse(t *testing.T) {
 		t.Fatalf("content response = %d %s", res.Code, res.Body)
 	}
 	var response struct {
-		ValidationStages queue.ValidationStages `json:"validationStages"`
+		RequestedProfile queue.ValidationProfile `json:"requestedProfile"`
+		ResolvedProfile  queue.ValidationProfile `json:"resolvedProfile"`
+		Profile          queue.ValidationProfile `json:"profile"`
+		ValidationStages queue.ValidationStages  `json:"validationStages"`
 	}
 	if err := json.Unmarshal(res.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
+	}
+	if response.RequestedProfile != queue.ValidationProfileAuto ||
+		response.ResolvedProfile != queue.ValidationProfileUBL21EN16931 || response.Profile != response.ResolvedProfile {
+		t.Fatalf("status profiles = %+v", response)
 	}
 	semantic, ok := response.ValidationStages.Find(queue.ValidationLayerEN16931)
 	if !ok || semantic.Version != "1.3.16" || semantic.Valid || len(semantic.Issues) != 1 ||

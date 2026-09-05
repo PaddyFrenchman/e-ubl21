@@ -26,7 +26,7 @@ func FrozenValidationPlanFor(documentType string, profile queue.ValidationProfil
 			profile = queue.ValidationProfileUBL21
 		}
 	}
-	if !queue.ValidPublicValidationProfile(profile) {
+	if !queue.ValidValidationProfile(profile) {
 		return "", queue.FrozenValidationPlan{}, fmt.Errorf("unsupported validation profile %q", profile)
 	}
 	plan, err := frozenValidationPlanForResolvedProfile(documentType, profile)
@@ -37,8 +37,7 @@ func FrozenValidationPlanFor(documentType string, profile queue.ValidationProfil
 }
 
 // ResolveFrozenValidationPlanFor resolves automatic or explicit Peppol
-// applicability and builds the immutable concrete plan. It is intentionally
-// separate from the public HTTP selector, which remains owned by issue #75.
+// applicability and builds the immutable concrete plan.
 func ResolveFrozenValidationPlanFor(documentType string, requested queue.ValidationProfile, document []byte) (peppol.Resolution, queue.FrozenValidationPlan, error) {
 	resolution, err := peppol.Resolve(documentType, requested, document)
 	if err != nil {
@@ -197,6 +196,10 @@ func MigrateLegacyPendingUploads(ctx context.Context, client *queue.Client) (Leg
 			continue
 		}
 		record.Profile = profile
+		record.ResolvedProfile = profile
+		if record.RequestedProfile == "" {
+			record.RequestedProfile = profile
+		}
 		record.Status = queue.StatusPending
 		record.Error = ""
 		record.ValidatedAt = ""

@@ -37,6 +37,12 @@ The API and worker are separate processes built from the same Go binary (`e-ubl2
 | GET | `/api/v1/ubl/{id}` | Required | Status/metadata only by default |
 | GET | `/api/v1/ubl/{id}?includeContent=true` | Required | Status/metadata plus original XML |
 
+Uploads accept `validationProfile=auto`, `ubl21`, `ubl21-en16931`, or
+`peppol-bis-billing`; omission means `auto`. The deprecated `profile` query
+parameter remains an alias for existing clients. Responses retain both the
+requested value and the concrete frozen `resolvedProfile`, with `profile` kept
+as a compatibility alias for the resolved value.
+
 ## Authentication
 
 Protected routes require an HS256 bearer JWT. The configured HMAC secret verifies the signature. Expiration is required; configured issuer and audience are checked. Missing signing configuration fails closed. JWKS/asymmetric-key discovery and scopes/roles remain outside the current milestone.
@@ -78,14 +84,17 @@ A representative descriptor is about 102 bytes, rather than as much as 10 MiB wh
 
 1. enforces the 10 MiB body limit exactly with `http.MaxBytesReader`;
 2. accepts XML/octet-stream content types;
-3. uses `xml.Decoder` only until the first root `StartElement`;
-4. checks both root local name and UBL namespace against the schema catalog;
-5. stores the raw XML in Object Store;
-6. creates a small `pending` metadata record in KV;
-7. publishes the compact work descriptor;
+3. recognizes the first root `StartElement` and checks its local name and UBL namespace;
+4. resolves `auto` from bounded top-level Peppol identifiers when possible;
+5. freezes requested and resolved validation-profile metadata;
+6. stores the raw XML in Object Store;
+7. creates durable acceptance metadata and publishes validation work;
 8. returns `202 Accepted`.
 
-Full XML well-formedness is deliberately not established synchronously. The worker's `xmllint` run performs complete parsing and XSD validation.
+Profile inspection never substitutes for XSD validation. If inspection cannot
+complete because the body is malformed, the request retains its explicit
+profile (or the conservative automatic fallback) and the asynchronous XSD
+stage produces the standards verdict.
 
 ## Worker processing
 

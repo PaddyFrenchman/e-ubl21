@@ -213,6 +213,13 @@ The current public API is intentionally small and document-oriented.
 
 Uploads are limited to 10 MiB. The API performs only lightweight root-element/document recognition synchronously. Full parsing, XSD validation, and applicable semantic validation happen asynchronously in the worker.
 
+Select a validation contract with `validationProfile=auto`, `ubl21`,
+`ubl21-en16931`, or `peppol-bis-billing`. Omitting the parameter is equivalent
+to `auto`. Upload and status responses expose `requestedProfile` and the
+immutable concrete `resolvedProfile`; the older `profile` query/response field
+remains a deprecated compatibility alias. Explicit Peppol requests never
+downgrade to EN-only validation when identifiers are unsupported.
+
 See [`server/openapi.yaml`](server/openapi.yaml) for the machine-readable API contract and [`server/FUNCTIONALITY.md`](server/FUNCTIONALITY.md) for the detailed current server behavior.
 
 ## Queue and durable storage model

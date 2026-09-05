@@ -27,8 +27,12 @@ import (
 // PutUploadContent/GetUploadContent), so status updates never have to read
 // or rewrite the potentially large document body.
 type UploadRecord struct {
-	ID                 string                      `json:"id"`
-	DocumentType       string                      `json:"documentType"`
+	ID               string            `json:"id"`
+	DocumentType     string            `json:"documentType"`
+	RequestedProfile ValidationProfile `json:"requestedProfile,omitempty"`
+	ResolvedProfile  ValidationProfile `json:"resolvedProfile,omitempty"`
+	// Profile is the legacy alias for ResolvedProfile and remains populated for
+	// stored-record and HTTP response compatibility.
 	Profile            ValidationProfile           `json:"profile,omitempty"`
 	Status             ValidationStatus            `json:"status"`
 	Error              string                      `json:"error,omitempty"`

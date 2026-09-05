@@ -129,17 +129,30 @@ paths:
       description: >-
         Accepts an XML payload, stores it once, and durably submits it to the
         active validation deployment generation. Every recognized
-        document is validated against UBL 2.1 XSD. By default Invoice and
-        CreditNote then undergo EN 16931 semantic validation; callers may
-        explicitly freeze either supported validation profile.
+        document is validated against UBL 2.1 XSD. An omitted
+        validationProfile behaves as auto: Invoice and CreditNote identifiers
+        may resolve to Peppol BIS Billing, otherwise billing documents resolve
+        to EN 16931 and other UBL documents resolve to XSD-only validation.
       parameters:
+        - name: validationProfile
+          in: query
+          required: false
+          description: >-
+            Requested standards pipeline. Auto is the default. Explicit Peppol
+            never downgrades when identifiers are missing or unsupported; those
+            identifiers are decided by the Peppol stage after XSD and EN pass.
+          schema:
+            type: string
+            enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing]
+            default: auto
         - name: profile
           in: query
           required: false
-          description: Standards pipeline to persist for asynchronous validation.
+          deprecated: true
+          description: Deprecated compatibility alias for validationProfile. Supplying conflicting values is rejected.
           schema:
             type: string
-            enum: [ubl21, ubl21-en16931]
+            enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing]
         - name: documentType
           in: query
           required: false
@@ -187,19 +200,28 @@ paths:
                   document:
                     type: string
                     example: Invoice
+                  requestedProfile:
+                    type: string
+                    enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing]
+                  resolvedProfile:
+                    type: string
+                    enum: [ubl21, ubl21-en16931, peppol-bis-billing]
                   profile:
                     type: string
-                    enum: [ubl21, ubl21-en16931]
-                    example: ubl21-en16931
+                    deprecated: true
+                    description: Compatibility alias for resolvedProfile.
+                    enum: [ubl21, ubl21-en16931, peppol-bis-billing]
                   receivedAt:
                     type: string
                     format: date-time
                     example: '2026-08-20T12:00:00Z'
-                required: [status, id, document, profile, receivedAt]
+                required: [status, id, document, requestedProfile, resolvedProfile, profile, receivedAt]
               example:
                 status: pending
                 id: 3f9c2b1a7e4d4f0a9b1c2d3e4f5a6b7c
                 document: Invoice
+                requestedProfile: auto
+                resolvedProfile: ubl21-en16931
                 profile: ubl21-en16931
                 receivedAt: '2026-08-20T12:00:00Z'
         '400':
@@ -221,7 +243,10 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
-          description: Validation admission is paused while the legacy deployment drains for migration.
+          description: >-
+            Validation admission is paused while the legacy deployment drains,
+            or the request resolved to Peppol while only the legacy worker
+            topology is active.
           headers:
             Retry-After:
               schema:
@@ -277,10 +302,19 @@ paths:
                   document:
                     type: string
                     example: Invoice
+                  requestedProfile:
+                    type: string
+                    description: Caller selection; auto is retained when it was omitted.
+                    enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing]
+                  resolvedProfile:
+                    type: string
+                    description: Concrete immutable profile used by the validation plan.
+                    enum: [ubl21, ubl21-en16931, peppol-bis-billing]
                   profile:
                     type: string
-                    enum: [ubl21, ubl21-en16931]
-                    example: ubl21-en16931
+                    deprecated: true
+                    description: Compatibility alias for resolvedProfile.
+                    enum: [ubl21, ubl21-en16931, peppol-bis-billing]
                   status:
                     type: string
                     enum: [accepting, cleanup_pending, enqueue_pending, pending, valid, invalid, acceptance_failed, dead_letter_pending, processing_failed]
@@ -298,9 +332,9 @@ paths:
                     type: array
                     description: >-
                       Completed validation-layer outcomes in execution order.
-                      Invoice and CreditNote are valid only after both
-                      ubl21-xsd and en16931 stages pass. Raw SVRL is never
-                      returned by this endpoint.
+                      A Peppol-resolved Invoice or CreditNote is valid only
+                      after ubl21-xsd, en16931, and peppol-bis-billing pass.
+                      Raw SVRL is never returned by this endpoint.
                     items:
                       $ref: '#/components/schemas/ValidationStageResult'
                     example:
@@ -351,13 +385,15 @@ paths:
                     type: string
                     description: The original raw XML payload. Present only when includeContent=true.
                     example: '<?xml version="1.0" encoding="UTF-8"?><Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">...</Invoice>'
-                required: [id, document, profile, status, receivedAt, contentAvailable]
+                required: [id, document, requestedProfile, resolvedProfile, profile, status, receivedAt, contentAvailable]
               examples:
                 xsdInvalidInvoice:
                   summary: Invoice rejected by UBL 2.1 XSD
                   value:
                     id: '11111111111111111111111111111111'
                     document: Invoice
+                    requestedProfile: ubl21
+                    resolvedProfile: ubl21
                     profile: ubl21
                     status: invalid
                     receivedAt: '2026-08-20T12:00:00Z'
@@ -380,6 +416,8 @@ paths:
                   value:
                     id: '22222222222222222222222222222222'
                     document: Invoice
+                    requestedProfile: ubl21-en16931
+                    resolvedProfile: ubl21-en16931
                     profile: ubl21-en16931
                     status: invalid
                     receivedAt: '2026-08-20T12:00:00Z'
@@ -410,6 +448,8 @@ paths:
                   value:
                     id: '33333333333333333333333333333333'
                     document: Invoice
+                    requestedProfile: ubl21-en16931
+                    resolvedProfile: ubl21-en16931
                     profile: ubl21-en16931
                     status: valid
                     receivedAt: '2026-08-20T12:00:00Z'
@@ -427,11 +467,130 @@ paths:
                         durationMs: 31
                     contentAvailable: true
                     contentExpiresAt: '2026-09-19T12:00:02Z'
+                peppolValidInvoice:
+                  summary: Auto-resolved Invoice passing all three Peppol stages
+                  value:
+                    id: '66666666666666666666666666666666'
+                    document: Invoice
+                    requestedProfile: auto
+                    resolvedProfile: peppol-bis-billing
+                    profile: peppol-bis-billing
+                    status: valid
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    validatedAt: '2026-08-20T12:00:03Z'
+                    validationStages:
+                      - {layer: ubl21-xsd, version: '2.1', valid: true, validatedAt: '2026-08-20T12:00:01Z'}
+                      - {layer: en16931, version: '1.3.16', valid: true, validatedAt: '2026-08-20T12:00:02Z'}
+                      - layer: peppol-bis-billing
+                        version: '1.3.16'
+                        bisVersion: '3.0.21'
+                        bisReleaseDate: '2026-05-20'
+                        bisMandatoryFrom: '2026-08-17'
+                        customizationId: urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0
+                        profileId: urn:fdc:peppol.eu:2017:poacc:billing:01:1.0
+                        processProfile: '01'
+                        valid: true
+                        validatedAt: '2026-08-20T12:00:03Z'
+                    contentAvailable: true
+                peppolValidCreditNote:
+                  summary: Explicit Peppol CreditNote passing all three stages
+                  value:
+                    id: '77777777777777777777777777777777'
+                    document: CreditNote
+                    requestedProfile: peppol-bis-billing
+                    resolvedProfile: peppol-bis-billing
+                    profile: peppol-bis-billing
+                    status: valid
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    validatedAt: '2026-08-20T12:00:03Z'
+                    validationStages:
+                      - {layer: ubl21-xsd, version: '2.1', valid: true, validatedAt: '2026-08-20T12:00:01Z'}
+                      - {layer: en16931, version: '1.3.16', valid: true, validatedAt: '2026-08-20T12:00:02Z'}
+                      - layer: peppol-bis-billing
+                        version: '1.3.16'
+                        bisVersion: '3.0.21'
+                        profileId: urn:peppol:bis:billing_with_response
+                        processProfile: '02'
+                        valid: true
+                        validatedAt: '2026-08-20T12:00:03Z'
+                    contentAvailable: true
+                peppolInvalidInvoice:
+                  summary: EN-valid Invoice rejected by an official Peppol rule
+                  value:
+                    id: '88888888888888888888888888888888'
+                    document: Invoice
+                    requestedProfile: peppol-bis-billing
+                    resolvedProfile: peppol-bis-billing
+                    profile: peppol-bis-billing
+                    status: invalid
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    validatedAt: '2026-08-20T12:00:03Z'
+                    validationStages:
+                      - {layer: ubl21-xsd, version: '2.1', valid: true, validatedAt: '2026-08-20T12:00:01Z'}
+                      - {layer: en16931, version: '1.3.16', valid: true, validatedAt: '2026-08-20T12:00:02Z'}
+                      - layer: peppol-bis-billing
+                        version: '1.3.16'
+                        valid: false
+                        issues:
+                          - {kind: failed-assert, layer: peppol-bis-billing, rule: PEPPOL-EN16931-R001, severity: fatal, message: Business process identifier is required.}
+                        validatedAt: '2026-08-20T12:00:03Z'
+                    contentAvailable: true
+                unsupportedPeppolProfileID:
+                  summary: Explicit Peppol request with an unsupported ProfileID
+                  value:
+                    id: '99999999999999999999999999999999'
+                    document: Invoice
+                    requestedProfile: peppol-bis-billing
+                    resolvedProfile: peppol-bis-billing
+                    profile: peppol-bis-billing
+                    status: invalid
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    validatedAt: '2026-08-20T12:00:03Z'
+                    validationStages:
+                      - {layer: ubl21-xsd, version: '2.1', valid: true, validatedAt: '2026-08-20T12:00:01Z'}
+                      - {layer: en16931, version: '1.3.16', valid: true, validatedAt: '2026-08-20T12:00:02Z'}
+                      - layer: peppol-bis-billing
+                        version: '1.3.16'
+                        profileId: urn:unsupported:profile
+                        valid: false
+                        issues:
+                          - {kind: failed-assert, layer: peppol-bis-billing, rule: EUBL21-PEPPOL-PROFILE-ID-UNSUPPORTED, severity: error, message: ProfileID is not supported by the Peppol Billing product profile.}
+                        validatedAt: '2026-08-20T12:00:03Z'
+                    contentAvailable: true
+                peppolOperationalFailure:
+                  summary: Peppol runtime exhausted its independent retry budget
+                  value:
+                    id: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                    document: Invoice
+                    requestedProfile: peppol-bis-billing
+                    resolvedProfile: peppol-bis-billing
+                    profile: peppol-bis-billing
+                    status: processing_failed
+                    receivedAt: '2026-08-20T12:00:00Z'
+                    validatedAt: '2026-08-20T12:05:00Z'
+                    validationStages:
+                      - {layer: ubl21-xsd, version: '2.1', valid: true, validatedAt: '2026-08-20T12:00:01Z'}
+                      - {layer: en16931, version: '1.3.16', valid: true, validatedAt: '2026-08-20T12:00:02Z'}
+                      - layer: peppol-bis-billing
+                        version: '1.3.16'
+                        bisVersion: '3.0.21'
+                        valid: false
+                        outcome: operational-failure
+                        reason: timeout
+                        diagnostic: Peppol validation process timed out.
+                        validatedAt: '2026-08-20T12:05:00Z'
+                    error: 'Peppol BIS Billing validation failed: Saxon process timed out'
+                    lastError: 'Peppol BIS Billing validation failed: Saxon process timed out'
+                    processingAttempts: 3
+                    processingFailedAt: '2026-08-20T12:05:00Z'
+                    contentAvailable: true
                 validOrder:
                   summary: Non-billing UBL document passing its XSD-only contract
                   value:
                     id: '44444444444444444444444444444444'
                     document: Order
+                    requestedProfile: auto
+                    resolvedProfile: ubl21
                     profile: ubl21
                     status: valid
                     receivedAt: '2026-08-20T12:00:00Z'
@@ -448,6 +607,8 @@ paths:
                   value:
                     id: '55555555555555555555555555555555'
                     document: Invoice
+                    requestedProfile: ubl21-en16931
+                    resolvedProfile: ubl21-en16931
                     profile: ubl21-en16931
                     status: processing_failed
                     receivedAt: '2026-08-20T12:00:00Z'

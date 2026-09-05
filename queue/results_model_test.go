@@ -74,16 +74,16 @@ const (
 	peppolProfile02ID     = "urn:peppol:bis:billing_with_response"
 )
 
-func TestPeppolProfileIsDurableButNotYetPublic(t *testing.T) {
+func TestPeppolAndAutoProfilesArePublicRequestValues(t *testing.T) {
 	if !queue.ValidValidationProfile(queue.ValidationProfilePeppolBISBilling) {
 		t.Fatal("durable validation contracts reject the Peppol profile")
 	}
-	if queue.ValidPublicValidationProfile(queue.ValidationProfilePeppolBISBilling) {
-		t.Fatal("public validation API enabled Peppol before issue #75")
+	if !queue.ValidPublicValidationProfile(queue.ValidationProfilePeppolBISBilling) {
+		t.Fatal("public validation API rejects the Peppol profile")
 	}
 	if queue.ValidValidationProfile(queue.ValidationProfileAuto) ||
-		queue.ValidPublicValidationProfile(queue.ValidationProfileAuto) {
-		t.Fatal("unresolved auto profile was accepted as a durable or public profile")
+		!queue.ValidPublicValidationProfile(queue.ValidationProfileAuto) {
+		t.Fatal("auto must be public-request-only, not a durable profile")
 	}
 }
 

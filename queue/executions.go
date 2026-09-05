@@ -740,6 +740,12 @@ func (c *Client) ProjectUploadRecord(ctx context.Context, record UploadRecord) (
 		return record, nil
 	}
 	record.Profile = current.RequestedProfile
+	record.ResolvedProfile = current.RequestedProfile
+	if record.RequestedProfile == "" {
+		// Records accepted before requested/resolved profile metadata existed
+		// retain their original concrete profile semantics.
+		record.RequestedProfile = current.RequestedProfile
+	}
 	if current.Orchestration.FinalResultStatus != FinalResultPublished {
 		return record, nil
 	}

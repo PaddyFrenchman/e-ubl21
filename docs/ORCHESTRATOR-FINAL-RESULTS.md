@@ -57,8 +57,10 @@ are rejected on unrelated layers. Fatal/error assertions remain standards
 failures; warning/warn assertions and successful reports remain visible
 advisory evidence without changing a passing verdict.
 
-This durable model support does not enable Peppol as a public upload selector.
-The HTTP request/resolution contract remains owned by issue #75.
+The public upload API accepts `validationProfile=auto`, `ubl21`,
+`ubl21-en16931`, or `peppol-bis-billing`. Status projections expose both the
+requested value and the concrete resolved profile; the legacy `profile` field
+remains a compatibility alias for the resolved profile.
 
 Durable executions and canonical results bind each profile to its stage
 sequence: `ubl21` requires XSD, `ubl21-en16931` requires XSD then EN 16931, and

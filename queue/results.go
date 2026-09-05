@@ -38,10 +38,11 @@ func ValidValidationProfile(profile ValidationProfile) bool {
 		profile == ValidationProfilePeppolBISBilling
 }
 
-// ValidPublicValidationProfile reports whether the current HTTP API may accept
-// profile. Peppol remains internal until its API contract is implemented.
+// ValidPublicValidationProfile reports whether the HTTP API may accept profile
+// as a requested value. Auto is resolved to a concrete durable profile before
+// an execution is created.
 func ValidPublicValidationProfile(profile ValidationProfile) bool {
-	return profile == ValidationProfileUBL21 || profile == ValidationProfileUBL21EN16931
+	return profile == ValidationProfileAuto || ValidValidationProfile(profile)
 }
 
 // ValidationLayer is a stable identifier for one independently reportable

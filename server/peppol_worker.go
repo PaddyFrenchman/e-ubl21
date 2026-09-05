@@ -1,14 +1,17 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 
+	peppolprofile "github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 	"github.com/nats-io/nats.go"
@@ -140,6 +143,7 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 	}
 
 	validator := cfg.validator
+	wrapProfileResolution := validator == nil
 	if validator == nil {
 		runtime := resolvePeppolSaxonRuntimeOverrides(saxonRuntimeOverrides{
 			javaExecutable: cfg.JavaExecutable, saxonJARPath: cfg.SaxonJARPath,
@@ -159,6 +163,9 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 		}
 		logValidationRuntimeVersions(logger)
 		validator = newSaxonPeppolValidator(runtime, settings.validationTimeout)
+	}
+	if wrapProfileResolution {
+		validator = peppolProfileAwareValidator{delegate: validator}
 	}
 	now := cfg.now
 	if now == nil {
@@ -264,6 +271,41 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 	return nil
 }
 
+// peppolProfileAwareValidator adds the product-level explicit-profile failures
+// frozen by the public contract without manufacturing official Schematron rule
+// IDs. The delegate still streams the input to Saxon; the bounded tee is used
+// only to resolve the same top-level identifiers after that run.
+type peppolProfileAwareValidator struct {
+	delegate PeppolValidator
+}
+
+func (validator peppolProfileAwareValidator) Validate(ctx context.Context, input io.Reader) (queue.ValidationStageResult, error) {
+	var document bytes.Buffer
+	result, err := validator.delegate.Validate(ctx, io.TeeReader(io.LimitReader(input, peppolprofile.MaxResolutionDocumentBytes+1), &document))
+	if err != nil {
+		return queue.ValidationStageResult{}, err
+	}
+	if document.Len() > peppolprofile.MaxResolutionDocumentBytes {
+		return queue.ValidationStageResult{}, peppolprofile.ErrDocumentTooLarge
+	}
+	documentType, _, err := rootElementOfPayload(document.Bytes())
+	if err != nil {
+		return queue.ValidationStageResult{}, fmt.Errorf("resolve Peppol validation profile: %w", err)
+	}
+	resolution, err := peppolprofile.Resolve(documentType, queue.ValidationProfilePeppolBISBilling, document.Bytes())
+	if err != nil {
+		return queue.ValidationStageResult{}, fmt.Errorf("resolve Peppol validation profile: %w", err)
+	}
+	for _, failure := range resolution.Failures {
+		result.Issues = append(result.Issues, queue.ValidationIssue{
+			Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerPeppolBISBilling,
+			Rule: string(failure.Code), Severity: "error", Message: failure.Message,
+		})
+	}
+	result.Valid = !queue.StageIssuesContainStandardsFailure(result.Issues)
+	return result, nil
+}
+
 func peppolStageOperationalReason(err error) queue.StageOperationalReason {
 	switch {
 	case errors.Is(err, context.DeadlineExceeded):
@@ -274,7 +316,7 @@ func peppolStageOperationalReason(err error) queue.StageOperationalReason {
 		return queue.StageReasonContentUnavailable
 	case errors.Is(err, errPeppolRuntimeAsset):
 		return queue.StageReasonRuntimeUnavailable
-	case errors.Is(err, errPeppolSVRLOutputLimit):
+	case errors.Is(err, errPeppolSVRLOutputLimit), errors.Is(err, peppolprofile.ErrDocumentTooLarge):
 		return queue.StageReasonResourceLimit
 	case errors.Is(err, errPeppolRuntimeSVRL):
 		return queue.StageReasonMalformedOutput

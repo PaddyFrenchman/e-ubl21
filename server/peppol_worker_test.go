@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -86,6 +87,27 @@ func TestPeppolOperationalFailureUsesIndependentRetry(t *testing.T) {
 	}
 	if err := retry.Ack(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestPeppolProfileAwareValidatorRejectsUnsupportedProfileID(t *testing.T) {
+	validator := peppolProfileAwareValidator{delegate: peppolValidatorFunc(func(_ context.Context, input io.Reader) (queue.ValidationStageResult, error) {
+		if _, err := io.Copy(io.Discard, input); err != nil {
+			return queue.ValidationStageResult{}, err
+		}
+		return queue.ValidationStageResult{
+			Layer: queue.ValidationLayerPeppolBISBilling, Version: validationassets.Peppol().ValidationArtefactsVersion, Valid: true,
+		}, nil
+	})}
+	document := strings.Replace(peppolWorkerIdentityDocument(),
+		"urn:fdc:peppol.eu:2017:poacc:billing:01:1.0", "urn:unsupported:profile", 1)
+	result, err := validator.Validate(context.Background(), strings.NewReader(document))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Valid || len(result.Issues) != 1 || result.Issues[0].Rule != "EUBL21-PEPPOL-PROFILE-ID-UNSUPPORTED" ||
+		result.Issues[0].Layer != queue.ValidationLayerPeppolBISBilling {
+		t.Fatalf("unsupported ProfileID result = %+v", result)
 	}
 }
 

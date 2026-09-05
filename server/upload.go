@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/observability"
+	"github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -101,7 +102,7 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rootElement := documentType
-	profile, err := requestedValidationProfile(r, rootElement)
+	resolution, err := requestedValidationProfile(r, rootElement, body)
 	if err != nil {
 		recordUploadOutcome("unsupported_profile")
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -120,6 +121,12 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "validation deployment is draining for migration; retry later"})
 			return
 		}
+		if mode == queue.DeploymentModeLegacy && resolution.ResolvedProfile == queue.ValidationProfilePeppolBISBilling {
+			recordUploadOutcome("profile_unavailable")
+			w.Header().Set("Retry-After", "30")
+			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "Peppol validation requires the split validation deployment"})
+			return
+		}
 	}
 
 	id, err := queue.NewID()
@@ -134,8 +141,12 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 	// Persist intent first so every later partial failure is observable and
 	// can be reconciled. No content is written if this first boundary fails.
 	record := queue.UploadRecord{
-		ID: id, DocumentType: rootElement, Profile: profile, Status: queue.StatusAccepting,
-		ReceivedAt: receivedAt.Format(time.RFC3339), EnqueueTrace: observability.CaptureTrace(r.Context()),
+		ID: id, DocumentType: rootElement,
+		RequestedProfile: resolution.RequestedProfile,
+		ResolvedProfile:  resolution.ResolvedProfile,
+		Profile:          resolution.ResolvedProfile,
+		Status:           queue.StatusAccepting,
+		ReceivedAt:       receivedAt.Format(time.RFC3339), EnqueueTrace: observability.CaptureTrace(r.Context()),
 	}
 	revision, err := h.queue.CreateUploadRecord(r.Context(), record)
 	if err != nil {
@@ -212,11 +223,13 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 
 func writeUploadAccepted(w http.ResponseWriter, record queue.UploadRecord) {
 	writeJSON(w, http.StatusAccepted, map[string]any{
-		"status":     string(record.Status),
-		"id":         record.ID,
-		"document":   record.DocumentType,
-		"profile":    record.Profile,
-		"receivedAt": record.ReceivedAt,
+		"status":           string(record.Status),
+		"id":               record.ID,
+		"document":         record.DocumentType,
+		"requestedProfile": record.RequestedProfile,
+		"resolvedProfile":  resolvedUploadProfile(record),
+		"profile":          resolvedUploadProfile(record),
+		"receivedAt":       record.ReceivedAt,
 	})
 }
 
@@ -257,7 +270,9 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	response := map[string]any{
 		"id":               record.ID,
 		"document":         record.DocumentType,
-		"profile":          record.Profile,
+		"requestedProfile": requestedUploadProfile(record),
+		"resolvedProfile":  resolvedUploadProfile(record),
+		"profile":          resolvedUploadProfile(record),
 		"status":           string(record.Status),
 		"receivedAt":       record.ReceivedAt,
 		"contentAvailable": uploadContentAvailable(record),
@@ -309,22 +324,67 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, response)
 }
 
-func requestedValidationProfile(r *http.Request, documentType string) (queue.ValidationProfile, error) {
-	raw := strings.TrimSpace(r.URL.Query().Get("profile"))
-	if raw == "" {
+func requestedValidationProfile(r *http.Request, documentType string, document []byte) (peppol.Resolution, error) {
+	requested, err := requestedValidationProfileValue(r)
+	if err != nil {
+		return peppol.Resolution{}, err
+	}
+	resolution, _, err := ResolveFrozenValidationPlanFor(documentType, requested, document)
+	if err == nil {
+		return resolution, nil
+	}
+	if !errors.Is(err, peppol.ErrMalformedDocument) {
+		return peppol.Resolution{}, err
+	}
+	// Full XML validity belongs to the asynchronous XSD stage. If profile
+	// inspection cannot finish, freeze the conservative non-auto fallback (or
+	// the caller's explicit profile) so malformed uploads retain the existing
+	// accepted-then-invalid behavior.
+	resolved := requested
+	if requested == queue.ValidationProfileAuto {
+		resolved = queue.ValidationProfileUBL21
 		if requiresEN16931(documentType) {
-			return queue.ValidationProfileUBL21EN16931, nil
+			resolved = queue.ValidationProfileUBL21EN16931
 		}
-		return queue.ValidationProfileUBL21, nil
+	}
+	if _, planErr := frozenValidationPlanForResolvedProfile(documentType, resolved); planErr != nil {
+		return peppol.Resolution{}, planErr
+	}
+	return peppol.Resolution{RequestedProfile: requested, ResolvedProfile: resolved}, nil
+}
+
+func requestedValidationProfileValue(r *http.Request) (queue.ValidationProfile, error) {
+	primary := strings.TrimSpace(r.URL.Query().Get("validationProfile"))
+	legacy := strings.TrimSpace(r.URL.Query().Get("profile"))
+	if primary != "" && legacy != "" && primary != legacy {
+		return "", errors.New("validationProfile and legacy profile query parameters disagree")
+	}
+	raw := primary
+	if raw == "" {
+		raw = legacy
+	}
+	if raw == "" {
+		raw = string(queue.ValidationProfileAuto)
 	}
 	profile := queue.ValidationProfile(raw)
 	if !queue.ValidPublicValidationProfile(profile) {
 		return "", fmt.Errorf("unsupported validation profile %q", raw)
 	}
-	if profile == queue.ValidationProfileUBL21EN16931 && !requiresEN16931(documentType) {
-		return "", fmt.Errorf("validation profile %q is only available for Invoice and CreditNote", raw)
-	}
 	return profile, nil
+}
+
+func requestedUploadProfile(record queue.UploadRecord) queue.ValidationProfile {
+	if record.RequestedProfile != "" {
+		return record.RequestedProfile
+	}
+	return resolvedUploadProfile(record)
+}
+
+func resolvedUploadProfile(record queue.UploadRecord) queue.ValidationProfile {
+	if record.ResolvedProfile != "" {
+		return record.ResolvedProfile
+	}
+	return record.Profile
 }
 
 func uploadContentAvailable(record queue.UploadRecord) bool {

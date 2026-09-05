@@ -461,8 +461,27 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 		t.Fatalf("openapi = %v, want %q", spec["openapi"], "3.0.3")
 	}
 	paths := spec["paths"].(map[string]any)
-	if _, ok := paths["/api/v1/ubl/upload"]; !ok {
+	upload, ok := paths["/api/v1/ubl/upload"].(map[string]any)
+	if !ok {
 		t.Fatal("missing upload path in specification")
+	}
+	uploadParameters := upload["post"].(map[string]any)["parameters"].([]any)
+	foundValidationProfile := false
+	for _, raw := range uploadParameters {
+		parameter := raw.(map[string]any)
+		if parameter["name"] != "validationProfile" {
+			continue
+		}
+		foundValidationProfile = true
+		values := parameter["schema"].(map[string]any)["enum"].([]any)
+		for _, want := range []any{"auto", "ubl21", "ubl21-en16931", "peppol-bis-billing"} {
+			if !slices.Contains(values, want) {
+				t.Fatalf("validationProfile enum = %v, missing %q", values, want)
+			}
+		}
+	}
+	if !foundValidationProfile {
+		t.Fatal("upload operation missing validationProfile query parameter")
 	}
 	retrieval, ok := paths["/api/v1/ubl/{id}"].(map[string]any)
 	if !ok {
@@ -489,7 +508,7 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 	mediaType := content["application/json"].(map[string]any)
 	schema := mediaType["schema"].(map[string]any)
 	properties := schema["properties"].(map[string]any)
-	for _, field := range []string{"contentAvailable", "contentExpiresAt", "contentExpiredAt", "validationStages"} {
+	for _, field := range []string{"requestedProfile", "resolvedProfile", "contentAvailable", "contentExpiresAt", "contentExpiredAt", "validationStages"} {
 		if _, ok := properties[field]; !ok {
 			t.Fatalf("retrieval schema missing %s", field)
 		}
@@ -519,10 +538,19 @@ func TestNewHandlerMatchesOpenAPISpecification(t *testing.T) {
 		}
 	}
 	examples := mediaType["examples"].(map[string]any)
-	for _, name := range []string{"xsdInvalidInvoice", "en16931InvalidInvoice", "compliantInvoice", "validOrder", "processingFailed"} {
+	for _, name := range []string{
+		"peppolValidInvoice", "peppolValidCreditNote", "xsdInvalidInvoice",
+		"en16931InvalidInvoice", "peppolInvalidInvoice", "unsupportedPeppolProfileID",
+		"peppolOperationalFailure", "compliantInvoice", "validOrder", "processingFailed",
+	} {
 		if _, ok := examples[name]; !ok {
 			t.Fatalf("retrieval response missing %s example", name)
 		}
+	}
+	peppolExample := examples["peppolValidInvoice"].(map[string]any)["value"].(map[string]any)
+	if peppolExample["requestedProfile"] != "auto" || peppolExample["resolvedProfile"] != "peppol-bis-billing" ||
+		len(peppolExample["validationStages"].([]any)) != 3 {
+		t.Fatalf("Peppol-valid example is ambiguous: %v", peppolExample)
 	}
 	semanticExample := examples["en16931InvalidInvoice"].(map[string]any)["value"].(map[string]any)
 	semanticStages := semanticExample["validationStages"].([]any)
