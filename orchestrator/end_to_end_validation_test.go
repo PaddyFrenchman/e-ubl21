@@ -123,6 +123,86 @@ func TestPeppolStandardsFailureFinalizesWithThirdStageEvidence(t *testing.T) {
 	}
 }
 
+func TestPeppolExhaustionReplayPreservesPrerequisitesAndOneFinalPerGeneration(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	intent := testIntent(t, peppolTestPlan())
+	intent.RequestedProfile = queue.ValidationProfilePeppolBISBilling
+	intent.RetryPolicy.PeppolBISMaxAttempts = 1
+	if err := client.PutUploadContent(ctx, intent.UploadID, []byte(peppolIdentityDocument())); err != nil {
+		t.Fatal(err)
+	}
+	started, err := machine.Start(ctx, intent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, stage := range []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931} {
+		request := takeRequest(t, ctx, client, stage)
+		if _, err := machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerPeppolBISBilling)
+	failure := resultFor(t, request, queue.StageOutcomeOperationalFailure, queue.StageReasonRuntimeUnavailable)
+	dead, err := queue.NewStageDeadLetter(failure, 1, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PublishStageDeadLetter(ctx, dead); err != nil {
+		t.Fatal(err)
+	}
+	failed, err := machine.HandleStageResult(ctx, failure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if failed.Execution.Orchestration.Status != queue.ExecutionStatusProcessingFailed {
+		t.Fatalf("exhausted Peppol generation = %+v", failed.Execution.Orchestration)
+	}
+
+	replayed, err := machine.ReplayStage(ctx, dead)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if replayed.Execution.Generation != started.Execution.Generation+1 || replayed.Execution.Orchestration.CurrentStageOrdinal != 3 {
+		t.Fatalf("Peppol replay generation = %+v", replayed.Execution)
+	}
+	for index := range 2 {
+		stage := replayed.Execution.Orchestration.Stages[index]
+		if stage.InheritedEvidence == nil || stage.TerminalOutcome != queue.StageOutcomePassed || len(stage.Attempts) != 0 {
+			t.Fatalf("inherited prerequisite %d = %+v", index+1, stage)
+		}
+	}
+	assertNoRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	assertNoRequest(t, ctx, client, queue.ValidationLayerEN16931)
+	replayRequest := takeRequest(t, ctx, client, queue.ValidationLayerPeppolBISBilling)
+	passing := resultFor(t, replayRequest, queue.StageOutcomePassed, queue.StageReasonNone)
+	completed, err := machine.HandleStageResult(ctx, passing)
+	if err != nil {
+		t.Fatal(err)
+	}
+	duplicate, err := machine.HandleStageResult(ctx, passing)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completed.Execution.Orchestration.Status != queue.ExecutionStatusValid || duplicate.Execution.Orchestration.Status != queue.ExecutionStatusValid {
+		t.Fatalf("replayed Peppol completion = %+v; duplicate = %+v", completed.Execution.Orchestration, duplicate.Execution.Orchestration)
+	}
+	stale, err := machine.HandleStageResult(ctx, failure)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stale.Execution.Generation != started.Execution.Generation || stale.Execution.Orchestration.Status != queue.ExecutionStatusProcessingFailed {
+		t.Fatalf("stale generation changed = %+v", stale.Execution)
+	}
+	result, err := client.GetValidationExecutionResult(ctx, completed.Execution.ValidationID, completed.Execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != queue.StatusValid || len(result.ValidationStages) != 3 || result.ValidationStages[2].Layer != queue.ValidationLayerPeppolBISBilling {
+		t.Fatalf("replayed permanent result = %+v", result)
+	}
+	assertPermanentResultCount(t, ctx, client, 2)
+}
+
 func peppolTestPlan() queue.FrozenValidationPlan {
 	return queue.FrozenValidationPlan{ID: "peppol-bis-billing", Version: "1", Stages: []queue.FrozenValidationStage{
 		{ID: queue.ValidationLayerUBL21XSD, Ordinal: 1, Requirement: queue.ValidationStageRequired, RulesetVersion: "2.1"},

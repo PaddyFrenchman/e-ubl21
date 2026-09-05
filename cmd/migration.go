@@ -135,7 +135,11 @@ func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consu
 	if err := client.VerifyValidationExecutionInfra(ctx); err != nil {
 		return fmt.Errorf("verify execution infrastructure: %w", err)
 	}
-	for _, stage := range []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931} {
+	for _, stage := range []queue.ValidationLayer{
+		queue.ValidationLayerUBL21XSD,
+		queue.ValidationLayerEN16931,
+		queue.ValidationLayerPeppolBISBilling,
+	} {
 		if _, err := client.VerifyStageWorkerInfra(ctx, stage); err != nil {
 			return fmt.Errorf("verify %s stage infrastructure: %w", stage, err)
 		}

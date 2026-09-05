@@ -102,6 +102,47 @@ func TestMigrationActivationClaimPreventsUnsafeRollback(t *testing.T) {
 	}
 }
 
+func TestMigrationActivationRequiresPeppolStageInfrastructure(t *testing.T) {
+	server := queuetest.StartServer(t)
+	namespace := queue.MustNamespace("migration.peppol.barrier")
+	cfg := &Config{NATSURL: server.URL, NATSOptions: server.Options, QueueNamespace: namespace}
+	client, err := queue.ConnectWithOptions(server.URL, namespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.Close)
+	ctx := context.Background()
+	if err := client.EnsureInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.DocumentsConsumer(ctx, defaultLegacyConsumerName, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.ProvisionValidationExecutionInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
+	stageConfig := queue.DefaultStageQueueInfraConfig()
+	stageConfig.Stages = stageConfig.Stages[:2]
+	if err := client.ProvisionStageQueueInfra(ctx, stageConfig); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.ProvisionDeploymentGenerationInfra(ctx, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	if err := migrationTransition(ctx, &output, cfg, queue.DeploymentModeDraining); err != nil {
+		t.Fatal(err)
+	}
+	err = migrationActivate(ctx, &output, cfg, defaultLegacyConsumerName, false)
+	if err == nil || !strings.Contains(err.Error(), string(queue.ValidationLayerPeppolBISBilling)) {
+		t.Fatalf("activation without Peppol infrastructure error = %v", err)
+	}
+	current, getErr := client.DeploymentGeneration(ctx)
+	if getErr != nil || current.State.Mode != queue.DeploymentModeDraining {
+		t.Fatalf("failed activation state = %+v, err=%v", current.State, getErr)
+	}
+}
+
 func TestMigrationStatusRequiresExpectedLegacyConsumerUnlessExplicitlyAllowed(t *testing.T) {
 	server := queuetest.StartServer(t)
 	namespace := queue.MustNamespace("migration.consumer.policy")

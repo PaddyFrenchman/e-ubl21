@@ -62,6 +62,8 @@ func TestTerminalValidationStagesComplete(t *testing.T) {
 	failedXSD := queue.ValidationStageResult{Layer: queue.ValidationLayerUBL21XSD, Version: "2.1", Valid: false, ValidatedAt: "2026-08-25T12:00:00Z"}
 	passedEN := queue.ValidationStageResult{Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: true, ValidatedAt: "2026-08-25T12:00:01Z"}
 	failedEN := queue.ValidationStageResult{Layer: queue.ValidationLayerEN16931, Version: "1.3.16", Valid: false, ValidatedAt: "2026-08-25T12:00:01Z"}
+	passedPeppol := queue.ValidationStageResult{Layer: queue.ValidationLayerPeppolBISBilling, Version: "2025.5", Valid: true, ValidatedAt: "2026-08-25T12:00:02Z"}
+	failedPeppol := queue.ValidationStageResult{Layer: queue.ValidationLayerPeppolBISBilling, Version: "2025.5", Valid: false, ValidatedAt: "2026-08-25T12:00:02Z"}
 	tests := []struct {
 		name   string
 		record queue.UploadRecord
@@ -77,6 +79,10 @@ func TestTerminalValidationStagesComplete(t *testing.T) {
 		{"stages after short circuit", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusInvalid, ValidationStages: queue.ValidationStages{failedXSD, passedEN}}, false},
 		{"Order XSD valid", queue.UploadRecord{DocumentType: "Order", Status: queue.StatusValid, ValidationStages: queue.ValidationStages{passedXSD}}, true},
 		{"legacy result without stages", queue.UploadRecord{DocumentType: "Invoice", Status: queue.StatusValid}, false},
+		{"Peppol valid requires third-stage evidence", queue.UploadRecord{DocumentType: "Invoice", Profile: queue.ValidationProfilePeppolBISBilling, Status: queue.StatusValid, ValidationStages: queue.ValidationStages{passedXSD, passedEN}}, false},
+		{"Peppol valid with all evidence", queue.UploadRecord{DocumentType: "Invoice", Profile: queue.ValidationProfilePeppolBISBilling, Status: queue.StatusValid, ValidationStages: queue.ValidationStages{passedXSD, passedEN, passedPeppol}}, true},
+		{"Peppol invalid at third stage", queue.UploadRecord{DocumentType: "Invoice", Profile: queue.ValidationProfilePeppolBISBilling, Status: queue.StatusInvalid, ValidationStages: queue.ValidationStages{passedXSD, passedEN, failedPeppol}}, true},
+		{"EN-only profile remains EN-only", queue.UploadRecord{DocumentType: "Invoice", Profile: queue.ValidationProfileUBL21EN16931, Status: queue.StatusValid, ValidationStages: queue.ValidationStages{passedXSD, passedEN}}, true},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

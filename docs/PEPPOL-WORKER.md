@@ -39,3 +39,6 @@ Public HTTP selection of `peppol-bis-billing` is deliberately separate and is
 owned by issue #75. Until that contract lands, the durable internal profile and
 worker can be exercised by orchestrator-created plans without changing legacy
 client behavior.
+
+Durable replay, failure, shutdown, and EN-only-to-Peppol upgrade rules are
+specified in [`PEPPOL-DURABILITY-MIGRATION.md`](PEPPOL-DURABILITY-MIGRATION.md).

@@ -125,6 +125,72 @@ func TestPeppolWorkerScalesFromZeroAndStopsCleanly(t *testing.T) {
 	}
 }
 
+func TestPeppolWorkerShutdownRequeuesActiveValidationForReplacement(t *testing.T) {
+	client, ctx := newENWorkerTestClient(t)
+	machine, _, pendingMessage := authorizePeppolWorkerRequest(t, ctx, client, []byte(peppolWorkerIdentityDocument()))
+	if err := pendingMessage.Nak(); err != nil {
+		t.Fatal(err)
+	}
+	entered := make(chan struct{})
+	workerCtx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- RunPeppolWorker(workerCtx, PeppolWorkerConfig{
+			queueClient: client, MetricsAddr: "", ValidationTimeout: time.Minute,
+			Concurrency: 1, Prefetch: 1, ProgressInterval: 10 * time.Millisecond,
+			validator: peppolValidatorFunc(func(ctx context.Context, _ io.Reader) (queue.ValidationStageResult, error) {
+				close(entered)
+				<-ctx.Done()
+				return queue.ValidationStageResult{}, ctx.Err()
+			}), Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		})
+	}()
+	select {
+	case <-entered:
+	case <-time.After(3 * time.Second):
+		t.Fatal("Peppol validation did not start")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("worker-peppol did not stop during validation")
+	}
+	assertStageResultStreamMessages(t, ctx, client, queue.ValidationLayerPeppolBISBilling, 0)
+
+	replacementCtx, stopReplacement := context.WithCancel(context.Background())
+	replacementDone := make(chan error, 1)
+	go func() {
+		replacementDone <- RunPeppolWorker(replacementCtx, PeppolWorkerConfig{
+			queueClient: client, MetricsAddr: "", ValidationTimeout: 3 * time.Second,
+			Concurrency: 1, Prefetch: 1, ProgressInterval: 10 * time.Millisecond,
+			validator: peppolValidatorFunc(func(context.Context, io.Reader) (queue.ValidationStageResult, error) {
+				return queue.ValidationStageResult{Layer: queue.ValidationLayerPeppolBISBilling, Version: validationassets.Peppol().ValidationArtefactsVersion, Valid: true}, nil
+			}), Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		})
+	}()
+	result := fetchPeppolWorkerResult(t, ctx, client)
+	completed, err := machine.HandleStageResult(ctx, result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completed.Execution.Orchestration.Status != queue.ExecutionStatusValid {
+		t.Fatalf("replacement final status = %s", completed.Execution.Orchestration.Status)
+	}
+	stopReplacement()
+	select {
+	case err := <-replacementDone:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("replacement worker-peppol did not stop")
+	}
+}
+
 func TestPeppolWorkerSettingsRespectProvisionedBounds(t *testing.T) {
 	settings := resolvePeppolWorkerSettings(PeppolWorkerConfig{})
 	if settings.validationTimeout != defaultPeppolValidationTimeout || settings.concurrency != 1 || settings.prefetch != 1 || settings.progressInterval != 20*time.Second {

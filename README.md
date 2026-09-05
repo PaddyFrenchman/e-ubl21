@@ -611,7 +611,9 @@ e-ubl21 dead-letter stage-retry en16931 DEAD_LETTER_ID
 Split-stage retries have independent frozen budgets and permanent stage DLQ
 records. Stage replay creates a new generation at the failed stage while
 reusing verified immutable prerequisite evidence, so replaying EN does not
-rerun XSD. See [`docs/STAGE-RETRY-DLQ.md`](docs/STAGE-RETRY-DLQ.md).
+rerun XSD. Peppol-specific upgrade and replay barriers are documented in
+[`docs/PEPPOL-DURABILITY-MIGRATION.md`](docs/PEPPOL-DURABILITY-MIGRATION.md).
+See also [`docs/STAGE-RETRY-DLQ.md`](docs/STAGE-RETRY-DLQ.md).
 
 ## Raw XML retention
 
