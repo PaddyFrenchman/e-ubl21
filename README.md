@@ -693,6 +693,19 @@ Run the EN worker capacity matrix with:
 BENCHTIME=4x make benchmark-en16931
 ```
 
+Measure the independent Peppol durable worker boundary and repeat it under the
+production 2 CPU / 2 GiB limits with:
+
+```bash
+CAPACITY_SAMPLES=100 make benchmark-peppol
+CAPACITY_SAMPLES=100 make benchmark-peppol-cgroup
+```
+
+Both matrices include valid and invalid invoices, a Peppol-valid 1,000-line
+invoice, concurrency 1/2/4, queue wait, service duration, durable publication
+latency, CPU, allocation, and memory evidence. Recorded sizing decisions are
+in [`docs/STAGE-CAPACITY.md`](docs/STAGE-CAPACITY.md).
+
 ## Repository structure
 
 ```text

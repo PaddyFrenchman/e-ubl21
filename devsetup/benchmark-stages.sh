@@ -66,10 +66,10 @@ BENCHMARK_ARGS=(
     go test ./server ./orchestrator
     -p 1
     -run '^$'
-    -bench '^(BenchmarkXSDStageCapacity|BenchmarkEN16931StageCapacity|BenchmarkEN16931ProcessCost|BenchmarkOrchestratorCapacity)$'
+    -bench '^(BenchmarkXSDStageCapacity|BenchmarkEN16931StageCapacity|BenchmarkPeppolStageCapacity|BenchmarkEN16931ProcessCost|BenchmarkOrchestratorCapacity)$'
     -benchtime 1x
     -count 1
-    -timeout 30m
+    -timeout 60m
 )
 
 benchmark_tree_rss_kib() {

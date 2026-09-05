@@ -36,7 +36,10 @@ capacity. Alerting should use rates over counters rather than treating a raw
 counter as documents per second.
 
 Structured logs retain upload/validation/request identity for correlation but
-never invoice content. Completion records include generation, stage, attempt,
-outcome, operational reason, duration, and whether DLQ evidence was recovered.
+never invoice content. Completion records include document type, validation
+profile/version, ruleset version, generation, stage, attempt, outcome,
+operational reason, issue count, duration, and whether DLQ evidence was
+recovered. Peppol records additionally include BIS version, publication date,
+and mandatory-from date.
 Distributed trace propagation remains owned by #60;
 metrics are non-authoritative and never alter durable execution state.

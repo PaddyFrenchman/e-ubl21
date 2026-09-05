@@ -6,9 +6,9 @@ is a sizing baseline, not a service-level objective. Repeat the measurements
 on the intended Kubernetes node type whenever the Go or Java runtime, pinned
 validation assets, XML limits, persistence topology, or pod resources change.
 
-Peppol is not implemented yet. Its worker must be added to this same benchmark
-and this decision record before the Peppol deployment receives production
-resource or scaling defaults.
+The Peppol worker is measured by the same durable benchmark boundary and has a
+separate host and constrained baseline below. Its production resource and
+scaling defaults are derived from that evidence.
 
 ## Reproduce the measurements
 
@@ -26,6 +26,10 @@ split-worker boundaries:
   result publication, and acknowledgement;
 - EN 16931: the same durable boundary with one Saxon JVM per document and
   prerequisite XSD evidence already present;
+- Peppol: the same durable boundary with XSD and EN prerequisite evidence,
+  profile resolution, one Saxon JVM, bounded SVRL parsing, result publication,
+  and acknowledgement. Its cases include valid/invalid small invoices,
+  concurrency 1/2/4, and a Peppol-valid 1,000-line invoice;
 - orchestrator: durable start/dispatch, XSD-to-EN advance, operational retry,
   and terminal projection transitions using production JetStream KV, evidence,
   outbox, and compare-and-swap paths;
@@ -61,15 +65,15 @@ are made durable before the timer begins. They demonstrate the effect of
 service time and concurrency on an existing backlog, not broker publication
 latency under a live arrival stream.
 
-### Constrained EN 16931 measurement
+### Constrained semantic-stage measurement
 
 The host run above is unconstrained: it can use every core the machine
 offers, which a Kubernetes CPU **limit** forbids at the cgroup level. A
 Kubernetes CPU **request** is scheduling/entitlement metadata, not an
 execution ceiling by itself; only the **limit** imposes hard CFS throttling.
-Because the EN worker's measured host CPU-seconds per document is several
-times its wall-clock service time (the Saxon transform is internally
-multi-threaded), the EN worker must additionally be measured inside the same
+Because the semantic workers' measured host CPU-seconds per document are several
+times their wall-clock service time (the Saxon transform is internally
+multi-threaded), they must additionally be measured inside the same
 hard CPU and memory cgroup limits as the deployed pod before its resource
 defaults are set from benchmark evidence:
 
@@ -77,13 +81,13 @@ defaults are set from benchmark evidence:
 CAPACITY_SAMPLES=100 make benchmark-stages-cgroup
 ```
 
-This builds the `capacity-benchmark` container target and runs the EN
-capacity and process-cost cases under a `--cpus=2 --memory=2g` container,
+This builds the `capacity-benchmark` container target and runs the EN, Peppol,
+and process-cost cases under a `--cpus=2 --memory=2g` container,
 matching the worker's `limits.cpu: "2"` / `limits.memory: 2Gi`. It prints
 `cpu.max`, `memory.max`, `memory.peak`, and `cpu.stat` from the container's
 own cgroup alongside the same service-time percentiles as the host run. Use
-this run, not the unconstrained host run, to decide the EN worker's CPU
-request and limit.
+this run, not the unconstrained host run, to decide semantic-worker CPU and
+memory settings.
 
 ## Baseline recorded 2026-09-01
 
@@ -166,6 +170,55 @@ cannot predict pod behavior. Concurrency 1 remains the only safe choice under
 2 CPU hard limit) without permitting dangerous over-subscription when multiple
 EN pods run on the same node.
 
+## Peppol baseline recorded 2026-09-05
+
+The Peppol-only host run used the same Intel i7-11800H / 16 logical CPU machine,
+Go 1.26.2, OpenJDK 21.0.12, Saxon-HE 12.7, XML Resolver 6.0.17, and 100 durable
+observations per case. Reproduce it independently with:
+
+```sh
+MEASURE_TREE_RSS=1 CAPACITY_SAMPLES=100 make benchmark-peppol
+```
+
+Service time covers the complete worker handler boundary. Durable publication
+is measured independently around the JetStream result publish call. Queue
+percentiles are intentionally omitted from the table: all 100 requests are
+made durable before draining, so those figures describe a controlled backlog,
+not steady-state arrival latency.
+
+| Peppol workload | Concurrency | Throughput | Service p50 / p95 / p99 | Durable publish p50 / p95 / p99 | CPU/document | Go allocation/document |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| valid small Invoice | 1 | 0.799 docs/s | 1,234 / 1,416 / 1,544 ms | 0.142 / 0.477 / 0.683 ms | 5,317 ms | 443 KiB |
+| valid small Invoice | 2 | 0.963 docs/s | 1,954 / 3,236 / 3,810 ms | 0.186 / 0.486 / 0.659 ms | 8,169 ms | 428 KiB |
+| valid small Invoice | 4 | 1.031 docs/s | 3,757 / 4,350 / 4,401 ms | 0.206 / 0.686 / 1.020 ms | 11,256 ms | 518 KiB |
+| Peppol-invalid Invoice | 1 | 0.823 docs/s | 1,208 / 1,301 / 1,329 ms | 0.150 / 0.480 / 0.630 ms | 5,225 ms | 477 KiB |
+| valid 1,000-line Invoice (683 KiB) | 1 | 0.577 docs/s | 1,744 / 1,874 / 1,927 ms | 0.200 / 0.632 / 0.792 ms | 9,647 ms | 23.0 MiB |
+
+The host run took 622.5 seconds. Maximum single-process RSS was 457 MiB and
+the sampled peak aggregate process-tree RSS was 985 MiB; the latter includes
+the benchmark, embedded NATS, and up to four simultaneous Java children.
+Invalid documents are not materially cheaper than valid documents.
+
+### Constrained Peppol baseline (2 CPU / 2 GiB)
+
+`CAPACITY_SAMPLES=100 make benchmark-peppol-cgroup` ran the same matrix in the
+deployment cgroup using Go 1.25.14, OpenJDK 21.0.12 Alpine, and the pinned
+validation assets.
+
+| Peppol workload | Concurrency | Throughput | Service p50 / p95 / p99 | Durable publish p50 / p95 / p99 | CPU/document |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| valid small Invoice | 1 | 0.744 docs/s | 1,329 / 1,502 / 1,569 ms | 0.138 / 0.348 / 0.599 ms | 2,661 ms |
+| valid small Invoice | 2 | 0.622 docs/s | 3,138 / 3,491 / 3,569 ms | 0.147 / 0.402 / 0.613 ms | 3,215 ms |
+| valid small Invoice | 4 | 0.421 docs/s | 9,313 / 10,225 / 11,169 ms | 0.156 / 0.515 / 76.03 ms | 4,745 ms |
+| Peppol-invalid Invoice | 1 | 0.758 docs/s | 1,305 / 1,434 / 1,512 ms | 0.157 / 0.392 / 0.671 ms | 2,609 ms |
+| valid 1,000-line Invoice (683 KiB) | 1 | 0.559 docs/s | 1,765 / 2,052 / 2,069 ms | 0.188 / 0.603 / 0.861 ms | 3,525 ms |
+
+Peak cgroup memory was 506 MiB. The complete matrix observed 7,900 throttled
+periods out of 8,448 and 2,383 CPU-seconds of throttling, dominated by the
+deliberately over-subscribed c2/c4 cases. At c2 and c4, throughput regressed
+below c1 while service latency grew 2.3x and 6.8x respectively. The 45-second
+stage timeout retains more than 20x headroom over the c1 large-document p99.
+
 ## Initial deployment decisions
 
 ### XSD worker
@@ -192,11 +245,8 @@ EN pods run on the same node.
 - The measurements above are unconstrained: the host has many cores, but the
   Kubernetes pod will have a 2 CPU hard limit. A CPU **request** is scheduling
   metadata and does not itself enforce an execution ceiling; only the **limit**
-  causes hard CFS throttling. Therefore: benchmark the EN worker again under the
-  same 2 CPU / 2 GiB cgroup limits as the deployment (`make
-  benchmark-stages-cgroup`) before deciding the CPU request and limit. The
-  constrained result, not the unconstrained host run, determines safe concurrency
-  and valid resource defaults.
+  causes hard CFS throttling. The committed constrained result, not the
+  unconstrained host run, determines safe concurrency and resource defaults.
 - Retain 500m CPU request / 2 CPU limit and 768 MiB request / 2 GiB limit. The
   constrained benchmark under 2 CPU hard limit (see "Constrained EN 16931
   baseline" above) confirms that the measured 637 MiB peak is safe, throttling
@@ -211,6 +261,27 @@ EN pods run on the same node.
   an assumption that invalid traffic exits cheaply. The 1,000-line and
   near-limit cases capture the material effect of semantic complexity and
   document size.
+
+### Peppol worker
+
+- Keep concurrency and prefetch at `1`. Under the production 2 CPU limit,
+  concurrency 2 reduced throughput from 0.744 to 0.622 docs/s and raised p95
+  service time from 1.50 to 3.49 seconds; concurrency 4 fell to 0.421 docs/s
+  with 10.23-second p95. Add horizontal replicas instead of concurrent JVMs.
+- Request 1 CPU and 768 MiB, with 2 CPU / 2 GiB limits. One active c1 validator
+  consumed about two CPU cores during its 1.33-second median service interval.
+  A 1 CPU request avoids the fourfold scheduling over-commitment implied by the
+  earlier 500m placeholder while retaining burst headroom to the measured 2
+  CPU limit. The constrained 506 MiB peak fits the memory request with margin.
+- Retain the KEDA request-lag threshold of 4. At 0.744 docs/s it represents
+  about 5.4 seconds of c1 work, below the 10-second scaler polling interval.
+  Keep scale-to-zero activation at one request and the maximum at 30 replicas.
+- Retain the 45-second attempt timeout, 20-second progress heartbeat, and
+  120-second provisioned `AckWait`. The constrained 1,000-line p99 was 2.07
+  seconds, leaving substantial runtime-variance headroom.
+- Scale and alert using Peppol queue wait/request age with service duration and
+  queue depth. Durable publication remained sub-millisecond at c1; publication
+  latency rising without service time identifies broker/storage pressure.
 
 ### Orchestrator
 

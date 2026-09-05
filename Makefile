@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -44,6 +44,15 @@ test-validation-chaos:
 # count when collecting release evidence, for example BENCHTIME=10x.
 benchmark-en16931:
 	./devsetup/benchmark-en16931.sh
+
+# Measure the independent Peppol worker's complete durable boundary for valid,
+# invalid, line-heavy, and concurrency 1/2/4 workloads.
+benchmark-peppol:
+	./devsetup/benchmark-peppol.sh
+
+# Repeat only the Peppol capacity matrix inside the deployment's hard 2 CPU / 2 GiB limits.
+benchmark-peppol-cgroup:
+	CAPACITY_BENCHMARK_PATTERN='^BenchmarkPeppolStageCapacity$$' ./devsetup/benchmark-stages-cgroup.sh
 
 # Run the independent XSD, EN 16931, and orchestrator capacity matrix with 100
 # latency observations per case. Override with CAPACITY_SAMPLES=200.

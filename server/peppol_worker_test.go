@@ -158,7 +158,7 @@ func TestPeppolWorkerShutdownRequeuesActiveValidationForReplacement(t *testing.T
 	done := make(chan error, 1)
 	go func() {
 		done <- RunPeppolWorker(workerCtx, PeppolWorkerConfig{
-			queueClient: client, MetricsAddr: "", ValidationTimeout: time.Minute,
+			queueClient: client, MetricsAddr: "", ValidationTimeout: 45 * time.Second,
 			Concurrency: 1, Prefetch: 1, ProgressInterval: 10 * time.Millisecond,
 			validator: peppolValidatorFunc(func(ctx context.Context, _ io.Reader) (queue.ValidationStageResult, error) {
 				close(entered)
@@ -230,6 +230,10 @@ func TestPeppolWorkerSettingsRespectProvisionedBounds(t *testing.T) {
 	settings.concurrency, settings.prefetch, settings.progressInterval = 1, 1, 90*time.Second
 	if err := validatePeppolWorkerCapacity(settings, delivery); err == nil {
 		t.Fatal("accepted progress interval at AckWait")
+	}
+	settings.progressInterval, settings.validationTimeout = 20*time.Second, 90*time.Second
+	if err := validatePeppolWorkerCapacity(settings, delivery); err == nil {
+		t.Fatal("accepted validation timeout at AckWait")
 	}
 }
 

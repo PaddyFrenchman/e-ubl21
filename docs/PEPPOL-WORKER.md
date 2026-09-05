@@ -29,16 +29,41 @@ e-ubl21 worker-peppol \
   --worker-peppol-progress-interval 20s
 ```
 
+The 45-second deployment timeout covers Object Store streaming, profile
+resolution, the Saxon process, and bounded SVRL parsing for one attempt. It is
+shorter than the provisioned 120-second request `AckWait`; 20-second progress
+heartbeats preserve ownership while work is active. Shutdown cancellation
+propagates into the attempt context and terminates the Java child before the
+request is NAKed for another worker.
+
+Peppol uses the shared semantic-runtime bounds: 4 MiB maximum SVRL, 256 issues,
+bounded rule/severity/location/test/message/diagnostic fields, 256 KiB total
+issue text, 8 KiB worker diagnostic, and truncated Saxon stderr. Output or
+profile-resolution evidence exceeding a bound is an operational
+`resource-limit`, never a partial standards result. Malformed XML/SVRL remains
+the separate bounded `malformed-output` reason.
+
 The configured concurrency plus prefetch must not exceed the provisioned
 Peppol request consumer `MaxAckPending`, and the progress interval must remain
 below its `AckWait`. Kubernetes uses the Peppol request consumer lag for
 independent scale-to-zero activation and exposes `/metrics` and `/healthz` on
 port 9095.
 
-Public HTTP selection of `peppol-bis-billing` is deliberately separate and is
-owned by issue #75. Until that contract lands, the durable internal profile and
-worker can be exercised by orchestrator-created plans without changing legacy
-client behavior.
+Prometheus exposes bounded Peppol dimensions on the shared stage request,
+service-duration, queue-wait, request-age, in-flight, retry, redelivery,
+queue-depth, DLQ-depth, runtime-error, startup-error, and durable-publication
+series documented in [`STAGE-TELEMETRY.md`](STAGE-TELEMETRY.md). Completion
+logs include upload/validation/request correlation, document type, selected
+profile and version, stage and ruleset, Peppol BIS version/dates, outcome,
+bounded reason, issue count, and duration. XML content and rule IDs are never
+metric labels and invoice content is never logged.
+
+The measured production defaults are concurrency/prefetch 1/1, 1 CPU and
+768 MiB requested, 2 CPU and 2 GiB limited, and KEDA lag threshold 4. Run
+`CAPACITY_SAMPLES=100 make benchmark-peppol` for the host matrix and
+`CAPACITY_SAMPLES=100 make benchmark-peppol-cgroup` for the deployment limits.
+The recorded service, durable publication, memory, throttling, and scaling
+decision evidence is in [`STAGE-CAPACITY.md`](STAGE-CAPACITY.md).
 
 Durable replay, failure, shutdown, and EN-only-to-Peppol upgrade rules are
 specified in [`PEPPOL-DURABILITY-MIGRATION.md`](PEPPOL-DURABILITY-MIGRATION.md).

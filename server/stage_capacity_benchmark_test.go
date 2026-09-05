@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"log/slog"
@@ -17,9 +18,11 @@ import (
 	"time"
 
 	fixtures "github.com/PaddyFrenchman/e-ubl21/createsamples/en16931"
+	peppolfixtures "github.com/PaddyFrenchman/e-ubl21/createsamples/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/orchestrator"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
@@ -113,6 +116,69 @@ func BenchmarkEN16931StageCapacity(b *testing.B) {
 	}
 }
 
+// BenchmarkPeppolStageCapacity measures the complete independent worker
+// boundary, including prerequisite authorization, Object Store streaming,
+// Saxon execution, bounded SVRL parsing, durable result publication and ACK.
+func BenchmarkPeppolStageCapacity(b *testing.B) {
+	runtimeConfig, ok := localSaxonRuntimeConfig(b)
+	if !ok {
+		return
+	}
+	enRuntimeConfig := runtimeConfig
+	validDocument, err := peppolfixtures.NewInvoice(peppolfixtures.Profile01)
+	if err != nil {
+		b.Fatal(err)
+	}
+	valid, err := fixtures.BuildInvoiceXML(validDocument)
+	if err != nil {
+		b.Fatal(err)
+	}
+	negative, err := peppolfixtures.NegativeInvoiceFixtures()
+	if err != nil {
+		b.Fatal(err)
+	}
+	var invalid string
+	for _, fixture := range negative {
+		if fixture.ID == "multiple-document-notes" {
+			invalid = fixture.XML
+			break
+		}
+	}
+	if invalid == "" {
+		b.Fatal("Peppol invalid capacity fixture is missing")
+	}
+	lineHeavy := buildBenchmarkPeppolLineHeavyInvoice(b, 1000)
+	enValidator := newSaxonEN16931Validator(enRuntimeConfig, 45*time.Second)
+	for _, fixture := range []struct {
+		name string
+		body []byte
+	}{
+		{name: "valid small", body: []byte(valid)},
+		{name: "Peppol invalid", body: []byte(invalid)},
+		{name: "valid 1,000-line", body: lineHeavy},
+	} {
+		result, err := enValidator.Validate(context.Background(), bytes.NewReader(fixture.body))
+		if err != nil || !result.Valid {
+			b.Fatalf("%s capacity fixture is not EN 16931-valid: result=%+v error=%v", fixture.name, result, err)
+		}
+	}
+	profile := validationassets.Peppol()
+	runtimeConfig.xsltPath = filepath.Join("..", "validation-assets", filepath.FromSlash(profile.EmbeddedXSLTPath))
+	runtimeConfig.xsltSHA256 = profile.XSLTSHA256
+	cases := []stageCapacityCase{
+		{name: "valid_invoice_small/c1", body: []byte(valid), concurrency: 1, wantOutcome: queue.StageOutcomePassed},
+		{name: "valid_invoice_small/c2", body: []byte(valid), concurrency: 2, wantOutcome: queue.StageOutcomePassed},
+		{name: "valid_invoice_small/c4", body: []byte(valid), concurrency: 4, wantOutcome: queue.StageOutcomePassed},
+		{name: "invalid_semantics/c1", body: []byte(invalid), concurrency: 1, wantOutcome: queue.StageOutcomeStandardsInvalid},
+		{name: "valid_invoice_1000_lines/c1", body: lineHeavy, lines: 1000, concurrency: 1, wantOutcome: queue.StageOutcomePassed},
+	}
+	for _, tc := range cases {
+		b.Run(tc.name, func(b *testing.B) {
+			benchmarkPeppolStageCase(b, runtimeConfig, tc)
+		})
+	}
+}
+
 func benchmarkXSDStageCase(b *testing.B, catalog *validationCatalog, tc stageCapacityCase) {
 	requireSingleCapacityBenchmarkIteration(b)
 	samples := stageCapacitySampleCount(b)
@@ -124,7 +190,7 @@ func benchmarkXSDStageCase(b *testing.B, catalog *validationCatalog, tc stageCap
 		publishResult: client.PublishStageResult, publishDeadLetter: client.PublishStageDeadLetter,
 		nakDelay: xsdWorkerNAKDelay,
 	}
-	runStageCapacityCase(b, ctx, client, queue.ValidationLayerUBL21XSD, tc, samples, worker.handle)
+	runStageCapacityCase(b, ctx, client, queue.ValidationLayerUBL21XSD, tc, samples, worker.handle, nil)
 }
 
 func benchmarkENStageCase(b *testing.B, runtimeConfig saxonRuntimeConfig, tc stageCapacityCase) {
@@ -138,7 +204,57 @@ func benchmarkENStageCase(b *testing.B, runtimeConfig saxonRuntimeConfig, tc sta
 		publishResult: client.PublishStageResult, publishDeadLetter: client.PublishStageDeadLetter,
 		nakDelay: enWorkerNAKDelay,
 	}
-	runStageCapacityCase(b, ctx, client, queue.ValidationLayerEN16931, tc, samples, worker.handle)
+	runStageCapacityCase(b, ctx, client, queue.ValidationLayerEN16931, tc, samples, worker.handle, nil)
+}
+
+func benchmarkPeppolStageCase(b *testing.B, runtimeConfig saxonRuntimeConfig, tc stageCapacityCase) {
+	requireSingleCapacityBenchmarkIteration(b)
+	samples := stageCapacitySampleCount(b)
+	client, ctx := newStageCapacityClient(b)
+	prepareStageCapacityRequests(b, ctx, client, tc.body, queue.ValidationLayerPeppolBISBilling, samples)
+	var publicationMu sync.Mutex
+	publication := make([]time.Duration, 0, samples)
+	worker := &enStageWorker{
+		queue:     client,
+		validator: peppolProfileAwareValidator{delegate: newSaxonPeppolValidator(runtimeConfig, 45*time.Second)},
+		layer:     queue.ValidationLayerPeppolBISBilling, rulesetVersion: validationassets.Peppol().ValidationArtefactsVersion,
+		workerName: "worker-peppol", supportsDocument: requiresEN16931,
+		operationalReason: peppolStageOperationalReason, staleError: errPeppolStageRequestStale,
+		timeout: 45 * time.Second, logger: discardCapacityLogger(), now: time.Now,
+		publishResult: func(ctx context.Context, result queue.StageResult) error {
+			started := time.Now()
+			err := client.PublishStageResult(ctx, result)
+			publicationMu.Lock()
+			publication = append(publication, time.Since(started))
+			publicationMu.Unlock()
+			return err
+		},
+		publishDeadLetter: client.PublishStageDeadLetter, nakDelay: peppolWorkerNAKDelay,
+	}
+	runStageCapacityCase(b, ctx, client, queue.ValidationLayerPeppolBISBilling, tc, samples, worker.handle, func() []time.Duration {
+		publicationMu.Lock()
+		defer publicationMu.Unlock()
+		return append([]time.Duration(nil), publication...)
+	})
+}
+
+func buildBenchmarkPeppolLineHeavyInvoice(b *testing.B, lineCount int) []byte {
+	b.Helper()
+	document, err := peppolfixtures.NewInvoice(peppolfixtures.Profile01)
+	if err != nil {
+		b.Fatal(err)
+	}
+	heavy, err := fixtures.NewLineHeavyInvoiceVariantS(lineCount)
+	if err != nil {
+		b.Fatal(err)
+	}
+	document.ID = "PEPPOL-INV-LINES-" + strconv.Itoa(lineCount)
+	document.Lines, document.TaxBreakdown, document.Totals = heavy.Lines, heavy.TaxBreakdown, heavy.Totals
+	content, err := fixtures.BuildInvoiceXML(document)
+	if err != nil {
+		b.Fatal(err)
+	}
+	return []byte(content)
 }
 
 func newStageCapacityClient(b *testing.B) (*queue.Client, context.Context) {
@@ -177,7 +293,7 @@ func prepareStageCapacityRequests(b *testing.B, ctx context.Context, client *que
 		plan.Version = strconv.Itoa(index + 1)
 		intent := queue.ValidationExecutionIntent{
 			IntentID: capacityID(b), UploadID: uploadID, DocumentType: "Invoice",
-			Trigger: queue.ValidationTriggerInitial, RequestedProfile: queue.ValidationProfileUBL21EN16931,
+			Trigger: queue.ValidationTriggerInitial, RequestedProfile: capacityProfile(stage),
 			Plan: plan, RetryPolicy: queue.DefaultFrozenValidationRetryPolicy(), CreatedAt: time.Now().UTC(),
 		}
 		if index > 0 {
@@ -195,21 +311,28 @@ func prepareStageCapacityRequests(b *testing.B, ctx context.Context, client *que
 		if index == 0 {
 			initialReference = &queue.ValidationExecutionReference{ValidationID: state.Execution.ValidationID, Generation: state.Execution.Generation}
 		}
-		if stage == queue.ValidationLayerEN16931 {
-			xsdRequest := takeCapacityRequest(b, ctx, client, queue.ValidationLayerUBL21XSD)
-			xsdResult, err := queue.NewStageResult(xsdRequest, queue.StageOutcomePassed, queue.StageReasonNone, nil, "", time.Now().UTC(), time.Now().UTC(), 0)
+		prerequisites := []queue.ValidationLayer{}
+		if stage == queue.ValidationLayerEN16931 || stage == queue.ValidationLayerPeppolBISBilling {
+			prerequisites = append(prerequisites, queue.ValidationLayerUBL21XSD)
+		}
+		if stage == queue.ValidationLayerPeppolBISBilling {
+			prerequisites = append(prerequisites, queue.ValidationLayerEN16931)
+		}
+		for _, prerequisite := range prerequisites {
+			request := takeCapacityRequest(b, ctx, client, prerequisite)
+			result, err := queue.NewStageResult(request, queue.StageOutcomePassed, queue.StageReasonNone, nil, "", time.Now().UTC(), time.Now().UTC(), 0)
 			if err != nil {
 				b.Fatal(err)
 			}
-			if state, err = machine.HandleStageResult(ctx, xsdResult); err != nil {
+			if state, err = machine.HandleStageResult(ctx, result); err != nil {
 				b.Fatal(err)
 			}
-			_ = state
 		}
+		_ = state
 	}
 }
 
-func runStageCapacityCase(b *testing.B, ctx context.Context, client *queue.Client, stage queue.ValidationLayer, tc stageCapacityCase, count int, handle func(context.Context, jetstream.Msg) error) {
+func runStageCapacityCase(b *testing.B, ctx context.Context, client *queue.Client, stage queue.ValidationLayer, tc stageCapacityCase, count int, handle func(context.Context, jetstream.Msg) error, publication func() []time.Duration) {
 	b.Helper()
 	consumer, err := client.StageRequestConsumer(ctx, stage)
 	if err != nil {
@@ -296,6 +419,15 @@ func runStageCapacityCase(b *testing.B, ctx context.Context, client *queue.Clien
 	}
 	verifyCapacityResults(b, ctx, client, stage, count, tc.wantOutcome)
 	reportCapacityMetrics(b, service, queueWait, elapsed, cpuAfter-cpuBefore, memoryAfter.TotalAlloc-memoryBefore.TotalAlloc, memoryAfter.Mallocs-memoryBefore.Mallocs, tc.concurrency, len(tc.body), tc.lines)
+	if publication != nil {
+		values := publication()
+		if len(values) != count {
+			b.Fatalf("durable publication observations = %d, want %d", len(values), count)
+		}
+		b.ReportMetric(durationPercentile(values, .50), "publish_p50_ms")
+		b.ReportMetric(durationPercentile(values, .95), "publish_p95_ms")
+		b.ReportMetric(durationPercentile(values, .99), "publish_p99_ms")
+	}
 }
 
 func takeCapacityRequest(b *testing.B, ctx context.Context, client *queue.Client, stage queue.ValidationLayer) queue.StageRequest {
@@ -428,11 +560,22 @@ func timevalSeconds(value syscall.Timeval) float64 {
 func capacityPlan(finalStage queue.ValidationLayer) queue.FrozenValidationPlan {
 	stages := []queue.FrozenValidationStage{{ID: queue.ValidationLayerUBL21XSD, Ordinal: 1, Requirement: queue.ValidationStageRequired, RulesetVersion: "2.1"}}
 	profile := "ubl21-xsd"
-	if finalStage == queue.ValidationLayerEN16931 {
+	if finalStage == queue.ValidationLayerEN16931 || finalStage == queue.ValidationLayerPeppolBISBilling {
 		profile = "ubl21-en16931"
 		stages = append(stages, queue.FrozenValidationStage{ID: queue.ValidationLayerEN16931, Ordinal: 2, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"})
 	}
+	if finalStage == queue.ValidationLayerPeppolBISBilling {
+		profile = "peppol-bis-billing"
+		stages = append(stages, queue.FrozenValidationStage{ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3, Requirement: queue.ValidationStageRequired, RulesetVersion: validationassets.Peppol().ValidationArtefactsVersion})
+	}
 	return queue.FrozenValidationPlan{ID: profile, Version: "1", Stages: stages}
+}
+
+func capacityProfile(stage queue.ValidationLayer) queue.ValidationProfile {
+	if stage == queue.ValidationLayerPeppolBISBilling {
+		return queue.ValidationProfilePeppolBISBilling
+	}
+	return queue.ValidationProfileUBL21EN16931
 }
 
 func bytesLookLikeOrder(body []byte) bool {

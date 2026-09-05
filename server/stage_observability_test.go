@@ -1,18 +1,89 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
 	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 )
+
+func TestPeppolStageMetricsAndStructuredLogUseBoundedDimensions(t *testing.T) {
+	stage := string(queue.ValidationLayerPeppolBISBilling)
+	outcome := string(queue.StageOutcomeOperationalFailure)
+	reason := string(queue.StageReasonResourceLimit)
+	completed := stageRequestsTotal.WithLabelValues(stage, outcome)
+	runtimeErrors := stageRuntimeErrorsTotal.WithLabelValues(stage, reason)
+	retries := stageRetriesTotal.WithLabelValues(stage, reason)
+	duration := validationStageDuration.WithLabelValues(stage)
+	queueWait := stageQueueWait.WithLabelValues(stage)
+	publication := stageResultPublicationLatency.WithLabelValues(stage, outcome)
+	completedBefore := prometheusCounterValue(t, completed)
+	runtimeBefore := prometheusCounterValue(t, runtimeErrors)
+	retriesBefore := prometheusCounterValue(t, retries)
+	durationBefore := histogramSampleCount(t, duration)
+	queueWaitBefore := histogramSampleCount(t, queueWait)
+	publicationBefore := histogramSampleCount(t, publication)
+
+	result := queue.StageResult{
+		UploadID: "upload-peppol-observed", ValidationID: "validation-peppol-observed",
+		RequestID: "request-peppol-observed", DocumentType: "Invoice",
+		Plan: "peppol-bis-billing", PlanVersion: "1", Generation: 2,
+		Stage: queue.ValidationLayerPeppolBISBilling, RulesetVersion: validationassets.Peppol().ValidationArtefactsVersion,
+		Attempt: 1, Outcome: queue.StageOutcomeOperationalFailure, Reason: queue.StageReasonResourceLimit,
+		Issues: []queue.ValidationIssue{{Kind: queue.ValidationIssueFailedAssert}}, DurationMS: 1250,
+	}
+	recordSplitStageExecution(result)
+	recordSplitStagePublished(result, 3)
+	recordStageRequestTiming(stage, .75, 1)
+	observeStageResultPublication(result.Stage, result.Outcome, time.Now())
+	var output bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&output, nil))
+	logSplitStageResult(context.Background(), logger, result, false)
+
+	if got := prometheusCounterValue(t, completed) - completedBefore; got != 1 {
+		t.Fatalf("completed metric delta = %v, want 1", got)
+	}
+	if got := prometheusCounterValue(t, runtimeErrors) - runtimeBefore; got != 1 {
+		t.Fatalf("runtime error metric delta = %v, want 1", got)
+	}
+	if got := prometheusCounterValue(t, retries) - retriesBefore; got != 1 {
+		t.Fatalf("retry metric delta = %v, want 1", got)
+	}
+	if got := histogramSampleCount(t, duration) - durationBefore; got != 1 {
+		t.Fatalf("duration metric samples = %d, want 1", got)
+	}
+	if got := histogramSampleCount(t, queueWait) - queueWaitBefore; got != 1 {
+		t.Fatalf("queue-wait metric samples = %d, want 1", got)
+	}
+	if got := histogramSampleCount(t, publication) - publicationBefore; got != 1 {
+		t.Fatalf("publication metric samples = %d, want 1", got)
+	}
+	logText := output.String()
+	for _, field := range []string{
+		`"upload_id":"upload-peppol-observed"`, `"document_type":"Invoice"`,
+		`"validation_profile":"peppol-bis-billing"`, `"profile_version":"1"`,
+		`"stage":"peppol-bis-billing"`, `"ruleset_version":"1.3.16"`,
+		`"outcome":"operational-failure"`, `"reason":"resource-limit"`,
+		`"issue_count":1`, `"duration_ms":1250`, `"bis_version":"3.0.21"`,
+	} {
+		if !strings.Contains(logText, field) {
+			t.Errorf("Peppol structured log missing %s: %s", field, logText)
+		}
+	}
+	if strings.Contains(logText, "invoice-body") {
+		t.Fatal("Peppol structured log contains invoice content")
+	}
+}
 
 func histogramSampleCount(t *testing.T, observer prometheus.Observer) uint64 {
 	t.Helper()

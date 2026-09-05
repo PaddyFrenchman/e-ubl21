@@ -7,8 +7,9 @@ cd "$ROOT_DIR"
 CONTAINER_CLI="${CONTAINER_CLI:-docker}"
 CAPACITY_IMAGE="${CAPACITY_IMAGE:-e-ubl21:stage-capacity}"
 CAPACITY_SAMPLES="${CAPACITY_SAMPLES:-100}"
+CAPACITY_BENCHMARK_PATTERN="${CAPACITY_BENCHMARK_PATTERN:-^(BenchmarkEN16931StageCapacity|BenchmarkPeppolStageCapacity|BenchmarkEN16931ProcessCost)$}"
 if ! command -v "$CONTAINER_CLI" >/dev/null 2>&1; then
-    echo "ERROR: ${CONTAINER_CLI} is required for the constrained EN 16931 benchmark." >&2
+    echo "ERROR: ${CONTAINER_CLI} is required for the constrained semantic-stage benchmark." >&2
     exit 1
 fi
 if [[ ! "$CAPACITY_SAMPLES" =~ ^[0-9]+$ ]] || (( CAPACITY_SAMPLES < 100 || CAPACITY_SAMPLES > 500 )); then
@@ -23,13 +24,15 @@ fi
     --memory-swap=2g \
     --pids-limit=2048 \
     --env "EUBL21_CAPACITY_SAMPLES=${CAPACITY_SAMPLES}" \
+    --env "EUBL21_CAPACITY_BENCHMARK_PATTERN=${CAPACITY_BENCHMARK_PATTERN}" \
     --env EUBL21_REQUIRE_EN16931_TEST_RUNTIME=1 \
     "$CAPACITY_IMAGE" \
     sh -euc '
-        echo "Constrained EN 16931 benchmark cgroup:"
+        echo "Constrained EN 16931 and Peppol benchmark cgroup:"
         echo "  cpu.max=$(cat /sys/fs/cgroup/cpu.max)"
         echo "  memory.max=$(cat /sys/fs/cgroup/memory.max)"
         echo "  capacity_samples=${EUBL21_CAPACITY_SAMPLES}"
+        echo "  benchmark_pattern=${EUBL21_CAPACITY_BENCHMARK_PATTERN}"
         echo "  $(go version)"
         java -version 2>&1 | sed -n "1,3p"
         xmllint --version 2>&1 | sed -n "1p"
@@ -37,7 +40,7 @@ fi
         cd /src/server
         status=0
         /usr/local/bin/stage-capacity.test -test.run "^$" \
-            -test.bench "^(BenchmarkEN16931StageCapacity|BenchmarkEN16931ProcessCost)$" \
+            -test.bench "${EUBL21_CAPACITY_BENCHMARK_PATTERN}" \
             -test.benchtime 1x -test.count 1 -test.timeout 90m || status=$?
         echo "capacity_cgroup_memory_peak_bytes=$(cat /sys/fs/cgroup/memory.peak)"
         sed "s/^/capacity_cgroup_cpu_/" /sys/fs/cgroup/cpu.stat

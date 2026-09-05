@@ -7,13 +7,14 @@ import (
 
 	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
 func init() {
 	stages := []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931, queue.ValidationLayerPeppolBISBilling}
 	outcomes := []queue.StageOutcome{queue.StageOutcomePassed, queue.StageOutcomeStandardsInvalid, queue.StageOutcomeOperationalFailure}
-	reasons := []queue.StageOperationalReason{queue.StageReasonTimeout, queue.StageReasonCancelled, queue.StageReasonRuntimeUnavailable, queue.StageReasonRuntimeFailure, queue.StageReasonContentUnavailable, queue.StageReasonResourceLimit, queue.StageReasonMalformedOutput}
+	reasons := []queue.StageOperationalReason{queue.StageReasonTimeout, queue.StageReasonCancelled, queue.StageReasonRuntimeUnavailable, queue.StageReasonRuntimeFailure, queue.StageReasonContentUnavailable, queue.StageReasonResourceLimit, queue.StageReasonMalformedOutput, queue.StageReasonInternalError}
 	for _, stage := range stages {
 		stageName := string(stage)
 		stageInFlight.WithLabelValues(stageName).Set(0)
@@ -87,11 +88,21 @@ func observeStageResultPublication(stage queue.ValidationLayer, outcome queue.St
 
 func logSplitStageResult(ctx context.Context, logger *slog.Logger, result queue.StageResult, recovered bool) {
 	traceID, spanID := observability.CorrelationFields(ctx)
-	logger.Info("validation stage request completed",
+	attributes := []any{
 		"trace_id", traceID, "span_id", spanID,
 		"upload_id", result.UploadID, "validation_id", result.ValidationID,
+		"document_type", result.DocumentType, "validation_profile", result.Plan,
+		"profile_version", result.PlanVersion, "ruleset_version", result.RulesetVersion,
 		"generation", result.Generation, "request_id", result.RequestID,
 		"stage", result.Stage, "attempt", result.Attempt, "outcome", result.Outcome,
-		"reason", result.Reason, "duration_ms", result.DurationMS, "recovered_from_dlq", recovered,
-	)
+		"reason", result.Reason, "issue_count", len(result.Issues),
+		"duration_ms", result.DurationMS, "recovered_from_dlq", recovered,
+	}
+	if result.Stage == queue.ValidationLayerPeppolBISBilling {
+		profile := validationassets.Peppol()
+		attributes = append(attributes,
+			"bis_version", profile.Version, "bis_release_date", profile.PublicationDate,
+			"bis_mandatory_from", profile.MandatoryFrom)
+	}
+	logger.Info("validation stage request completed", attributes...)
 }

@@ -72,6 +72,14 @@ func TestWorkloadsAreIndependentAndOperationallyBounded(t *testing.T) {
 	assertEnv(t, peppolEnv, "EUBL21_WORKER_PEPPOL_CONCURRENCY", "1")
 	assertEnv(t, peppolEnv, "EUBL21_WORKER_PEPPOL_PREFETCH", "1")
 	assertEnv(t, peppolEnv, "EUBL21_WORKER_PEPPOL_TIMEOUT", "45s")
+	peppolContainer := firstContainer(t, requireObject(t, objects, "Deployment", "e-ubl21-worker-peppol"))
+	peppolResources := objectMap(t, peppolContainer["resources"])
+	peppolRequests := objectMap(t, peppolResources["requests"])
+	peppolLimits := objectMap(t, peppolResources["limits"])
+	if stringValue(t, peppolRequests["cpu"]) != "1" || stringValue(t, peppolRequests["memory"]) != "768Mi" ||
+		stringValue(t, peppolLimits["cpu"]) != "2" || stringValue(t, peppolLimits["memory"]) != "2Gi" {
+		t.Fatalf("Peppol resources = requests %v limits %v", peppolRequests, peppolLimits)
+	}
 }
 
 func TestScaleToZeroWorkersActivateForOneQueuedRequest(t *testing.T) {

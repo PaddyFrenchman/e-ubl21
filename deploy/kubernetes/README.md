@@ -97,7 +97,7 @@ to the cluster network.
 ## Capacity calculation
 
 Measure mean service time from
-`e_ubl21_stage_service_duration_seconds` separately for each stage. For stage
+`e_ubl21_validation_stage_duration_seconds` separately for each stage. For stage
 arrival rate `lambda`, per-pod concurrency `c`, mean service time `s` seconds,
 and safety factor `f`:
 

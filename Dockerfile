@@ -38,7 +38,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/e-ubl21
 
 # ---- Capacity benchmark ----------------------------------------------------
 # This opt-in target is not part of the production image. It supplies the Go
-# toolchain and validator runtimes needed to execute the EN worker benchmarks
+# toolchain and validator runtimes needed to execute the EN and Peppol worker benchmarks
 # inside the same hard CPU and memory cgroup limits used by the deployment.
 FROM build AS capacity-benchmark
 

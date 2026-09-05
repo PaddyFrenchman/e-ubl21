@@ -97,7 +97,7 @@ func (validator *saxonPeppolValidator) Validate(ctx context.Context, xmlInput io
 }
 
 func classifyPeppolRuntimeError(err error) error {
-	if errors.Is(err, errSaxonSVRLOutputLimit) {
+	if errors.Is(err, errSaxonSVRLOutputLimit) || errors.Is(err, svrl.ErrLimitExceeded) {
 		return fmt.Errorf("Peppol validation operational failure: %w: %w: %w", errPeppolRuntimeSVRL, errPeppolSVRLOutputLimit, err)
 	}
 	var category error

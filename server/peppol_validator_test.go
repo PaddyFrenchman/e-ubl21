@@ -3,15 +3,19 @@ package server
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
 	peppolprofile "github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/PaddyFrenchman/e-ubl21/svrl"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 )
 
@@ -87,6 +91,20 @@ func TestPeppolValidatorClassifiesOperationalFailures(t *testing.T) {
 		{name: "timeout", script: `while :; do :; done`, configure: func(v *saxonPeppolValidator) { v.timeout = 10 * time.Millisecond }, want: context.DeadlineExceeded, contains: "timed out"},
 		{name: "oversized SVRL", script: `cat >/dev/null; i=0; while [ "$i" -lt 200 ]; do printf x; i=$((i + 1)); done`, configure: func(v *saxonPeppolValidator) { v.limits.MaxInputBytes = 64 }, want: errPeppolSVRLOutputLimit, contains: "maximum is 64 bytes"},
 	}
+
+	t.Run("parsed issue limit is resource exhaustion", func(t *testing.T) {
+		assertion := `<svrl:failed-assert id="PEPPOL-LIMIT" flag="fatal"><svrl:text>bounded</svrl:text></svrl:failed-assert>`
+		document := `<svrl:schematron-output xmlns:svrl="http://purl.oclc.org/dsdl/svrl">` + strings.Repeat(assertion, 2) + `</svrl:schematron-output>`
+		validator := newSaxonPeppolValidator(fakeSaxonRuntime(t, "cat >/dev/null\nprintf '%s' '"+document+"'"), time.Second)
+		validator.limits.MaxIssues = 1
+		result, err := validator.Validate(context.Background(), strings.NewReader(`<Invoice/>`))
+		if !errors.Is(err, errPeppolSVRLOutputLimit) || !errors.Is(err, svrl.ErrLimitExceeded) || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+			t.Fatalf("result/error = %+v / %v", result, err)
+		}
+		if reason := peppolStageOperationalReason(err); reason != queue.StageReasonResourceLimit {
+			t.Fatalf("operational reason = %q, want resource-limit", reason)
+		}
+	})
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			validator := newSaxonPeppolValidator(fakeSaxonRuntime(t, test.script), time.Second)
@@ -118,6 +136,78 @@ func TestPeppolValidatorClassifiesOperationalFailures(t *testing.T) {
 			t.Fatalf("error = %v", err)
 		}
 	})
+}
+
+func TestPeppolProfileEvidenceCannotExceedDurableBounds(t *testing.T) {
+	issues := make([]queue.ValidationIssue, queue.MaxStageIssues)
+	for index := range issues {
+		issues[index] = queue.ValidationIssue{
+			Kind: queue.ValidationIssueSuccessfulReport, Layer: queue.ValidationLayerPeppolBISBilling,
+			Rule: "PEPPOL-ADVISORY", Severity: "info", Message: "bounded",
+		}
+	}
+	validator := peppolProfileAwareValidator{delegate: peppolValidatorFunc(func(_ context.Context, input io.Reader) (queue.ValidationStageResult, error) {
+		if _, err := io.ReadAll(input); err != nil {
+			return queue.ValidationStageResult{}, err
+		}
+		return queue.ValidationStageResult{
+			Layer: queue.ValidationLayerPeppolBISBilling, Version: validationassets.Peppol().ValidationArtefactsVersion,
+			Valid: true, Issues: issues,
+		}, nil
+	})}
+	result, err := validator.Validate(context.Background(), strings.NewReader(`<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"/>`))
+	if !errors.Is(err, errPeppolSVRLOutputLimit) || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+		t.Fatalf("result/error = %+v / %v", result, err)
+	}
+	if reason := peppolStageOperationalReason(err); reason != queue.StageReasonResourceLimit {
+		t.Fatalf("operational reason = %q, want resource-limit", reason)
+	}
+}
+
+func TestPeppolCancellationKillsJavaProcess(t *testing.T) {
+	pidPath := filepath.Join(t.TempDir(), "java.pid")
+	cfg := fakeSaxonRuntime(t, `printf '%s' "$$" > "`+pidPath+`"; while :; do :; done`)
+	validator := newSaxonPeppolValidator(cfg, 5*time.Second)
+	validator.waitDelay = 25 * time.Millisecond
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		_, err := validator.Validate(ctx, strings.NewReader(`<Invoice/>`))
+		done <- err
+	}()
+	var pid int
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		body, err := os.ReadFile(pidPath)
+		if err == nil {
+			pid, err = strconv.Atoi(string(body))
+			if err == nil && pid != 0 {
+				break
+			}
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if pid == 0 {
+		cancel()
+		t.Fatal("fake Java process did not start")
+	}
+	cancel()
+	select {
+	case err := <-done:
+		if err == nil || !errors.Is(err, context.Canceled) {
+			t.Fatalf("canceled Peppol validation error = %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Peppol validation did not return after cancellation")
+	}
+	deadline = time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		if err := syscall.Kill(pid, 0); errors.Is(err, syscall.ESRCH) {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatalf("Peppol Java process %d remains alive after cancellation", pid)
 }
 
 func TestPinnedPeppolValidatorMatchesReferenceManifest(t *testing.T) {

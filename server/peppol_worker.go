@@ -89,6 +89,9 @@ func validatePeppolWorkerCapacity(settings peppolWorkerSettings, delivery queue.
 	if settings.progressInterval >= delivery.AckWait {
 		return fmt.Errorf("worker-peppol progress interval (%s) must be shorter than provisioned Peppol request AckWait (%s)", settings.progressInterval, delivery.AckWait)
 	}
+	if settings.validationTimeout >= delivery.AckWait {
+		return fmt.Errorf("worker-peppol validation timeout (%s) must be shorter than provisioned Peppol request AckWait (%s)", settings.validationTimeout, delivery.AckWait)
+	}
 	return nil
 }
 
@@ -301,6 +304,9 @@ func (validator peppolProfileAwareValidator) Validate(ctx context.Context, input
 			Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerPeppolBISBilling,
 			Rule: string(failure.Code), Severity: "error", Message: failure.Message,
 		})
+	}
+	if err := queue.ValidateStageIssues(queue.ValidationLayerPeppolBISBilling, result.Issues); err != nil {
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: normalized Peppol evidence: %w", errPeppolSVRLOutputLimit, err)
 	}
 	result.Valid = !queue.StageIssuesContainStandardsFailure(result.Issues)
 	return result, nil
