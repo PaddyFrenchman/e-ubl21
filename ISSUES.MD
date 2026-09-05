@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #72, the **next actionable issue is #75 — TODO-PEPPOL-010 — Extend HTTP/OpenAPI validation profile contract**. Issues #37, #38, #72, #76, #77, issues #48 through #63, and issues #65 through #71 are complete. Issue #64 remains open but is intentionally downstream of the Peppol validator/asset work, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+After completion of #73, the **next actionable issue is #75 — TODO-PEPPOL-010 — Extend HTTP/OpenAPI validation profile contract**. Issues #37, #38, #72, #73, #76, #77, issues #48 through #63, and issues #65 through #71 are complete. Issue #64 remains open as a separately tracked Peppol-stage acceptance contract, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -333,7 +333,7 @@ Freeze that stage workers cannot finalize whole-document validity or choose the 
 
 **Acceptance:** A written ownership table leaves no state mutation shared by unrelated roles without an explicit CAS/idempotency contract.
 
-**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44. **#37, #38, #48 through #63, #65 through #72, #76, and #77 are complete; #75 is the current next actionable issue. #64 remains open for later Peppol-stage integration.**
+**Dependency:** Regression corpus and baseline should be established first. This dependency is satisfied by #44. **#37, #38, #48 through #63, #65 through #73, #76, and #77 are complete; #75 is the current next actionable issue. #64 remains open as a separately tracked Peppol-stage acceptance contract.**
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/48
 
@@ -705,6 +705,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/64
 
 ### 42. #73 — TODO-PEPPOL-008 — Integrate Peppol as the third validation stage
 
+**Status:** Complete / closed.
+
 **Goal:** Integrate Peppol after durable XSD and EN 16931 success without reintroducing synchronous stage chaining.
 
 Use `worker-peppol` and the validation-plan orchestrator. Peppol runs only for applicable explicit/resolved requests and only after durable XSD + EN pass evidence. Operational failure follows its own retry path. No partial final result may be published while Peppol is pending or running.
@@ -928,9 +930,9 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 
 ## Notes
 
-- Issues #64 and #73 are closely related and should be implemented as one coordinated Peppol-stage integration effort, while preserving both acceptance contracts.
+- Issues #64 and #73 are closely related; #73 is complete, while #64 remains open as a separately tracked Peppol-stage acceptance contract.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
-- Issues #37, #38, #44, #48–#63, #65–#72, #76, and #77 are complete; **#75 is therefore the current next actionable issue.** #64 remains open and intentionally follows the Peppol engine work because it integrates `worker-peppol` into the asynchronous runtime.
+- Issues #37, #38, #44, #48–#63, #65–#73, #76, and #77 are complete; **#75 is therefore the current next actionable issue.** #64 remains open as a separately tracked Peppol-stage acceptance contract.
 - Issue #45 is the safety rail for declaring the first Peppol release supported and remains blocked until its real Peppol prerequisites are complete.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
