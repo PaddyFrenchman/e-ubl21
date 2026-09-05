@@ -25,7 +25,7 @@ subject, stream, and durable consumer. For the default namespace:
 | --- | --- | --- | --- |
 | UBL 2.1 XSD | `ubl.validation.request.xsd` | `ubl.validation.result.xsd` | `ubl.validation.dead_letter.xsd.*` |
 | EN 16931 | `ubl.validation.request.en16931` | `ubl.validation.result.en16931` | `ubl.validation.dead_letter.en16931.*` |
-| Reserved Peppol Billing | `ubl.validation.request.peppol` | `ubl.validation.result.peppol` | `ubl.validation.dead_letter.peppol.*` |
+| Peppol Billing | `ubl.validation.request.peppol` | `ubl.validation.result.peppol` | `ubl.validation.dead_letter.peppol.*` |
 
 For `EUBL21_QUEUE_NAMESPACE=eubl21.prod`, the EN subjects become:
 
@@ -50,8 +50,9 @@ dead-letter stream: UBL_VALIDATION_DEAD_LETTER_XSD
 
 An explicit namespace prepends its normalized resource prefix, for example
 `EUBL21_PROD_VALIDATION_REQUEST_XSD`. Unknown stage IDs are rejected rather
-than mapped into an accidental subject. Reserving the Peppol resources now
-does not add Peppol to a validation plan or public API profile.
+than mapped into an accidental subject. Peppol uses these resources only when
+the immutable validation plan contains the Peppol Billing stage; public API
+profile selection remains a separate contract.
 
 The value `ubl` is reserved for the default deployment's legacy physical
 namespace and cannot be configured as an explicit namespace. Although

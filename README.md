@@ -116,6 +116,7 @@ deployment-generation migration barrier:
 e-ubl21 orchestrator
 e-ubl21 worker-xsd
 e-ubl21 worker-en16931
+e-ubl21 worker-peppol
 ```
 
 The versioned Kubernetes base, independent resource and delivery settings,
@@ -169,7 +170,7 @@ Validation orchestrator
  |
  +--> EN 16931 worker pool
  |
- +--> Peppol worker pool       # planned
+ +--> Peppol worker pool
 ```
 
 Each stage will consume a durable `StageRequest`, publish a durable `StageResult`, and scale independently. The orchestrator alone will own the validation plan and final document status.
@@ -473,6 +474,19 @@ The command verifies passing XSD evidence before invoking the pinned Saxon
 runtime. EN work remains durable while this role is scaled to zero. See
 [`docs/EN16931-WORKER.md`](docs/EN16931-WORKER.md).
 
+### Run the independent Peppol stage worker
+
+After provisioning, run the third-stage Peppol Billing consumer with:
+
+```bash
+go run . worker-peppol \
+  --nats-url nats://localhost:4222
+```
+
+It consumes only orchestrator-authorized Peppol requests after durable XSD and
+EN pass evidence. Public selection of the Peppol profile remains owned by
+issue #75. See [`docs/PEPPOL-WORKER.md`](docs/PEPPOL-WORKER.md).
+
 ### Provision and run the validation orchestrator
 
 The split runtime requires deployer-owned durable infrastructure. Provision it
@@ -514,6 +528,7 @@ go run . serve --help
 go run . worker --help
 go run . worker-xsd --help
 go run . worker-en16931 --help
+go run . worker-peppol --help
 go run . orchestrator --help
 go run . provision --help
 go run . migration --help
@@ -535,6 +550,7 @@ Examples:
 --worker-validation-timeout -> EUBL21_WORKER_VALIDATION_TIMEOUT
 --worker-xsd-timeout         -> EUBL21_WORKER_XSD_TIMEOUT
 --worker-en16931-timeout     -> EUBL21_WORKER_EN16931_TIMEOUT
+--worker-peppol-timeout      -> EUBL21_WORKER_PEPPOL_TIMEOUT
 --orchestrator-result-prefetch -> EUBL21_ORCHESTRATOR_RESULT_PREFETCH
 --stage-xsd-ack-wait         -> EUBL21_STAGE_XSD_ACK_WAIT
 ```

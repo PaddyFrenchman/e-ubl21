@@ -56,6 +56,41 @@ spec:
         lagThreshold: "8"
         activationLagThreshold: "0"
         useHttps: "false"
+    - type: nats-jetstream
+      metadata:
+        natsServerMonitoringEndpoint: nats:8222
+        account: "$G"
+        stream: EUBL21_PROD_VALIDATION_RESULT_PEPPOL
+        consumer: EUBL21_PROD_VALIDATION_PEPPOL_ORCHESTRATOR
+        lagThreshold: "8"
+        activationLagThreshold: "0"
+        useHttps: "false"
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "70"
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: e-ubl21-worker-peppol
+spec:
+  scaleTargetRef:
+    name: e-ubl21-worker-peppol
+  pollingInterval: 10
+  cooldownPeriod: 180
+  minReplicaCount: 0
+  maxReplicaCount: 30
+  triggers:
+    - type: nats-jetstream
+      metadata:
+        natsServerMonitoringEndpoint: nats:8222
+        account: "$G"
+        stream: EUBL21_PROD_VALIDATION_REQUEST_PEPPOL
+        consumer: EUBL21_PROD_VALIDATION_PEPPOL_WORKER
+        lagThreshold: "4"
+        activationLagThreshold: "0"
+        useHttps: "false"
     - type: cpu
       metricType: Utilization
       metadata:

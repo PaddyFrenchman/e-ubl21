@@ -19,8 +19,26 @@ func TestRootCommandBuildsAndPrintsHelp(t *testing.T) {
 	if err := root.Execute(); err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) || !bytes.Contains(stdout.Bytes(), []byte("worker-xsd")) || !bytes.Contains(stdout.Bytes(), []byte("worker-en16931")) || !bytes.Contains(stdout.Bytes(), []byte("orchestrator")) || !bytes.Contains(stdout.Bytes(), []byte("provision")) || !bytes.Contains(stdout.Bytes(), []byte("dead-letter")) || !bytes.Contains(stdout.Bytes(), []byte("maintenance")) || !bytes.Contains(stdout.Bytes(), []byte("regression")) {
+	if !bytes.Contains(stdout.Bytes(), []byte("serve")) || !bytes.Contains(stdout.Bytes(), []byte("worker")) || !bytes.Contains(stdout.Bytes(), []byte("worker-xsd")) || !bytes.Contains(stdout.Bytes(), []byte("worker-en16931")) || !bytes.Contains(stdout.Bytes(), []byte("worker-peppol")) || !bytes.Contains(stdout.Bytes(), []byte("orchestrator")) || !bytes.Contains(stdout.Bytes(), []byte("provision")) || !bytes.Contains(stdout.Bytes(), []byte("dead-letter")) || !bytes.Contains(stdout.Bytes(), []byte("maintenance")) || !bytes.Contains(stdout.Bytes(), []byte("regression")) {
 		t.Fatalf("help missing subcommands: %s", stdout.String())
+	}
+}
+
+func TestPeppolWorkerCommandExposesOnlyPeppolRuntimeControls(t *testing.T) {
+	command := newPeppolWorkerCmd(viper.New(), &Config{})
+	for _, name := range []string{
+		"worker-peppol-metrics-addr", "worker-peppol-timeout", "worker-peppol-concurrency",
+		"worker-peppol-prefetch", "worker-peppol-progress-interval", "worker-peppol-java-executable",
+		"worker-peppol-saxon-jar-path", "worker-peppol-xmlresolver-jar-path",
+		"worker-peppol-saxon-configuration-path", "worker-peppol-runtime-xslt-path",
+		"worker-peppol-saxon-startup-timeout",
+	} {
+		if command.Flags().Lookup(name) == nil {
+			t.Fatalf("worker-peppol flag %q is missing", name)
+		}
+	}
+	if command.Flags().Lookup("worker-en16931-timeout") != nil || command.Flags().Lookup("worker-xsd-timeout") != nil {
+		t.Fatal("worker-peppol exposes another stage's runtime controls")
 	}
 }
 
@@ -146,6 +164,9 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	}
 	if cfg.ENWorkerMetricsAddr != ":9093" || cfg.ENWorkerValidationTimeout != 30*time.Second || cfg.ENWorkerConcurrency != 1 || cfg.ENWorkerPrefetch != 1 || cfg.ENWorkerProgressInterval != 20*time.Second || cfg.ENWorkerJavaExecutable != "java" || cfg.ENWorkerSaxonStartupTimeout != 30*time.Second {
 		t.Fatalf("default worker-en16931 config = %+v", cfg)
+	}
+	if cfg.PeppolWorkerMetricsAddr != ":9095" || cfg.PeppolWorkerValidationTimeout != 30*time.Second || cfg.PeppolWorkerConcurrency != 1 || cfg.PeppolWorkerPrefetch != 1 || cfg.PeppolWorkerProgressInterval != 20*time.Second || cfg.PeppolWorkerJavaExecutable != "java" || cfg.PeppolWorkerSaxonStartupTimeout != 30*time.Second {
+		t.Fatalf("default worker-peppol config = %+v", cfg)
 	}
 	if cfg.OrchestratorMetricsAddr != ":9094" || cfg.OrchestratorRole != "combined" || cfg.OrchestratorResultPrefetch != 8 || cfg.OrchestratorReconcileInterval != 10*time.Second {
 		t.Fatalf("default orchestrator config = %+v", cfg)

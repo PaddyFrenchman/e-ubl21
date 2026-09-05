@@ -25,10 +25,12 @@ func TestWorkloadsAreIndependentAndOperationallyBounded(t *testing.T) {
 		"e-ubl21-orchestrator-reconciler": "orchestrator",
 		"e-ubl21-worker-xsd":              "worker-xsd",
 		"e-ubl21-worker-en16931":          "worker-en16931",
+		"e-ubl21-worker-peppol":           "worker-peppol",
 	}
 	autoscaled := map[string]bool{
 		"e-ubl21-api": true, "e-ubl21-orchestrator": true,
 		"e-ubl21-worker-xsd": true, "e-ubl21-worker-en16931": true,
+		"e-ubl21-worker-peppol": true,
 	}
 	for name, wantArg := range wantArgs {
 		deployment := requireObject(t, objects, "Deployment", name)
@@ -60,17 +62,21 @@ func TestWorkloadsAreIndependentAndOperationallyBounded(t *testing.T) {
 
 	xsdEnv := environment(t, firstContainer(t, requireObject(t, objects, "Deployment", "e-ubl21-worker-xsd")))
 	enEnv := environment(t, firstContainer(t, requireObject(t, objects, "Deployment", "e-ubl21-worker-en16931")))
+	peppolEnv := environment(t, firstContainer(t, requireObject(t, objects, "Deployment", "e-ubl21-worker-peppol")))
 	assertEnv(t, xsdEnv, "EUBL21_WORKER_XSD_CONCURRENCY", "2")
 	assertEnv(t, xsdEnv, "EUBL21_WORKER_XSD_PREFETCH", "2")
 	assertEnv(t, xsdEnv, "EUBL21_WORKER_XSD_TIMEOUT", "30s")
 	assertEnv(t, enEnv, "EUBL21_WORKER_EN16931_CONCURRENCY", "1")
 	assertEnv(t, enEnv, "EUBL21_WORKER_EN16931_PREFETCH", "1")
 	assertEnv(t, enEnv, "EUBL21_WORKER_EN16931_TIMEOUT", "45s")
+	assertEnv(t, peppolEnv, "EUBL21_WORKER_PEPPOL_CONCURRENCY", "1")
+	assertEnv(t, peppolEnv, "EUBL21_WORKER_PEPPOL_PREFETCH", "1")
+	assertEnv(t, peppolEnv, "EUBL21_WORKER_PEPPOL_TIMEOUT", "45s")
 }
 
 func TestScaleToZeroWorkersActivateForOneQueuedRequest(t *testing.T) {
 	objects := loadObjects(t)
-	for _, name := range []string{"e-ubl21-worker-xsd", "e-ubl21-worker-en16931"} {
+	for _, name := range []string{"e-ubl21-worker-xsd", "e-ubl21-worker-en16931", "e-ubl21-worker-peppol"} {
 		scaledObject := requireObject(t, objects, "ScaledObject", name)
 		metadata := jetStreamTriggerMetadata(t, scaledObject)
 		if got := stringValue(t, metadata["activationLagThreshold"]); got != "0" {
@@ -115,22 +121,29 @@ func TestStageAutoscalersUseDifferentJetStreamConsumers(t *testing.T) {
 	objects := loadObjects(t)
 	xsd := requireObject(t, objects, "ScaledObject", "e-ubl21-worker-xsd")
 	en := requireObject(t, objects, "ScaledObject", "e-ubl21-worker-en16931")
+	peppol := requireObject(t, objects, "ScaledObject", "e-ubl21-worker-peppol")
 
 	assertScaleTarget(t, xsd, "e-ubl21-worker-xsd", 0, 20)
 	assertScaleTarget(t, en, "e-ubl21-worker-en16931", 0, 30)
+	assertScaleTarget(t, peppol, "e-ubl21-worker-peppol", 0, 30)
 	xsdStream, xsdConsumer := jetStreamTrigger(t, xsd)
 	enStream, enConsumer := jetStreamTrigger(t, en)
+	peppolStream, peppolConsumer := jetStreamTrigger(t, peppol)
 	if xsdStream != "EUBL21_PROD_VALIDATION_REQUEST_XSD" || xsdConsumer != "EUBL21_PROD_VALIDATION_XSD_WORKER" {
 		t.Fatalf("XSD scaler topology = %s/%s", xsdStream, xsdConsumer)
 	}
 	if enStream != "EUBL21_PROD_VALIDATION_REQUEST_EN16931" || enConsumer != "EUBL21_PROD_VALIDATION_EN16931_WORKER" {
 		t.Fatalf("EN scaler topology = %s/%s", enStream, enConsumer)
 	}
+	if peppolStream != "EUBL21_PROD_VALIDATION_REQUEST_PEPPOL" || peppolConsumer != "EUBL21_PROD_VALIDATION_PEPPOL_WORKER" {
+		t.Fatalf("Peppol scaler topology = %s/%s", peppolStream, peppolConsumer)
+	}
 	if xsdStream == enStream || xsdConsumer == enConsumer {
 		t.Fatalf("stage scalers share JetStream topology: XSD %s/%s, EN %s/%s", xsdStream, xsdConsumer, enStream, enConsumer)
 	}
 	assertHasTrigger(t, xsd, "cpu")
 	assertHasTrigger(t, en, "cpu")
+	assertHasTrigger(t, peppol, "cpu")
 
 	api := requireObject(t, objects, "HorizontalPodAutoscaler", "e-ubl21-api")
 	if got := stringValue(t, nested(t, api, "spec", "scaleTargetRef", "name")); got != "e-ubl21-api" {

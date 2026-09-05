@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/observability"
+	"github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
+	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -140,11 +143,17 @@ func (machine *Machine) buildValidationResult(ctx context.Context, execution que
 				return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d evidence does not match orchestration state", index+1)
 			}
 		}
-		stages = append(stages, queue.ValidationStageResult{
+		stageResult := queue.ValidationStageResult{
 			Layer: evidence.Stage, Version: evidence.RulesetVersion, Valid: evidence.Outcome == queue.StageOutcomePassed,
 			Outcome: evidence.Outcome, Reason: evidence.Reason, Issues: append([]queue.ValidationIssue(nil), evidence.Issues...),
 			Diagnostic: evidence.Diagnostic, ValidatedAt: evidence.CompletedAt, DurationMS: evidence.DurationMS,
-		})
+		}
+		if evidence.Stage == queue.ValidationLayerPeppolBISBilling {
+			if err := machine.populatePeppolIdentity(ctx, execution, &stageResult); err != nil {
+				return queue.ValidationResult{}, fmt.Errorf("build Peppol terminal identity: %w", err)
+			}
+		}
+		stages = append(stages, stageResult)
 	}
 	status := queue.StatusProcessingFailed
 	switch state.Status {
@@ -172,6 +181,50 @@ func (machine *Machine) buildValidationResult(ctx context.Context, execution que
 		return queue.ValidationResult{}, fmt.Errorf("build canonical validation result: %w", err)
 	}
 	return result, nil
+}
+
+// populatePeppolIdentity derives client-visible identity from the same
+// immutable upload bytes selected by the frozen plan. StageResult remains the
+// stable generic worker contract; the orchestrator owns final-result shaping.
+func (machine *Machine) populatePeppolIdentity(ctx context.Context, execution queue.ValidationExecution, stage *queue.ValidationStageResult) error {
+	profile := validationassets.Peppol()
+	stage.BISVersion = profile.Version
+	stage.BISReleaseDate = profile.PublicationDate
+	stage.BISMandatoryFrom = profile.MandatoryFrom
+
+	content, err := machine.Queue.OpenUploadContent(ctx, execution.UploadID)
+	if err != nil {
+		if stage.Outcome == queue.StageOutcomeOperationalFailure {
+			return nil
+		}
+		return fmt.Errorf("open immutable upload content: %w", err)
+	}
+	defer content.Close()
+	limited := io.LimitReader(content, peppol.MaxResolutionDocumentBytes+1)
+	document, err := io.ReadAll(limited)
+	if err != nil {
+		if stage.Outcome == queue.StageOutcomeOperationalFailure {
+			return nil
+		}
+		return fmt.Errorf("read immutable upload content: %w", err)
+	}
+	if streamErr := content.Error(); streamErr != nil {
+		if stage.Outcome == queue.StageOutcomeOperationalFailure {
+			return nil
+		}
+		return fmt.Errorf("stream immutable upload content: %w", streamErr)
+	}
+	resolution, err := peppol.Resolve(execution.DocumentType, queue.ValidationProfilePeppolBISBilling, document)
+	if err != nil {
+		if stage.Outcome == queue.StageOutcomeOperationalFailure {
+			return nil
+		}
+		return err
+	}
+	stage.CustomizationID = resolution.Identifiers.CustomizationID
+	stage.ProfileID = resolution.Identifiers.ProfileID
+	stage.ProcessProfile = resolution.Identifiers.ProcessProfile
+	return nil
 }
 
 func terminalExecutionStatus(status queue.ValidationExecutionStatus) bool {

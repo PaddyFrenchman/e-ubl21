@@ -2,9 +2,8 @@
 
 This Kustomize base is the operational topology for issue #59. It deploys the
 API, autoscaled orchestrator result consumers, a singleton orchestrator
-reconciler, XSD workers, and EN 16931 workers as separate Deployments from one
-immutable application image. Peppol will add another worker Deployment without
-changing these roles.
+reconciler, XSD workers, EN 16931 workers, and Peppol workers as separate
+Deployments from one immutable application image.
 
 The base assumes that the namespace can resolve `nats` on ports 4222 (client)
 and 8222 (monitoring), KEDA 2.20 or compatible is installed, the
@@ -58,16 +57,18 @@ kubectl -n e-ubl21 wait --for=condition=complete job/e-ubl21-provision --timeout
 | Orchestrator reconciler | fixed 1 | two repair loops | n/a | reconciliation 10s | n/a | 250m CPU / 128Mi |
 | XSD | KEDA 0–20 | 2 | 2 | 30s | 90s | 250m CPU / 256Mi |
 | EN 16931 | KEDA 0–30 | 1 | 1 | 45s | 120s | 500m CPU / 768Mi |
+| Peppol BIS Billing | KEDA 0–30 | 1 | 1 | 45s | 120s | 500m CPU / 768Mi |
 
 The initial worker and orchestrator values are supported by the reproducible
 measurements and decision record in
 [`docs/STAGE-CAPACITY.md`](../../docs/STAGE-CAPACITY.md). They remain starting
 points: repeat that benchmark on the intended node type before production.
 
-The XSD and EN `ScaledObject` resources watch different JetStream streams and
-durable consumers. Increasing EN backlog therefore changes only EN replicas.
+The XSD, EN, and Peppol `ScaledObject` resources watch different JetStream
+streams and durable consumers. Increasing one stage's backlog therefore
+changes only that stage's replicas.
 CPU is a secondary signal. API scaling uses CPU/memory because it has no stage
-queue, while orchestrator scaling watches both result queues.
+queue, while orchestrator scaling watches all three result queues.
 
 The autoscaled orchestrator Deployment runs with
 `EUBL21_ORCHESTRATOR_ROLE=consumer`: it consumes and applies stage results but

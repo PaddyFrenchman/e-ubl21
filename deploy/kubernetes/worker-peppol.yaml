@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: e-ubl21-worker-peppol
+spec:
+  selector:
+    app.kubernetes.io/name: e-ubl21
+    app.kubernetes.io/component: worker-peppol
+  ports:
+    - name: metrics
+      port: 9095
+      targetPort: metrics
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: e-ubl21-worker-peppol
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: e-ubl21
+      app.kubernetes.io/component: worker-peppol
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: e-ubl21
+        app.kubernetes.io/component: worker-peppol
+    spec:
+      terminationGracePeriodSeconds: 90
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: worker-peppol
+          image: e-ubl21:replace-me
+          imagePullPolicy: IfNotPresent
+          args: ["worker-peppol"]
+          envFrom:
+            - configMapRef:
+                name: e-ubl21-runtime
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: e-ubl21-worker-peppol
+            - name: EUBL21_WORKER_PEPPOL_METRICS_ADDR
+              value: :9095
+            - name: EUBL21_WORKER_PEPPOL_TIMEOUT
+              value: 45s
+            - name: EUBL21_WORKER_PEPPOL_CONCURRENCY
+              value: "1"
+            - name: EUBL21_WORKER_PEPPOL_PREFETCH
+              value: "1"
+            - name: EUBL21_WORKER_PEPPOL_PROGRESS_INTERVAL
+              value: 20s
+            - name: EUBL21_WORKER_PEPPOL_JAVA_EXECUTABLE
+              value: /usr/bin/java
+            - name: EUBL21_WORKER_PEPPOL_SAXON_JAR_PATH
+              value: /opt/e-ubl21/saxon/saxon-he-12.7.jar
+            - name: EUBL21_WORKER_PEPPOL_XMLRESOLVER_JAR_PATH
+              value: /opt/e-ubl21/saxon/xmlresolver-6.0.17.jar
+            - name: EUBL21_WORKER_PEPPOL_SAXON_CONFIGURATION_PATH
+              value: /opt/e-ubl21/validation-assets/saxon/saxon-config.xml
+            - name: EUBL21_WORKER_PEPPOL_RUNTIME_XSLT_PATH
+              value: /opt/e-ubl21/validation-assets/peppol/3.0.21/runtime/PEPPOL-EN16931-UBL-validation.xslt
+            - name: EUBL21_WORKER_PEPPOL_SAXON_STARTUP_TIMEOUT
+              value: 30s
+          ports:
+            - name: metrics
+              containerPort: 9095
+          startupProbe:
+            httpGet: {path: /healthz, port: metrics}
+            periodSeconds: 3
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /healthz, port: metrics}
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: {path: /healthz, port: metrics}
+            periodSeconds: 15
+            failureThreshold: 4
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests: {cpu: 500m, memory: 768Mi}
+            limits: {cpu: "2", memory: 2Gi}

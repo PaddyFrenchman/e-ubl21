@@ -1,12 +1,143 @@
 package orchestrator_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go/jetstream"
 )
+
+func TestPeppolPlanRequiresDurableThirdStageBeforeValid(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	plan := peppolTestPlan()
+	intent := testIntent(t, plan)
+	intent.RequestedProfile = queue.ValidationProfilePeppolBISBilling
+	if err := client.PutUploadContent(ctx, intent.UploadID, []byte(peppolIdentityDocument())); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := machine.Start(ctx, intent); err != nil {
+		t.Fatal(err)
+	}
+
+	xsd := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	if _, err := machine.HandleStageResult(ctx, resultFor(t, xsd, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+		t.Fatal(err)
+	}
+	en := takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+	pending, err := machine.HandleStageResult(ctx, resultFor(t, en, queue.StageOutcomePassed, queue.StageReasonNone))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pending.Execution.Orchestration.Status != queue.ExecutionStatusStageQueued || pending.Execution.Orchestration.CurrentStageOrdinal != 3 {
+		t.Fatalf("EN pass prematurely finalized Peppol plan: %+v", pending.Execution.Orchestration)
+	}
+	if _, err := client.GetValidationExecutionResult(ctx, pending.Execution.ValidationID, pending.Execution.Generation); err == nil {
+		t.Fatal("partial final result was published while Peppol was pending")
+	}
+
+	peppolRequest := takeRequest(t, ctx, client, queue.ValidationLayerPeppolBISBilling)
+	completed, err := machine.HandleStageResult(ctx, resultFor(t, peppolRequest, queue.StageOutcomePassed, queue.StageReasonNone))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completed.Execution.Orchestration.Status != queue.ExecutionStatusValid {
+		t.Fatalf("Peppol pass status = %s", completed.Execution.Orchestration.Status)
+	}
+	result, err := client.GetValidationExecutionResult(ctx, completed.Execution.ValidationID, completed.Execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.ValidationStages) != 3 || result.ValidationStages[2].Layer != queue.ValidationLayerPeppolBISBilling ||
+		result.ValidationStages[2].CustomizationID == "" || result.ValidationStages[2].ProcessProfile != queue.PeppolProcessProfile01 {
+		t.Fatalf("final Peppol evidence = %+v", result.ValidationStages)
+	}
+	assertNoRequest(t, ctx, client, queue.ValidationLayerPeppolBISBilling)
+}
+
+func TestPeppolPlanDoesNotQueueThirdStageAfterENFailure(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	intent := testIntent(t, peppolTestPlan())
+	intent.RequestedProfile = queue.ValidationProfilePeppolBISBilling
+	if err := client.PutUploadContent(ctx, intent.UploadID, []byte(peppolIdentityDocument())); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := machine.Start(ctx, intent); err != nil {
+		t.Fatal(err)
+	}
+	xsd := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	if _, err := machine.HandleStageResult(ctx, resultFor(t, xsd, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+		t.Fatal(err)
+	}
+	en := takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+	finished, err := machine.HandleStageResult(ctx, resultFor(t, en, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if finished.Execution.Orchestration.Status != queue.ExecutionStatusInvalid {
+		t.Fatalf("status = %s", finished.Execution.Orchestration.Status)
+	}
+	assertNoRequest(t, ctx, client, queue.ValidationLayerPeppolBISBilling)
+}
+
+func TestPeppolStandardsFailureFinalizesWithThirdStageEvidence(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	intent := testIntent(t, peppolTestPlan())
+	intent.RequestedProfile = queue.ValidationProfilePeppolBISBilling
+	if err := client.PutUploadContent(ctx, intent.UploadID, []byte(peppolIdentityDocument())); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := machine.Start(ctx, intent); err != nil {
+		t.Fatal(err)
+	}
+	for _, stage := range []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931} {
+		request := takeRequest(t, ctx, client, stage)
+		if _, err := machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerPeppolBISBilling)
+	issue := queue.ValidationIssue{
+		Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerPeppolBISBilling,
+		Rule: "PEPPOL-EN16931-R001", Severity: "fatal", Message: "Business process identifier is required.",
+	}
+	started := time.Now().UTC()
+	evidence, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, []queue.ValidationIssue{issue}, "", started, started.Add(time.Millisecond), time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	completed, err := machine.HandleStageResult(ctx, evidence)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completed.Execution.Orchestration.Status != queue.ExecutionStatusInvalid {
+		t.Fatalf("status = %s", completed.Execution.Orchestration.Status)
+	}
+	result, err := client.GetValidationExecutionResult(ctx, completed.Execution.ValidationID, completed.Execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != queue.StatusInvalid || len(result.ValidationStages) != 3 || len(result.ValidationStages[2].Issues) != 1 || result.ValidationStages[2].Issues[0].Rule != issue.Rule {
+		t.Fatalf("final result = %+v", result)
+	}
+}
+
+func peppolTestPlan() queue.FrozenValidationPlan {
+	return queue.FrozenValidationPlan{ID: "peppol-bis-billing", Version: "1", Stages: []queue.FrozenValidationStage{
+		{ID: queue.ValidationLayerUBL21XSD, Ordinal: 1, Requirement: queue.ValidationStageRequired, RulesetVersion: "2.1"},
+		{ID: queue.ValidationLayerEN16931, Ordinal: 2, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"},
+		{ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"},
+	}}
+}
+
+func peppolIdentityDocument() string {
+	return strings.Join([]string{
+		`<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">`,
+		`<cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:CustomizationID>`,
+		`<cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID></Invoice>`,
+	}, "")
+}
 
 // TestOrchestratorValidPlanCompletes validates orchestrator sequencing when both stages pass.
 // This is orchestrator-level coverage, not deployment-level E2E. Stages are simulated via

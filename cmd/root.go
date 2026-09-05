@@ -14,72 +14,83 @@ import (
 )
 
 type Config struct {
-	ConfigFile                     string
-	Host                           string
-	Port                           int
-	OpenAPIPath                    string
-	SwaggerPath                    string
-	OAuthIssuer                    string
-	OAuthAudience                  string
-	OAuthHMACSecret                string
-	NATSURL                        string
-	NATSOptions                    []nats.Option
-	QueueNamespace                 queue.Namespace
-	RateLimitRPS                   float64
-	RateLimitBurst                 int
-	TLSCertFile                    string
-	TLSKeyFile                     string
-	HTTPReadHeaderTimeout          time.Duration
-	HTTPReadTimeout                time.Duration
-	HTTPWriteTimeout               time.Duration
-	HTTPIdleTimeout                time.Duration
-	HTTPShutdownTimeout            time.Duration
-	HTTPMaxHeaderBytes             int
-	UploadContentRetention         time.Duration
-	UploadContentMaxBytes          int64
-	WorkerConsumerName             string
-	WorkerSubjectFilter            string
-	WorkerMetricsAddr              string
-	WorkerValidationTimeout        time.Duration
-	WorkerXSDValidationTimeout     time.Duration
-	WorkerEN16931ValidationTimeout time.Duration
-	WorkerConcurrency              int
-	WorkerPrefetch                 int
-	WorkerAckWait                  time.Duration
-	WorkerMaxDeliver               int
-	WorkerMaxAckPending            int
-	WorkerJavaExecutable           string
-	WorkerSaxonJARPath             string
-	WorkerXMLResolverJARPath       string
-	WorkerSaxonConfigurationPath   string
-	WorkerEN16931XSLTPath          string
-	WorkerSaxonStartupTimeout      time.Duration
-	XSDWorkerMetricsAddr           string
-	XSDWorkerValidationTimeout     time.Duration
-	XSDWorkerConcurrency           int
-	XSDWorkerPrefetch              int
-	XSDWorkerProgressInterval      time.Duration
-	ENWorkerMetricsAddr            string
-	ENWorkerValidationTimeout      time.Duration
-	ENWorkerConcurrency            int
-	ENWorkerPrefetch               int
-	ENWorkerProgressInterval       time.Duration
-	ENWorkerJavaExecutable         string
-	ENWorkerSaxonJARPath           string
-	ENWorkerXMLResolverJARPath     string
-	ENWorkerSaxonConfigurationPath string
-	ENWorkerXSLTPath               string
-	ENWorkerSaxonStartupTimeout    time.Duration
-	OrchestratorMetricsAddr        string
-	OrchestratorRole               string
-	OrchestratorResultPrefetch     int
-	OrchestratorReconcileInterval  time.Duration
-	StageXSDAckWait                time.Duration
-	StageXSDMaxAckPending          int
-	StageENAckWait                 time.Duration
-	StageENMaxAckPending           int
-	StagePeppolAckWait             time.Duration
-	StagePeppolMaxAckPending       int
+	ConfigFile                         string
+	Host                               string
+	Port                               int
+	OpenAPIPath                        string
+	SwaggerPath                        string
+	OAuthIssuer                        string
+	OAuthAudience                      string
+	OAuthHMACSecret                    string
+	NATSURL                            string
+	NATSOptions                        []nats.Option
+	QueueNamespace                     queue.Namespace
+	RateLimitRPS                       float64
+	RateLimitBurst                     int
+	TLSCertFile                        string
+	TLSKeyFile                         string
+	HTTPReadHeaderTimeout              time.Duration
+	HTTPReadTimeout                    time.Duration
+	HTTPWriteTimeout                   time.Duration
+	HTTPIdleTimeout                    time.Duration
+	HTTPShutdownTimeout                time.Duration
+	HTTPMaxHeaderBytes                 int
+	UploadContentRetention             time.Duration
+	UploadContentMaxBytes              int64
+	WorkerConsumerName                 string
+	WorkerSubjectFilter                string
+	WorkerMetricsAddr                  string
+	WorkerValidationTimeout            time.Duration
+	WorkerXSDValidationTimeout         time.Duration
+	WorkerEN16931ValidationTimeout     time.Duration
+	WorkerConcurrency                  int
+	WorkerPrefetch                     int
+	WorkerAckWait                      time.Duration
+	WorkerMaxDeliver                   int
+	WorkerMaxAckPending                int
+	WorkerJavaExecutable               string
+	WorkerSaxonJARPath                 string
+	WorkerXMLResolverJARPath           string
+	WorkerSaxonConfigurationPath       string
+	WorkerEN16931XSLTPath              string
+	WorkerSaxonStartupTimeout          time.Duration
+	XSDWorkerMetricsAddr               string
+	XSDWorkerValidationTimeout         time.Duration
+	XSDWorkerConcurrency               int
+	XSDWorkerPrefetch                  int
+	XSDWorkerProgressInterval          time.Duration
+	ENWorkerMetricsAddr                string
+	ENWorkerValidationTimeout          time.Duration
+	ENWorkerConcurrency                int
+	ENWorkerPrefetch                   int
+	ENWorkerProgressInterval           time.Duration
+	ENWorkerJavaExecutable             string
+	ENWorkerSaxonJARPath               string
+	ENWorkerXMLResolverJARPath         string
+	ENWorkerSaxonConfigurationPath     string
+	ENWorkerXSLTPath                   string
+	ENWorkerSaxonStartupTimeout        time.Duration
+	PeppolWorkerMetricsAddr            string
+	PeppolWorkerValidationTimeout      time.Duration
+	PeppolWorkerConcurrency            int
+	PeppolWorkerPrefetch               int
+	PeppolWorkerProgressInterval       time.Duration
+	PeppolWorkerJavaExecutable         string
+	PeppolWorkerSaxonJARPath           string
+	PeppolWorkerXMLResolverJARPath     string
+	PeppolWorkerSaxonConfigurationPath string
+	PeppolWorkerXSLTPath               string
+	PeppolWorkerSaxonStartupTimeout    time.Duration
+	OrchestratorMetricsAddr            string
+	OrchestratorRole                   string
+	OrchestratorResultPrefetch         int
+	OrchestratorReconcileInterval      time.Duration
+	StageXSDAckWait                    time.Duration
+	StageXSDMaxAckPending              int
+	StageENAckWait                     time.Duration
+	StageENMaxAckPending               int
+	StagePeppolAckWait                 time.Duration
+	StagePeppolMaxAckPending           int
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -153,6 +164,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newXSDWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newEN16931WorkerCmd(v, cfg))
+	rootCmd.AddCommand(newPeppolWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newOrchestratorCmd(v, cfg))
 	rootCmd.AddCommand(newProvisionCmd(v, cfg))
 	rootCmd.AddCommand(newMigrationCmd(cfg))
@@ -219,6 +231,13 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("worker-en16931-progress-interval", 20*time.Second)
 	v.SetDefault("worker-en16931-java-executable", "java")
 	v.SetDefault("worker-en16931-saxon-startup-timeout", 30*time.Second)
+	v.SetDefault("worker-peppol-metrics-addr", ":9095")
+	v.SetDefault("worker-peppol-timeout", 30*time.Second)
+	v.SetDefault("worker-peppol-concurrency", 1)
+	v.SetDefault("worker-peppol-prefetch", 1)
+	v.SetDefault("worker-peppol-progress-interval", 20*time.Second)
+	v.SetDefault("worker-peppol-java-executable", "java")
+	v.SetDefault("worker-peppol-saxon-startup-timeout", 30*time.Second)
 	v.SetDefault("orchestrator-metrics-addr", ":9094")
 	v.SetDefault("orchestrator-role", "combined")
 	v.SetDefault("orchestrator-result-prefetch", 8)
@@ -307,6 +326,17 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.ENWorkerSaxonConfigurationPath = v.GetString("worker-en16931-saxon-configuration-path")
 	cfg.ENWorkerXSLTPath = v.GetString("worker-en16931-runtime-xslt-path")
 	cfg.ENWorkerSaxonStartupTimeout = v.GetDuration("worker-en16931-saxon-startup-timeout")
+	cfg.PeppolWorkerMetricsAddr = v.GetString("worker-peppol-metrics-addr")
+	cfg.PeppolWorkerValidationTimeout = v.GetDuration("worker-peppol-timeout")
+	cfg.PeppolWorkerConcurrency = v.GetInt("worker-peppol-concurrency")
+	cfg.PeppolWorkerPrefetch = v.GetInt("worker-peppol-prefetch")
+	cfg.PeppolWorkerProgressInterval = v.GetDuration("worker-peppol-progress-interval")
+	cfg.PeppolWorkerJavaExecutable = v.GetString("worker-peppol-java-executable")
+	cfg.PeppolWorkerSaxonJARPath = v.GetString("worker-peppol-saxon-jar-path")
+	cfg.PeppolWorkerXMLResolverJARPath = v.GetString("worker-peppol-xmlresolver-jar-path")
+	cfg.PeppolWorkerSaxonConfigurationPath = v.GetString("worker-peppol-saxon-configuration-path")
+	cfg.PeppolWorkerXSLTPath = v.GetString("worker-peppol-runtime-xslt-path")
+	cfg.PeppolWorkerSaxonStartupTimeout = v.GetDuration("worker-peppol-saxon-startup-timeout")
 	cfg.OrchestratorMetricsAddr = v.GetString("orchestrator-metrics-addr")
 	cfg.OrchestratorRole = v.GetString("orchestrator-role")
 	cfg.OrchestratorResultPrefetch = v.GetInt("orchestrator-result-prefetch")
