@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -121,7 +120,7 @@ func TestPeppolValidatorClassifiesOperationalFailures(t *testing.T) {
 	})
 }
 
-func TestPinnedPeppolValidatorClassifiesOfficialInputs(t *testing.T) {
+func TestPinnedPeppolValidatorMatchesReferenceManifest(t *testing.T) {
 	cfg, ok := localSaxonRuntimeConfig(t)
 	if !ok {
 		return
@@ -133,36 +132,33 @@ func TestPinnedPeppolValidatorClassifiesOfficialInputs(t *testing.T) {
 		t.Fatalf("verify pinned Peppol runtime: %v", err)
 	}
 	validator := newSaxonPeppolValidator(cfg, 20*time.Second)
-
-	valid, err := os.Open(filepath.Join("..", "validation-assets", "peppol", profile.Version, "examples", "base-example.xml"))
+	manifest, err := validationassets.PeppolReference()
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err := validator.Validate(context.Background(), valid)
-	valid.Close()
-	if err != nil || !result.Valid {
-		t.Fatalf("official Peppol example result/error = %+v / %v", result, err)
+	for _, testCase := range manifest.Cases {
+		testCase := testCase
+		t.Run(testCase.ID, func(t *testing.T) {
+			input, err := os.Open(filepath.Join("..", filepath.FromSlash(testCase.Path)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			result, validationErr := validator.Validate(context.Background(), input)
+			input.Close()
+			if validationErr != nil {
+				t.Fatalf("Peppol validation: %v", validationErr)
+			}
+			wantValid := testCase.Outcome == "passed"
+			if result.Valid != wantValid || len(result.Issues) != len(testCase.Issues) {
+				t.Fatalf("result valid/issues = %v/%+v, want %v/%+v", result.Valid, result.Issues, wantValid, testCase.Issues)
+			}
+			for index, want := range testCase.Issues {
+				got := result.Issues[index]
+				if string(got.Kind) != want.Kind || got.Rule != want.RuleID || got.Severity != want.Severity ||
+					got.Layer != queue.ValidationLayerPeppolBISBilling {
+					t.Fatalf("issue %d = %+v, want %+v", index, got, want)
+				}
+			}
+		})
 	}
-
-	invalid, err := os.ReadFile(filepath.Join("..", "validation-assets", "peppol", profile.Version, "examples", "base-example.xml"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	invalid = bytes.Replace(invalid, []byte(peppolprofile.ProfileID01), []byte("urn:fdc:peppol.eu:2017:poacc:billing:99:1.0"), 1)
-	result, err = validator.Validate(context.Background(), bytes.NewReader(invalid))
-	if err != nil {
-		t.Fatalf("invalid Peppol transform: %v", err)
-	}
-	if result.Valid || !containsRule(result.Issues, "PEPPOL-EN16931-R007") {
-		t.Fatalf("invalid Peppol result = %+v", result)
-	}
-}
-
-func containsRule(issues []queue.ValidationIssue, rule string) bool {
-	for _, issue := range issues {
-		if issue.Rule == rule {
-			return true
-		}
-	}
-	return false
 }

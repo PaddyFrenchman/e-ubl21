@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "bisVersion": "3.0.21",
+    "validationArtefactsVersion": "1.3.16",
+    "sourceCommit": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+    "sourceSchematronSHA256": "62e5b67892f12755352d78b06f63229a02cc2eccc748677c56efbc8dbcb336e3",
+    "compiledXSLTSHA256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+  },
+  "inventory": {
+    "activePatterns": 13,
+    "rules": 99,
+    "asserts": 165,
+    "reports": 0,
+    "namespaces": {
+      "cac": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "cbc": "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
+      "u": "utils",
+      "ubl-creditnote": "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2",
+      "ubl-invoice": "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
+      "xs": "http://www.w3.org/2001/XMLSchema"
+    }
+  },
+  "cases": [
+    {"id":"official.allowance","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-Allowance-example.xml","sha256":"aa3df18eb8c634624637eb229891d989c5cfb7cd0d08894ff8e58c58f247ea5b","outcome":"passed","issues":[]},
+    {"id":"official.vat-s","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-Vat-category-S.xml","sha256":"59f96ae9a77ed3eda4ac17f499994fbd1b050432edf3bb8c117d7f3bca8d5f95","outcome":"passed","issues":[]},
+    {"id":"official.creditnote-correction","provenance":"official-example","path":"createsamples/samples-peppol/official/CreditNote/OpenPeppol-base-creditnote-correction.xml","sha256":"08e0ad82e0dbe7e16d7533c01761843343a56954ea24881d0f7f1cce06f8879e","outcome":"passed","issues":[]},
+    {"id":"official.base","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-base-example.xml","sha256":"1b7cc3ff1834c8963f2c93f30f171b58002cbf0b2c52dc8765e7e83aebb9f7c9","outcome":"passed","issues":[]},
+    {"id":"official.profile-02","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-base-example_profile02.xml","sha256":"97e9dd5fc1747a9a2447b38bae8d1de3317d2636714369bdd99ba7dd1fb0ee1a","outcome":"passed","issues":[]},
+    {"id":"official.negative-correction","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-base-negative-inv-correction.xml","sha256":"000781ee8cb7794a140bb1308f7f7a2c9ded3623571b4297aef38423971ab5a4","outcome":"passed","issues":[]},
+    {"id":"official.sales-order","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-sales-order-example.xml","sha256":"cdb84e4ce1a770f6e4a8949dcbe37493bc37aeded5232b592a1a48feb221a504","outcome":"passed","issues":[]},
+    {"id":"official.vat-e","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-vat-category-E.xml","sha256":"4f2f20de65a8c088bba6c43177c75b5066bf30f54b996bc1729a82097a6591db","outcome":"passed","issues":[]},
+    {"id":"official.vat-o","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-vat-category-O.xml","sha256":"212c4eede960a775f8e79dca6cd6430e6f8c105560fbfdeaa03d5e6587eaa1ec","outcome":"passed","issues":[]},
+    {"id":"official.vat-z","provenance":"official-example","path":"createsamples/samples-peppol/official/Invoice/OpenPeppol-vat-category-Z.xml","sha256":"fed3f3f393591e1c628f2da4a3aa77e8c66e4ed8ed4368e18837782beab60daa","outcome":"passed","issues":[]},
+    {"id":"reference.invalid-customization-id","provenance":"reviewed-mutation","path":"createsamples/samples-peppol/negative/Invoice/invalid-customization-id.xml","sha256":"4cb83f2e54be8e8a5a759898be950d66f4bc6e9c941bccbf5555a168a67c867e","outcome":"standards-invalid","issues":[{"kind":"failed-assert","ruleId":"PEPPOL-EN16931-R004","severity":"fatal"}]},
+    {"id":"reference.missing-profile-id","provenance":"reviewed-mutation","path":"createsamples/samples-peppol/negative/Invoice/missing-profile-id.xml","sha256":"41eb46bf39499c2e84979c09c72c7dcd6ca7676b08b7f22c2b0c07d47241a824","outcome":"standards-invalid","issues":[{"kind":"failed-assert","ruleId":"PEPPOL-EN16931-R001","severity":"fatal"},{"kind":"failed-assert","ruleId":"PEPPOL-EN16931-R007","severity":"fatal"}]},
+    {"id":"reference.invalid-endpoint-scheme","provenance":"reviewed-mutation","path":"createsamples/samples-peppol/negative/Invoice/invalid-endpoint-scheme.xml","sha256":"f031e6b4e91b89c711e0ddc844fb2cd91a9ee5395fdb7fa1d9a31fbf11a1b24e","outcome":"standards-invalid","issues":[{"kind":"failed-assert","ruleId":"PEPPOL-EN16931-CL008","severity":"fatal"}]},
+    {"id":"reference.invalid-gln-check-digit","provenance":"reviewed-mutation","path":"createsamples/samples-peppol/negative/Invoice/invalid-gln-check-digit.xml","sha256":"a121e97b4c11903625a140621f443d4294800a774feede638d8fbf6eb87fc3ce","outcome":"standards-invalid","issues":[{"kind":"failed-assert","ruleId":"PEPPOL-COMMON-R040","severity":"fatal"}]},
+    {"id":"reference.line-arithmetic","provenance":"reviewed-mutation","path":"createsamples/samples-peppol/negative/Invoice/line-arithmetic-outside-slack.xml","sha256":"a07600f08b1ec738a89cec0ddd215b025fbbd0dbbb3c2b2e49e84164cb01b4f1","outcome":"standards-invalid","issues":[{"kind":"failed-assert","ruleId":"PEPPOL-EN16931-R120","severity":"fatal"}]},
+    {"id":"reference.danish-legal-scheme","provenance":"reviewed-mutation","path":"createsamples/samples-peppol/negative/Invoice/danish-supplier-legal-scheme.xml","sha256":"cadd92468169e6c784e3e9204906c7e78a3cb58a2849588ca51cdb2e35a10543","outcome":"standards-invalid","issues":[{"kind":"failed-assert","ruleId":"DK-R-014","severity":"fatal"}]}
+  ]
+}

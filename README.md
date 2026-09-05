@@ -347,6 +347,17 @@ The gate treats runtime dependencies as mandatory, validates each fixture only
 through its declared ordered stages, and verifies exact rule evidence at the
 first failing stage.
 
+Cross-check all official examples and a reviewed invalid rule/severity sample
+against both the accepted server stylesheet and a fresh compilation of the
+exact pinned official source with:
+
+```bash
+make test-peppol-reference
+```
+
+The frozen inventory, normalization boundary, and evidence model are described
+in [`docs/PEPPOL-REFERENCE-CROSS-CHECK.md`](docs/PEPPOL-REFERENCE-CROSS-CHECK.md).
+
 Run a tracked manifest through the authenticated public API and durable result
 path with `go run . regression`; see [`regression/README.md`](regression/README.md)
 for token, profile, polling, and artifact options. Each run emits deterministic

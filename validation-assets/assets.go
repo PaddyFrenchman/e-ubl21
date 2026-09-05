@@ -63,7 +63,7 @@ func EN16931() Profile {
 // Embed versioned stylesheets without selecting a version here. The profile
 // above is the only version selector and verification rejects any mismatch.
 //
-//go:embed en16931/*/*.xslt peppol saxon/saxon-config.xml schematron
+//go:embed en16931/*/*.xslt peppol peppol-reference/*.json saxon/saxon-config.xml schematron
 var files embed.FS
 
 // OpenEN16931XSLT opens the exact stylesheet represented by EN16931. The

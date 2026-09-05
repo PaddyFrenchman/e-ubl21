@@ -50,6 +50,40 @@ func TestVerifyPeppol(t *testing.T) {
 	}
 }
 
+func TestVerifyPeppolReference(t *testing.T) {
+	if err := VerifyPeppolReference(); err != nil {
+		t.Fatal(err)
+	}
+	manifest, err := PeppolReference()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Cases) != 16 || manifest.Inventory.ActivePatterns != 13 ||
+		manifest.Inventory.Rules != 99 || manifest.Inventory.Asserts != 165 || manifest.Inventory.Reports != 0 {
+		t.Fatalf("Peppol reference contract is incomplete: %+v", manifest)
+	}
+	manifest.Cases[0].ID = "changed-by-caller"
+	again, err := PeppolReference()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again.Cases[0].ID == "changed-by-caller" {
+		t.Fatal("caller mutated embedded Peppol reference contract")
+	}
+}
+
+func TestPeppolReferenceRejectsRuleLoss(t *testing.T) {
+	manifest, err := PeppolReference()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := manifest.Inventory
+	got.Rules--
+	if err := comparePeppolInventory("compiled XSLT", manifest.Inventory, got); err == nil || !strings.Contains(err.Error(), "inventory") {
+		t.Fatalf("rule-loss error = %v, want inventory mismatch", err)
+	}
+}
+
 func TestOpenPeppolSchematron(t *testing.T) {
 	file, err := OpenPeppolSchematron()
 	if err != nil {

@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-peppol-positive test-peppol-negative test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -29,6 +29,11 @@ test-peppol-positive:
 # prove XSD-invalid and EN-invalid documents stop before later runtimes.
 test-peppol-negative:
 	./devsetup/test-peppol-negative.sh
+
+# Compare all official examples and a reviewed rule/severity sample against
+# both the accepted runtime and a fresh compilation of the exact pinned source.
+test-peppol-reference:
+	./devsetup/test-peppol-reference.sh
 
 # Run the deterministic JetStream chaos/crash/replay integration gate. The
 # scenario-to-test mapping is documented in docs/CHAOS-CRASH-REPLAY.md.
