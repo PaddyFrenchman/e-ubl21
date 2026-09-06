@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-After completion of #80, the **next actionable issue is #81 — TODO-PEPPOL-016 — Final public end-to-end Peppol compliance gate**. Issues #37, #38, #48 through #63, and #65 through #80 are complete. Issue #64 remains open as a separately tracked Peppol-stage acceptance contract, so it is not the next task. Issue #45 is **blocked/deferred**, not the next task by issue number. Do not implement #45 until the first supported Peppol validator, pinned release assets, native asynchronous runtime stage, official/reference cross-check, and complete positive/negative Peppol corpus exist. Required predecessors include #37, #38, #64, and the Peppol sequence #66–#78.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline. Issues #37, #38, #48 through #63, and #65 through #80 are complete. Issue #64 remains open as a separately tracked Peppol-stage acceptance contract. Reassessment for #81 found that #45's substantive prerequisites now exist; its baseline is implemented and enforced here, while #45 remains open pending separately authorized closure.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -757,7 +757,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/78
 
 Complete the positive/negative corpus, cross-check official/reference validation, record release/digests, and produce the first accepted normalized Peppol result set.
 
-**Blocked:** Do not implement until #37, #38, #64, and #66–#78 have supplied the real pinned Peppol release assets, validator/runtime stage, official/reference evidence, and complete positive/negative corpus. An empty, guessed, placeholder, or automatically blessed baseline does not satisfy this issue.
+**Status:** Reassessed as actionable. Issue #81 establishes the accepted baseline from the real pinned release assets, complete corpus, native asynchronous runtime, and official/reference evidence. Issue #45 remains open pending separately authorized closure; an empty, guessed, placeholder, or automatically blessed baseline does not satisfy it.
 
 **Acceptance:** `TODO-PEPPOL` cannot complete until the full Peppol corpus matches committed expectations.
 
@@ -941,7 +941,7 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 - Issues #64 and #73 are closely related; #73 is complete, while #64 remains open as a separately tracked Peppol-stage acceptance contract.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
 - Issues #37, #38, #44, #48–#63, and #65–#80 are complete; **#81 is therefore the current next actionable issue.** #64 remains open as a separately tracked Peppol-stage acceptance contract.
-- Issue #45 is the safety rail for declaring the first Peppol release supported and remains blocked until its real Peppol prerequisites are complete.
+- Issue #45's prerequisites have been reassessed as satisfied in substance; #81 establishes and enforces its accepted normalized baseline, but #45 remains open pending separately authorized closure.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
 - Issue #88 and #89 should be evaluated together when the future persistence architecture is revisited, while remaining separate issues because raw-content storage and metadata persistence have different migration and failure semantics.

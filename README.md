@@ -359,6 +359,18 @@ make test-peppol-reference
 The frozen inventory, normalization boundary, and evidence model are described
 in [`docs/PEPPOL-REFERENCE-CROSS-CHECK.md`](docs/PEPPOL-REFERENCE-CROSS-CHECK.md).
 
+Run the final public-contract gate with:
+
+```bash
+make test-peppol-compliance
+```
+
+This first verifies the accepted normalized Peppol release baseline, then sends
+the complete corpus through the authenticated HTTP API, Object Store, separate
+XSD/EN/Peppol workers, durable orchestrator, and permanent result stream. It
+also proves stage short-circuiting, Profiles 01/02, EN-only compatibility,
+retry/DLQ replay, crash/restart recovery, and duplicate-message convergence.
+
 Run a tracked manifest through the authenticated public API and durable result
 path with `go run . regression`; see [`regression/README.md`](regression/README.md)
 for token, profile, polling, and artifact options. Each run emits deterministic

@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -8,6 +8,11 @@ test-en16931:
 # Explicit release-gate name. test-en16931 includes the same final public API,
 # crash/restart, operational replay, and duplicate-replay scenarios.
 test-en16931-compliance: test-en16931
+
+# Verify the accepted Peppol baseline, then exercise the public API through the
+# real split-stage topology, including failure replay and crash recovery.
+test-peppol-compliance:
+	./devsetup/test-peppol-compliance.sh
 
 # Build the production image, then prove its checksum-verified Saxon smoke
 # transform succeeds with networking disabled. Override IMAGE if required.

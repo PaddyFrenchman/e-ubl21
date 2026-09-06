@@ -110,9 +110,13 @@ func RunService(ctx context.Context, raw ServiceConfig) error {
 		return fmt.Errorf("orchestrator verify execution infrastructure: %w", err)
 	}
 
-	stages := make([]queue.ValidationLayer, 0, 2)
+	stages := make([]queue.ValidationLayer, 0, 3)
 	if cfg.Role.consumesResults() {
-		stages = append(stages, queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931)
+		stages = append(stages,
+			queue.ValidationLayerUBL21XSD,
+			queue.ValidationLayerEN16931,
+			queue.ValidationLayerPeppolBISBilling,
+		)
 	}
 	consumers := make([]jetstream.Consumer, 0, len(stages))
 	for _, stage := range stages {

@@ -272,6 +272,14 @@ Final fixture expectations are `valid` or `invalid`. Actual normalized results
 also permit `operational-failure`, which must never be translated to
 `invalid`. An operationally failed stage has no standards rule IDs.
 
+The first accepted Peppol release baseline is stored in
+`baselines/peppol/`. Its metadata binds normalized results to the complete
+corpus, reviewed reference evidence, and pinned release digests. Run
+`make test-peppol-compliance` to verify that baseline before exercising the
+same documents through the real public asynchronous pipeline. A baseline
+change is a reviewed standards-release event, never an automatic update from a
+candidate run.
+
 ## Fixture provenance
 
 Every fixture records one of two provenance forms:

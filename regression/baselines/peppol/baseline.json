@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "architecture": "split-stage",
+  "release": {
+    "bisVersion": "3.0.21",
+    "validationArtefactsVersion": "1.3.16",
+    "sourceCommit": "806866bd2bd91d7e9623b68f08164e8fbe9e67a0",
+    "sourceSchematronSHA256": "62e5b67892f12755352d78b06f63229a02cc2eccc748677c56efbc8dbcb336e3",
+    "compiledXSLTSHA256": "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa"
+  },
+  "manifest": {
+    "path": "createsamples/samples-peppol/manifest.json",
+    "sha256": "b3a9b9989b2b77a8c85663d002c03fb64d113df8525c7820c3f5a9c4519aca40"
+  },
+  "reference": {
+    "path": "validation-assets/peppol-reference/3.0.21.json",
+    "sha256": "6b1b3d71cbe91eec12272281367fef01c2e7c1aaaa123c8d61cebfedb5292d50",
+    "cases": 16
+  },
+  "results": {
+    "path": "regression/baselines/peppol/results.jsonl",
+    "sha256": "7453fa099be75245b1d92bed954dc384b526fea7a95d0b15310ad8db0918ef80",
+    "fixtures": 30
+  }
+}

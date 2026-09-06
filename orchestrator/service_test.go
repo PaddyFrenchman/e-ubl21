@@ -172,23 +172,29 @@ func TestRunServiceOpensProvisionedConsumersAndStops(t *testing.T) {
 	go func() {
 		done <- RunService(runCtx, ServiceConfig{queueClient: client, MetricsAddr: "", Role: ServiceRoleConsumer})
 	}()
-	consumer, err := client.StageResultConsumer(ctx, queue.ValidationLayerUBL21XSD)
-	if err != nil {
-		t.Fatal(err)
-	}
-	deadline := time.Now().Add(5 * time.Second)
-	for {
-		info, infoErr := consumer.Info(ctx)
-		if infoErr != nil {
-			t.Fatal(infoErr)
+	for _, stage := range []queue.ValidationLayer{
+		queue.ValidationLayerUBL21XSD,
+		queue.ValidationLayerEN16931,
+		queue.ValidationLayerPeppolBISBilling,
+	} {
+		consumer, err := client.StageResultConsumer(ctx, stage)
+		if err != nil {
+			t.Fatal(err)
 		}
-		if info.NumWaiting > 0 {
-			break
+		deadline := time.Now().Add(5 * time.Second)
+		for {
+			info, infoErr := consumer.Info(ctx)
+			if infoErr != nil {
+				t.Fatal(infoErr)
+			}
+			if info.NumWaiting > 0 {
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatalf("orchestrator did not begin pulling %s stage results", stage)
+			}
+			time.Sleep(10 * time.Millisecond)
 		}
-		if time.Now().After(deadline) {
-			t.Fatal("orchestrator did not begin pulling stage results")
-		}
-		time.Sleep(10 * time.Millisecond)
 	}
 	cancel()
 	select {
