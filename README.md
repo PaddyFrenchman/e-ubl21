@@ -723,6 +723,18 @@ invoice, concurrency 1/2/4, queue wait, service duration, durable publication
 latency, CPU, allocation, and memory evidence. Recorded sizing decisions are
 in [`docs/STAGE-CAPACITY.md`](docs/STAGE-CAPACITY.md).
 
+Collect the full host stress matrix as retained, machine-readable evidence with:
+
+```bash
+CAPACITY_SAMPLES=100 ARTIFACT_DIR=performance-results/local \
+  make performance-evidence
+```
+
+Nightly and published-release runs, plus on-demand runs by default, also execute
+the constrained matrix, compare against the prior successful run, and retain
+raw logs and a summary without turning timing variation into a correctness assertion. See
+[`docs/PERFORMANCE-EVIDENCE.md`](docs/PERFORMANCE-EVIDENCE.md).
+
 ## Repository structure
 
 ```text
@@ -796,6 +808,7 @@ For deeper detail, start with:
 - [`docs/EN16931-COMPLIANCE-GATE.md`](docs/EN16931-COMPLIANCE-GATE.md) — release compliance evidence.
 - [`docs/EN16931-CAPACITY.md`](docs/EN16931-CAPACITY.md) — benchmark and sizing baseline.
 - [`docs/PEPPOL-ASSET-UPGRADE.md`](docs/PEPPOL-ASSET-UPGRADE.md) — offline production packaging, release identity, and upgrade policy.
+- [`docs/PERFORMANCE-EVIDENCE.md`](docs/PERFORMANCE-EVIDENCE.md) — nightly/release stress evidence, trend comparison, retention, and resource ceilings.
 - [`UPLOAD-CONTENT-RETENTION.md`](UPLOAD-CONTENT-RETENTION.md) — content lifecycle and storage capacity.
 - [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) — validation-runtime licensing and provenance.
 

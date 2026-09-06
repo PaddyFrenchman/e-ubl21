@@ -10,6 +10,10 @@ The Peppol worker is measured by the same durable benchmark boundary and has a
 separate host and constrained baseline below. Its production resource and
 scaling defaults are derived from that evidence.
 
+Repeatable nightly, on-demand, and release evidence, machine-readable trend
+comparison, artifact retention, and the non-flaky failure policy are documented
+in [Release and nightly performance evidence](PERFORMANCE-EVIDENCE.md).
+
 ## Reproduce the measurements
 
 Run the fixed-count matrix:

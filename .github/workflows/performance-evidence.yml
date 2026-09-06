@@ -1,0 +1,107 @@
+name: Performance and stress evidence
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+    inputs:
+      capacity_samples:
+        description: Durable observations per benchmark case
+        required: true
+        default: '100'
+        type: choice
+        options: ['100', '200', '500']
+      run_cgroup:
+        description: Also run the production 2 CPU / 2 GiB constrained matrix
+        required: true
+        default: true
+        type: boolean
+      regression_threshold_percent:
+        description: Advisory material-change threshold
+        required: true
+        default: '25'
+        type: string
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-evidence-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  performance-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install benchmark prerequisites
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils time procps
+      - name: Restore previous successful evidence
+        uses: actions/cache/restore@v4
+        with:
+          path: .performance-history
+          key: performance-evidence-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            performance-evidence-${{ runner.os }}-
+      - name: Run stress and capacity evidence
+        id: performance
+        shell: bash
+        env:
+          REQUESTED_SAMPLES: ${{ inputs.capacity_samples || '100' }}
+          REQUESTED_CGROUP: ${{ inputs.run_cgroup }}
+          REQUESTED_THRESHOLD: ${{ inputs.regression_threshold_percent || '25' }}
+        run: |
+          run_cgroup=1
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${REQUESTED_CGROUP}" != "true" ]]; then
+            run_cgroup=0
+          fi
+          CAPACITY_SAMPLES="${REQUESTED_SAMPLES}" \
+          RUN_CGROUP="${run_cgroup}" \
+          PERFORMANCE_REGRESSION_THRESHOLD="${REQUESTED_THRESHOLD}" \
+          PERFORMANCE_MAX_TREE_RSS_KIB=2097152 \
+          PERFORMANCE_MAX_CGROUP_MEMORY_BYTES=2147483648 \
+          PERFORMANCE_BASELINE=.performance-history/latest.json \
+          ARTIFACT_DIR="performance-results/${GITHUB_RUN_ID}" \
+          make performance-evidence
+      - name: Publish performance summary
+        if: always()
+        shell: bash
+        run: |
+          summary="performance-results/${GITHUB_RUN_ID}/summary.md"
+          if [[ -f "$summary" ]]; then
+            cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Performance evidence did not reach the summary stage; inspect the retained raw logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Prepare next comparison baseline
+        if: steps.performance.outcome == 'success'
+        run: |
+          mkdir -p .performance-history
+          cp "performance-results/${GITHUB_RUN_ID}/evidence.json" .performance-history/latest.json
+      - name: Save successful comparison baseline
+        if: steps.performance.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: .performance-history
+          key: performance-evidence-${{ runner.os }}-${{ github.run_id }}
+      - name: Upload performance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-evidence-${{ github.event_name }}-${{ github.run_id }}
+          path: performance-results/${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 90

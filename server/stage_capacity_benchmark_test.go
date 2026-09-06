@@ -148,6 +148,7 @@ func BenchmarkPeppolStageCapacity(b *testing.B) {
 		b.Fatal("Peppol invalid capacity fixture is missing")
 	}
 	lineHeavy := buildBenchmarkPeppolLineHeavyInvoice(b, 1000)
+	nearLimit := buildBenchmarkPeppolLineHeavyInvoice(b, 2950)
 	enValidator := newSaxonEN16931Validator(enRuntimeConfig, 45*time.Second)
 	for _, fixture := range []struct {
 		name string
@@ -156,6 +157,7 @@ func BenchmarkPeppolStageCapacity(b *testing.B) {
 		{name: "valid small", body: []byte(valid)},
 		{name: "Peppol invalid", body: []byte(invalid)},
 		{name: "valid 1,000-line", body: lineHeavy},
+		{name: "valid near-limit 2,950-line", body: nearLimit},
 	} {
 		result, err := enValidator.Validate(context.Background(), bytes.NewReader(fixture.body))
 		if err != nil || !result.Valid {
@@ -171,6 +173,7 @@ func BenchmarkPeppolStageCapacity(b *testing.B) {
 		{name: "valid_invoice_small/c4", body: []byte(valid), concurrency: 4, wantOutcome: queue.StageOutcomePassed},
 		{name: "invalid_semantics/c1", body: []byte(invalid), concurrency: 1, wantOutcome: queue.StageOutcomeStandardsInvalid},
 		{name: "valid_invoice_1000_lines/c1", body: lineHeavy, lines: 1000, concurrency: 1, wantOutcome: queue.StageOutcomePassed},
+		{name: "valid_invoice_near_limit_2950_lines/c1", body: nearLimit, lines: 2950, concurrency: 1, wantOutcome: queue.StageOutcomePassed},
 	}
 	for _, tc := range cases {
 		b.Run(tc.name, func(b *testing.B) {
@@ -498,6 +501,10 @@ func verifyCapacityResults(b *testing.B, ctx context.Context, client *queue.Clie
 
 func reportCapacityMetrics(b *testing.B, service, queueWait []time.Duration, elapsed time.Duration, cpuSeconds float64, allocatedBytes, allocations uint64, concurrency, inputBytes, lines int) {
 	b.Helper()
+	endToEnd := make([]time.Duration, len(service))
+	for index := range service {
+		endToEnd[index] = queueWait[index] + service[index]
+	}
 	count := float64(len(service))
 	b.ReportMetric(count/elapsed.Seconds(), "docs/s")
 	b.ReportMetric(durationPercentile(service, 0.50), "service_p50_ms")
@@ -506,6 +513,9 @@ func reportCapacityMetrics(b *testing.B, service, queueWait []time.Duration, ela
 	b.ReportMetric(durationPercentile(queueWait, 0.50), "queue_p50_ms")
 	b.ReportMetric(durationPercentile(queueWait, 0.95), "queue_p95_ms")
 	b.ReportMetric(durationPercentile(queueWait, 0.99), "queue_p99_ms")
+	b.ReportMetric(durationPercentile(endToEnd, 0.50), "e2e_p50_ms")
+	b.ReportMetric(durationPercentile(endToEnd, 0.95), "e2e_p95_ms")
+	b.ReportMetric(durationPercentile(endToEnd, 0.99), "e2e_p99_ms")
 	b.ReportMetric(cpuSeconds*1000/count, "cpu_ms/doc")
 	b.ReportMetric(float64(allocatedBytes)/count, "alloc_B/doc")
 	b.ReportMetric(float64(allocations)/count, "allocs/doc")
@@ -572,10 +582,30 @@ func capacityPlan(finalStage queue.ValidationLayer) queue.FrozenValidationPlan {
 }
 
 func capacityProfile(stage queue.ValidationLayer) queue.ValidationProfile {
-	if stage == queue.ValidationLayerPeppolBISBilling {
+	switch stage {
+	case queue.ValidationLayerUBL21XSD:
+		return queue.ValidationProfileUBL21
+	case queue.ValidationLayerPeppolBISBilling:
 		return queue.ValidationProfilePeppolBISBilling
+	default:
+		return queue.ValidationProfileUBL21EN16931
 	}
-	return queue.ValidationProfileUBL21EN16931
+}
+
+func TestCapacityProfileMatchesMeasuredStagePlan(t *testing.T) {
+	tests := []struct {
+		stage   queue.ValidationLayer
+		profile queue.ValidationProfile
+	}{
+		{queue.ValidationLayerUBL21XSD, queue.ValidationProfileUBL21},
+		{queue.ValidationLayerEN16931, queue.ValidationProfileUBL21EN16931},
+		{queue.ValidationLayerPeppolBISBilling, queue.ValidationProfilePeppolBISBilling},
+	}
+	for _, test := range tests {
+		if got := capacityProfile(test.stage); got != test.profile {
+			t.Errorf("capacityProfile(%s) = %s, want %s", test.stage, got, test.profile)
+		}
+	}
 }
 
 func bytesLookLikeOrder(body []byte) bool {

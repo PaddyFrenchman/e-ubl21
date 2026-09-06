@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -73,6 +73,13 @@ benchmark-stages:
 # limits. A Kubernetes CPU request is scheduling metadata, not a cgroup limit.
 benchmark-stages-cgroup:
 	./devsetup/benchmark-stages-cgroup.sh
+
+# Collect retained host and optional constrained performance evidence. Timing
+# changes are advisory; only benchmark failures or explicit resource ceilings fail.
+performance-evidence:
+	ARTIFACT_DIR="$(ARTIFACT_DIR)" \
+	PERFORMANCE_BASELINE="$(PERFORMANCE_BASELINE)" \
+	./devsetup/performance-evidence.sh
 
 # Regenerate and verify both tracked corpora, then run them through the real
 # authenticated API/worker topology with all required runtimes available.
