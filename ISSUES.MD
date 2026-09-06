@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance. Issues #37, #38, #45, #48 through #63, and #65 through #81 are complete. Issue #64 remains open pending separately authorized reconciliation of its already-implemented Peppol-stage acceptance contract; after that reconciliation, #46 is the next actionable issue.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #45, and #48 through #81 are complete. **#46 is the next actionable issue.**
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -699,6 +699,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/75
 
 ### 41. #64 — TODO-VALIDATION-SPLIT-017 — Integrate Peppol as a native asynchronous stage
 
+**Status:** Complete / closed. The `worker-peppol` stage and its durable XSD -> EN -> Peppol transitions were implemented by #73 and proven through the final public asynchronous gate in #81.
+
 **Goal:** Implement Peppol as `worker-peppol` with its own StageRequest/StageResult subjects, queued only after durable EN pass evidence, with independent timeout, retry, DLQ, telemetry, and autoscaling.
 
 **Acceptance:** The orchestrator executes XSD -> durable result -> EN -> durable result -> Peppol -> durable result -> final, with every transition asynchronous.
@@ -938,9 +940,9 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 
 ## Notes
 
-- Issues #64 and #73 are closely related; #73 is complete, while #64 remains open pending authorized reconciliation of its already-implemented Peppol-stage acceptance contract.
+- Issues #64 and #73 are complete: #73 implemented the native Peppol stage and #81 proved #64's full asynchronous acceptance contract.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
-- Issues #37, #38, #44–#45, #48–#63, and #65–#81 are complete. After reconciling the already-implemented #64 acceptance contract, **#46 is the next actionable issue.**
+- Issues #37, #38, #44–#45, and #48–#81 are complete. **#46 is the next actionable issue.**
 - Issue #45 is complete: #81 establishes and enforces its accepted normalized Peppol release baseline from independently reviewed pinned assets and reference evidence.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
