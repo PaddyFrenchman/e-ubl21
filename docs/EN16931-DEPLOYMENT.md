@@ -36,6 +36,7 @@ Use the reproducible gate from a clean checkout:
 make test-en16931
 make test-en16931-compliance
 make test-en16931-image
+make test-peppol-image
 ```
 
 The first command treats missing Java or `xmllint` as a failure and exercises
@@ -43,14 +44,14 @@ the positive corpus, targeted-negative corpus, XSD short-circuit control, and
 the final public/durable compliance scenarios. The explicitly named
 `test-en16931-compliance` release target is an alias for that complete gate;
 its scenario-to-assertion map is in `EN16931-COMPLIANCE-GATE.md`.
-The second builds the production image and starts its worker with container
-networking disabled. It succeeds only when the checksum verification and real
-Saxon transform complete before the expected NATS connection failure. This
-proves that validation itself needs no runtime network access; a deployed
-worker still needs its configured NATS connection.
+The image targets build the production image and start the EN and Peppol
+workers with container networking disabled. They succeed only when checksum
+verification and a real Saxon transform complete before the expected NATS
+connection failure. This proves that validation itself needs no runtime
+network access; a deployed worker still needs its configured NATS connection.
 
-The same two targets run in `.github/workflows/en16931.yml` for pull requests
-and pushes to `main`.
+The compliance and both image targets run in `.github/workflows/en16931.yml`
+for pull requests and protected integration/release pushes.
 
 ## Docker Compose
 

@@ -110,6 +110,9 @@ func ensureSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig) error {
 }
 
 func ensurePeppolSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig) error {
+	if err := validationassets.VerifyPeppol(); err != nil {
+		return fmt.Errorf("Peppol runtime: verify embedded source, provenance and compilation chain: %w", err)
+	}
 	return ensureProfileSaxonRuntime(ctx, cfg, "Peppol")
 }
 

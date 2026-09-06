@@ -28,10 +28,12 @@ func TestPeppolPinnedMetadata(t *testing.T) {
 		ManifestSHA256:                     "705e83fa494c052254c5cd4cbd2fb42baa975d559774f6cc928dbdddd10ab29e",
 		EmbeddedRoot:                       "peppol/3.0.21",
 		SchematronPath:                     "peppol/3.0.21/rules/PEPPOL-EN16931-UBL.sch",
+		SchematronSHA256:                   "62e5b67892f12755352d78b06f63229a02cc2eccc748677c56efbc8dbcb336e3",
 		EmbeddedXSLTPath:                   "peppol/3.0.21/runtime/PEPPOL-EN16931-UBL-validation.xslt",
 		RuntimeXSLTPath:                    "/opt/e-ubl21/validation-assets/peppol/3.0.21/runtime/PEPPOL-EN16931-UBL-validation.xslt",
 		XSLTSHA256:                         "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa",
 		CompilerMetadataPath:               "peppol/3.0.21/runtime/compiler.json",
+		CompilerMetadataSHA256:             "e52d9533c9e4c9bdf14959d546e0fe4a344bc49aecc67d1ee9731f4a30bba35b",
 	}
 	if Peppol() != want {
 		t.Fatalf("Peppol metadata = %#v, want %#v", Peppol(), want)
@@ -193,6 +195,15 @@ func TestVerifyPeppolRejectsChangedCompiledXSLT(t *testing.T) {
 	}
 }
 
+func TestVerifyPeppolRejectsPinnedSourceDigestMismatch(t *testing.T) {
+	profile := Peppol()
+	profile.SchematronSHA256 = strings.Repeat("0", 64)
+	err := verifyPeppolFS(files, profile)
+	if err == nil || !strings.Contains(err.Error(), "Schematron: SHA-256 mismatch") {
+		t.Fatalf("verifyPeppolFS() error = %v, want Schematron SHA-256 mismatch", err)
+	}
+}
+
 func TestVerifyPeppolRejectsMissingCompilerMetadata(t *testing.T) {
 	mapFS := copyPeppolFS(t)
 	delete(mapFS, Peppol().CompilerMetadataPath)
@@ -202,11 +213,22 @@ func TestVerifyPeppolRejectsMissingCompilerMetadata(t *testing.T) {
 	}
 }
 
+func TestVerifyPeppolRejectsCompilerMetadataDigestMismatch(t *testing.T) {
+	profile := Peppol()
+	profile.CompilerMetadataSHA256 = strings.Repeat("0", 64)
+	err := verifyPeppolFS(files, profile)
+	if err == nil || !strings.Contains(err.Error(), "compiler metadata: SHA-256 mismatch") {
+		t.Fatalf("verifyPeppolFS() error = %v, want compiler metadata SHA-256 mismatch", err)
+	}
+}
+
 func TestVerifyPeppolRejectsCompilerMetadataMismatch(t *testing.T) {
 	mapFS := copyPeppolFS(t)
 	metadata := mapFS[Peppol().CompilerMetadataPath]
 	metadata.Data = bytes.Replace(metadata.Data, []byte(`"compiler_version": "1.10.1"`), []byte(`"compiler_version": "changed"`), 1)
-	err := verifyPeppolFS(mapFS, Peppol())
+	profile := Peppol()
+	profile.CompilerMetadataSHA256 = fmt.Sprintf("%x", sha256.Sum256(metadata.Data))
+	err := verifyPeppolFS(mapFS, profile)
 	if err == nil || !strings.Contains(err.Error(), "values do not match pinned compiler profile") {
 		t.Fatalf("verifyPeppolFS() error = %v, want compiler metadata mismatch", err)
 	}

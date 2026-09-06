@@ -46,6 +46,14 @@ diagnostic ID and dynamically rendered content. The production image repeats
 this compilation check but contains only the accepted XSLT and runtime Saxon
 dependencies; SchXslt and all download tools remain build-only.
 
+Run `make test-peppol-image` to build the final production image and start
+`worker-peppol` with container networking disabled. The worker re-verifies the
+embedded source/provenance/compilation chain and every separately staged
+runtime digest, performs a real SVRL transform, and logs the complete release
+identity before the gate permits it to reach the expected NATS boundary. The
+upgrade and mandatory-transition-date policy is in
+[`docs/PEPPOL-ASSET-UPGRADE.md`](../../docs/PEPPOL-ASSET-UPGRADE.md).
+
 The files are copied unchanged from OpenPeppol repository commit
 `806866bd2bd91d7e9623b68f08164e8fbe9e67a0`. Their upstream terms and the CEN
 notice in the Schematron header continue to apply. This narrow source bundle

@@ -394,6 +394,10 @@ func verifyPeppolCompilationFS(fsys fs.FS, profile PeppolProfile) error {
 	if err != nil {
 		return fmt.Errorf("read %s profile %s Schematron: %w", profile.Name, profile.Version, err)
 	}
+	actualSourceSHA256 := fmt.Sprintf("%x", sha256.Sum256(source))
+	if actualSourceSHA256 != profile.SchematronSHA256 {
+		return fmt.Errorf("verify %s profile %s Schematron: SHA-256 mismatch: expected %s, got %s", profile.Name, profile.Version, profile.SchematronSHA256, actualSourceSHA256)
+	}
 	compiled, err := fs.ReadFile(fsys, profile.EmbeddedXSLTPath)
 	if err != nil {
 		return fmt.Errorf("read %s profile %s compiled XSLT: %w", profile.Name, profile.Version, err)
@@ -412,6 +416,10 @@ func verifyPeppolCompilerMetadata(fsys fs.FS, profile PeppolProfile) error {
 	content, err := fs.ReadFile(fsys, profile.CompilerMetadataPath)
 	if err != nil {
 		return fmt.Errorf("read %s profile %s compiler metadata: %w", profile.Name, profile.Version, err)
+	}
+	actualMetadataSHA256 := fmt.Sprintf("%x", sha256.Sum256(content))
+	if actualMetadataSHA256 != profile.CompilerMetadataSHA256 {
+		return fmt.Errorf("verify %s profile %s compiler metadata: SHA-256 mismatch: expected %s, got %s", profile.Name, profile.Version, profile.CompilerMetadataSHA256, actualMetadataSHA256)
 	}
 	var metadata peppolCompilerMetadata
 	decoder := json.NewDecoder(bytes.NewReader(content))

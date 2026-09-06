@@ -6,9 +6,13 @@ This note records the current licensing and redistribution position for the Pepp
 
 ## Current project decision
 
-Issue #68 packages a narrow, pinned set of Peppol validation source material under `validation-assets/peppol/` so that the project can verify exact bytes, versions, provenance and checksums offline.
+The repository packages a narrow, pinned set of Peppol validation source material under `validation-assets/peppol/` so that the project can verify exact bytes, versions, provenance and checksums offline.
 
-The implementation is accepted as-is for the current development milestone. Uncertainty about the precise redistribution terms of selected OpenPeppol source files is **not considered a blocker for issue #68**. The licensing position will be clarified separately before any distribution model requires a definitive answer.
+The static application binary embeds those controlled verification inputs, and
+the production image additionally exposes the derived executable XSLT and a
+third-party notice file. This packaging does not imply rights beyond the
+applicable upstream terms; release owners remain responsible for completing
+any legal review required by their distribution model.
 
 The full Peppol standards/reference documentation downloaded through `standard/peppol/download.sh` remains outside Git under `standard/peppol/downloaded/` and is intentionally excluded from version control.
 
@@ -16,7 +20,7 @@ The full Peppol standards/reference documentation downloaded through `standard/p
 
 The downloaded standards/reference documentation under `standard/peppol/downloaded/` is documentation and audit material only. It must never be copied into application container images, release archives, installers or other product builds.
 
-The controlled files under `validation-assets/peppol/` are a separate category: they are selected validation source inputs used by the implementation and verifier. Their inclusion, transformation or redistribution in future runtime/release artefacts must be reviewed explicitly as part of packaging and release work.
+The controlled files under `validation-assets/peppol/` are a separate category: they are selected validation source inputs used by the implementation and verifier. Their inclusion, transformation, notices, and redistribution must be reviewed explicitly for every Peppol release upgrade under `docs/PEPPOL-ASSET-UPGRADE.md`.
 
 Do not treat the presence of a file in the public upstream OpenPeppol repository as, by itself, proof of a particular redistribution licence.
 

@@ -18,6 +18,14 @@ resource limits, and timeouts are operational outcomes. The orchestrator alone
 authorizes retries, advances the plan, and publishes the permanent final
 result.
 
+Before connecting to NATS, the production worker verifies the embedded source
+inventory, provenance and compilation chain, Java availability, the Saxon and
+XML Resolver JAR digests, the restricted Saxon configuration, the compiled
+Peppol XSLT digest, and a real offline SVRL smoke transform. It then logs the
+exact BIS publication/mandatory dates and source, executable, compiler, and
+processor digests. Any mismatch is a startup failure; the worker cannot
+consume from the Peppol request stream in a degraded mode.
+
 Run locally after the split topology is provisioned and activated:
 
 ```bash
@@ -64,6 +72,13 @@ The measured production defaults are concurrency/prefetch 1/1, 1 CPU and
 `CAPACITY_SAMPLES=100 make benchmark-peppol-cgroup` for the deployment limits.
 The recorded service, durable publication, memory, throttling, and scaling
 decision evidence is in [`STAGE-CAPACITY.md`](STAGE-CAPACITY.md).
+
+`make test-peppol-image` builds the production image and proves this complete
+startup path with `--network none`. Packaged locations, mandatory release-date
+planning, ruleset upgrade/rollback steps, required evidence, and the rule/tool
+change-separation policy are defined in
+[`PEPPOL-ASSET-UPGRADE.md`](PEPPOL-ASSET-UPGRADE.md). Third-party identity and
+notices are installed at `/opt/e-ubl21/THIRD_PARTY_NOTICES.md`.
 
 Durable replay, failure, shutdown, and EN-only-to-Peppol upgrade rules are
 specified in [`PEPPOL-DURABILITY-MIGRATION.md`](PEPPOL-DURABILITY-MIGRATION.md).

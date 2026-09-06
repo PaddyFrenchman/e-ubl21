@@ -37,8 +37,15 @@ Maven Central and verified before packaging.
 ## Peppol BIS Billing 3.0.21 compiled validation artefact
 
 - Component: `PEPPOL-EN16931-UBL-validation.xslt`
+- Release: Peppol BIS Billing 3.0.21, published 2026-05-20 and mandatory from
+  2026-08-17; validation artefacts 1.3.16
 - Source: `OpenPEPPOL/peppol-bis-invoice-3`, immutable commit
   `806866bd2bd91d7e9623b68f08164e8fbe9e67a0`
+- Source tree: `a8acc94f1216279839547e1670585fac62dfc122`
+- Source archive SHA-256:
+  `a843cd3808c6e95565eded1a535a5a40a88ad6f92e009d2b1816a4818a82299e`
+- Selected-source manifest SHA-256:
+  `705e83fa494c052254c5cd4cbd2fb42baa975d559774f6cc928dbdddd10ab29e`
 - Source Schematron SHA-256:
   `62e5b67892f12755352d78b06f63229a02cc2eccc748677c56efbc8dbcb336e3`
 - Packaged XSLT SHA-256:
@@ -46,11 +53,15 @@ Maven Central and verified before packaging.
 - Compiler: SchXslt 1.10.1, MIT License
 - Compiler release: <https://codeberg.org/SchXslt/schxslt/releases/tag/v1.10.1>
 - Compiler license: <https://codeberg.org/SchXslt/schxslt/src/tag/v1.10.1/LICENSE>
+- Compiler metadata SHA-256:
+  `e52d9533c9e4c9bdf14959d546e0fe4a344bc49aecc67d1ee9731f4a30bba35b`
 
 The XSLT is generated deterministically from the pinned OpenPeppol Schematron.
-The OpenPeppol/CEN notices in that source continue to apply. SchXslt is used
-only during build/release verification, but portions of its MIT-licensed
-templates are represented in the generated XSLT.
+The source states that it uses CEN/EN 16931-1 business terms reproduced with
+permission, that CEN accepts no liability for their use, and that no warranty
+is given. The OpenPeppol/CEN notices in that source continue to apply. SchXslt
+is used only during build/release verification, but portions of its
+MIT-licensed templates are represented in the generated XSLT.
 
 SchXslt MIT license:
 

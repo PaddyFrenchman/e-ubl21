@@ -1,4 +1,4 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
@@ -13,6 +13,11 @@ test-en16931-compliance: test-en16931
 # transform succeeds with networking disabled. Override IMAGE if required.
 test-en16931-image:
 	./devsetup/test-en16931-image.sh "$(or $(IMAGE),e-ubl21:en16931-check)"
+
+# Build the production image and prove worker-peppol verifies and reports its
+# complete pinned runtime before an expected NATS failure with networking off.
+test-peppol-image:
+	./devsetup/test-peppol-image.sh "$(or $(IMAGE),e-ubl21:peppol-check)"
 
 # Recompile the pinned Peppol Schematron twice, compare it with the accepted
 # executable XSLT, and run the offline SVRL smoke transform.

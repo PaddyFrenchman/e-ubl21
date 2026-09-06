@@ -18,8 +18,9 @@ RUN go mod download
 COPY . .
 
 # Refuse to package a validation ruleset whose bytes do not match the pinned
-# release metadata. This verification is entirely offline and runs before the
-# application binary or runtime image is produced.
+# release, source, compiler, and executable metadata. This verification is
+# entirely offline and runs before the application binary or runtime image is
+# produced.
 RUN ./devsetup/download_saxon_he.sh /out/saxon
 RUN ./devsetup/download_schxslt.sh /out/schxslt
 RUN go run ./tools/compile-peppol-schematron \

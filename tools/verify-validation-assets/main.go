@@ -43,13 +43,23 @@ func main() {
 		profile.RuntimeXSLTPath,
 	)
 	peppol := validationassets.Peppol()
-	fmt.Printf("verified profile=%s version=%s artefacts=%s manifest_sha256=%s schematron=%s xslt_sha256=%s xslt=%s\n",
+	compiler := validationassets.SchXslt()
+	fmt.Printf("verified profile=%s version=%s publication_date=%s mandatory_from=%s artefacts=%s source_commit=%s source_archive_sha256=%s manifest_sha256=%s schematron=%s schematron_sha256=%s xslt_sha256=%s compiler=%s compiler_version=%s compiler_archive_sha256=%s compiler_metadata_sha256=%s xslt=%s\n",
 		peppol.Name,
 		peppol.Version,
+		peppol.PublicationDate,
+		peppol.MandatoryFrom,
 		peppol.ValidationArtefactsVersion,
+		peppol.SourceCommit,
+		peppol.SourceArchiveSHA256,
 		peppol.ManifestSHA256,
 		peppol.SchematronPath,
+		peppol.SchematronSHA256,
 		peppol.XSLTSHA256,
+		compiler.Name,
+		compiler.Version,
+		compiler.ArchiveSHA256,
+		peppol.CompilerMetadataSHA256,
 		peppol.RuntimeXSLTPath,
 	)
 	for _, path := range staged {

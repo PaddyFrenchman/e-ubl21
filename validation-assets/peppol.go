@@ -37,10 +37,12 @@ type PeppolProfile struct {
 	ManifestSHA256                     string
 	EmbeddedRoot                       string
 	SchematronPath                     string
+	SchematronSHA256                   string
 	EmbeddedXSLTPath                   string
 	RuntimeXSLTPath                    string
 	XSLTSHA256                         string
 	CompilerMetadataPath               string
+	CompilerMetadataSHA256             string
 }
 
 // PeppolExample is one byte-for-byte official example from the pinned
@@ -92,10 +94,12 @@ func newPeppolProfile(version, manifestSHA256 string) PeppolProfile {
 		ManifestSHA256:                     manifestSHA256,
 		EmbeddedRoot:                       embeddedRoot,
 		SchematronPath:                     path.Join(embeddedRoot, peppolSchematronRelativePath),
+		SchematronSHA256:                   "62e5b67892f12755352d78b06f63229a02cc2eccc748677c56efbc8dbcb336e3",
 		EmbeddedXSLTPath:                   path.Join(embeddedRoot, peppolRuntimeDirectory, "PEPPOL-EN16931-UBL-validation.xslt"),
 		RuntimeXSLTPath:                    path.Join("/opt/e-ubl21/validation-assets", embeddedRoot, peppolRuntimeDirectory, "PEPPOL-EN16931-UBL-validation.xslt"),
 		XSLTSHA256:                         "56bbd05ea26b4ffb859e0c15fcd2c1c8782870b530aae06a828ddb0bdf9b66aa",
 		CompilerMetadataPath:               path.Join(embeddedRoot, peppolRuntimeDirectory, "compiler.json"),
+		CompilerMetadataSHA256:             "e52d9533c9e4c9bdf14959d546e0fe4a344bc49aecc67d1ee9731f4a30bba35b",
 	}
 }
 

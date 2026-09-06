@@ -259,6 +259,7 @@ Deployment, runtime pinning, upgrade rules, and offline verification are documen
 - [`docs/EN16931-ASSET-UPGRADE.md`](docs/EN16931-ASSET-UPGRADE.md)
 - [`docs/EN16931-COMPLIANCE-GATE.md`](docs/EN16931-COMPLIANCE-GATE.md)
 - [`docs/EN16931-CAPACITY.md`](docs/EN16931-CAPACITY.md)
+- [`docs/PEPPOL-ASSET-UPGRADE.md`](docs/PEPPOL-ASSET-UPGRADE.md)
 
 ## Sample generation and regression corpus
 
@@ -676,9 +677,13 @@ Some tests that require external Java/Saxon dependencies may skip in an ordinary
 make test-en16931
 make test-en16931-compliance
 make test-en16931-image
+make test-peppol-image
 ```
 
-The image gate builds the production container and verifies the checksum-controlled Saxon smoke transform with networking disabled.
+The image gates build the production container and verify the checksum-controlled
+EN 16931 and Peppol Saxon smoke transforms with networking disabled. The
+Peppol worker also reports the exact BIS release, transition dates, source,
+compiled-XSLT, compiler, and processor digests before attempting NATS.
 
 Reproduce the accepted Peppol Schematron runtime XSLT, verify its pinned
 SchXslt/Saxon inputs, and run the offline SVRL smoke transform with:
@@ -778,6 +783,7 @@ For deeper detail, start with:
 - [`docs/EN16931-DEPLOYMENT.md`](docs/EN16931-DEPLOYMENT.md) — controlled semantic-validator runtime/deployment.
 - [`docs/EN16931-COMPLIANCE-GATE.md`](docs/EN16931-COMPLIANCE-GATE.md) — release compliance evidence.
 - [`docs/EN16931-CAPACITY.md`](docs/EN16931-CAPACITY.md) — benchmark and sizing baseline.
+- [`docs/PEPPOL-ASSET-UPGRADE.md`](docs/PEPPOL-ASSET-UPGRADE.md) — offline production packaging, release identity, and upgrade policy.
 - [`UPLOAD-CONTENT-RETENTION.md`](UPLOAD-CONTENT-RETENTION.md) — content lifecycle and storage capacity.
 - [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) — validation-runtime licensing and provenance.
 

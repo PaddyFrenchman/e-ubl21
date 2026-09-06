@@ -102,6 +102,31 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 	if logger == nil {
 		logger = slog.Default()
 	}
+	validator := cfg.validator
+	wrapProfileResolution := validator == nil
+	if validator == nil {
+		runtime := resolvePeppolSaxonRuntimeOverrides(saxonRuntimeOverrides{
+			javaExecutable: cfg.JavaExecutable, saxonJARPath: cfg.SaxonJARPath,
+			xmlResolverJARPath: cfg.XMLResolverJARPath, configurationPath: cfg.SaxonConfigurationPath,
+			xsltPath: cfg.PeppolXSLTPath, startupTimeout: cfg.SaxonStartupTimeout,
+		})
+		verifyRuntime := cfg.verifyRuntime
+		if verifyRuntime == nil {
+			verifyRuntime = ensurePeppolSaxonRuntime
+		}
+		if err := verifyRuntime(ctx, runtime); err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
+			stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerPeppolBISBilling), "runtime").Inc()
+			return fmt.Errorf("worker-peppol verify Saxon runtime: %w", err)
+		}
+		logPeppolValidationRuntimeVersions(logger)
+		validator = newSaxonPeppolValidator(runtime, settings.validationTimeout)
+	}
+	if wrapProfileResolution {
+		validator = peppolProfileAwareValidator{delegate: validator}
+	}
 	client := cfg.queueClient
 	ownedClient := false
 	var err error
@@ -145,31 +170,6 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 		return fmt.Errorf("worker-peppol verify validation execution infrastructure: %w", err)
 	}
 
-	validator := cfg.validator
-	wrapProfileResolution := validator == nil
-	if validator == nil {
-		runtime := resolvePeppolSaxonRuntimeOverrides(saxonRuntimeOverrides{
-			javaExecutable: cfg.JavaExecutable, saxonJARPath: cfg.SaxonJARPath,
-			xmlResolverJARPath: cfg.XMLResolverJARPath, configurationPath: cfg.SaxonConfigurationPath,
-			xsltPath: cfg.PeppolXSLTPath, startupTimeout: cfg.SaxonStartupTimeout,
-		})
-		verifyRuntime := cfg.verifyRuntime
-		if verifyRuntime == nil {
-			verifyRuntime = ensurePeppolSaxonRuntime
-		}
-		if err := verifyRuntime(ctx, runtime); err != nil {
-			if ctx.Err() != nil {
-				return nil
-			}
-			stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerPeppolBISBilling), "runtime").Inc()
-			return fmt.Errorf("worker-peppol verify Saxon runtime: %w", err)
-		}
-		logValidationRuntimeVersions(logger)
-		validator = newSaxonPeppolValidator(runtime, settings.validationTimeout)
-	}
-	if wrapProfileResolution {
-		validator = peppolProfileAwareValidator{delegate: validator}
-	}
 	now := cfg.now
 	if now == nil {
 		now = time.Now

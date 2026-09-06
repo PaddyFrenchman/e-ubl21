@@ -43,3 +43,5 @@ jobs:
         run: make test-en16931-compliance
       - name: Build and verify the production image offline
         run: make test-en16931-image IMAGE=e-ubl21:ci
+      - name: Verify packaged Peppol worker offline
+        run: SKIP_IMAGE_BUILD=1 make test-peppol-image IMAGE=e-ubl21:ci

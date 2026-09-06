@@ -237,6 +237,30 @@ func TestPeppolWorkerSettingsRespectProvisionedBounds(t *testing.T) {
 	}
 }
 
+func TestPeppolWorkerVerifiesPinnedRuntimeBeforeConnectingToNATS(t *testing.T) {
+	verificationFailure := errors.New("packaged Peppol checksum mismatch")
+	var inspected saxonRuntimeConfig
+	err := RunPeppolWorker(context.Background(), PeppolWorkerConfig{
+		NATSURL: "nats://127.0.0.1:1", MetricsAddr: "",
+		JavaExecutable: "/test/java", SaxonJARPath: "/test/saxon.jar",
+		XMLResolverJARPath: "/test/resolver.jar", SaxonConfigurationPath: "/test/saxon.xml",
+		PeppolXSLTPath: "/test/peppol.xslt", SaxonStartupTimeout: 7 * time.Second,
+		verifyRuntime: func(_ context.Context, runtime saxonRuntimeConfig) error {
+			inspected = runtime
+			return verificationFailure
+		},
+		Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+	})
+	if !errors.Is(err, verificationFailure) {
+		t.Fatalf("startup error = %v, want runtime verification failure before NATS", err)
+	}
+	if inspected.javaExecutable != "/test/java" || inspected.saxonJARPath != "/test/saxon.jar" ||
+		inspected.xmlResolverJARPath != "/test/resolver.jar" || inspected.configurationPath != "/test/saxon.xml" ||
+		inspected.xsltPath != "/test/peppol.xslt" || inspected.startupTimeout != 7*time.Second {
+		t.Fatalf("inspected Peppol runtime = %+v", inspected)
+	}
+}
+
 func authorizePeppolWorkerRequest(t *testing.T, ctx context.Context, client *queue.Client, content []byte) (*orchestrator.Machine, queue.StageRequest, jetstream.Msg) {
 	t.Helper()
 	uploadID := enWorkerTestID(t)
