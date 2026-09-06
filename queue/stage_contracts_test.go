@@ -331,19 +331,26 @@ func TestStageResultDiagnosticBounds(t *testing.T) {
 		Kind: queue.ValidationIssueFailedAssert, Layer: request.Stage,
 		Severity: "error", Message: strings.Repeat("m", queue.MaxStageIssueMessageBytes+1),
 	}
-	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, []queue.ValidationIssue{issue}, "", startedAt, startedAt.Add(time.Second), time.Second); err == nil {
-		t.Fatal("oversized issue field was accepted")
+	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, []queue.ValidationIssue{issue}, "", startedAt, startedAt.Add(time.Second), time.Second); !errors.Is(err, queue.ErrStageIssueLimitExceeded) {
+		t.Fatalf("oversized issue field error = %v, want ErrStageIssueLimitExceeded", err)
 	}
 	issues := make([]queue.ValidationIssue, queue.MaxStageIssues+1)
 	for index := range issues {
 		issues[index] = queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: request.Stage, Severity: "error", Message: "failed"}
 	}
-	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, issues, "", startedAt, startedAt.Add(time.Second), time.Second); err == nil {
-		t.Fatal("oversized issue collection was accepted")
+	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, issues, "", startedAt, startedAt.Add(time.Second), time.Second); !errors.Is(err, queue.ErrStageIssueLimitExceeded) {
+		t.Fatalf("oversized issue collection error = %v, want ErrStageIssueLimitExceeded", err)
 	}
 	wrongLayer := queue.ValidationIssue{Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerUBL21XSD, Severity: "error", Message: "failed"}
-	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, []queue.ValidationIssue{wrongLayer}, "", startedAt, startedAt.Add(time.Second), time.Second); err == nil {
-		t.Fatal("issue for another stage was accepted")
+	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, []queue.ValidationIssue{wrongLayer}, "", startedAt, startedAt.Add(time.Second), time.Second); err == nil || errors.Is(err, queue.ErrStageIssueLimitExceeded) {
+		t.Fatalf("wrong-layer issue error = %v, want non-limit validation failure", err)
+	}
+	invalidEncoding := queue.ValidationIssue{
+		Kind: queue.ValidationIssueFailedAssert, Layer: request.Stage,
+		Severity: "error", Message: string([]byte{0xff}),
+	}
+	if _, err := queue.NewStageResult(request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone, []queue.ValidationIssue{invalidEncoding}, "", startedAt, startedAt.Add(time.Second), time.Second); err == nil || errors.Is(err, queue.ErrStageIssueLimitExceeded) {
+		t.Fatalf("invalid-UTF-8 issue error = %v, want non-limit validation failure", err)
 	}
 }
 

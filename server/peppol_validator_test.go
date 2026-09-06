@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -161,6 +162,47 @@ func TestPeppolProfileEvidenceCannotExceedDurableBounds(t *testing.T) {
 	}
 	if reason := peppolStageOperationalReason(err); reason != queue.StageReasonResourceLimit {
 		t.Fatalf("operational reason = %q, want resource-limit", reason)
+	}
+}
+
+func TestPeppolProfileAwareValidatorPrioritizesDocumentLimitOverDelegateError(t *testing.T) {
+	delegateErr := errors.New("delegate rejected truncated XML")
+	validator := peppolProfileAwareValidator{delegate: peppolValidatorFunc(func(_ context.Context, input io.Reader) (queue.ValidationStageResult, error) {
+		if _, err := io.Copy(io.Discard, input); err != nil {
+			return queue.ValidationStageResult{}, err
+		}
+		return queue.ValidationStageResult{}, delegateErr
+	})}
+
+	result, err := validator.Validate(context.Background(), bytes.NewReader(make([]byte, peppolprofile.MaxResolutionDocumentBytes+1)))
+	if !errors.Is(err, peppolprofile.ErrDocumentTooLarge) || errors.Is(err, delegateErr) || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+		t.Fatalf("result/error = %+v / %v, want document-too-large", result, err)
+	}
+	if reason := peppolStageOperationalReason(err); reason != queue.StageReasonResourceLimit {
+		t.Fatalf("operational reason = %q, want resource-limit", reason)
+	}
+}
+
+func TestPeppolMalformedEvidenceIsNotAResourceLimit(t *testing.T) {
+	validator := peppolProfileAwareValidator{delegate: peppolValidatorFunc(func(_ context.Context, input io.Reader) (queue.ValidationStageResult, error) {
+		if _, err := io.Copy(io.Discard, input); err != nil {
+			return queue.ValidationStageResult{}, err
+		}
+		return queue.ValidationStageResult{
+			Layer: queue.ValidationLayerPeppolBISBilling, Version: validationassets.Peppol().ValidationArtefactsVersion,
+			Issues: []queue.ValidationIssue{{
+				Kind: queue.ValidationIssueFailedAssert, Layer: queue.ValidationLayerEN16931,
+				Severity: "error", Message: "wrong layer",
+			}},
+		}, nil
+	})}
+
+	result, err := validator.Validate(context.Background(), strings.NewReader(`<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"/>`))
+	if !errors.Is(err, errPeppolMalformedEvidence) || errors.Is(err, errPeppolSVRLOutputLimit) || !reflect.DeepEqual(result, queue.ValidationStageResult{}) {
+		t.Fatalf("result/error = %+v / %v, want malformed non-limit evidence", result, err)
+	}
+	if reason := peppolStageOperationalReason(err); reason != queue.StageReasonMalformedOutput {
+		t.Fatalf("operational reason = %q, want malformed-output", reason)
 	}
 }
 

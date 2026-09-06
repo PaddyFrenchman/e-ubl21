@@ -285,11 +285,11 @@ type peppolProfileAwareValidator struct {
 func (validator peppolProfileAwareValidator) Validate(ctx context.Context, input io.Reader) (queue.ValidationStageResult, error) {
 	var document bytes.Buffer
 	result, err := validator.delegate.Validate(ctx, io.TeeReader(io.LimitReader(input, peppolprofile.MaxResolutionDocumentBytes+1), &document))
-	if err != nil {
-		return queue.ValidationStageResult{}, err
-	}
 	if document.Len() > peppolprofile.MaxResolutionDocumentBytes {
 		return queue.ValidationStageResult{}, peppolprofile.ErrDocumentTooLarge
+	}
+	if err != nil {
+		return queue.ValidationStageResult{}, err
 	}
 	documentType, _, err := rootElementOfPayload(document.Bytes())
 	if err != nil {
@@ -306,7 +306,10 @@ func (validator peppolProfileAwareValidator) Validate(ctx context.Context, input
 		})
 	}
 	if err := queue.ValidateStageIssues(queue.ValidationLayerPeppolBISBilling, result.Issues); err != nil {
-		return queue.ValidationStageResult{}, fmt.Errorf("%w: normalized Peppol evidence: %w", errPeppolSVRLOutputLimit, err)
+		if errors.Is(err, queue.ErrStageIssueLimitExceeded) {
+			return queue.ValidationStageResult{}, fmt.Errorf("%w: normalized Peppol evidence: %w", errPeppolSVRLOutputLimit, err)
+		}
+		return queue.ValidationStageResult{}, fmt.Errorf("%w: %w", errPeppolMalformedEvidence, err)
 	}
 	result.Valid = !queue.StageIssuesContainStandardsFailure(result.Issues)
 	return result, nil
@@ -324,6 +327,8 @@ func peppolStageOperationalReason(err error) queue.StageOperationalReason {
 		return queue.StageReasonRuntimeUnavailable
 	case errors.Is(err, errPeppolSVRLOutputLimit), errors.Is(err, peppolprofile.ErrDocumentTooLarge):
 		return queue.StageReasonResourceLimit
+	case errors.Is(err, errPeppolMalformedEvidence):
+		return queue.StageReasonMalformedOutput
 	case errors.Is(err, errPeppolRuntimeSVRL):
 		return queue.StageReasonMalformedOutput
 	default:

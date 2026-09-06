@@ -16,11 +16,12 @@ import (
 const defaultPeppolValidationTimeout = 30 * time.Second
 
 var (
-	errPeppolSVRLOutputLimit = errors.New("Peppol SVRL output limit exceeded")
-	errPeppolRuntimeAsset    = errors.New("Peppol runtime asset failure")
-	errPeppolRuntimeSaxon    = errors.New("Peppol Saxon process failure")
-	errPeppolRuntimeSVRL     = errors.New("Peppol SVRL failure")
-	errPeppolRuntimeInput    = errors.New("Peppol input stream failure")
+	errPeppolSVRLOutputLimit   = errors.New("Peppol SVRL output limit exceeded")
+	errPeppolMalformedEvidence = errors.New("Peppol normalized issue evidence is malformed")
+	errPeppolRuntimeAsset      = errors.New("Peppol runtime asset failure")
+	errPeppolRuntimeSaxon      = errors.New("Peppol Saxon process failure")
+	errPeppolRuntimeSVRL       = errors.New("Peppol SVRL failure")
+	errPeppolRuntimeInput      = errors.New("Peppol input stream failure")
 )
 
 // PeppolValidator executes the pinned Peppol BIS Billing ruleset for one UBL

@@ -35,9 +35,14 @@ const (
 	MaxStageIssueTextBytes       = 256 << 10
 )
 
-// ErrUnsupportedStageContractVersion identifies a fail-closed wire-version
-// rejection. Callers may use errors.Is without parsing diagnostic text.
-var ErrUnsupportedStageContractVersion = errors.New("unsupported stage contract version")
+var (
+	// ErrUnsupportedStageContractVersion identifies a fail-closed wire-version
+	// rejection. Callers may use errors.Is without parsing diagnostic text.
+	ErrUnsupportedStageContractVersion = errors.New("unsupported stage contract version")
+	// ErrStageIssueLimitExceeded identifies issue count or text-size exhaustion.
+	// Structural and encoding failures deliberately do not wrap this sentinel.
+	ErrStageIssueLimitExceeded = errors.New("stage issue evidence limit exceeded")
+)
 
 // StageOutcome is the result of one authorized logical stage attempt.
 // Operational failure is retry evidence; it is not standards invalidity and
@@ -445,7 +450,7 @@ func validateStageVersion(name, value string) error {
 // before it is used to construct a durable StageResult.
 func ValidateStageIssues(stage ValidationLayer, issues []ValidationIssue) error {
 	if len(issues) > MaxStageIssues {
-		return fmt.Errorf("stage result has %d issues, maximum is %d", len(issues), MaxStageIssues)
+		return fmt.Errorf("%w: stage result has %d issues, maximum is %d", ErrStageIssueLimitExceeded, len(issues), MaxStageIssues)
 	}
 	total := 0
 	for index, issue := range issues {
@@ -474,13 +479,16 @@ func ValidateStageIssues(stage ValidationLayer, issues []ValidationIssue) error 
 			if field.required && strings.TrimSpace(field.value) == "" {
 				return fmt.Errorf("stage result issue %d %s is required", index, field.name)
 			}
-			if !utf8.ValidString(field.value) || len(field.value) > field.limit {
-				return fmt.Errorf("stage result issue %d %s exceeds %d bytes or is not UTF-8", index, field.name, field.limit)
+			if !utf8.ValidString(field.value) {
+				return fmt.Errorf("stage result issue %d %s is not UTF-8", index, field.name)
+			}
+			if len(field.value) > field.limit {
+				return fmt.Errorf("%w: stage result issue %d %s exceeds %d bytes", ErrStageIssueLimitExceeded, index, field.name, field.limit)
 			}
 			total += len(field.value)
 		}
 		if total > MaxStageIssueTextBytes {
-			return fmt.Errorf("stage result issue text exceeds %d bytes", MaxStageIssueTextBytes)
+			return fmt.Errorf("%w: stage result issue text exceeds %d bytes", ErrStageIssueLimitExceeded, MaxStageIssueTextBytes)
 		}
 	}
 	return nil
