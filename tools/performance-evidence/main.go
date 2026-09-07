@@ -68,6 +68,7 @@ type ceilingResult struct {
 	Observed float64 `json:"observed,omitempty"`
 	Found    bool    `json:"found"`
 	Breached bool    `json:"breached"`
+	Failed   bool    `json:"failed"`
 }
 
 func main() {
@@ -127,7 +128,7 @@ func main() {
 		fail(err)
 	}
 	for _, result := range current.Ceilings {
-		if result.Breached {
+		if result.Failed {
 			os.Exit(2)
 		}
 	}
@@ -304,6 +305,7 @@ func evaluateCeilings(value evidence, maxTreeRSSKiB, maxCgroupMemoryBytes float6
 			}
 		}
 		result.Breached = result.Found && result.Observed > result.Limit
+		result.Failed = !result.Found || result.Breached
 		results = append(results, result)
 	}
 	return results
@@ -352,12 +354,11 @@ func writeMarkdown(path string, value evidence, compared bool) error {
 		fmt.Fprintln(&output, "\n| Metric | Limit | Observed | Result |")
 		fmt.Fprintln(&output, "| --- | ---: | ---: | --- |")
 		for _, ceiling := range value.Ceilings {
-			result := "not observed"
-			if ceiling.Found {
-				result = "pass"
-			}
-			if ceiling.Breached {
-				result = "FAIL"
+			result := "pass"
+			if !ceiling.Found {
+				result = "FAIL: metric not observed"
+			} else if ceiling.Breached {
+				result = "FAIL: ceiling exceeded"
 			}
 			fmt.Fprintf(&output, "| `%s` | %.4g | %.4g | %s |\n", ceiling.Metric, ceiling.Limit, ceiling.Observed, result)
 		}

@@ -43,11 +43,14 @@ correctness workflow.
 
 Only these conditions fail the performance workflow:
 
-1. setup, fixture, validator, or benchmark execution fails; or
-2. an explicitly configured absolute resource ceiling is exceeded.
+1. setup, fixture, validator, or benchmark execution fails;
+2. an explicitly configured absolute resource ceiling is exceeded; or
+3. the measurement required to enforce a configured ceiling is absent.
 
 The checked-in workflow sets a 2 GiB process-tree RSS ceiling and the deployed
-2 GiB cgroup memory ceiling. Timing deltas alone never fail a run.
+2 GiB cgroup memory ceiling. A missing RSS/cgroup measurement is therefore an
+evidence failure rather than a silent guardrail bypass. Timing deltas alone
+never fail a run.
 
 ## Local and on-demand use
 

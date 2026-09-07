@@ -45,12 +45,26 @@ func TestCompareEvidenceFlagsDirectionAwareMaterialChanges(t *testing.T) {
 	}
 }
 
-func TestEvaluateCeilingsOnlyFailsObservedBreaches(t *testing.T) {
+func TestEvaluateCeilingsFailsBreachesAndMissingMeasurements(t *testing.T) {
 	current := evidence{Sources: []source{{Resources: map[string]float64{
 		"capacity_peak_process_tree_rss_kib": 900,
 	}}}}
 	results := evaluateCeilings(current, 800, 2_000)
-	if len(results) != 2 || !results[0].Breached || results[1].Found || results[1].Breached {
+	if len(results) != 2 || !results[0].Found || !results[0].Breached || !results[0].Failed {
+		t.Fatalf("breached ceiling = %#v", results)
+	}
+	if results[1].Found || results[1].Breached || !results[1].Failed {
+		t.Fatalf("missing ceiling measurement = %#v", results)
+	}
+}
+
+func TestEvaluateCeilingsPassesObservedMeasurementsWithinLimits(t *testing.T) {
+	current := evidence{Sources: []source{{Resources: map[string]float64{
+		"capacity_peak_process_tree_rss_kib": 700,
+		"capacity_cgroup_memory_peak_bytes":  1_500,
+	}}}}
+	results := evaluateCeilings(current, 800, 2_000)
+	if len(results) != 2 || results[0].Failed || results[1].Failed {
 		t.Fatalf("ceilings = %#v", results)
 	}
 }

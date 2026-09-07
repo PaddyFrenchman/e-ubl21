@@ -68,11 +68,15 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${REQUESTED_CGROUP}" != "true" ]]; then
             run_cgroup=0
           fi
+          max_cgroup_memory_bytes=2147483648
+          if [[ "${run_cgroup}" == "0" ]]; then
+            max_cgroup_memory_bytes=0
+          fi
           CAPACITY_SAMPLES="${REQUESTED_SAMPLES}" \
           RUN_CGROUP="${run_cgroup}" \
           PERFORMANCE_REGRESSION_THRESHOLD="${REQUESTED_THRESHOLD}" \
           PERFORMANCE_MAX_TREE_RSS_KIB=2097152 \
-          PERFORMANCE_MAX_CGROUP_MEMORY_BYTES=2147483648 \
+          PERFORMANCE_MAX_CGROUP_MEMORY_BYTES="${max_cgroup_memory_bytes}" \
           PERFORMANCE_BASELINE=.performance-history/latest.json \
           ARTIFACT_DIR="performance-results/${GITHUB_RUN_ID}" \
           make performance-evidence
