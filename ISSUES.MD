@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #45, and #48 through #81 are complete. Issue #46 is closed on GitHub by explicit user instruction, while its implementation remains isolated in open PR #116 pending a later CI rerun and integration decision.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #46, and #48 through #81 are complete. **#47 is the next actionable issue.**
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -804,7 +804,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/81
 
 ### 49. #46 — TODO-REGRESSION-015 — Add release/nightly stress and performance evidence
 
-**Status:** Closed on GitHub by explicit user instruction. Implementation remains in open PR #116 pending resolution of the GitHub Actions billing/spending-limit blocker, a successful CI rerun, and a later integration decision.
+**Status:** Complete / closed. PR #116 adds the retained nightly, on-demand, and release evidence workflow, advisory trend comparison, explicit resource ceilings, and missing-measurement enforcement without adding timing assertions to correctness CI.
 
 **Goal:** Retain performance and capacity evidence separately from deterministic semantic correctness.
 
@@ -944,7 +944,7 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 
 - Issues #64 and #73 are complete: #73 implemented the native Peppol stage and #81 proved #64's full asynchronous acceptance contract.
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
-- Issues #37, #38, #44–#45, and #48–#81 are complete. Issue #46 is closed while its unintegrated implementation remains retained in open PR #116 for later CI and integration.
+- Issues #37, #38, #44–#46, and #48–#81 are complete. **#47 is the next actionable issue.**
 - Issue #45 is complete: #81 establishes and enforces its accepted normalized Peppol release baseline from independently reviewed pinned assets and reference evidence.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
