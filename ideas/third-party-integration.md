@@ -11,7 +11,7 @@ Sage ──────────────┐
 Xero ──────────────┤
 QuickBooks ────────┤
 SAP Business One ──┤
-SAP S/4HANA ───────┼──► Canonical billing model ─► UBL renderer ─► validation
+SAP S/4HANA ───────┼──► Canonical billing model ─► target profile/rendering ─► validation
 NetSuite ──────────┤
 Custom JSON/CSV ───┤
 Customer ERP ──────┘
@@ -38,13 +38,16 @@ enrichment + semantic resolution
 resolved canonical invoice
         │
         ▼
-UBL 2.1 renderer
+target-profile mapper / renderer
         │
         ▼
-XSD → EN 16931 → Peppol
+UBL 2.1 / other target representation
+        │
+        ▼
+standards validation
 ```
 
-The hard problem is not XML generation. It is preserving business meaning while translating vendor-specific tax codes, party references, units, discounts, charges, totals, and identifiers into explicit EN 16931 / Peppol semantics.
+The hard problem is not XML generation. It is preserving business meaning while translating vendor-specific tax codes, party references, units, discounts, charges, totals, and identifiers into explicit portable semantics that can subsequently be mapped to EN 16931, Peppol, or another national/regional e-invoicing profile.
 
 The public APIs discussed below were reviewed in September 2026. Vendor APIs evolve, so any production adapter must pin and test the source API/schema version it supports.
 
@@ -111,7 +114,7 @@ Official reference:
 
 ## Core difficulty: semantic mapping
 
-Generating XML is not the difficult part. The difficult part is mapping Sage's business model into EN 16931 / Peppol semantics without inventing information or losing meaning.
+Generating XML is not the difficult part. The difficult part is mapping Sage's business model into portable invoice semantics without inventing information or losing meaning.
 
 A conceptual Sage source line might contain:
 
@@ -126,7 +129,7 @@ A conceptual Sage source line might contain:
 }
 ```
 
-The adapter needs to resolve the source information into business semantics such as:
+For an EN 16931 target, the adapter and target-profile mapper ultimately need to resolve the source information into business terms such as:
 
 ```text
 Invoice number       → BT-1
@@ -142,15 +145,15 @@ VAT category         → BT-151
 VAT rate             → BT-152
 ```
 
-Source identifiers such as `unitOfMeasurementId` or `taxTreatmentId` must never leak into the canonical model as if they were standard identifiers. The Sage adapter must resolve them to normalized unit/tax semantics first.
+Source identifiers such as `unitOfMeasurementId` or `taxTreatmentId` must never leak into the resolved canonical model as if they were standard identifiers. The Sage adapter must resolve them to normalized unit/tax semantics first.
 
 ## Semantic gaps must fail explicitly
 
 A source product may not contain everything necessary to construct a compliant e-invoice.
 
-For example, `vatPercentage = 0` alone is insufficient to identify the legal VAT treatment. Zero-rated, exempt, reverse charge, outside-scope and intra-community transactions are not interchangeable.
+For example, `vatPercentage = 0` alone is insufficient to identify the legal tax treatment. Zero-rated, exempt, reverse charge, outside-scope and intra-community transactions are not interchangeable.
 
-Likewise, the source invoice may not contain a Peppol electronic endpoint identifier.
+Likewise, the source invoice may not contain an electronic endpoint identifier required by a particular network or target profile.
 
 Missing semantics may be resolved only from controlled sources:
 
@@ -158,6 +161,7 @@ Missing semantics may be resolved only from controlled sources:
 - tenant/company configuration;
 - customer/supplier master data;
 - an explicitly configured mapping rule;
+- human resolution through a UI or API;
 - or a structured conversion error.
 
 The converter must not invent legal information.
@@ -259,11 +263,11 @@ LineItems[].TaxAmount      → source tax evidence
 
 The main difficulty is tax and party enrichment rather than basic invoice structure.
 
-`TaxType` is a Xero accounting/tax configuration value, not automatically an EN 16931 VAT category. The adapter therefore needs a versioned mapping layer from Xero tax configuration to legal e-invoice tax semantics.
+`TaxType` is a Xero accounting/tax configuration value, not automatically a portable legal tax classification. The adapter therefore needs a versioned mapping layer from Xero tax configuration to normalized legal e-invoice tax semantics.
 
 The invoice's `ContactID` is also only a reference. A connector normally needs to snapshot the associated contact so the deterministic mapper has legal name, tax number and postal address available.
 
-Electronic endpoint identifiers, legal registration scheme identifiers and some Peppol-specific data may need tenant/master-data enrichment.
+Electronic endpoint identifiers, legal registration scheme identifiers and target-profile-specific data may need tenant/master-data enrichment.
 
 `LineAmountTypes` must be honored because Xero can represent lines as tax-exclusive, tax-inclusive or no-tax. The canonical model should normalize all monetary semantics rather than merely copy displayed amounts.
 
@@ -359,7 +363,7 @@ The adapter therefore needs to snapshot referenced tax objects or resolve them t
 
 `CustomerRef` and `ItemRef` similarly require master-data lookup when legal names, addresses, tax registrations, product identifiers or units are needed.
 
-The source can contain subtotal/description/group/discount lines that should not necessarily become one-for-one UBL invoice lines. The mapper must interpret their accounting meaning.
+The source can contain subtotal/description/group/discount lines that should not necessarily become one-for-one invoice lines. The mapper must interpret their accounting meaning.
 
 QuickBooks may calculate tax/totals itself. e-ubl21 should retain those source totals as reconciliation evidence but independently derive canonical totals and reject unexplained mismatches.
 
@@ -456,9 +460,9 @@ TaxTotal                → source tax evidence
 
 ### Important semantic gaps
 
-SAP Business One uses configurable business-partner, tax-code and unit-of-measure master data. `CardCode`, `TaxCode` and `UoMCode` therefore cannot be copied directly into EN 16931 fields without resolution.
+SAP Business One uses configurable business-partner, tax-code and unit-of-measure master data. `CardCode`, `TaxCode` and `UoMCode` therefore cannot be copied directly into portable canonical fields without resolution.
 
-User-defined fields are widely used in SAP Business One installations. The adapter should support declarative field mappings for customer-specific UDFs so Peppol endpoint IDs, legal identifiers or buyer references can be sourced without custom Go code for every installation.
+User-defined fields are widely used in SAP Business One installations. The adapter should support declarative field mappings for customer-specific UDFs so target-network endpoint IDs, legal identifiers or buyer references can be sourced without custom Go code for every installation.
 
 The same `Document` structure can represent different commercial document types. The connector must preserve the exact SAP object/entity type so the mapper can distinguish invoice, credit memo and other records.
 
@@ -584,9 +588,9 @@ NetSuite is extremely configurable. Record references, custom fields, subsidiari
 
 The connector should therefore fetch/snapshot referenced customer, subsidiary, item, currency and tax information required by the mapping policy rather than allowing the mapper to make live network calls.
 
-NetSuite's custom fields should be handled through declarative mapping rules where possible. This is likely to be necessary for Peppol participant identifiers, organization registration identifiers and customer-specific references.
+NetSuite's custom fields should be handled through declarative mapping rules where possible. This is likely to be necessary for network participant identifiers, organization registration identifiers and customer-specific references.
 
-The `taxdetails` sublist is useful evidence but the adapter must still resolve NetSuite tax codes/types to EN 16931 VAT categories and exemption semantics.
+The `taxdetails` sublist is useful evidence but the adapter must still resolve NetSuite tax codes/types to portable tax semantics and, when relevant, EN 16931 VAT categories and exemption semantics.
 
 ## NetSuite adapter recommendation
 
@@ -613,9 +617,9 @@ The comparison strongly supports defining a canonical model before implementing 
 | Discounts | direct | direct | special/detail lines | fields/pricing | pricing conditions | fields/items |
 | Tax rate | direct | available | tax detail/configuration | tax code/detail | pricing/tax data | taxdetails |
 | Legal tax category | requires mapping | requires mapping | requires mapping | requires mapping | requires mapping | requires mapping |
-| VAT/legal IDs | source/master data | Contact/org | customer/company data | BP/company/UDF | partner/company | entity/subsidiary |
+| Tax/legal IDs | source/master data | Contact/org | customer/company data | BP/company/UDF | partner/company | entity/subsidiary |
 | Unit code | source ID | often implicit/source | item/source | UoMCode | item/UoM | units reference |
-| Peppol endpoint ID | usually enrichment | usually enrichment | usually enrichment | usually UDF/enrichment | master/custom field | custom/master data |
+| Electronic network endpoint ID | usually enrichment | usually enrichment | usually enrichment | usually UDF/enrichment | master/custom field | custom/master data |
 | Custom extensions | API/product fields | limited/vendor model | custom fields | UDFs | extensibility | extensive custom fields |
 
 The striking commonality is that **every system has the same business skeleton**:
@@ -659,6 +663,8 @@ This is the model proposed in this document. It represents invoice/credit-note *
 
 Vendor adapters target this model.
 
+The canonical business model is intentionally **global and target-neutral**. EN 16931 and Peppol are target profiles, not the semantic center of the model. This is necessary because the commercial target includes organizations outside the EU and because other jurisdictions can impose different tax schemes, identifiers, network addresses, invoice constraints and reporting requirements.
+
 ### 2. Canonical UBL document model
 
 The project roadmap also anticipates a lossless canonical representation capable of full UBL XML ↔ JSON round trips, including namespaces, attributes, extensions and element ordering.
@@ -673,17 +679,18 @@ vendor invoice
      ▼
 CanonicalBillingDocument
      │
-     ▼
-UBL semantic renderer
-     │
-     ▼
-UBL XML / full canonical UBL representation
-     │
-     ▼
-validation
+     ├──► EN 16931 / Peppol mapper
+     ├──► another national/regional target mapper
+     └──► future non-UBL target if required
+             │
+             ▼
+     target document representation
+             │
+             ▼
+          validation
 ```
 
-The accounting adapters should not need to understand UBL namespace mechanics.
+The accounting adapters should not need to understand UBL namespace mechanics or a particular country's e-invoicing rules.
 
 ## Draft versus resolved model
 
@@ -701,7 +708,7 @@ CanonicalBillingDocument
 
 The **draft** may retain unresolved source tax/unit/reference keys.
 
-The **resolved document** must contain only explicit portable semantics and must satisfy the canonical model's invariants before UBL rendering starts.
+The **resolved document** must contain only explicit portable semantics and must satisfy the canonical model's invariants before target rendering starts.
 
 This prevents source-specific values such as `TaxCodeRef=7`, `TaxType=OUTPUT2`, `TaxCode=VAT23` or a Sage tax UUID from masquerading as legal standard values.
 
@@ -752,14 +759,16 @@ type CanonicalBillingDocument struct {
 
 ### Party
 
+For global use a party can have multiple legal/tax registrations and multiple electronic addresses. The model must not assume that every jurisdiction uses EU VAT identifiers or that every network uses a Peppol endpoint.
+
 ```go
 type Party struct {
     LegalName   string
     TradingName string
 
-    Identifiers       []Identifier
-    VATIdentifier     *Identifier
-    ElectronicAddress *Identifier
+    Identifiers          []Identifier
+    TaxRegistrations     []TaxRegistration
+    ElectronicAddresses  []ElectronicAddress
 
     Address Address
     Contact *Contact
@@ -768,6 +777,17 @@ type Party struct {
 type Identifier struct {
     Value    string
     SchemeID string
+}
+
+type TaxRegistration struct {
+    Jurisdiction string
+    TaxScheme    string
+    Identifier   Identifier
+}
+
+type ElectronicAddress struct {
+    Network  string
+    Address  Identifier
 }
 
 type Address struct {
@@ -780,7 +800,7 @@ type Address struct {
 }
 ```
 
-Identifiers must always be scheme-aware where the target standard requires a scheme. Vendor record IDs belong in `SourceProvenance`, not in `Party.Identifiers` unless they genuinely are business/legal identifiers.
+Identifiers must always be scheme-aware where the target standard requires a scheme. Vendor record IDs belong in `SourceProvenance` or the master-data external-ID mapping, not in `Party.Identifiers` unless they genuinely are business/legal identifiers.
 
 ### Lines
 
@@ -811,7 +831,7 @@ type Price struct {
 }
 ```
 
-`UnitCode` must be a target-standard unit code after resolution. Source values such as Sage unit UUIDs, SAP `UoMCode`, NetSuite units or ERP-specific labels are mapping inputs, not final canonical values.
+`UnitCode` must be a portable/target-resolvable unit code after resolution. Source values such as Sage unit UUIDs, SAP `UoMCode`, NetSuite units or ERP-specific labels are mapping inputs, not final canonical values.
 
 ### Allowances and charges
 
@@ -821,9 +841,9 @@ Both document-level and line-level discounts/surcharges must use the same semant
 type AllowanceCharge struct {
     IsCharge bool
 
-    Amount     Decimal
-    BaseAmount *Decimal
-    Percentage *Decimal
+    Amount      Decimal
+    BaseAmount  *Decimal
+    Percentage  *Decimal
 
     ReasonCode string
     Reason     string
@@ -843,10 +863,15 @@ The source presentation is discarded after its economic meaning is captured.
 
 ### Tax treatment
 
+The canonical tax model must be jurisdiction-aware rather than hard-wired to EN 16931 VAT categories.
+
 ```go
 type TaxTreatment struct {
-    CategoryCode string
+    Jurisdiction string
+    TaxScheme    string
     Rate         Decimal
+
+    Classification Identifier
 
     ExemptionReasonCode string
     ExemptionReason     string
@@ -859,7 +884,7 @@ type TaxBreakdown struct {
 }
 ```
 
-`CategoryCode` represents resolved target semantics. It must never contain an arbitrary source tax-code ID.
+For an EN 16931 target, the target-profile mapper resolves the canonical classification into the appropriate VAT category code and business terms. Other jurisdictions can map the same canonical tax treatment differently.
 
 The draft model may contain a source-tax structure such as:
 
@@ -878,7 +903,7 @@ A resolver converts that evidence into a valid `TaxTreatment`, or returns an amb
 
 ```go
 type MonetaryTotals struct {
-    LineExtensionAmount Decimal
+    LineExtensionAmount  Decimal
     AllowanceTotalAmount Decimal
     ChargeTotalAmount    Decimal
     TaxExclusiveAmount   Decimal
@@ -900,7 +925,7 @@ The current sample-generator `Money` type is intentionally simple and fixed to t
 type PaymentMeans struct {
     MeansCode string
 
-    PayeeAccountID string
+    PayeeAccountID   string
     PayeeAccountName string
     PaymentReference string
 
@@ -936,9 +961,9 @@ Important enrichment/mapping decisions should be traceable:
 
 ```go
 type MappingDecision struct {
-    CanonicalPath string
-    SourcePath    string
-    RuleID        string
+    CanonicalPath    string
+    SourcePath       string
+    RuleID           string
     ResolutionSource string
 }
 ```
@@ -946,14 +971,14 @@ type MappingDecision struct {
 Examples:
 
 ```text
-lines[0].tax.categoryCode
+lines[0].tax.classification
   source: LineItems[0].TaxType
   rule: xero-tax-map-ie-v1
   resolved from: tenant tax mapping
 
-buyer.electronicAddress
+buyer.electronicAddresses[0]
   source: none
-  rule: peppol-buyer-endpoint
+  rule: target-network-buyer-endpoint
   resolved from: customer master data
 ```
 
@@ -1015,7 +1040,8 @@ CanonicalInvoiceDraft
         ├── tax-code mappings
         ├── unit mappings
         ├── identifier scheme mappings
-        └── target profile requirements
+        ├── target profile requirements
+        └── human/API resolution when necessary
         │
         ▼
 CanonicalInvoice
@@ -1041,6 +1067,683 @@ UNSUPPORTED_DOCUMENT_TYPE
 
 A failure should identify both the canonical field that could not be produced and the relevant source field/value.
 
+## Resolution precedence
+
+Resolution should follow an explicit and auditable order:
+
+```text
+1. Explicit value present in the source document
+2. Explicit source-system mapping
+3. Party/customer/supplier-specific mapping
+4. Tenant master data
+5. Tenant default, only for fields that are safe to default
+6. Human resolution through UI/API
+7. Fail conversion
+```
+
+Not every field is eligible for tenant defaults. Mechanical conventions such as default currency, source unit mappings, seller identifiers or a default payment means can often be configured safely. Legally ambiguous semantics such as the meaning of a zero tax rate, reverse-charge treatment or an exemption reason must not be guessed from a convenient default unless an administrator has explicitly configured a valid rule for the relevant context.
+
+---
+
+# Master data is a required subsystem
+
+## Why it is necessary
+
+The third-party invoice payload alone is often insufficient to produce a legally and semantically complete e-invoice.
+
+Accounting packages commonly store only references on the invoice itself:
+
+```text
+customer ID
+supplier/business-partner ID
+item ID
+tax-code ID
+unit-of-measure ID
+payment-terms ID
+subsidiary/company ID
+```
+
+The corresponding legal name, address, tax registrations, electronic addresses, product metadata, tax semantics, unit mappings and other values live in customer, supplier, item, tax and configuration tables elsewhere in the source system.
+
+This is not an unusual edge case. It is a recurring characteristic across Sage, Xero, QuickBooks, SAP and NetSuite. Therefore master-data access is not an optional optimization. It is part of the semantic conversion architecture.
+
+Without master data, the resolver will repeatedly encounter blocking gremlins such as:
+
+```text
+UNRESOLVED_PARTY
+UNMAPPED_TAX_CODE
+UNMAPPED_UNIT
+MISSING_LEGAL_IDENTIFIER
+MISSING_ELECTRONIC_ADDRESS
+```
+
+The system must therefore either have access to the relevant third-party master data at conversion time or maintain its own canonical copy of the information.
+
+## Decision: e-ubl21 maintains canonical master data
+
+The preferred architecture is for e-ubl21 to maintain a canonical tenant-scoped master-data layer rather than depend on synchronous live access to every source ERP for every invoice.
+
+Third-party ERP/accounting systems remain the authoritative accounting systems, but e-ubl21 keeps the data needed to resolve invoice semantics reliably and quickly.
+
+This avoids making invoice conversion dependent on:
+
+- vendor API availability;
+- network latency;
+- rate limits;
+- temporary authentication failures;
+- expensive multi-object source lookups;
+- changes in external source data after an invoice was submitted.
+
+It also makes conversion deterministic and auditable because the version of the master data used for a conversion can be recorded.
+
+## Ways to populate master data
+
+All of the following acquisition modes should be supported because customers have different security and operational constraints.
+
+### 1. Live connector synchronization
+
+An authorized connector can read customer, supplier, item, tax and configuration data through the vendor API and synchronize the canonical master-data store.
+
+This is convenient for SaaS products such as Xero, QuickBooks or Sage and for enterprise systems where API access is permitted.
+
+### 2. Periodic synchronization
+
+The integration can poll or receive change events and periodically synchronize only changed records.
+
+This avoids querying the source ERP during the invoice hot path while keeping the canonical copy current.
+
+### 3. Client data export/import
+
+Customers can export master data from their system and upload it to e-ubl21, for example:
+
+```text
+customers.csv
+suppliers.csv
+products.csv
+tax-codes.csv
+units.csv
+payment-methods.csv
+```
+
+JSON, XML and spreadsheet imports can be added where useful.
+
+This mode is important for customers who do not want to grant e-ubl21 broad API access to their ERP or who use systems with weak integration APIs.
+
+### 4. Manual administration and enrichment
+
+The administration UI/API must allow missing information to be added or corrected directly in e-ubl21, particularly information that does not exist in the accounting package at all, such as a network-specific electronic address.
+
+## Canonical party identity
+
+Third-party record IDs must never become the primary identity of a party inside e-ubl21.
+
+One business can appear under several source-system identities:
+
+```text
+e-ubl21 party: party-9f312
+
+Sage customer ID:       742
+Xero contact ID:        0a7e...
+SAP BusinessPartner:    C10037
+NetSuite entity ID:     220
+Tax registration:       IE1234567A
+Electronic endpoint:    0088:1234567890123
+```
+
+The canonical record therefore needs stable internal identity plus external identifiers, conceptually:
+
+```go
+type MasterParty struct {
+    ID           string
+    TenantID     string
+    ExternalIDs  []ExternalSystemID
+
+    LegalName    string
+    TradingName  string
+    Addresses    []Address
+
+    Identifiers          []Identifier
+    TaxRegistrations     []TaxRegistration
+    ElectronicAddresses  []ElectronicAddress
+
+    DefaultCurrency     string
+    DefaultPaymentMeans string
+
+    Version     int64
+    UpdatedAt   time.Time
+}
+
+type ExternalSystemID struct {
+    System string
+    Value  string
+}
+```
+
+The same principle applies to products/items, tax codes, units, payment methods and other source references.
+
+## Master data and mapping data are different
+
+Master data describes entities and facts:
+
+```text
+party/customer/supplier
+address
+tax registration
+product/item
+payment account
+currency
+```
+
+Mapping data describes how source-system concepts should be interpreted:
+
+```text
+Sage tax code T0       → canonical tax treatment
+Xero TaxType X         → canonical tax treatment
+SAP unit HOUR          → portable unit code HUR
+source payment code 7  → canonical payment-means semantics
+```
+
+These should be stored as related but distinct concepts. Mapping rules require their own versions and audit history because changing a mapping can change the legal meaning of subsequently generated invoices.
+
+## Import/onboarding analysis
+
+Master-data import can double as an onboarding diagnostic.
+
+After an initial import e-ubl21 should be able to report, for example:
+
+```text
+1,842 customer records imported
+37 supplier records imported
+12 tax codes detected
+8 unit codes detected
+
+Potential resolution problems:
+3 unmapped tax codes
+2 unmapped units
+7 customers missing country
+412 customers missing electronic endpoint identifiers for the selected target network
+```
+
+This allows semantic gaps to be resolved before the first production invoice enters the system.
+
+## Provenance of master data
+
+Every imported/enriched value should retain sufficient provenance to answer questions such as:
+
+> Why did e-ubl21 put this tax registration or endpoint on this invoice?
+
+A stored value should therefore record, where practical:
+
+```text
+source system
+external source record ID
+source/import version or batch
+imported/updated timestamp
+human or rule responsible for an override
+```
+
+This provenance should flow into the mapping trace of the generated invoice.
+
+---
+
+# Human resolution and configurable defaults
+
+The remaining semantic gremlins should be first-class product objects rather than opaque conversion failures.
+
+A conceptual issue model is:
+
+```go
+type ResolutionIssue struct {
+    Code         string
+    Severity     string
+    SourcePath   string
+    CanonicalPath string
+    CurrentValue any
+    Candidates   []CandidateResolution
+    Message      string
+}
+```
+
+For example:
+
+```json
+{
+  "code": "AMBIGUOUS_TAX_TREATMENT",
+  "severity": "blocking",
+  "sourcePath": "lines[3].tax_rate",
+  "canonicalPath": "lines[3].tax",
+  "currentValue": 0,
+  "candidates": [
+    "zero-rated",
+    "exempt",
+    "reverse-charge",
+    "outside-scope"
+  ]
+}
+```
+
+A web UI can present the ambiguity to an administrator and optionally offer:
+
+```text
+[Resolve this invoice only]
+[Resolve and remember this mapping for future invoices]
+```
+
+The second option turns recurring manual decisions into explicit, tenant-owned configuration.
+
+Large ERP customers must not be forced through a graphical UI. The same issue/resolution contract should be exposed through an API so automated customer workflows can inspect and resolve blocking semantics programmatically.
+
+The resulting operating modes are therefore:
+
+```text
+well-configured tenant  → fully automatic conversion
+SME/admin workflow      → web resolution UI
+enterprise integration  → API-driven resolution
+```
+
+---
+
+# Global-market architecture
+
+The commercial target should not be limited to Ireland or the EU.
+
+The canonical billing model and persistence design should therefore assume that:
+
+- tenants can be located anywhere in the world;
+- tax schemes vary by jurisdiction;
+- businesses can hold multiple tax registrations;
+- electronic invoicing networks and participant identifiers vary by country;
+- target syntaxes/profiles can differ from EN 16931/Peppol;
+- data residency and latency requirements can differ by tenant.
+
+This is why the canonical model above uses jurisdiction-aware tax registrations and potentially multiple electronic addresses rather than a single `VATIdentifier` or `PeppolEndpointID` field.
+
+Target-specific interpretation belongs after canonical resolution:
+
+```text
+Sage / Xero / SAP / ...
+          │
+          ▼
+Global Canonical Billing Model
+          │
+      ┌───┼────────────────┐
+      ▼   ▼                ▼
+ EN 16931 / Peppol    future national    future other
+                       profiles           targets
+```
+
+---
+
+# Persistence and cache architecture
+
+## Decision
+
+For this subsystem, and as the intended strategic relational database for e-ubl21 generally, use:
+
+```text
+YugabyteDB  → authoritative distributed SQL data store
+Valkey      → high-speed disposable cache
+NATS        → orchestration and cache-invalidation events
+```
+
+Do not add etcd as a business/master-data database.
+
+## Why YugabyteDB
+
+The master-data and mapping workload is relational:
+
+- tenants own parties, products and mappings;
+- parties have multiple addresses/identifiers/tax registrations;
+- vendor identities map onto canonical identities;
+- mappings are versioned and audited;
+- billing documents refer to parties, mappings and provenance;
+- administrative queries and reporting require joins and indexes.
+
+At the same time, the product is intended for a global market. A single traditional database in one region would introduce unnecessary latency and eventually create a geographic availability bottleneck.
+
+YugabyteDB is selected because it combines a PostgreSQL-compatible YSQL interface with distributed storage, replication and multi-region/data-locality capabilities. The Go application can retain a familiar SQL/PostgreSQL programming model while the database supplies horizontal distribution underneath.
+
+The architecture should not mean that every tenant's data is synchronously written across every continent. Prefer **tenant locality**:
+
+```text
+Tenant A → home region Europe
+Tenant B → home region USA
+Tenant C → home region Asia-Pacific
+```
+
+The logical database can remain globally distributed while a tenant's data is placed near the region where it is normally processed, subject to availability and residency requirements.
+
+Typical durable data includes:
+
+```text
+tenants
+integration connections/configuration
+parties
+party external IDs
+party addresses
+party tax registrations
+party electronic addresses
+products/items
+product external IDs
+tax mappings
+unit mappings
+payment mappings
+semantic-resolution rules
+mapping versions/audit history
+source/import provenance
+billing-document metadata/status
+```
+
+Raw invoice/XML payload storage can remain a separate object-storage concern as described elsewhere in the project architecture.
+
+## Why not etcd
+
+etcd is useful for small strongly consistent control-plane data, configuration, coordination, leases, watches and leader election. It is not the preferred primary business database for a growing relational master-data domain.
+
+Using etcd here would make relational querying, secondary indexes, historical audit models, large tenant datasets and global sharding significantly more awkward. It would also mix control-plane responsibilities with business-data persistence.
+
+If etcd is ever introduced, keep it in the control plane rather than making it authoritative for parties, products, mappings or billing metadata.
+
+## Valkey cache
+
+Valkey is the selected cache. It is open source and commercially usable under a permissive license.
+
+The critical rule is:
+
+> YugabyteDB is authoritative. Valkey is disposable acceleration.
+
+Loss of the Valkey cache must reduce performance, not correctness or durability.
+
+The resolver will perform many repetitive lookups such as:
+
+```text
+party by tenant + source system + external ID
+party by tenant + tax registration
+product by tenant + source system + external ID
+tax mapping by tenant + source system + source tax code
+unit mapping by tenant + source system + source unit code
+```
+
+These are ideal cache candidates because master data is read frequently and changes relatively rarely.
+
+Representative cache keys could be:
+
+```text
+party:{tenant}:{source}:{external-id}
+party-tax:{tenant}:{jurisdiction}:{tax-id}
+product:{tenant}:{source}:{external-id}
+taxmap:{tenant}:{source}:{tax-code}
+unitmap:{tenant}:{source}:{unit-code}
+```
+
+Cached objects should carry a record/mapping version and a TTL. TTL is a safety net rather than the primary invalidation mechanism.
+
+## L1 process cache
+
+A small in-process Go L1 cache can sit in front of Valkey for the hottest mappings if measurement shows it is useful:
+
+```text
+resolver
+   │
+   ▼
+L1 Go memory cache
+   │ miss
+   ▼
+regional Valkey
+   │ miss
+   ▼
+YugabyteDB
+```
+
+The L1 layer is optional and should be introduced only when profiling demonstrates value. The architecture must work correctly with only Valkey + YugabyteDB.
+
+## NATS-driven invalidation
+
+Because e-ubl21 already uses NATS/JetStream, use NATS to publish cache-invalidation events when canonical master data or mappings change.
+
+Example:
+
+```text
+master-data update
+       │
+       ▼
+YugabyteDB commit
+       │
+       ▼
+NATS event
+masterdata.<tenant>.party.changed
+       │
+       ├──► Europe resolver: evict
+       ├──► US resolver: evict
+       └──► APAC resolver: evict
+```
+
+The write to YugabyteDB occurs first. Cache invalidation follows the durable commit. Consumers evict stale entries; the next request repopulates them from the authoritative database.
+
+Cache events must include sufficient identity/version information to avoid an old delayed invalidation accidentally overwriting or reintroducing stale state.
+
+## Consistency principle
+
+For legal/semantic mapping data, correctness wins over cache availability.
+
+If a cache entry is absent or cannot be trusted, read YugabyteDB. If the database cannot provide the authoritative mapping, fail or defer resolution rather than guess from stale/local data.
+
+---
+
+# Migration from existing PostgreSQL support to YugabyteDB
+
+## Current repository position
+
+The repository already describes and deploys PostgreSQL in several places, particularly the on-premises deployment architecture. The current on-prem bootstrap installs CloudNativePG and creates a single PostgreSQL cluster/database.
+
+PostgreSQL also appears in:
+
+- `deploy/on-prem/scripts/install-on-prem.sh`;
+- `deploy/on-prem/README.md`;
+- `deploy/on-prem/deployment-on-prem.md`;
+- `deployment-target.md`;
+- `.github/roadmap-0.md`;
+- `README.md`;
+- `docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md`;
+- `e-invoice/E-INVOICE.md`;
+- AWS/deployment idea documents;
+- issue #89, which currently describes moving metadata/status from JetStream KV to PostgreSQL.
+
+A repository search at the time of this decision did **not** find application Go code importing `database/sql` or `pgx`, which indicates that PostgreSQL is currently much more deeply represented in deployment/documentation/future architecture than in implemented application persistence code.
+
+That makes this the preferred time to change the database decision. The migration cost is substantially lower now than after a large persistence layer has been written against PostgreSQL-specific behavior.
+
+## Migration goal
+
+Replace PostgreSQL/CloudNativePG as the official relational database platform with YugabyteDB while retaining the PostgreSQL-compatible application programming model through YSQL.
+
+Conceptually:
+
+```text
+Before
+------
+e-ubl21
+   │
+   └── PostgreSQL / CloudNativePG
+
+After
+-----
+e-ubl21
+   │
+   └── YugabyteDB YSQL
+```
+
+This does **not** mean abandoning the PostgreSQL ecosystem. The application should continue to use ordinary SQL and PostgreSQL-compatible drivers/tooling where they work with YugabyteDB.
+
+## Application data-access policy
+
+When the persistence layer is implemented:
+
+- use YugabyteDB YSQL as the test and production database;
+- prefer `pgx` or a similarly mature PostgreSQL-compatible Go driver;
+- use parameterized SQL and explicit transactions;
+- keep the repository/data-access layer isolated from business logic;
+- avoid unnecessary PostgreSQL-specific extensions/functions unless verified on YugabyteDB;
+- do not develop against PostgreSQL locally and assume YugabyteDB compatibility later;
+- run integration tests against the actual supported YugabyteDB version;
+- pin and regression-test schema/migration behavior.
+
+PostgreSQL compatibility is a major advantage of YugabyteDB, but compatibility must not be treated as identity. SQL syntax, locking behavior, extensions, administrative operations and performance characteristics can differ.
+
+## Database configuration
+
+Avoid perpetuating PostgreSQL-specific configuration names in new application code.
+
+Prefer generic application settings such as:
+
+```text
+EUBL21_DB_HOST
+EUBL21_DB_PORT
+EUBL21_DB_NAME
+EUBL21_DB_USER
+EUBL21_DB_PASSWORD
+EUBL21_DB_SSLMODE
+```
+
+or a generic connection URL:
+
+```text
+EUBL21_DATABASE_URL
+```
+
+Deployment-specific Yugabyte settings can use a separate `YB_` namespace where they control the database cluster rather than the application connection.
+
+This keeps the Go application coupled to a SQL contract rather than a deployment product name.
+
+## Schema migration strategy
+
+Schema migrations should be treated as product artifacts and tested on YugabyteDB.
+
+The migration framework must support:
+
+- ordered forward migrations;
+- reproducible fresh-database creation;
+- safe rolling upgrades where required;
+- tenant-aware indexes/constraints;
+- large-table migration planning;
+- rollback/repair procedures or explicit forward-fix policy;
+- compatibility testing against the supported YugabyteDB release.
+
+Any chosen migration tool must be validated against YSQL before adoption.
+
+## On-premises deployment migration
+
+The current on-prem installer must eventually stop installing CloudNativePG/PostgreSQL and install/configure YugabyteDB instead.
+
+Current concepts such as:
+
+```text
+CLOUDNATIVEPG_CHART_VERSION
+POSTGRES_STORAGE_SIZE
+install_cloudnativepg
+install_postgresql_cluster
+e-ubl21-postgres
+```
+
+must be replaced with YugabyteDB equivalents.
+
+The replacement must cover:
+
+- Helm/operator or supported Kubernetes installation method;
+- storage sizing;
+- service discovery;
+- credentials/secrets;
+- TLS;
+- readiness/health checks;
+- backups/restores;
+- upgrades;
+- observability;
+- persistence-volume requirements.
+
+For the small single-server on-premises target, a single-node YugabyteDB configuration can preserve the simple appliance model. It does not provide the same fault tolerance as a multi-node deployment, but it keeps one database technology across development, small on-prem installations and global SaaS.
+
+Recommended deployment tiers:
+
+```text
+Development / small on-prem
+    YugabyteDB single-node
+
+Production on-prem HA
+    YugabyteDB 3+ nodes
+
+Cloud / global SaaS
+    YugabyteDB multi-node / multi-region
+```
+
+## Cloud deployment migration
+
+Existing design references to:
+
+```text
+Aurora PostgreSQL / RDS
+Azure Database for PostgreSQL
+PostgreSQL / CloudNativePG
+```
+
+should be reviewed and replaced by the selected YugabyteDB deployment model so the same database semantics are exercised in all supported environments.
+
+Avoid supporting a matrix in which local/on-prem uses PostgreSQL, AWS uses Aurora, Azure uses Azure PostgreSQL and global SaaS uses YugabyteDB. That multiplies persistence behavior, operational procedures and regression requirements for little product benefit.
+
+The target principle is:
+
+```text
+one logical database technology
+        │
+        ├── development
+        ├── on-premises
+        ├── AWS
+        ├── Azure
+        └── global SaaS
+              │
+              ▼
+         YugabyteDB
+```
+
+## Data migration when PostgreSQL data exists
+
+At present the project appears to have deployment support/planning rather than a mature PostgreSQL-backed application dataset. Nevertheless, the migration design should cover installations that may already have PostgreSQL data by the time this change is implemented.
+
+The safe migration pattern is:
+
+```text
+1. freeze or quiesce writes
+2. take verified PostgreSQL backup
+3. create/upgrade YugabyteDB schema
+4. copy data using a tested migration path
+5. verify row counts, constraints and critical checksums
+6. run application-level reconciliation/integration tests
+7. switch connection endpoint to YugabyteDB
+8. retain rollback backup until acceptance window closes
+```
+
+If a zero/minimal-downtime migration later becomes necessary, design a separate replication/cutover plan rather than complicating the first migration prematurely.
+
+## Tests required for migration acceptance
+
+The PostgreSQL-to-YugabyteDB architecture change is complete only when:
+
+- fresh installs use YugabyteDB instead of PostgreSQL/CloudNativePG;
+- all persistence integration tests run against YugabyteDB;
+- schema migrations work from an empty database;
+- backup/restore procedures are demonstrated;
+- tenant isolation tests pass;
+- concurrency/idempotency tests pass;
+- billing/master-data queries and indexes are exercised at representative volume;
+- Valkey can be completely flushed without changing functional correctness;
+- NATS invalidation repopulates caches correctly after master-data changes;
+- documentation no longer presents PostgreSQL as the intended production database where YugabyteDB is now the decision.
+
+## Follow-up repository work
+
+This design document records the decision but does not itself change all deployment/runtime files.
+
+A dedicated implementation issue should update the installer, manifests, architecture documentation and affected future issues. In particular, issue #89 should be revised from "move metadata/status to PostgreSQL" to a YugabyteDB-based persistence objective when that work is scheduled.
+
 ---
 
 # Reconciliation policy
@@ -1061,7 +1764,7 @@ canonical computed  = 230.00
                  → conversion/reconciliation error or explicit rounding rule required
 ```
 
-This will catch source-export defects and mapping errors before a malformed UBL document reaches downstream validators.
+This will catch source-export defects and mapping errors before a malformed target document reaches downstream validators.
 
 ---
 
@@ -1091,7 +1794,7 @@ POST /api/v1/integrations/xero/invoices/{external-id}/import
 
 The connector uses stored integration credentials, creates the immutable source snapshot, and sends it through the same mapper/resolver/renderer pipeline.
 
-The existing asynchronous execution model is a good fit: return an import/validation ID and expose conversion diagnostics and generated UBL through the resulting resource.
+The existing asynchronous execution model is a good fit: return an import/validation ID and expose conversion diagnostics and generated target document through the resulting resource.
 
 ---
 
@@ -1108,20 +1811,30 @@ vendor snapshot
 expected canonical JSON
       │
       ▼
-generated UBL XML
+target-profile rendering
       │
-      ├── XSD
-      ├── EN 16931
-      └── Peppol
+      ▼
+generated e-invoice
+      │
+      └── target validation
+```
+
+For EN 16931 / Peppol fixtures the target validation remains:
+
+```text
+UBL XML
+  ├── XSD
+  ├── EN 16931
+  └── Peppol
 ```
 
 Tests should cover at least:
 
-- standard VAT;
+- standard tax;
 - zero rate;
 - exemptions;
-- reverse charge;
-- intra-community scenarios;
+- reverse charge where applicable;
+- cross-border scenarios;
 - discounts/allowances;
 - charges/freight;
 - multiple tax categories;
@@ -1131,7 +1844,10 @@ Tests should cover at least:
 - unknown units;
 - invoice and credit note;
 - source totals that disagree with recomputed totals;
-- target-profile-specific missing fields.
+- target-profile-specific missing fields;
+- master-data import/update behavior;
+- cache invalidation and stale-version handling;
+- regional/tenant data-locality policy where deployed globally.
 
 Mapping rules should be versioned. A change to a tax mapping or semantic resolver should be treated like a standards/corpus change and run through regression review.
 
@@ -1143,14 +1859,18 @@ The canonical model should be implemented **before** several independent vendor 
 
 A sensible progression is:
 
-1. define `CanonicalBillingDocumentDraft` and resolved `CanonicalBillingDocument`;
-2. extract/reuse the existing EN 16931 sample-generator rendering knowledge without making production code depend on a sample-only model;
-3. build one Sage Active adapter;
-4. build Xero as the second adapter and adjust the canonical model only when a genuinely vendor-independent concept is missing;
-5. add QuickBooks Online to exercise polymorphic lines and locale-dependent tax behavior;
-6. add SAP Business One to exercise enterprise master-data and UDF mapping;
-7. add NetSuite to exercise subsidiaries, SuiteTax and extensive custom fields;
-8. add SAP S/4HANA last as the enterprise stress test for normalized multi-entity billing and pricing-condition semantics.
+1. establish YugabyteDB as the intended relational persistence layer and remove PostgreSQL/CloudNativePG from new architecture work;
+2. introduce Valkey and define NATS-based cache invalidation semantics;
+3. define canonical master-data records and import/synchronization contracts;
+4. define `CanonicalBillingDocumentDraft` and resolved `CanonicalBillingDocument` as target-neutral global business models;
+5. extract/reuse the existing EN 16931 sample-generator rendering knowledge without making production code depend on a sample-only model;
+6. build the semantic resolver and structured `ResolutionIssue` contract;
+7. build one Sage Active adapter;
+8. build Xero as the second adapter and adjust the canonical model only when a genuinely vendor-independent concept is missing;
+9. add QuickBooks Online to exercise polymorphic lines and locale-dependent tax behavior;
+10. add SAP Business One to exercise enterprise master-data and UDF mapping;
+11. add NetSuite to exercise subsidiaries, SuiteTax and extensive custom fields;
+12. add SAP S/4HANA last as the enterprise stress test for normalized multi-entity billing and pricing-condition semantics.
 
 After the first three independent adapters, the canonical model should be stable enough that new integrations become mostly source mapping rather than core-model redesign.
 
@@ -1168,10 +1888,10 @@ With third-party integration:
 
 > Send e-ubl21 the invoice produced by your accounting system and it will turn it into a compliant electronic invoice and validate it.
 
-With connected adapters:
+With connected adapters and semantic master data:
 
-> Connect your accounting system to e-ubl21 and e-ubl21 becomes the standards translation layer between your existing accounting workflow and EN 16931 / Peppol e-invoicing.
+> Connect your accounting system to e-ubl21 and e-ubl21 becomes the standards translation layer between your existing accounting workflow and the e-invoicing requirements of the destination market/network.
 
-That moves e-ubl21 from being primarily a validator toward becoming an e-invoicing interoperability and transformation platform.
+That moves e-ubl21 from being primarily a validator toward becoming a global e-invoicing interoperability and transformation platform.
 
-The research across Sage, Xero, QuickBooks, SAP and NetSuite strongly suggests that a single vendor-neutral canonical billing model is practical. The common business structure is stable; most of the real complexity belongs in source-specific reference expansion, tax/unit mapping, enrichment and reconciliation, exactly where adapters and resolvers can contain it.
+The research across Sage, Xero, QuickBooks, SAP and NetSuite strongly suggests that a single vendor-neutral canonical billing model is practical. The common business structure is stable; most of the real complexity belongs in source-specific reference expansion, master-data enrichment, tax/unit mapping, semantic resolution, reconciliation and target-profile mapping, exactly where adapters, resolvers and profile renderers can contain it.
