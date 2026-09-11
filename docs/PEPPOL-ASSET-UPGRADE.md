@@ -6,6 +6,12 @@ at startup or while validating a document. The image build selects and
 verifies all bytes; `worker-peppol` verifies every runtime file again before it
 connects to NATS.
 
+This component procedure supplements the canonical
+[`standards upgrade workflow`](STANDARDS-UPGRADE-WORKFLOW.md). Its separated
+accepted/candidate runs, fixture-by-fixture change ledger, deliberate baseline
+promotion, and retained approval evidence are mandatory for every Peppol
+ruleset or code-list change.
+
 ## Current packaged release
 
 | Component | Pinned identity | Production location / source of truth |

@@ -8,6 +8,12 @@ Every upgrade is an explicit, reviewed release change. Never combine an EN
 ruleset bump with a Saxon, Java, or libxml2 bump unless compatibility requires
 it; independent changes make regressions attributable.
 
+This component procedure supplements the canonical
+[`standards upgrade workflow`](STANDARDS-UPGRADE-WORKFLOW.md). That workflow's
+accepted/candidate evidence separation, fixture change ledger, baseline
+promotion boundary, downstream Peppol review, and approval record are
+mandatory for every EN ruleset change.
+
 ## EN 16931 artefact
 
 1. Select and review a new official release from

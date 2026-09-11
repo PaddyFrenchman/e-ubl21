@@ -45,3 +45,8 @@ not established are downloaded only into the ignored
 5. The component's own licence and terms continue to apply. See
    [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) for material packaged
    in the runtime image.
+
+All UBL, EN 16931, and Peppol version changes must follow the canonical
+[`standards upgrade workflow`](../docs/STANDARDS-UPGRADE-WORKFLOW.md). It
+requires separate accepted/candidate evidence and reviewed classification of
+every changed fixture before manifests or baselines may be updated.

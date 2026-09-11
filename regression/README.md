@@ -73,6 +73,12 @@ Do not replace a baseline merely because a candidate differs. See the baseline
 directory README for the review policy and the separate mandatory asynchronous
 queue/restart/scale-to-zero scenarios.
 
+For any UBL, EN 16931, or Peppol version change, follow the canonical
+[`standards upgrade workflow`](../docs/STANDARDS-UPGRADE-WORKFLOW.md). It
+defines how to preserve the accepted result set, stage candidate corpora,
+produce normalized old/new evidence, classify every changed fixture, and only
+then promote deliberate manifest and baseline updates.
+
 ## Diagnostic evidence collector
 
 Collect bounded diagnostics into the same artifact directory after every run,
