@@ -53,22 +53,46 @@ Release-only fixes made on `release/vX.Y.Z` must also be propagated back to `dev
 The branch model is a repository invariant, not a naming convention. GitHub must be configured as follows whenever the repository plan supports enforcement:
 
 - Set `development` as the GitHub default branch.
-- Protect `main` from direct day-to-day development pushes, force pushes, and deletion. Changes to `main` must come only from an approved `release/vX.Y.Z` promotion and must pass the release CI gates.
-- Protect `development` from force pushes and deletion. Normal changes reach it through issue-branch integration after required CI succeeds.
+- Protect `main` from direct day-to-day development pushes, force pushes, and deletion. Changes to `main` must come only from an approved `release/vX.Y.Z` promotion and must pass the required release verification.
+- Protect `development` from force pushes and deletion. Normal changes reach it through issue-branch integration after required verification succeeds.
 - Keep linear history on `development` and `main` unless a specific exception is explicitly authorized.
-- Require the applicable correctness, Minikube, and standards-validation checks for development and release integration.
+- When hosted CI regression execution is enabled, require the applicable correctness, Minikube, and standards-validation checks for development and release integration. During the temporary suspension defined below, the local regression gate replaces those hosted regression checks.
 - Do not create a permanent `release` branch. Protect short-lived `release/vX.Y.Z` branches as release candidates where repository-plan capabilities permit.
 
-If GitHub server-side branch protection is unavailable for the current repository plan, these rules remain mandatory project policy and must be enforced procedurally by the documented workflow and CI until server-side enforcement becomes available.
+If GitHub server-side branch protection is unavailable for the current repository plan, these rules remain mandatory project policy and must be enforced procedurally by the documented workflow and verification process until server-side enforcement becomes available.
+
+### Temporary local regression policy
+
+**Temporary suspension:** GitHub-hosted execution of the correctness and Minikube/Kubernetes regression gates is suspended for the moment. Until this suspension is explicitly lifted, a successful **local** execution of the repository regression runner replaces the GitHub Actions regression-execution requirement everywhere in this document.
+
+The temporary required regression gate is:
+
+```bash
+./run-regression-tests.sh
+```
+
+The policy during this suspension is:
+
+- Run the local regression suite against the exact candidate commit being reviewed or integrated.
+- A non-zero exit status or any failed regression suite blocks integration, issue closure, and release promotion exactly as a failed hosted gate would.
+- Retain the generated local regression report and evidence long enough to review failures and confirm the tested commit.
+- Re-run the local regression suite after a rebase or other substantive change that changes the candidate commit.
+- Before a release is promoted, run the local regression suite on the release candidate state.
+- Existing GitHub Actions workflows may remain in the repository, but a skipped, disabled, unavailable, or unexecuted hosted regression workflow is **not** a blocking condition while this temporary policy is active.
+- This suspension changes only **where** regression verification runs. It does not weaken or remove any semantic, standards, correctness, equivalence, Minikube, or acceptance criteria.
+
+This temporary override applies to all hosted-execution language in this document, including the GitHub Actions regression gates described by issues #42 and #43 and mandatory hosted-gate wording retained in already completed historical items. The hosted CI requirements remain the intended long-term target and can be re-enabled later without redefining the regression contract.
 
 ### CI branch policy
 
-The repository CI workflows must follow the branch model:
+The intended repository CI workflow model remains:
 
-- Pull requests targeting `development`, `release/vX.Y.Z`, or `main` run the relevant correctness and compliance gates.
-- Pushes to `development`, `release/vX.Y.Z`, and `main` run the relevant regression/compliance gates.
+- Pull requests targeting `development`, `release/vX.Y.Z`, or `main` normally run the relevant correctness and compliance gates.
+- Pushes to `development`, `release/vX.Y.Z`, and `main` normally run the relevant regression/compliance gates.
 - `main` CI is therefore a release-verification safety net, not the normal development integration path.
 - Cleanup of completed `issue/*` branches is based on containment in `development`, not containment in `main`.
+
+While the temporary local regression policy above is active, the hosted regression-execution requirements in this section are suspended and the local `./run-regression-tests.sh` result is the authoritative regression gate.
 
 ### Local development branch requirement
 
@@ -129,7 +153,7 @@ The pull request is the normal code-review surface for an issue. **Creating, upd
 
 The review roles are deliberately separated:
 
-- **ChatGPT is the designated code reviewer.** It reviews the complete PR diff, issue acceptance criteria, tests, CI results, architecture, regressions, migration/safety behavior, and existing review history.
+- **ChatGPT is the designated code reviewer.** It reviews the complete PR diff, issue acceptance criteria, tests, CI/local regression results as applicable, architecture, regressions, migration/safety behavior, and existing review history.
 - **Codex in VS Code is the implementation and fix agent.** It implements the issue, runs local verification, commits/pushes work, and addresses findings supplied from the ChatGPT review.
 - **Codex must not perform a second independent full code review by default.** The user submits ChatGPT's review findings to Codex so that Codex can fix them without duplicating the complete review and consuming unnecessary coding-agent credits.
 - While addressing a finding, Codex may explain why it believes a specific finding is incorrect or may surface a newly discovered implementation problem. That is not permission to start another broad PR review unless the user explicitly requests one.
@@ -140,9 +164,9 @@ The required review loop is:
 2. Commit and push the issue branch.
 3. Create or update the pull request targeting `development`.
 4. The user asks **ChatGPT to review the PR**.
-5. ChatGPT reviews the complete current PR against `development`, the GitHub issue/acceptance criteria, relevant repository contracts and tests, current CI state, and prior unresolved findings. ChatGPT produces a complete review report and may post it to the PR when requested.
+5. ChatGPT reviews the complete current PR against `development`, the GitHub issue/acceptance criteria, relevant repository contracts and tests, current CI/local regression state as applicable, and prior unresolved findings. ChatGPT produces a complete review report and may post it to the PR when requested.
 6. The user submits ChatGPT's review report to Codex. Codex addresses the identified findings, adds or updates tests where required, runs verification, then commits and pushes the fixes to the same issue branch. Codex does not repeat the full review unless explicitly instructed.
-7. The user asks ChatGPT to re-review the updated PR. ChatGPT verifies the fixes, reviews the new diff for regressions or newly introduced defects, checks the relevant CI/tests, and updates the review verdict.
+7. The user asks ChatGPT to re-review the updated PR. ChatGPT verifies the fixes, reviews the new diff for regressions or newly introduced defects, checks the relevant CI/local tests, and updates the review verdict.
 8. Findings that are fully addressed are recorded as resolved; unresolved findings remain blocking or advisory according to severity. New findings are added when necessary.
 9. Steps 6 through 8 repeat until the implementation fully satisfies the issue and ChatGPT reports no unresolved blocking findings.
 
@@ -171,12 +195,12 @@ Only when explicitly told to **close a specific issue** must the following **reb
 2. Switch to the issue branch.
 3. Rebase the issue branch onto the current `origin/development` with `git rebase origin/development`.
 4. Resolve any conflicts on the issue branch. If the rebase cannot be completed safely, abort it and report the problem rather than merging `development` into the issue branch.
-5. Run the tests and verification required by the issue/repository on the rebased branch.
+5. Run the tests and verification required by the issue/repository on the rebased branch. While the temporary hosted-CI suspension is active, this includes a successful local `./run-regression-tests.sh` whenever regression verification applies.
 6. A rebase normally rewrites existing commits; it does **not** require an additional commit unless resolving the rebase requires an actual content change. If published commits were rewritten, push the rebased issue branch with `git push --force-with-lease origin <issue-branch>`; otherwise use a normal push as appropriate.
 7. Re-check the PR after the rebase to ensure the reviewed implementation remains unchanged in substance and no new blocking finding or conflict-resolution regression was introduced. ChatGPT remains the designated reviewer for any substantive post-rebase review; Codex should not perform a redundant full review unless explicitly requested.
 8. Switch to `development` and update it with `git pull --ff-only origin development`.
 9. Integrate the issue branch with `git merge --ff-only <issue-branch>`.
-10. Run the final required verification on the integrated `development` state.
+10. Run the final required verification on the integrated `development` state. While the temporary hosted-CI suspension is active, use the local regression runner as the authoritative regression gate.
 11. Push `development` with `git push origin development`.
 12. Close the PR as completed/merged according to the repository's chosen PR bookkeeping method.
 13. Only after the integrated `development` push succeeds should the GitHub issue be closed.
@@ -197,7 +221,7 @@ If `git merge --ff-only` fails because `development` advanced after the rebase, 
 
 A release branch is created only when a concrete version is ready for stabilization.
 
-1. Ensure `development` contains all work selected for the release and that required CI/regression gates pass.
+1. Ensure `development` contains all work selected for the release and that required verification passes. While the temporary hosted-CI suspension is active, the regression requirement is satisfied by a successful local `./run-regression-tests.sh` on the release-candidate state.
 2. Create `release/vX.Y.Z` from the current release candidate on `development`.
 3. Freeze feature work on that release branch. Only release-blocking fixes, versioning, packaging, documentation, and release-hardening changes belong there.
 4. Validate the complete release candidate on `release/vX.Y.Z`.
@@ -293,21 +317,25 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/41
 
 ### 9. #42 — TODO-REGRESSION-011 — Add GitHub Actions correctness regression gate
 
+**Temporary status:** Hosted execution is suspended under the temporary local regression policy above. Until explicitly re-enabled, successful local execution of `./run-regression-tests.sh` is the required correctness regression gate. This issue remains the intended hosted-CI target rather than being removed or weakened.
+
 **Goal:** Run deterministic regression on pull requests and pushes affecting `development`, `release/vX.Y.Z`, and `main`, with `development` as the normal integration branch and `main` reserved for release verification.
 
 Generate and verify corpus hashes, run required runtimes with skipping disabled, execute the runner, upload artifacts on success/failure, and publish JUnit/test summaries.
 
-**Acceptance:** Any unexpected standards-outcome change produces a failing GitHub check naming affected fixture IDs before development integration or release promotion.
+**Acceptance:** When hosted execution is re-enabled, any unexpected standards-outcome change produces a failing GitHub check naming affected fixture IDs before development integration or release promotion. While suspended, the equivalent blocking verdict is produced by the local regression runner.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/42
 
 ### 10. #43 — TODO-REGRESSION-012 — Add GitHub Minikube/Kubernetes regression gate
 
+**Temporary status:** Hosted Minikube/Kubernetes execution is suspended under the temporary local regression policy above. Until explicitly re-enabled, the local regression runner provides the required Minikube/distributed regression verification.
+
 **Goal:** Exercise the deployed Kubernetes topology in GitHub using the same Minikube-oriented runner used locally.
 
 Build/load candidate image, deploy NATS and e-ubl21 components, run the corpus, upload evidence, and tear down.
 
-**Acceptance:** Local and GitHub Minikube runs share the same semantic regression logic and both fail on fixture mismatches.
+**Acceptance:** The local Minikube/regression run remains mandatory and fails on fixture mismatches. When hosted execution is re-enabled, local and GitHub Minikube runs must share the same semantic regression logic and both fail on fixture mismatches.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/43
 
@@ -896,7 +924,8 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/89
 Regression contracts/corpus
         |
         v
-Normalized regression runner + CI gates
+Normalized regression runner + local regression gate
+(hosted GitHub regression execution temporarily suspended)
         |
         v
 Pre/post semantic equivalence baseline
@@ -946,6 +975,7 @@ The Phase 8 items are deliberately outside this immediate dependency chain. They
 - Issues #37/#76 and #38/#77 are paired: the regression issues define reusable generation capability; the Peppol issues define the conformity corpus that consumes it.
 - Issues #37, #38, #44–#46, and #48–#81 are complete. **#47 is the next actionable issue.**
 - Issue #45 is complete: #81 establishes and enforces its accepted normalized Peppol release baseline from independently reviewed pinned assets and reference evidence.
+- Hosted GitHub regression execution is temporarily suspended; successful local `./run-regression-tests.sh` execution is the authoritative regression gate until the suspension is explicitly lifted.
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
 - Issue #88 and #89 should be evaluated together when the future persistence architecture is revisited, while remaining separate issues because raw-content storage and metadata persistence have different migration and failure semantics.
