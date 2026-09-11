@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
@@ -34,7 +34,7 @@ first_line() {
 require_commands() {
     local missing=()
     local command
-    for command in bash git go make java xmllint docker curl diff minikube grep sed find sort tee tail; do
+    for command in bash git go make java xmllint docker curl diff minikube grep sed find sort tee tail setsid; do
         if ! command -v "$command" >/dev/null 2>&1; then
             missing+=("$command")
         fi
@@ -63,6 +63,7 @@ run_suite() {
     local log_file="$LOG_DIR/$safe_name.log"
     local started=$SECONDS
     local rc
+    local -a pipeline_status
 
     echo
     echo "======================================================================"
@@ -73,7 +74,14 @@ run_suite() {
 
     set +e
     "$@" 2>&1 | tee "$log_file"
-    rc=${PIPESTATUS[0]}
+    pipeline_status=("${PIPESTATUS[@]}")
+    set -e
+
+    rc=${pipeline_status[0]}
+    if (( rc == 0 && pipeline_status[1] != 0 )); then
+        rc=${pipeline_status[1]}
+        echo "ERROR: failed to write suite log: $log_file" >&2
+    fi
 
     local elapsed=$((SECONDS - started))
     local status="PASS"
@@ -312,5 +320,7 @@ run_suite \
         make regression-minikube
 
 write_report
-print_summary
-exit $?
+if print_summary; then
+    exit 0
+fi
+exit 1

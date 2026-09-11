@@ -41,8 +41,9 @@ make regression-minikube \
   ARTIFACT_DIR=regression-results/minikube/ubl21
 ```
 
-Prerequisites are `minikube`, Docker, Go, and `curl`. A standalone `kubectl`
-is not required: `devsetup/minikube-kubectl.sh` uses Minikube's pinned kubectl.
+Prerequisites are `minikube`, Docker, Go, `curl`, and `setsid` (normally
+provided by `util-linux`). A standalone `kubectl` is not required:
+`devsetup/minikube-kubectl.sh` uses Minikube's pinned kubectl.
 Set `KEEP_DEPLOYMENT=1` to retain the namespace for interactive debugging, or
 run `make regression-minikube-clean` after an interrupted/retained run.
 

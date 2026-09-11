@@ -32,7 +32,7 @@ KUBECTL_BIN="${KUBECTL_BIN:-$ROOT_DIR/devsetup/minikube-kubectl.sh}"
 KEEP_DEPLOYMENT="${KEEP_DEPLOYMENT:-0}"
 EQUIVALENCE_BASELINE="${EQUIVALENCE_BASELINE:-}"
 
-for command in minikube docker go curl; do
+for command in minikube docker go curl setsid; do
     if ! command -v "$command" >/dev/null 2>&1; then
         echo "ERROR: required command not found: $command" >&2
         exit 2
@@ -58,7 +58,7 @@ if [[ -z "$EQUIVALENCE_BASELINE" ]]; then
 fi
 export EUBL21_MINIKUBE_PROFILE="$MINIKUBE_PROFILE"
 
-PORT_FORWARD_PIDS=()
+PORT_FORWARD_PROCESS_GROUPS=()
 DEPLOYMENT_STARTED=0
 EVIDENCE_ATTEMPTED=0
 
@@ -89,9 +89,12 @@ cleanup() {
     local status=$?
     trap - EXIT INT TERM
     set +e
-    for pid in "${PORT_FORWARD_PIDS[@]}"; do
-        kill "$pid" >/dev/null 2>&1 || true
-        wait "$pid" >/dev/null 2>&1 || true
+    for process_group in "${PORT_FORWARD_PROCESS_GROUPS[@]}"; do
+        # `minikube kubectl` may exit after spawning kubectl, which leaves the
+        # port-forward process re-parented. Kill its dedicated process group so
+        # sequential regression runs can safely reuse the same local ports.
+        kill -- "-$process_group" >/dev/null 2>&1 || true
+        wait "$process_group" >/dev/null 2>&1 || true
     done
     if (( status != 0 && DEPLOYMENT_STARTED == 1 && EVIDENCE_ATTEMPTED == 0 )); then
         collect_failure_evidence
@@ -135,12 +138,45 @@ for deployment in nats e-ubl21-api e-ubl21-worker; do
     "$KUBECTL_BIN" --namespace "$NAMESPACE" rollout status "deployment/$deployment" --timeout="$ROLLOUT_TIMEOUT"
 done
 
-"$KUBECTL_BIN" --namespace "$NAMESPACE" port-forward service/e-ubl21-api "$API_LOCAL_PORT:8080" >"$ARTIFACT_DIR/port-forward/api.log" 2>&1 &
-PORT_FORWARD_PIDS+=("$!")
-"$KUBECTL_BIN" --namespace "$NAMESPACE" port-forward service/e-ubl21-worker "$WORKER_LOCAL_PORT:9091" >"$ARTIFACT_DIR/port-forward/worker.log" 2>&1 &
-PORT_FORWARD_PIDS+=("$!")
-"$KUBECTL_BIN" --namespace "$NAMESPACE" port-forward service/nats "$NATS_LOCAL_PORT:4222" >"$ARTIFACT_DIR/port-forward/nats.log" 2>&1 &
-PORT_FORWARD_PIDS+=("$!")
+start_port_forward() {
+    local name=$1
+    local resource=$2
+    local ports=$3
+    local log="$ARTIFACT_DIR/port-forward/$name.log"
+
+    setsid "$KUBECTL_BIN" --namespace "$NAMESPACE" port-forward "$resource" "$ports" >"$log" 2>&1 &
+    PORT_FORWARD_PROCESS_GROUPS+=("$!")
+}
+
+wait_port_forward() {
+    local name=$1
+    local process_group=$2
+    local log="$ARTIFACT_DIR/port-forward/$name.log"
+    local deadline=$((SECONDS + 30))
+
+    while (( SECONDS < deadline )); do
+        if grep -q '^Forwarding from ' "$log" 2>/dev/null; then
+            return 0
+        fi
+        if ! kill -0 -- "-$process_group" 2>/dev/null; then
+            echo "ERROR: $name port-forward exited before becoming ready" >&2
+            sed 's/^/  /' "$log" >&2
+            return 1
+        fi
+        sleep 1
+    done
+    echo "ERROR: timed out waiting for $name port-forward to become ready" >&2
+    sed 's/^/  /' "$log" >&2
+    return 1
+}
+
+start_port_forward api service/e-ubl21-api "$API_LOCAL_PORT:8080"
+start_port_forward worker service/e-ubl21-worker "$WORKER_LOCAL_PORT:9091"
+start_port_forward nats service/nats "$NATS_LOCAL_PORT:4222"
+
+wait_port_forward api "${PORT_FORWARD_PROCESS_GROUPS[0]}"
+wait_port_forward worker "${PORT_FORWARD_PROCESS_GROUPS[1]}"
+wait_port_forward nats "${PORT_FORWARD_PROCESS_GROUPS[2]}"
 
 wait_http() {
     local name=$1
