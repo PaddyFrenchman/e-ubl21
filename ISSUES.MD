@@ -850,6 +850,8 @@ Require asset pinning, candidate regeneration, old/new result comparison, classi
 
 **Acceptance:** Checksum or ruleset upgrades cannot merely bless changed tests; behavior differences require explicit reviewed regression evidence.
 
+**Status:** Complete / closed. PR #117 documents the three-cell accepted/candidate runtime and corpus comparison, fixture-level review, deliberate expectation promotion, and durable evidence-retention workflow.
+
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/47
 
 ---
