@@ -43,30 +43,62 @@ not, by itself, permission to change expected results.
 
 ## Required evidence layout
 
-Keep accepted and candidate output separate. The directory may remain ignored
-locally or be attached to the change/release record, but its structure and
-meaning must be clear:
+Keep all three execution cells separate. This working directory may be ignored
+locally while evidence is being produced, but it is not the durable review
+record:
 
 ```text
 regression-results/upgrades/<standard>/<accepted>-to-<candidate>/
-├── accepted/
-│   ├── report.md
-│   └── ... normalized results and diagnostic evidence
-├── candidate/
-│   ├── report.md
-│   └── ... normalized results and diagnostic evidence
-├── normalized.diff
+├── accepted-runtime/
+│   └── accepted-corpus/
+│       ├── local-gate/
+│       │   ├── correctness/{ubl21,en16931}/
+│       │   └── minikube/{ubl21,en16931}/
+│       └── peppol/
+├── candidate-runtime/
+│   ├── accepted-corpus/
+│   │   ├── ubl21/
+│   │   ├── en16931/
+│   │   └── peppol/
+│   └── candidate-corpus/
+│       ├── ubl21/
+│       ├── en16931/
+│       └── peppol/
+├── staged-corpus/
+│   ├── ubl21/
+│   ├── en16931/
+│   └── peppol/
+├── comparisons/
+│   ├── runtime-on-accepted-corpus/<profile>/{equivalence.json,results.diff}
+│   ├── corpus-under-candidate-runtime/<profile>/{equivalence.json,results.diff}
+│   └── complete-release-change/<profile>/{equivalence.json,results.diff}
 ├── source-and-rule.diff
 ├── fixture-change-ledger.md
-└── approval.md
+├── approval.md
+└── evidence.sha256
 ```
 
-`accepted/` and `candidate/` must identify their Git commit, dirty state,
+The cells mean:
+
+| Cell | Question answered |
+| --- | --- |
+| `accepted-runtime/accepted-corpus` | Does the accepted release still reproduce its accepted behavior? |
+| `candidate-runtime/accepted-corpus` | What did the validator/rules change for unchanged inputs and expectations? |
+| `candidate-runtime/candidate-corpus` | What is the complete proposed release behavior after corpus regeneration? |
+
+Each cell must identify its runtime commit, corpus commit, dirty state,
 standards versions/digests, generator commits, runtime/tool versions, and image
 digest where applicable. Retain `results.jsonl`, `summary.json`,
 `equivalence.json`, `manifest-used.json`, environment metadata, and the
 component-specific reference/runtime evidence produced by the applicable
-gates. Do not include secrets or invoice bodies in the retained review record.
+gates. Never reuse an output directory between cells. Do not include secrets
+or invoice bodies in the retained review record.
+
+Before approval, archive this complete tree in durable storage attached to the
+pull request/release record or record an immutable external artifact URI. The
+review record must contain the archive SHA-256 and `evidence.sha256`, which
+lists the digests of the files used for the decision. Evidence that exists only
+in an ignored directory or on one workstation does not satisfy retention.
 
 ## Procedure
 
@@ -89,7 +121,34 @@ existing gates before changing assets, corpora, manifests, or baselines. At
 minimum, run the authoritative local regression gate:
 
 ```sh
-REGRESSION_RUN_DIR="$EVIDENCE_ROOT/accepted" ./run-regression-tests.sh
+REGRESSION_RUN_DIR="$EVIDENCE_ROOT/accepted-runtime/accepted-corpus/local-gate" \
+  ./run-regression-tests.sh
+```
+
+The local runner has no top-level `results.jsonl`. Its normalized outputs are:
+
+```text
+$EVIDENCE_ROOT/accepted-runtime/accepted-corpus/local-gate/correctness/ubl21/results.jsonl
+$EVIDENCE_ROOT/accepted-runtime/accepted-corpus/local-gate/correctness/en16931/results.jsonl
+$EVIDENCE_ROOT/accepted-runtime/accepted-corpus/local-gate/minikube/ubl21/results.jsonl
+$EVIDENCE_ROOT/accepted-runtime/accepted-corpus/local-gate/minikube/en16931/results.jsonl
+```
+
+Use the `correctness/<corpus>/results.jsonl` records as the accepted UBL/EN
+comparison inputs. The corresponding Minikube records are independent deployed
+topology confirmation and must remain retained with the cell.
+
+The authoritative local gate does not execute Peppol. For a Peppol-affecting
+upgrade, run this additional accepted-runtime command from the accepted
+checkout against the accepted deployment:
+
+```sh
+go run . regression \
+  --base-url "$ACCEPTED_URL" \
+  --token "$ACCEPTED_TOKEN" \
+  --manifest createsamples/samples-peppol/manifest.json \
+  --profile all \
+  --output "$EVIDENCE_ROOT/accepted-runtime/accepted-corpus/peppol"
 ```
 
 Also run the profile-specific gates from the matrix below. If the accepted
@@ -125,11 +184,11 @@ tracked corpus:
 
 ```sh
 go run ./createsamples generate --profile ubl21 --set all \
-  --xsd XSD --output "$EVIDENCE_ROOT/candidate-corpus/ubl21"
+  --xsd XSD --output "$EVIDENCE_ROOT/staged-corpus/ubl21"
 go run ./createsamples generate --profile en16931 --set all \
-  --xsd XSD --output "$EVIDENCE_ROOT/candidate-corpus/en16931"
+  --xsd XSD --output "$EVIDENCE_ROOT/staged-corpus/en16931"
 go run ./createsamples generate --profile peppol-bis-billing --set all \
-  --xsd XSD --output "$EVIDENCE_ROOT/candidate-corpus/peppol"
+  --xsd XSD --output "$EVIDENCE_ROOT/staged-corpus/peppol"
 ```
 
 Run only the profiles affected by the upgrade, plus every downstream profile
@@ -141,7 +200,7 @@ At this point the tracked manifest and accepted baseline remain unchanged. A
 candidate that differs is expected to fail the existing equivalence gate; that
 failure is the input to review, not a reason to weaken the gate.
 
-### 5. Execute both standards states and produce the diff
+### 5. Execute all three cells and produce separate diffs
 
 Run the accepted runtime against the accepted corpus, the candidate runtime
 against the unchanged accepted corpus, and the candidate runtime against the
@@ -149,30 +208,74 @@ candidate corpus where regeneration is required. Running the candidate against
 the old corpus separates validator behavior changes from fixture-generation
 changes.
 
-Produce normalized comparisons for each corpus. The equivalence command gives
-the blocking semantic verdict and changed fixture IDs:
+For UBL and EN, the accepted cell is populated by the local gate above. Populate
+the other two cells with the regression command directly so each command writes
+one `results.jsonl` at a known profile-specific location. This EN example is
+copy-pasteable after the named URL, token, and worktree variables are set:
 
 ```sh
+CANDIDATE_RUNTIME_ACCEPTED="$EVIDENCE_ROOT/candidate-runtime/accepted-corpus/en16931"
+CANDIDATE_RUNTIME_CANDIDATE="$EVIDENCE_ROOT/candidate-runtime/candidate-corpus/en16931"
+
+go run . regression \
+  --base-url "$CANDIDATE_URL" \
+  --token "$CANDIDATE_TOKEN" \
+  --manifest "$ACCEPTED_WORKTREE/createsamples/samples-en16931/manifest.json" \
+  --profile all \
+  --output "$CANDIDATE_RUNTIME_ACCEPTED"
+
+go run . regression \
+  --base-url "$CANDIDATE_URL" \
+  --token "$CANDIDATE_TOKEN" \
+  --manifest "$EVIDENCE_ROOT/staged-corpus/en16931/manifest.json" \
+  --profile all \
+  --output "$CANDIDATE_RUNTIME_CANDIDATE"
+```
+
+For UBL, substitute `samples/manifest.json` and the `ubl21` output directory.
+For Peppol, substitute `samples-peppol/manifest.json`, the staged Peppol
+manifest, and `peppol`; the candidate URL must expose the complete split-stage
+Peppol topology. Run `make test-peppol-compliance` and the reference gates in
+addition to, not instead of, these retained normalized runs. Tokens remain
+secret inputs and must not be copied into evidence.
+
+For each affected corpus, produce three comparisons. These concrete EN paths
+match the local runner and direct commands above:
+
+```sh
+ACCEPTED_RESULTS="$EVIDENCE_ROOT/accepted-runtime/accepted-corpus/local-gate/correctness/en16931/results.jsonl"
+CANDIDATE_OLD_RESULTS="$EVIDENCE_ROOT/candidate-runtime/accepted-corpus/en16931/results.jsonl"
+CANDIDATE_NEW_RESULTS="$EVIDENCE_ROOT/candidate-runtime/candidate-corpus/en16931/results.jsonl"
+
 make regression-equivalence \
-  BASELINE="$EVIDENCE_ROOT/accepted/results.jsonl" \
-  CANDIDATE="$EVIDENCE_ROOT/candidate/results.jsonl" \
-  OUTPUT="$EVIDENCE_ROOT/candidate/equivalence.json"
+  BASELINE="$ACCEPTED_RESULTS" \
+  CANDIDATE="$CANDIDATE_OLD_RESULTS" \
+  OUTPUT="$EVIDENCE_ROOT/comparisons/runtime-on-accepted-corpus/en16931/equivalence.json"
+
+make regression-equivalence \
+  BASELINE="$CANDIDATE_OLD_RESULTS" \
+  CANDIDATE="$CANDIDATE_NEW_RESULTS" \
+  OUTPUT="$EVIDENCE_ROOT/comparisons/corpus-under-candidate-runtime/en16931/equivalence.json"
+
+make regression-equivalence \
+  BASELINE="$ACCEPTED_RESULTS" \
+  CANDIDATE="$CANDIDATE_NEW_RESULTS" \
+  OUTPUT="$EVIDENCE_ROOT/comparisons/complete-release-change/en16931/equivalence.json"
 ```
 
-Retain a reviewable record-level diff as well:
+The first comparison isolates runtime/rules behavior on unchanged inputs. The
+second isolates corpus regeneration under one runtime. The third records the
+complete release delta. Repeat with the exact `ubl21` or `peppol` locations as
+applicable. A non-equivalent result is expected during review, but a command or
+evidence-write failure is not; retain each `equivalence.json` even when the
+command exits non-zero.
 
-```sh
-diff -u \
-  "$EVIDENCE_ROOT/accepted/results.jsonl" \
-  "$EVIDENCE_ROOT/candidate/results.jsonl" \
-  > "$EVIDENCE_ROOT/normalized.diff"
-```
-
-An exit status of `1` from `diff` means differences were found and must be
-classified. Status greater than `1` is an evidence-generation failure. Also
-retain the upstream source/rule diff and, when generated bytes changed, the
-manifest and XML diff. Raw line order must not substitute for the normalized
-semantic comparison.
+Also retain a `diff -u` of each results pair under the same comparison
+directory, the upstream source/rule diff, and, when generated bytes changed,
+the manifest and XML diff. An exit status of `1` from `diff` means differences
+were found and must be classified; status greater than `1` is an
+evidence-generation failure. Raw line order must not substitute for the
+normalized semantic comparison.
 
 ### 6. Classify every changed fixture
 
@@ -254,7 +357,9 @@ accepted and candidate commits, evidence root, source/rule diff, completed
 fixture ledger, compatibility/migration notes, and explicit reviewer approval.
 `approval.md` records who reviewed the behavior changes and which ledger
 entries were accepted. An empty ledger is valid only when the equivalence
-result proves there were no semantic fixture changes.
+result proves there were no semantic fixture changes. Approval is blocked until
+the complete evidence archive has a durable URI and verified archive/file
+digests in the review record.
 
 ## Blocking conditions
 
@@ -283,4 +388,3 @@ digest to a non-production namespace first, retain its runtime-verification
 event, and preserve the accepted image/assets until rollback is no longer
 required. Peppol-specific transition rules are in
 `PEPPOL-DURABILITY-MIGRATION.md`.
-
