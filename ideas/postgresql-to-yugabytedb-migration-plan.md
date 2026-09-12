@@ -87,6 +87,26 @@ Valkey is part of the planned master-data/cache architecture but is **not requir
 
 Every issue created from this plan should obey the following rules.
 
+## Repository workflow inherited from `ISSUES.MD`
+
+This migration plan does **not** define a separate issue, branch, review, integration or closure workflow. Every `MIG-YB-*` issue created from this plan must follow the current **Branch and issue workflow** in `ISSUES.MD` exactly. If wording in this plan ever conflicts with `ISSUES.MD`, then `ISSUES.MD` is authoritative and this plan must be updated to match it.
+
+The migration workflow therefore has the same non-negotiable rules as the rest of the repository:
+
+1. When a migration issue is created, closed, materially re-scoped or re-ordered, update `ISSUES.MD` in the same workflow so the repository issue index remains synchronized with GitHub.
+2. Start issue work from a synchronized **local `development` branch** that tracks `origin/development`. Do not create issue branches from `main`, a release branch, or a detached `origin/development` ref.
+3. Implement each migration issue on its own `issue/<number>-<description>` branch, where `<number>` is the actual GitHub issue number assigned when the issue is created.
+4. Commit and push the issue branch, then create or update a pull request targeting `development`.
+5. **ChatGPT is the designated PR/code reviewer.** Codex in VS Code is the implementation and fix agent. Review findings are passed to Codex for correction, then ChatGPT re-reviews the updated PR. Repeat until no unresolved blocking findings remain.
+6. Creating or reviewing a PR does not authorize integration or issue closure. The issue remains open throughout the review cycle.
+7. Do not rebase merely because a review iteration completed, do not merge `development` into the issue branch, and do not fast-forward the issue branch into `development` during ordinary review work.
+8. While the repository's temporary local-regression policy is active, `./run-regression-tests.sh` is the authoritative regression gate wherever regression verification applies. Run it against the exact candidate commit, and rerun it after a rebase or other substantive candidate-changing modification.
+9. Neither ChatGPT nor Codex may close or integrate a migration issue unless the user explicitly instructs it to **close that specific issue**. A clean review, passing tests, a pushed branch or an open PR is not closure authorization.
+10. Once explicit closure authorization is given, use the `ISSUES.MD` **rebase-first, fast-forward-only** integration workflow: rebase the issue branch onto current `origin/development`, resolve conflicts on the issue branch, rerun required verification, push rewritten commits with `--force-with-lease` when required, re-check the PR, switch to `development`, update it with `git pull --ff-only`, integrate with `git merge --ff-only`, run final required verification on integrated `development`, push `development`, complete PR bookkeeping, then close the GitHub issue and remove the issue branch only after containment in `development` is confirmed.
+11. Do not use the GitHub PR merge button, a merge commit, or a direct integration into `main` or `release/vX.Y.Z` to bypass that workflow unless the user explicitly changes repository policy.
+
+The detailed commands, review-loop rules, temporary CI override, authorization boundary and release workflow remain defined centrally in `ISSUES.MD`. This file specifies migration work; `ISSUES.MD` specifies how that work moves through the repository.
+
 ## Preserve product behavior
 
 Replacing PostgreSQL deployment support must not alter invoice validation semantics, API responses, orchestration behavior or regression-corpus results.
@@ -99,13 +119,13 @@ Before any migration issue is closed, the exact candidate commit must pass the t
 go test ./... -count=1
 ```
 
-and the existing local regression gate:
+and, while the repository's temporary local-regression policy is active, the authoritative local regression gate:
 
 ```bash
 ./run-regression-tests.sh
 ```
 
-must remain green when the environment supports them.
+must remain green whenever regression verification applies. A rebase or other substantive change that changes the candidate commit requires the applicable verification to be rerun before integration, exactly as defined in `ISSUES.MD`.
 
 ## YugabyteDB is the test database
 
@@ -347,7 +367,6 @@ Because the current product does not yet appear to have relational business tabl
 ### Unit tests
 
 Test migration runner configuration and version ordering without requiring a database where practical.
-
 ### Integration tests
 
 Against fresh YugabyteDB:
@@ -980,7 +999,7 @@ This avoids performing two migrations at once. First establish and qualify Yugab
 
 # Recommended execution discipline
 
-Each migration issue should be implemented on its own issue branch and should leave `development` in a complete, testable state after merge.
+Each migration issue must be implemented on its own issue branch and, once the user explicitly authorizes closure of that specific issue, integrated into `development` using the rebase-first, fast-forward-only workflow defined in `ISSUES.MD`. After integration, `development` must remain complete and testable. Ordinary PR review iterations do not authorize integration or closure.
 
 No issue should rely on "the next issue will fix it" for:
 
