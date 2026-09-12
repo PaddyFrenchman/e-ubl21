@@ -944,6 +944,10 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/119
 
 **Dependencies:** #119.
 
+**Implementation assets:** [`database`](database), [`docs/YUGABYTEDB-CONNECTIVITY.md`](docs/YUGABYTEDB-CONNECTIVITY.md), and the vendor-neutral `EUBL21_DATABASE_*` root configuration in [`cmd/root.go`](cmd/root.go).
+
+**Status:** Implemented on `issue/120-yugabytedb-connectivity`; review/merge pending. The application database package, typed configuration, pgx pool, bounded operations, safe errors, and opt-in real-YugabyteDB integration contract are implemented and locally qualified without adding a production business-state dependency.
+
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/120
 
 ### 58. #121 — MIG-YB-003 — Add reproducible local YugabyteDB runtime for development and tests
