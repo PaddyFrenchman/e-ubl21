@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. The YugabyteDB migration program is now tracked by issues #119 through #130; #119 is the first issue in that migration sequence.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. The YugabyteDB migration program is tracked by issues #119 through #130; #119 is complete and #120 is the next issue in that migration sequence.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -934,6 +934,8 @@ The detailed source of truth for this issue series is [`ideas/postgresql-to-yuga
 
 **Implementation assets:** [`docs/architecture-decisions/0001-yugabytedb-relational-database.md`](docs/architecture-decisions/0001-yugabytedb-relational-database.md) and [`docs/YUGABYTEDB-MIGRATION-BASELINE.md`](docs/YUGABYTEDB-MIGRATION-BASELINE.md).
 
+**Status:** Complete / closed. PR #131 records the accepted YugabyteDB/YSQL decision, `2025.2.*.*` LTS policy, supported deployment modes, complete PostgreSQL/CloudNativePG inventory, and retained clean baseline evidence.
+
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/119
 
 ### 57. #120 — MIG-YB-002 — Introduce YugabyteDB/YSQL application database configuration and connectivity
@@ -1089,4 +1091,4 @@ The Phase 9 YugabyteDB migration is a separate platform sequence with its own de
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
 - Issue #88 and #89 should be evaluated together when the future persistence architecture is revisited, while remaining separate issues because raw-content storage and metadata persistence have different migration and failure semantics.
-- Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Their detailed scopes remain synchronized with `ideas/postgresql-to-yugabytedb-migration-plan.md`.
+- Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Issue #119 is complete; #120 is the next implementation step. Their detailed scopes remain synchronized with `ideas/postgresql-to-yugabytedb-migration-plan.md`.
