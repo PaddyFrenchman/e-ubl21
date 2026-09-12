@@ -9,7 +9,7 @@ import (
 // PeppolEnvelopeProfile versions the envelope rules independently from the
 // payload rules. The Schematron bytes are from the same immutable upstream
 // Peppol BIS Billing release, while the stage version identifies this product
-// contract (official BR-SBDH rules plus document/process consistency checks).
+// contract (supported official BR-SBDH rules plus document/process checks).
 type PeppolEnvelopeProfile struct {
 	Name, Version, BISVersion                                        string
 	SourceRepository, SourceCommit, SchematronPath, SchematronSHA256 string

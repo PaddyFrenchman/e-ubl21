@@ -105,6 +105,17 @@ func ParseEnvelope(document []byte) (Envelope, error) {
 	return result, nil
 }
 
+// ExtractEnvelopePayload returns the byte-exact Invoice or CreditNote carried
+// by a complete SBDH document. Keeping this selection in the Peppol package
+// gives payload-stage workers and final-result shaping one parsing contract.
+func ExtractEnvelopePayload(document []byte) ([]byte, error) {
+	envelope, err := ParseEnvelope(document)
+	if err != nil {
+		return nil, err
+	}
+	return envelope.Payload, nil
+}
+
 func (header *EnvelopeHeader) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
 	var raw struct {
 		Senders []struct {

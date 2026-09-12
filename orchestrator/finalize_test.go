@@ -5,11 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/orchestrator"
+	"github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 )
 
@@ -59,6 +61,123 @@ func TestFinalResultPublishesOnlyAfterEveryFrozenStagePasses(t *testing.T) {
 	if err != nil || !bytes.Equal(retained, content) {
 		t.Fatalf("retained raw XML = %q, %v", retained, err)
 	}
+}
+
+func TestEnvelopeFinalResultPublishesAfterAllFourStages(t *testing.T) {
+	tests := []struct {
+		name, documentType, sample, wantProfileID string
+		wantProcess                               queue.PeppolProcessProfile
+	}{
+		{
+			name: "Invoice", documentType: "Invoice",
+			sample:        "../createsamples/samples-peppol/Invoice/Peppol-Invoice-Profile-01.xml",
+			wantProfileID: peppol.ProfileID01, wantProcess: queue.PeppolProcessProfile01,
+		},
+		{
+			name: "CreditNote", documentType: "CreditNote",
+			sample:        "../createsamples/samples-peppol/CreditNote/Peppol-CreditNote-Profile-02.xml",
+			wantProfileID: peppol.ProfileID02, wantProcess: queue.PeppolProcessProfile02,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			machine, client, ctx := newMachine(t)
+			payload, err := os.ReadFile(test.sample)
+			if err != nil {
+				t.Fatal(err)
+			}
+			intent := testEnvelopeIntent(t, test.documentType)
+			document := testSBDHDocument(payload)
+			if err := client.PutUploadContent(ctx, intent.UploadID, document); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := machine.Start(ctx, intent); err != nil {
+				t.Fatal(err)
+			}
+			var terminal queue.VersionedValidationExecution
+			for _, stage := range intent.Plan.Stages {
+				request := takeRequest(t, ctx, client, stage.ID)
+				terminal, err = machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone))
+				if err != nil {
+					t.Fatalf("complete %s: %v", stage.ID, err)
+				}
+			}
+			if terminal.Execution.Orchestration.FinalResultStatus != queue.FinalResultPublished {
+				t.Fatalf("final-result state = %+v", terminal.Execution.Orchestration)
+			}
+			result, err := client.GetValidationExecutionResult(ctx, terminal.Execution.ValidationID, terminal.Execution.Generation)
+			if err != nil {
+				t.Fatal(err)
+			}
+			peppolStage := result.ValidationStages[2]
+			if result.Status != queue.StatusValid || len(result.ValidationStages) != 4 ||
+				peppolStage.ProfileID != test.wantProfileID || peppolStage.ProcessProfile != test.wantProcess {
+				t.Fatalf("canonical envelope result = %+v", result)
+			}
+			stored, err := client.GetUploadContent(ctx, intent.UploadID)
+			if err != nil || !bytes.Equal(stored, document) {
+				t.Fatalf("retained envelope changed: %v", err)
+			}
+		})
+	}
+}
+
+func TestEnvelopeInvalidityPublishesOnlyAfterThreePayloadPasses(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	payload, err := os.ReadFile("../createsamples/samples-peppol/Invoice/Peppol-Invoice-Profile-01.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	intent := testEnvelopeIntent(t, "Invoice")
+	if err := client.PutUploadContent(ctx, intent.UploadID, testSBDHDocument(payload)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := machine.Start(ctx, intent); err != nil {
+		t.Fatal(err)
+	}
+	for _, stage := range intent.Plan.Stages[:3] {
+		request := takeRequest(t, ctx, client, stage.ID)
+		if _, err := machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+			t.Fatalf("complete %s: %v", stage.ID, err)
+		}
+	}
+	request := takeRequest(t, ctx, client, queue.ValidationLayerPeppolEnvelope)
+	terminal, err := machine.HandleStageResult(ctx, resultFor(t, request, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone))
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := client.GetValidationExecutionResult(ctx, terminal.Execution.ValidationID, terminal.Execution.Generation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != queue.StatusInvalid || len(result.ValidationStages) != 4 ||
+		!result.ValidationStages[2].Valid || result.ValidationStages[3].Valid ||
+		result.ValidationStages[3].Layer != queue.ValidationLayerPeppolEnvelope {
+		t.Fatalf("canonical invalid envelope result = %+v", result)
+	}
+}
+
+func testEnvelopeIntent(t *testing.T, documentType string) queue.ValidationExecutionIntent {
+	t.Helper()
+	return queue.ValidationExecutionIntent{
+		IntentID: newID(t), UploadID: newID(t), DocumentType: documentType,
+		Trigger: queue.ValidationTriggerInitial, RequestedProfile: queue.ValidationProfilePeppolEnvelope,
+		Plan: queue.FrozenValidationPlan{
+			ID: "peppol-envelope", Version: "1",
+			Stages: []queue.FrozenValidationStage{
+				{ID: queue.ValidationLayerUBL21XSD, Ordinal: 1, Requirement: queue.ValidationStageRequired, RulesetVersion: "2.1"},
+				{ID: queue.ValidationLayerEN16931, Ordinal: 2, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"},
+				{ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3, Requirement: queue.ValidationStageRequired, RulesetVersion: "3.0.21"},
+				{ID: queue.ValidationLayerPeppolEnvelope, Ordinal: 4, Requirement: queue.ValidationStageRequired, RulesetVersion: "3.0.21-envelope.1"},
+			},
+		},
+		RetryPolicy: queue.DefaultFrozenValidationRetryPolicy(),
+		CreatedAt:   time.Date(2026, 8, 28, 19, 0, 0, 0, time.UTC),
+	}
+}
+
+func testSBDHDocument(payload []byte) []byte {
+	return []byte(fmt.Sprintf(`<StandardBusinessDocument xmlns="%s"><StandardBusinessDocumentHeader/>%s</StandardBusinessDocument>`, peppol.SBDHNamespace, payload))
 }
 
 func TestFinalResultDistinguishesStandardsAndOperationalFailure(t *testing.T) {

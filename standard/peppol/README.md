@@ -43,7 +43,8 @@ The CEN Schematron supplies the adopted EN 16931 layer and the Peppol
 Schematron supplies Peppol and country-qualified rules. The SBDH envelope
 Schematron from this same commit is pinned independently under
 [`validation-assets/peppol-envelope/`](../../validation-assets/peppol-envelope/)
-and runs only for the explicit `peppol-envelope` profile. The selected payload
+as a provenance/reference artefact for the bounded Go envelope contract used
+only by the explicit `peppol-envelope` profile. The selected payload
 Schematron, code lists, and official examples are packaged
 once under [`validation-assets/peppol/`](../../validation-assets/peppol/);
 this standards directory links to that controlled bundle rather than holding

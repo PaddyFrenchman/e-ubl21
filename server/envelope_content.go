@@ -23,9 +23,9 @@ func stageValidationReader(input io.Reader, execution queue.ValidationExecution,
 	if len(document) > peppol.MaxResolutionDocumentBytes {
 		return nil, peppol.ErrDocumentTooLarge
 	}
-	envelope, err := peppol.ParseEnvelope(document)
+	payload, err := peppol.ExtractEnvelopePayload(document)
 	if err != nil {
 		return nil, err
 	}
-	return bytes.NewReader(envelope.Payload), nil
+	return bytes.NewReader(payload), nil
 }

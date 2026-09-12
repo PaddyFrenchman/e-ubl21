@@ -214,6 +214,15 @@ func (machine *Machine) populatePeppolIdentity(ctx context.Context, execution qu
 		}
 		return fmt.Errorf("stream immutable upload content: %w", streamErr)
 	}
+	if execution.RequestedProfile == queue.ValidationProfilePeppolEnvelope {
+		document, err = peppol.ExtractEnvelopePayload(document)
+		if err != nil {
+			if stage.Outcome == queue.StageOutcomeOperationalFailure {
+				return nil
+			}
+			return fmt.Errorf("extract immutable Peppol envelope payload: %w", err)
+		}
+	}
 	resolution, err := peppol.Resolve(execution.DocumentType, queue.ValidationProfilePeppolBISBilling, document)
 	if err != nil {
 		if stage.Outcome == queue.StageOutcomeOperationalFailure {

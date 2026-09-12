@@ -106,6 +106,30 @@ func TestPeppolEnvelopeValidatorSeparatesEnvelopeEvidence(t *testing.T) {
 	}
 }
 
+func TestPeppolEnvelopeValidatorAcceptsInvoiceAndCreditNote(t *testing.T) {
+	tests := []struct{ name, sample string }{
+		{"Invoice", "../createsamples/samples-peppol/Invoice/Peppol-Invoice-Profile-01.xml"},
+		{"CreditNote", "../createsamples/samples-peppol/CreditNote/Peppol-CreditNote-Profile-02.xml"},
+	}
+	validator := newPeppolEnvelopeValidator()
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			payload, err := os.ReadFile(test.sample)
+			if err != nil {
+				t.Fatal(err)
+			}
+			identity, err := envelopePayloadIdentity(payload)
+			if err != nil {
+				t.Fatal(err)
+			}
+			result, err := validator.Validate(context.Background(), strings.NewReader(testEnvelope(string(payload), identity, "")))
+			if err != nil || !result.Valid {
+				t.Fatalf("result=%+v err=%v", result, err)
+			}
+		})
+	}
+}
+
 func TestPeppolEnvelopeValidatorChecksEveryEnvelopePayloadBinding(t *testing.T) {
 	payload, err := os.ReadFile("../createsamples/samples-peppol/Invoice/Peppol-Invoice-Profile-01.xml")
 	if err != nil {
@@ -171,10 +195,16 @@ func TestPeppolEnvelopeConformityCorpus(t *testing.T) {
 }
 
 func testEnvelope(payload string, identity payloadEnvelopeIdentity, senderOverride string) string {
+	documentType := "Invoice"
+	namespace := "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+	if strings.Contains(payload, "<CreditNote") {
+		documentType = "CreditNote"
+		namespace = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2"
+	}
 	sender := identity.SupplierEndpoint
 	if senderOverride != "" {
 		sender = senderOverride
 	}
-	documentID := "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2::Invoice##" + identity.CustomizationID + "::2.1"
-	return fmt.Sprintf(`<StandardBusinessDocument xmlns="%s"><StandardBusinessDocumentHeader><HeaderVersion>1.0</HeaderVersion><Sender><Identifier>%s</Identifier></Sender><Receiver><Identifier>%s</Identifier></Receiver><DocumentIdentification><Standard>urn:oasis:names:specification:ubl:schema:xsd:Invoice-2</Standard><TypeVersion>2.1</TypeVersion><Type>Invoice</Type></DocumentIdentification><BusinessScope><Scope><Type>DOCUMENTID</Type><InstanceIdentifier>%s</InstanceIdentifier></Scope><Scope><Type>PROCESSID</Type><InstanceIdentifier>%s</InstanceIdentifier></Scope></BusinessScope></StandardBusinessDocumentHeader>%s</StandardBusinessDocument>`, peppol.SBDHNamespace, sender, identity.CustomerEndpoint, documentID, identity.ProfileID, payload)
+	documentID := namespace + "::" + documentType + "##" + identity.CustomizationID + "::2.1"
+	return fmt.Sprintf(`<StandardBusinessDocument xmlns="%s"><StandardBusinessDocumentHeader><HeaderVersion>1.0</HeaderVersion><Sender><Identifier>%s</Identifier></Sender><Receiver><Identifier>%s</Identifier></Receiver><DocumentIdentification><Standard>%s</Standard><TypeVersion>2.1</TypeVersion><Type>%s</Type></DocumentIdentification><BusinessScope><Scope><Type>DOCUMENTID</Type><InstanceIdentifier>%s</InstanceIdentifier></Scope><Scope><Type>PROCESSID</Type><InstanceIdentifier>%s</InstanceIdentifier></Scope></BusinessScope></StandardBusinessDocumentHeader>%s</StandardBusinessDocument>`, peppol.SBDHNamespace, sender, identity.CustomerEndpoint, namespace, documentType, documentID, identity.ProfileID, payload)
 }

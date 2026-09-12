@@ -25,3 +25,16 @@ func TestParseEnvelopeRejectsAmbiguousPayload(t *testing.T) {
 		t.Fatalf("expected ambiguous payload error, got %v", err)
 	}
 }
+
+func TestExtractEnvelopePayloadUsesParseEnvelopeContract(t *testing.T) {
+	payload := `<Invoice xmlns="` + invoiceNamespace + `"/>`
+	document := `<StandardBusinessDocument xmlns="` + SBDHNamespace + `"><StandardBusinessDocumentHeader/>` + payload + `</StandardBusinessDocument>`
+
+	got, err := ExtractEnvelopePayload([]byte(document))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != payload {
+		t.Fatalf("payload = %q, want %q", got, payload)
+	}
+}
