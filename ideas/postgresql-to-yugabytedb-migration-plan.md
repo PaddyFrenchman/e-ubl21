@@ -4,7 +4,24 @@
 
 This document defines a concrete, issue-by-issue plan for replacing the product's existing PostgreSQL support and PostgreSQL-oriented deployment assumptions with YugabyteDB.
 
-**No GitHub issues are created by this document.** Each numbered implementation step below is intentionally written so that it can later become one GitHub issue with its own scope, tests, acceptance criteria and dependencies.
+GitHub issues have now been created for every numbered implementation step. Each step below corresponds to exactly one tracked GitHub issue with its own scope, tests, acceptance criteria and dependencies.
+
+## GitHub issue mapping
+
+| Step | Migration ID | GitHub issue |
+| ---: | --- | ---: |
+| 1 | `MIG-YB-001` | #119 |
+| 2 | `MIG-YB-002` | #120 |
+| 3 | `MIG-YB-003` | #121 |
+| 4 | `MIG-YB-004` | #122 |
+| 5 | `MIG-YB-005` | #123 |
+| 6 | `MIG-YB-006` | #124 |
+| 7 | `MIG-YB-007` | #125 |
+| 8 | `MIG-YB-008` | #126 |
+| 9 | `MIG-YB-009` | #127 |
+| 10 | `MIG-YB-010` | #128 |
+| 11 | `MIG-YB-011` | #129 |
+| 12 | `MIG-YB-012` | #130 |
 
 The plan is deliberately based on the product **as it exists now**, not on the future third-party-integration architecture alone.
 
@@ -149,6 +166,10 @@ Until the final cutover issue is complete, changes should be staged so that a fa
 
 `MIG-YB-001 — Adopt YugabyteDB as the product relational database and freeze migration baseline`
 
+### GitHub issue
+
+`#119`
+
 ### Goal
 
 Create the formal architectural baseline before implementation begins.
@@ -199,6 +220,10 @@ None.
 ### Proposed issue title
 
 `MIG-YB-002 — Introduce YugabyteDB/YSQL application database configuration and connectivity`
+
+### GitHub issue
+
+`#120`
 
 ### Goal
 
@@ -288,6 +313,10 @@ Step 1.
 
 `MIG-YB-003 — Add reproducible local YugabyteDB runtime for development and tests`
 
+### GitHub issue
+
+`#121`
+
 ### Goal
 
 Make it trivial for developers and tests to run the exact supported YugabyteDB version.
@@ -341,6 +370,10 @@ Steps 1-2.
 ### Proposed issue title
 
 `MIG-YB-004 — Establish YugabyteDB schema migration framework and compatibility gates`
+
+### GitHub issue
+
+`#122`
 
 ### Goal
 
@@ -402,6 +435,10 @@ Steps 2-3.
 
 `MIG-YB-005 — Replace CloudNativePG/PostgreSQL with YugabyteDB in on-prem installation`
 
+### GitHub issue
+
+`#123`
+
 ### Goal
 
 Make new on-prem installations deploy YugabyteDB instead of CloudNativePG/PostgreSQL.
@@ -462,6 +499,10 @@ Steps 1, 3 and 4.
 
 `MIG-YB-006 — Add safe on-prem upgrade path from PostgreSQL/CloudNativePG deployment to YugabyteDB`
 
+### GitHub issue
+
+`#124`
+
 ### Goal
 
 Avoid turning the new installer into a destructive upgrade for anyone who already ran the old bootstrap.
@@ -508,6 +549,10 @@ Step 5.
 ### Proposed issue title
 
 `MIG-YB-007 — Integrate YugabyteDB into Minikube regression topology`
+
+### GitHub issue
+
+`#125`
 
 ### Goal
 
@@ -567,6 +612,10 @@ Steps 3-5.
 
 `MIG-YB-008 — Add YugabyteDB unit/integration/regression CI gates`
 
+### GitHub issue
+
+`#126`
+
 ### Goal
 
 Prevent future code from accidentally becoming PostgreSQL-only or Yugabyte-incompatible.
@@ -621,6 +670,10 @@ Steps 4 and 7.
 ### Proposed issue title
 
 `MIG-YB-009 — Define production YugabyteDB HA and multi-region deployment architecture`
+
+### GitHub issue
+
+`#127`
 
 ### Goal
 
@@ -699,6 +752,10 @@ Steps 5, 7 and 8.
 
 `MIG-YB-010 — Establish YugabyteDB backup/restore, DR, security and observability`
 
+### GitHub issue
+
+`#128`
+
 ### Goal
 
 Reach operational parity with the expectations previously documented for PostgreSQL and make YugabyteDB production-operable.
@@ -760,6 +817,10 @@ Steps 4 and 9.
 
 `MIG-YB-011 — Remove stale PostgreSQL architecture and retarget future metadata persistence to YugabyteDB`
 
+### GitHub issue
+
+`#129`
+
 ### Goal
 
 Ensure the repository tells one coherent architectural story after the technical migration.
@@ -814,6 +875,10 @@ Steps 5, 8, 9 and 10.
 ### Proposed issue title
 
 `MIG-YB-012 — Qualify YugabyteDB migration and retire PostgreSQL support`
+
+### GitHub issue
+
+`#130`
 
 ### Goal
 
