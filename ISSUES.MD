@@ -932,6 +932,8 @@ The detailed source of truth for this issue series is [`ideas/postgresql-to-yuga
 
 **Dependencies:** None.
 
+**Implementation assets:** [`docs/architecture-decisions/0001-yugabytedb-relational-database.md`](docs/architecture-decisions/0001-yugabytedb-relational-database.md) and [`docs/YUGABYTEDB-MIGRATION-BASELINE.md`](docs/YUGABYTEDB-MIGRATION-BASELINE.md).
+
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/119
 
 ### 57. #120 — MIG-YB-002 — Introduce YugabyteDB/YSQL application database configuration and connectivity

@@ -162,6 +162,11 @@ Until the final cutover issue is complete, changes should be staged so that a fa
 
 ## Step 1 — Record the YugabyteDB architectural decision and migration baseline
 
+Implementation assets:
+
+- [`docs/architecture-decisions/0001-yugabytedb-relational-database.md`](../docs/architecture-decisions/0001-yugabytedb-relational-database.md)
+- [`docs/YUGABYTEDB-MIGRATION-BASELINE.md`](../docs/YUGABYTEDB-MIGRATION-BASELINE.md)
+
 ### Proposed issue title
 
 `MIG-YB-001 — Adopt YugabyteDB as the product relational database and freeze migration baseline`
