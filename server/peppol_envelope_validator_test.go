@@ -163,6 +163,54 @@ func TestPeppolEnvelopeValidatorChecksEveryEnvelopePayloadBinding(t *testing.T) 
 	}
 }
 
+func TestPeppolEnvelopeValidatorSeparatesStructureFromOfficialIdentityRules(t *testing.T) {
+	payload, err := os.ReadFile("../createsamples/samples-peppol/Invoice/Peppol-Invoice-Profile-01.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	identity, err := envelopePayloadIdentity(payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valid := testEnvelope(string(payload), identity, "")
+	sender := "<Sender><Identifier>" + identity.SupplierEndpoint + "</Identifier></Sender>"
+	receiver := "<Receiver><Identifier>" + identity.CustomerEndpoint + "</Identifier></Receiver>"
+	tests := []struct{ name, document, rule string }{
+		{
+			name: "exact Sender whitespace", document: strings.Replace(valid, identity.SupplierEndpoint, " "+identity.SupplierEndpoint+" ", 1),
+			rule: "BR-SBDH-2",
+		},
+		{
+			name: "missing Sender", document: strings.Replace(valid, sender, "", 1),
+			rule: "EUBL21-PEPPOL-ENVELOPE-SENDER-STRUCTURE",
+		},
+		{
+			name: "duplicate Sender", document: strings.Replace(valid, sender, sender+sender, 1),
+			rule: "EUBL21-PEPPOL-ENVELOPE-SENDER-STRUCTURE",
+		},
+		{
+			name: "foreign Sender", document: strings.Replace(valid, sender, `<foreign:Sender xmlns:foreign="urn:foreign"><foreign:Identifier>`+identity.SupplierEndpoint+`</foreign:Identifier></foreign:Sender>`, 1),
+			rule: "EUBL21-PEPPOL-ENVELOPE-SENDER-STRUCTURE",
+		},
+		{
+			name: "foreign Receiver Identifier", document: strings.Replace(valid, receiver, `<Receiver><foreign:Identifier xmlns:foreign="urn:foreign">`+identity.CustomerEndpoint+`</foreign:Identifier></Receiver>`, 1),
+			rule: "EUBL21-PEPPOL-ENVELOPE-RECEIVER-STRUCTURE",
+		},
+	}
+	validator := newPeppolEnvelopeValidator()
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := validator.Validate(context.Background(), strings.NewReader(test.document))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.Valid || len(result.Issues) != 1 || result.Issues[0].Rule != test.rule {
+				t.Fatalf("issues=%+v", result.Issues)
+			}
+		})
+	}
+}
+
 func TestPeppolEnvelopeConformityCorpus(t *testing.T) {
 	root := "../validation-assets/peppol-envelope/3.0.21/examples/"
 	tests := []struct {

@@ -48,11 +48,15 @@ func (validator *peppolEnvelopeValidator) Validate(ctx context.Context, input io
 			Rule: rule, Severity: "fatal", Message: message,
 		})
 	}
-	if envelope.Header.Receiver != identity.CustomerEndpoint {
-		add("BR-SBDH-1", "SBDH Receiver/Identifier must match the customer EndpointID including schemeID.")
+	if !envelope.Header.HasSingleReceiverIdentifier() {
+		add("EUBL21-PEPPOL-ENVELOPE-RECEIVER-STRUCTURE", "SBDH must contain exactly one Receiver with exactly one direct SBDH Identifier.")
+	} else if envelope.Header.Receiver != identity.CustomerEndpoint {
+		add("BR-SBDH-1", "SBDH Receiver/Identifier must exactly match the customer EndpointID including schemeID.")
 	}
-	if envelope.Header.Sender != identity.SupplierEndpoint {
-		add("BR-SBDH-2", "SBDH Sender/Identifier must match the supplier EndpointID including schemeID.")
+	if !envelope.Header.HasSingleSenderIdentifier() {
+		add("EUBL21-PEPPOL-ENVELOPE-SENDER-STRUCTURE", "SBDH must contain exactly one Sender with exactly one direct SBDH Identifier.")
+	} else if envelope.Header.Sender != identity.SupplierEndpoint {
+		add("BR-SBDH-2", "SBDH Sender/Identifier must exactly match the supplier EndpointID including schemeID.")
 	}
 	if envelope.Header.Standard != envelope.Namespace {
 		add("EUBL21-PEPPOL-ENVELOPE-DOCUMENT-STANDARD", "SBDH DocumentIdentification/Standard must match the embedded UBL namespace.")

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -129,6 +130,50 @@ func TestPeppolPublicComplianceScenarios(t *testing.T) {
 		}
 		topology.assertOneExecutionResult(t, uploadID, queue.StatusValid)
 	})
+}
+
+// TestPeppolEnvelopeFourWorkerAcceptance crosses the authenticated API,
+// immutable Object Store, all four real stage workers, JetStream evidence,
+// orchestrator, and the permanent result projection with one SBDH document.
+func TestPeppolEnvelopeFourWorkerAcceptance(t *testing.T) {
+	topology := newSplitPeppolComplianceTopology(t)
+	stopPeppol := topology.startPeppol(t, nil)
+	defer stopPeppol()
+	stopEnvelope := topology.startEnvelope(t)
+	defer stopEnvelope()
+
+	payload, err := os.ReadFile(filepath.Join("..", "createsamples", "samples-peppol", "Invoice", "Peppol-Invoice-Profile-01.xml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	identity, err := envelopePayloadIdentity(payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	document := []byte(testEnvelope(string(payload), identity, ""))
+	uploadID := uploadComplianceDocumentWithProfile(t, topology.handler, topology.token, document, "Invoice", string(queue.ValidationProfilePeppolEnvelope))
+	response := waitForSplitComplianceStatus(t, topology.handler, topology.token, uploadID, queue.StatusValid, 60*time.Second)
+	stages, ok := response["validationStages"].([]any)
+	if !ok || len(stages) != 4 {
+		t.Fatalf("four-worker validation stages = %#v", response["validationStages"])
+	}
+	want := []queue.ValidationLayer{
+		queue.ValidationLayerUBL21XSD,
+		queue.ValidationLayerEN16931,
+		queue.ValidationLayerPeppolBISBilling,
+		queue.ValidationLayerPeppolEnvelope,
+	}
+	for index, layer := range want {
+		stage, ok := stages[index].(map[string]any)
+		if !ok || stage["layer"] != string(layer) || stage["valid"] != true {
+			t.Fatalf("stage %d = %#v, want passing %s", index+1, stages[index], layer)
+		}
+	}
+	stored, err := topology.queue.GetUploadContent(context.Background(), uploadID)
+	if err != nil || !bytes.Equal(stored, document) {
+		t.Fatalf("stored SBDH changed: err=%v", err)
+	}
+	topology.assertOneExecutionResult(t, uploadID, queue.StatusValid)
 }
 
 // TestPeppolOperationalFailureReplayEndToEnd proves retry exhaustion, the
@@ -342,6 +387,17 @@ func (topology *splitPeppolComplianceTopology) startPeppol(t *testing.T, validat
 			PeppolXSLTPath:         filepath.Join("..", "validation-assets", filepath.FromSlash(profile.EmbeddedXSLTPath)),
 			SaxonStartupTimeout:    10 * time.Second, validator: validator,
 			Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+		})
+	})
+}
+
+func (topology *splitPeppolComplianceTopology) startEnvelope(t *testing.T) func() {
+	t.Helper()
+	return topology.startComponent(t, "worker-peppol-envelope", func(runCtx context.Context) error {
+		return RunPeppolEnvelopeWorker(runCtx, PeppolEnvelopeWorkerConfig{
+			NATSURL: topology.cfg.NATSURL, NATSOptions: topology.cfg.NATSOptions, QueueNamespace: topology.cfg.QueueNamespace,
+			MetricsAddr: "", ValidationTimeout: 20 * time.Second, Concurrency: 1, Prefetch: 1,
+			ProgressInterval: 10 * time.Second, Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
 		})
 	})
 }
