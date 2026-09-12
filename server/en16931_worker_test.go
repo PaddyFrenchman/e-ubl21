@@ -601,6 +601,10 @@ func TestENWorkerUsesPinnedSaxonAdapter(t *testing.T) {
 	_, _ = authorizeENWorkerRequest(t, ctx, client, content)
 	message := fetchENWorkerRequest(t, ctx, client)
 	worker := newTestENStageWorker(client, newSaxonEN16931Validator(runtime, 15*time.Second))
+	// The real Saxon adapter may run alongside other transform-heavy packages
+	// under `go test ./...`; do not let the helper's 3-second fake-validator
+	// deadline preempt the adapter timeout this test intends to exercise.
+	worker.timeout = 15 * time.Second
 	if err := worker.handle(ctx, message); err != nil {
 		t.Fatal(err)
 	}
@@ -835,6 +839,9 @@ func fetchENWorkerResult(t *testing.T, ctx context.Context, client *queue.Client
 
 func assertENWorkerRequestMessages(t *testing.T, ctx context.Context, client *queue.Client, want uint64) {
 	t.Helper()
+	if err := client.NC.Flush(); err != nil {
+		t.Fatal(err)
+	}
 	names, err := client.Namespace.StageQueue(queue.ValidationLayerEN16931)
 	if err != nil {
 		t.Fatal(err)
