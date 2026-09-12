@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: e-ubl21-worker-peppol-envelope
+spec:
+  selector:
+    app.kubernetes.io/name: e-ubl21
+    app.kubernetes.io/component: worker-peppol-envelope
+  ports:
+    - name: metrics
+      port: 9096
+      targetPort: metrics
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: e-ubl21-worker-peppol-envelope
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: e-ubl21
+      app.kubernetes.io/component: worker-peppol-envelope
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: e-ubl21
+        app.kubernetes.io/component: worker-peppol-envelope
+    spec:
+      terminationGracePeriodSeconds: 90
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: worker-peppol-envelope
+          image: e-ubl21:replace-me
+          imagePullPolicy: IfNotPresent
+          args: ["worker-peppol-envelope"]
+          envFrom:
+            - configMapRef: {name: e-ubl21-runtime}
+          env:
+            - {name: OTEL_SERVICE_NAME, value: e-ubl21-worker-peppol-envelope}
+            - {name: EUBL21_WORKER_PEPPOL_ENVELOPE_METRICS_ADDR, value: ":9096"}
+            - {name: EUBL21_WORKER_PEPPOL_ENVELOPE_TIMEOUT, value: 45s}
+            - {name: EUBL21_WORKER_PEPPOL_ENVELOPE_CONCURRENCY, value: "1"}
+            - {name: EUBL21_WORKER_PEPPOL_ENVELOPE_PREFETCH, value: "1"}
+            - {name: EUBL21_WORKER_PEPPOL_ENVELOPE_PROGRESS_INTERVAL, value: 20s}
+          ports:
+            - {name: metrics, containerPort: 9096}
+          startupProbe:
+            httpGet: {path: /healthz, port: metrics}
+            periodSeconds: 3
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /healthz, port: metrics}
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /healthz, port: metrics}
+            periodSeconds: 15
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: ["ALL"]}
+          resources:
+            requests: {cpu: 100m, memory: 64Mi}
+            limits: {cpu: "1", memory: 256Mi}

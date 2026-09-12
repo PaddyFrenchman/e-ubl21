@@ -278,6 +278,8 @@ func stageQueueToken(stage ValidationLayer) (string, bool) {
 		return "en16931", true
 	case ValidationLayerPeppolBISBilling:
 		return "peppol", true
+	case ValidationLayerPeppolEnvelope:
+		return "peppol_envelope", true
 	default:
 		return "", false
 	}

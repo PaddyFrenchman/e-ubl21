@@ -25,9 +25,12 @@ func newProvisionCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 	command.Flags().Int("stage-en16931-max-ack-pending", 32, "Fleet-wide EN 16931 pending-delivery limit")
 	command.Flags().Duration("stage-peppol-ack-wait", 120*time.Second, "Reserved Peppol request/result acknowledgement window")
 	command.Flags().Int("stage-peppol-max-ack-pending", 32, "Reserved Peppol pending-delivery limit")
+	command.Flags().Duration("stage-peppol-envelope-ack-wait", 120*time.Second, "Peppol envelope request/result acknowledgement window")
+	command.Flags().Int("stage-peppol-envelope-max-ack-pending", 32, "Peppol envelope pending-delivery limit")
 	for _, name := range []string{
 		"stage-xsd-ack-wait", "stage-xsd-max-ack-pending", "stage-en16931-ack-wait",
 		"stage-en16931-max-ack-pending", "stage-peppol-ack-wait", "stage-peppol-max-ack-pending",
+		"stage-peppol-envelope-ack-wait", "stage-peppol-envelope-max-ack-pending",
 	} {
 		mustBindLocalFlag(v, command, name)
 	}
@@ -49,10 +52,18 @@ func provisionInfrastructure(ctx context.Context, cfg *Config) error {
 	if _, err := client.ProvisionDeploymentGenerationInfra(ctx, time.Now()); err != nil {
 		return fmt.Errorf("provision deployment generation infrastructure: %w", err)
 	}
+	envelopeAckWait, envelopeMaxAckPending := cfg.StagePeppolEnvelopeAckWait, cfg.StagePeppolEnvelopeMaxAckPending
+	if envelopeAckWait <= 0 {
+		envelopeAckWait = cfg.StagePeppolAckWait
+	}
+	if envelopeMaxAckPending <= 0 {
+		envelopeMaxAckPending = cfg.StagePeppolMaxAckPending
+	}
 	stageConfig := queue.StageQueueInfraConfig{Stages: []queue.StageQueueConfig{
 		provisionStage(queue.ValidationLayerUBL21XSD, cfg.StageXSDAckWait, cfg.StageXSDMaxAckPending),
 		provisionStage(queue.ValidationLayerEN16931, cfg.StageENAckWait, cfg.StageENMaxAckPending),
 		provisionStage(queue.ValidationLayerPeppolBISBilling, cfg.StagePeppolAckWait, cfg.StagePeppolMaxAckPending),
+		provisionStage(queue.ValidationLayerPeppolEnvelope, envelopeAckWait, envelopeMaxAckPending),
 	}}
 	if err := client.ProvisionStageQueueInfra(ctx, stageConfig); err != nil {
 		return fmt.Errorf("provision stage infrastructure: %w", err)

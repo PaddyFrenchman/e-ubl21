@@ -40,9 +40,11 @@ name. The two published UBL Schematron files have these identities:
 | `PEPPOL-EN16931-UBL.sch` | `rules/sch/PEPPOL-EN16931-UBL.sch` | `62e5b67892f12755352d78b06f63229a02cc2eccc748677c56efbc8dbcb336e3` |
 
 The CEN Schematron supplies the adopted EN 16931 layer and the Peppol
-Schematron supplies Peppol and country-qualified rules. The optional SBDH
-envelope rules are excluded from this product milestone and belong to issue
-#82. The selected Schematron, code lists, and official examples are packaged
+Schematron supplies Peppol and country-qualified rules. The SBDH envelope
+Schematron from this same commit is pinned independently under
+[`validation-assets/peppol-envelope/`](../../validation-assets/peppol-envelope/)
+and runs only for the explicit `peppol-envelope` profile. The selected payload
+Schematron, code lists, and official examples are packaged
 once under [`validation-assets/peppol/`](../../validation-assets/peppol/);
 this standards directory links to that controlled bundle rather than holding
 a second runtime copy.

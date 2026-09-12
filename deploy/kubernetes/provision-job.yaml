@@ -37,6 +37,10 @@ spec:
               value: 120s
             - name: EUBL21_STAGE_PEPPOL_MAX_ACK_PENDING
               value: "32"
+            - name: EUBL21_STAGE_PEPPOL_ENVELOPE_ACK_WAIT
+              value: 120s
+            - name: EUBL21_STAGE_PEPPOL_ENVELOPE_MAX_ACK_PENDING
+              value: "32"
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

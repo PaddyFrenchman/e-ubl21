@@ -15,6 +15,7 @@ const (
 	validationLayerUBL21XSD validationLayer = queue.ValidationLayerUBL21XSD
 	validationLayerEN16931  validationLayer = queue.ValidationLayerEN16931
 	validationLayerPeppol   validationLayer = queue.ValidationLayerPeppolBISBilling
+	validationLayerEnvelope validationLayer = queue.ValidationLayerPeppolEnvelope
 )
 
 // validationStageOutcome distinguishes standards non-compliance from an
@@ -36,6 +37,13 @@ var peppolValidationLayers = []validationLayer{
 	validationLayerUBL21XSD,
 	validationLayerEN16931,
 	validationLayerPeppol,
+}
+
+var peppolEnvelopeValidationLayers = []validationLayer{
+	validationLayerUBL21XSD,
+	validationLayerEN16931,
+	validationLayerPeppol,
+	validationLayerEnvelope,
 }
 
 var structuralValidationLayers = []validationLayer{
@@ -62,6 +70,9 @@ func requiredValidationLayersForProfile(documentType string, profile queue.Valid
 		switch profile {
 		case queue.ValidationProfilePeppolBISBilling:
 			layers = peppolValidationLayers
+			withEN16931 = false
+		case queue.ValidationProfilePeppolEnvelope:
+			layers = peppolEnvelopeValidationLayers
 			withEN16931 = false
 		case queue.ValidationProfileUBL21EN16931:
 			withEN16931 = true

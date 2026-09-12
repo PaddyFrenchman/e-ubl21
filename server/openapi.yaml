@@ -141,9 +141,11 @@ paths:
             Requested standards pipeline. Auto is the default. Explicit Peppol
             never downgrades when identifiers are missing or unsupported; those
             identifiers are decided by the Peppol stage after XSD and EN pass.
+            peppol-envelope is explicit-only and requires an SBDH
+            StandardBusinessDocument containing one Invoice or CreditNote.
           schema:
             type: string
-            enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing]
+            enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing, peppol-envelope]
             default: auto
         - name: profile
           in: query
@@ -152,7 +154,7 @@ paths:
           description: Deprecated compatibility alias for validationProfile. Supplying conflicting values is rejected.
           schema:
             type: string
-            enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing]
+            enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing, peppol-envelope]
         - name: documentType
           in: query
           required: false
@@ -164,7 +166,7 @@ paths:
             type: string
       requestBody:
         required: true
-        description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.
+        description: Raw UBL 2.1 XML, or a complete SBDH document for the explicit peppol-envelope profile. Limited to 10 MiB; see the 413 response.
         content:
           application/xml:
             schema:
@@ -179,8 +181,8 @@ paths:
       responses:
         '202':
           description: >-
-            The payload has a syntactically valid root element that is a
-            recognized UBL 2.1 document type. It has been queued for
+            The payload has a syntactically valid recognized UBL root, or an
+            explicit SBDH envelope with one recognized embedded UBL root. It has been queued for
             asynchronous standards validation. Its status is accepting or
             enqueue_pending while a partial acceptance is being reconciled,
             pending once queued, and later valid, invalid, or processing_failed
@@ -202,15 +204,15 @@ paths:
                     example: Invoice
                   requestedProfile:
                     type: string
-                    enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing]
+                    enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing, peppol-envelope]
                   resolvedProfile:
                     type: string
-                    enum: [ubl21, ubl21-en16931, peppol-bis-billing]
+                    enum: [ubl21, ubl21-en16931, peppol-bis-billing, peppol-envelope]
                   profile:
                     type: string
                     deprecated: true
                     description: Compatibility alias for resolvedProfile.
-                    enum: [ubl21, ubl21-en16931, peppol-bis-billing]
+                    enum: [ubl21, ubl21-en16931, peppol-bis-billing, peppol-envelope]
                   receivedAt:
                     type: string
                     format: date-time
@@ -305,16 +307,16 @@ paths:
                   requestedProfile:
                     type: string
                     description: Caller selection; auto is retained when it was omitted.
-                    enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing]
+                    enum: [auto, ubl21, ubl21-en16931, peppol-bis-billing, peppol-envelope]
                   resolvedProfile:
                     type: string
                     description: Concrete immutable profile used by the validation plan.
-                    enum: [ubl21, ubl21-en16931, peppol-bis-billing]
+                    enum: [ubl21, ubl21-en16931, peppol-bis-billing, peppol-envelope]
                   profile:
                     type: string
                     deprecated: true
                     description: Compatibility alias for resolvedProfile.
-                    enum: [ubl21, ubl21-en16931, peppol-bis-billing]
+                    enum: [ubl21, ubl21-en16931, peppol-bis-billing, peppol-envelope]
                   status:
                     type: string
                     enum: [accepting, cleanup_pending, enqueue_pending, pending, valid, invalid, acceptance_failed, dead_letter_pending, processing_failed]
@@ -668,7 +670,7 @@ components:
           example: failed-assert
         layer:
           type: string
-          enum: [ubl21-xsd, en16931, peppol-bis-billing]
+          enum: [ubl21-xsd, en16931, peppol-bis-billing, peppol-envelope]
           example: en16931
         rule:
           type: string
@@ -699,7 +701,7 @@ components:
       properties:
         layer:
           type: string
-          enum: [ubl21-xsd, en16931, peppol-bis-billing]
+          enum: [ubl21-xsd, en16931, peppol-bis-billing, peppol-envelope]
         version:
           type: string
           example: 1.3.16

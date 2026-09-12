@@ -23,7 +23,7 @@ var (
 
 func init() {
 	for _, transition := range []string{"handle_stage_result", "dispatch_stage_request"} {
-		for _, stage := range []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931, queue.ValidationLayerPeppolBISBilling} {
+		for _, stage := range []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931, queue.ValidationLayerPeppolBISBilling, queue.ValidationLayerPeppolEnvelope} {
 			orchestratorTransitionDuration.WithLabelValues(transition, string(stage))
 		}
 	}

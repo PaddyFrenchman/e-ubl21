@@ -378,7 +378,7 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 		diagnostic = fmt.Sprintf("%s does not support document type %s", worker.workerLabel(), request.DocumentType)
 	} else {
 		var validationResult queue.ValidationStageResult
-		validationErr := worker.withContent(attemptCtx, request.UploadID, func(reader io.Reader) error {
+		validationErr := worker.withContent(attemptCtx, request.UploadID, execution, func(reader io.Reader) error {
 			validationCtx, validationSpan := beginStageOperation(attemptCtx, "stage.validator.execute", request)
 			var err error
 			validationResult, err = worker.validator.Validate(validationCtx, reader)
@@ -548,6 +548,9 @@ func (worker *enStageWorker) version() string {
 }
 
 func (worker *enStageWorker) name() string {
+	if worker.validationLayer() == queue.ValidationLayerPeppolEnvelope {
+		return "Peppol envelope"
+	}
 	if worker.validationLayer() == queue.ValidationLayerPeppolBISBilling {
 		return "Peppol BIS Billing"
 	}
@@ -582,7 +585,7 @@ func (worker *enStageWorker) requestStaleError() error {
 	return errENStageRequestStale
 }
 
-func (worker *enStageWorker) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {
+func (worker *enStageWorker) withContent(ctx context.Context, uploadID string, execution queue.ValidationExecution, validate func(io.Reader) error) error {
 	fetchCtx, fetchSpan := observability.Tracer().Start(ctx, "stage.xml.fetch", trace.WithAttributes(attribute.String("upload.id", uploadID)))
 	content, err := worker.queue.OpenUploadContent(fetchCtx, uploadID)
 	if err != nil {
@@ -590,7 +593,11 @@ func (worker *enStageWorker) withContent(ctx context.Context, uploadID string, v
 		return fmt.Errorf("%w: open upload content: %w", errValidationContentStream, err)
 	}
 	content = traceUploadContent(content, fetchSpan)
-	validationErr := validate(content)
+	reader, transformErr := stageValidationReader(content, execution, worker.validationLayer())
+	validationErr := transformErr
+	if transformErr == nil {
+		validationErr = validate(reader)
+	}
 	streamErr := content.Error()
 	closeErr := content.Close()
 	if streamErr == nil {

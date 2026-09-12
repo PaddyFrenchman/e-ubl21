@@ -446,6 +446,13 @@ func validateProfilePlan(profile ValidationProfile, plan FrozenValidationPlan) e
 			ValidationLayerEN16931,
 			ValidationLayerPeppolBISBilling,
 		}
+	case ValidationProfilePeppolEnvelope:
+		expected = []ValidationLayer{
+			ValidationLayerUBL21XSD,
+			ValidationLayerEN16931,
+			ValidationLayerPeppolBISBilling,
+			ValidationLayerPeppolEnvelope,
+		}
 	default:
 		return fmt.Errorf("invalid validation profile %q", profile)
 	}

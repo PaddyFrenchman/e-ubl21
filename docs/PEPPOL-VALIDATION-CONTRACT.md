@@ -208,11 +208,13 @@ requested/resolved profile through the HTTP/OpenAPI contract.
 
 ## Explicit exclusions
 
-The first Peppol payload milestone excludes CII, Self-Billing, Ordering,
-Despatch, national regimes outside the pinned artefact, SBDH/envelope
-conformity, Invoice Response payload validation, Peppol transport, participant
+The Peppol payload profile excludes CII, Self-Billing, Ordering,
+Despatch, national regimes outside the pinned artefact, Invoice Response
+payload validation, Peppol transport, participant
 discovery, Access Point operation, certificates, accreditation, and proof of
-delivery. Optional envelope validation is separately tracked by issue #82.
+delivery. Complete SBDH conformity is a distinct opt-in profile documented in
+[`PEPPOL-ENVELOPE-VALIDATION.md`](PEPPOL-ENVELOPE-VALIDATION.md); it does not
+broaden the meaning of payload-only `peppol-bis-billing` results.
 
 No implementation may broaden the phrase "Peppol-valid" beyond this contract
 without a new versioned contract and regression evidence.

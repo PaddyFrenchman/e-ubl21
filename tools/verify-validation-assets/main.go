@@ -35,6 +35,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	if err := validationassets.VerifyPeppolEnvelope(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	fmt.Printf("verified profile=%s version=%s release=%s sha256=%s xslt=%s\n",
 		profile.Name,
 		profile.Version,
@@ -65,6 +69,10 @@ func main() {
 	for _, path := range staged {
 		fmt.Printf("staged=%s\n", path)
 	}
+	envelope := validationassets.PeppolEnvelope()
+	fmt.Printf("verified profile=%s version=%s bis_version=%s source_commit=%s schematron=%s schematron_sha256=%s\n",
+		envelope.Name, envelope.Version, envelope.BISVersion, envelope.SourceCommit,
+		envelope.SchematronPath, envelope.SchematronSHA256)
 	if *saxonDir != "" {
 		if err := validationassets.VerifySaxonJARs(*saxonDir); err != nil {
 			fmt.Fprintln(os.Stderr, err)

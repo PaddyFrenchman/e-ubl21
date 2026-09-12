@@ -25,9 +25,11 @@ const (
 	ValidationProfileAuto         ValidationProfile = "auto"
 	ValidationProfileUBL21        ValidationProfile = "ubl21"
 	ValidationProfileUBL21EN16931 ValidationProfile = "ubl21-en16931"
-	// ValidationProfilePeppolBISBilling is available to frozen execution and
-	// result contracts before the public HTTP selector is enabled by issue #75.
+	// ValidationProfilePeppolBISBilling validates a bare Billing payload.
 	ValidationProfilePeppolBISBilling ValidationProfile = "peppol-bis-billing"
+	// ValidationProfilePeppolEnvelope explicitly validates a complete Peppol
+	// SBDH business message after its embedded Billing payload has passed.
+	ValidationProfilePeppolEnvelope ValidationProfile = "peppol-envelope"
 )
 
 // ValidValidationProfile reports whether profile is supported by durable
@@ -35,7 +37,8 @@ const (
 func ValidValidationProfile(profile ValidationProfile) bool {
 	return profile == ValidationProfileUBL21 ||
 		profile == ValidationProfileUBL21EN16931 ||
-		profile == ValidationProfilePeppolBISBilling
+		profile == ValidationProfilePeppolBISBilling ||
+		profile == ValidationProfilePeppolEnvelope
 }
 
 // ValidPublicValidationProfile reports whether the HTTP API may accept profile
@@ -62,10 +65,9 @@ type ValidationIssueKind string
 const (
 	ValidationLayerUBL21XSD ValidationLayer = "ubl21-xsd"
 	ValidationLayerEN16931  ValidationLayer = "en16931"
-	// ValidationLayerPeppolBISBilling reserves the stable stage identity and
-	// queue topology for the future Peppol worker. It does not enable the
-	// public Peppol validation profile or runtime validator.
+	// ValidationLayerPeppolBISBilling is the payload Schematron stage.
 	ValidationLayerPeppolBISBilling ValidationLayer = "peppol-bis-billing"
+	ValidationLayerPeppolEnvelope   ValidationLayer = "peppol-envelope"
 
 	PeppolProcessProfile01 PeppolProcessProfile = "01"
 	PeppolProcessProfile02 PeppolProcessProfile = "02"

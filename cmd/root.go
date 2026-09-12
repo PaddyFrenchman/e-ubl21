@@ -91,6 +91,8 @@ type Config struct {
 	StageENMaxAckPending               int
 	StagePeppolAckWait                 time.Duration
 	StagePeppolMaxAckPending           int
+	StagePeppolEnvelopeAckWait         time.Duration
+	StagePeppolEnvelopeMaxAckPending   int
 }
 
 func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
@@ -165,6 +167,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newXSDWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newEN16931WorkerCmd(v, cfg))
 	rootCmd.AddCommand(newPeppolWorkerCmd(v, cfg))
+	rootCmd.AddCommand(newPeppolEnvelopeWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newOrchestratorCmd(v, cfg))
 	rootCmd.AddCommand(newProvisionCmd(v, cfg))
 	rootCmd.AddCommand(newMigrationCmd(cfg))
@@ -248,6 +251,8 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("stage-en16931-max-ack-pending", 32)
 	v.SetDefault("stage-peppol-ack-wait", 120*time.Second)
 	v.SetDefault("stage-peppol-max-ack-pending", 32)
+	v.SetDefault("stage-peppol-envelope-ack-wait", 120*time.Second)
+	v.SetDefault("stage-peppol-envelope-max-ack-pending", 32)
 	v.SetEnvPrefix("EUBL21")
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv()
@@ -347,6 +352,8 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.StageENMaxAckPending = v.GetInt("stage-en16931-max-ack-pending")
 	cfg.StagePeppolAckWait = v.GetDuration("stage-peppol-ack-wait")
 	cfg.StagePeppolMaxAckPending = v.GetInt("stage-peppol-max-ack-pending")
+	cfg.StagePeppolEnvelopeAckWait = v.GetDuration("stage-peppol-envelope-ack-wait")
+	cfg.StagePeppolEnvelopeMaxAckPending = v.GetInt("stage-peppol-envelope-max-ack-pending")
 
 	return nil
 }

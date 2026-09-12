@@ -357,7 +357,7 @@ func (worker *xsdStageWorker) handle(ctx context.Context, message jetstream.Msg)
 		reason = queue.StageReasonRuntimeUnavailable
 		diagnostic = fmt.Sprintf("worker-xsd has no UBL 2.1 schema for document type %s", request.DocumentType)
 	} else {
-		validationErr := worker.withContent(attemptCtx, request.UploadID, func(reader io.Reader) error {
+		validationErr := worker.withContent(attemptCtx, request.UploadID, execution, func(reader io.Reader) error {
 			validationCtx, validationSpan := beginStageOperation(attemptCtx, "stage.validator.execute", request)
 			err := worker.validate(validationCtx, schemaPath, reader, worker.timeout)
 			observability.End(validationSpan, err)
@@ -468,7 +468,7 @@ func (worker *xsdStageWorker) nak(message jetstream.Msg) {
 	_ = message.NakWithDelay(delay)
 }
 
-func (worker *xsdStageWorker) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {
+func (worker *xsdStageWorker) withContent(ctx context.Context, uploadID string, execution queue.ValidationExecution, validate func(io.Reader) error) error {
 	fetchCtx, fetchSpan := observability.Tracer().Start(ctx, "stage.xml.fetch", trace.WithAttributes(attribute.String("upload.id", uploadID)))
 	openContent := worker.openContent
 	if openContent == nil {
@@ -480,7 +480,11 @@ func (worker *xsdStageWorker) withContent(ctx context.Context, uploadID string, 
 		return fmt.Errorf("%w: open upload content: %w", errValidationContentStream, err)
 	}
 	content = traceUploadContent(content, fetchSpan)
-	validationErr := validate(content)
+	reader, transformErr := stageValidationReader(content, execution, queue.ValidationLayerUBL21XSD)
+	validationErr := transformErr
+	if transformErr == nil {
+		validationErr = validate(reader)
+	}
 	streamErr := content.Error()
 	closeErr := content.Close()
 	if streamErr == nil {

@@ -37,8 +37,9 @@ The API and worker are separate processes built from the same Go binary (`e-ubl2
 | GET | `/api/v1/ubl/{id}` | Required | Status/metadata only by default |
 | GET | `/api/v1/ubl/{id}?includeContent=true` | Required | Status/metadata plus original XML |
 
-Uploads accept `validationProfile=auto`, `ubl21`, `ubl21-en16931`, or
-`peppol-bis-billing`; omission means `auto`. The deprecated `profile` query
+Uploads accept `validationProfile=auto`, `ubl21`, `ubl21-en16931`,
+`peppol-bis-billing`, or the explicit complete-SBDH profile
+`peppol-envelope`; omission means `auto`. The deprecated `profile` query
 parameter remains an alias for existing clients. Responses retain both the
 requested value and the concrete frozen `resolvedProfile`, with `profile` kept
 as a compatibility alias for the resolved value.

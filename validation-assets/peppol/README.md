@@ -12,8 +12,9 @@ Peppol BIS Billing validation stage. The current bundle is
   [`runtime/`](3.0.21/runtime/).
 
 The bundle deliberately excludes the CEN Schematron already represented by
-the separate EN 16931 stage, all CII artefacts, SBDH envelope rules, and unit
-or national test corpora. The source selection and exclusions are recorded in
+the separate EN 16931 stage, all CII artefacts, SBDH envelope rules (packaged
+and versioned independently in [`../peppol-envelope/`](../peppol-envelope/)),
+and unit or national test corpora. The source selection and exclusions are recorded in
 [`provenance.json`](3.0.21/provenance.json).
 
 Run the offline verifier from the repository root:

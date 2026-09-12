@@ -11,6 +11,7 @@ resources:
   - worker-xsd.yaml
   - worker-en16931.yaml
   - worker-peppol.yaml
+  - worker-peppol-envelope.yaml
   - disruption-budgets.yaml
   - autoscaling.yaml
 labels:

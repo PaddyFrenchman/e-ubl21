@@ -66,9 +66,8 @@ type StageQueueInfraConfig struct {
 	Stages []StageQueueConfig
 }
 
-// DefaultStageQueueInfraConfig reserves independent XSD, EN 16931 and future
-// Peppol queues. The future queue reservation does not activate Peppol in any
-// validation plan. All queues retain unacknowledged work indefinitely by
+// DefaultStageQueueInfraConfig reserves independent XSD, EN 16931, Peppol
+// payload, and Peppol envelope queues. All queues retain unacknowledged work indefinitely by
 // default; capacity tuning remains independently configurable.
 func DefaultStageQueueInfraConfig() StageQueueInfraConfig {
 	const (
@@ -79,6 +78,7 @@ func DefaultStageQueueInfraConfig() StageQueueInfraConfig {
 		ValidationLayerUBL21XSD,
 		ValidationLayerEN16931,
 		ValidationLayerPeppolBISBilling,
+		ValidationLayerPeppolEnvelope,
 	}
 	config := StageQueueInfraConfig{Stages: make([]StageQueueConfig, 0, len(stages))}
 	for _, stage := range stages {
