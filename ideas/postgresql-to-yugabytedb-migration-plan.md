@@ -310,6 +310,14 @@ Against a real YugabyteDB instance:
 
 Step 1.
 
+### Implementation
+
+Implemented by the vendor-neutral [`database`](../database) package, root
+`EUBL21_DATABASE_*` configuration, and the
+[`YugabyteDB/YSQL application connectivity`](../docs/YUGABYTEDB-CONNECTIVITY.md)
+contract. The integration test requires a real YugabyteDB target and rejects a
+PostgreSQL substitute. No production business path uses the pool at this stage.
+
 ---
 
 ## Step 3 — Add a reproducible local YugabyteDB developer/test runtime

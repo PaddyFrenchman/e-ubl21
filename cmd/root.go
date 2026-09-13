@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	appdb "github.com/PaddyFrenchman/e-ubl21/database"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/server"
 	"github.com/nats-io/nats.go"
@@ -22,6 +23,7 @@ type Config struct {
 	OAuthIssuer                        string
 	OAuthAudience                      string
 	OAuthHMACSecret                    string
+	Database                           *appdb.Config
 	NATSURL                            string
 	NATSOptions                        []nats.Option
 	QueueNamespace                     queue.Namespace
@@ -122,6 +124,11 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().String("oauth-issuer", "", "OAuth issuer URL")
 	rootCmd.PersistentFlags().String("oauth-audience", "", "OAuth audience")
 	rootCmd.PersistentFlags().String("oauth-hmac-secret", "", "Shared secret used to verify HS256 bearer token signatures (required for protected routes)")
+	rootCmd.PersistentFlags().String("database-url", "", "Relational database URL (postgres/postgresql URL for YugabyteDB YSQL; optional until persistence is enabled)")
+	rootCmd.PersistentFlags().Duration("database-connect-timeout", appdb.DefaultConnectTimeout, "Maximum time for a database connection or startup probe")
+	rootCmd.PersistentFlags().Duration("database-query-timeout", appdb.DefaultQueryTimeout, "Maximum time for a database query or pool acquisition")
+	rootCmd.PersistentFlags().Int32("database-max-connections", appdb.DefaultMaxConnections, "Maximum number of database pool connections")
+	rootCmd.PersistentFlags().Int32("database-min-connections", appdb.DefaultMinConnections, "Minimum number of database pool connections")
 	rootCmd.PersistentFlags().String("nats-url", "nats://localhost:4222", "NATS server URL used to queue uploads and read/write their status")
 	rootCmd.PersistentFlags().String("queue-namespace", "", "Queue namespace scoping every JetStream stream/subject/KV bucket name (dot-separated lowercase alphanumeric segments, e.g. \"eubl21.prod\"), so multiple deployments can share one NATS cluster; empty preserves the original hard-coded names")
 	rootCmd.PersistentFlags().Float64("rate-limit-rps", 5, "Per-client requests/second allowed before rate limiting")
@@ -145,6 +152,11 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	mustBindFlag(v, rootCmd, "oauth-issuer")
 	mustBindFlag(v, rootCmd, "oauth-audience")
 	mustBindFlag(v, rootCmd, "oauth-hmac-secret")
+	mustBindFlag(v, rootCmd, "database-url")
+	mustBindFlag(v, rootCmd, "database-connect-timeout")
+	mustBindFlag(v, rootCmd, "database-query-timeout")
+	mustBindFlag(v, rootCmd, "database-max-connections")
+	mustBindFlag(v, rootCmd, "database-min-connections")
 	mustBindFlag(v, rootCmd, "nats-url")
 	mustBindFlag(v, rootCmd, "queue-namespace")
 	mustBindFlag(v, rootCmd, "rate-limit-rps")
@@ -194,6 +206,11 @@ func configureViper(v *viper.Viper) {
 	v.SetDefault("port", 8080)
 	v.SetDefault("openapi-path", "/openapi.json")
 	v.SetDefault("swagger-path", "/swagger/")
+	v.SetDefault("database-url", "")
+	v.SetDefault("database-connect-timeout", appdb.DefaultConnectTimeout)
+	v.SetDefault("database-query-timeout", appdb.DefaultQueryTimeout)
+	v.SetDefault("database-max-connections", appdb.DefaultMaxConnections)
+	v.SetDefault("database-min-connections", appdb.DefaultMinConnections)
 	v.SetDefault("nats-url", "nats://localhost:4222")
 	v.SetDefault("queue-namespace", "")
 	v.SetDefault("rate-limit-rps", 5)
@@ -269,6 +286,19 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	cfg.OAuthIssuer = v.GetString("oauth-issuer")
 	cfg.OAuthAudience = v.GetString("oauth-audience")
 	cfg.OAuthHMACSecret = v.GetString("oauth-hmac-secret")
+	cfg.Database = nil
+	if databaseURL := v.GetString("database-url"); databaseURL != "" {
+		databaseConfig, databaseErr := appdb.ParseConfigWithSettings(databaseURL, appdb.Settings{
+			ConnectTimeout: v.GetDuration("database-connect-timeout"),
+			QueryTimeout:   v.GetDuration("database-query-timeout"),
+			MaxConnections: v.GetInt32("database-max-connections"),
+			MinConnections: v.GetInt32("database-min-connections"),
+		})
+		if databaseErr != nil {
+			return fmt.Errorf("load config: %w", databaseErr)
+		}
+		cfg.Database = &databaseConfig
+	}
 	cfg.NATSURL = v.GetString("nats-url")
 	namespace, err := queue.NewNamespace(v.GetString("queue-namespace"))
 	if err != nil {

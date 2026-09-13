@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -150,6 +151,9 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	if cfg.QueueNamespace != queue.DefaultNamespace {
 		t.Fatalf("queue namespace = %q, want DefaultNamespace", cfg.QueueNamespace)
 	}
+	if cfg.Database != nil {
+		t.Fatalf("database should remain optional, got %v", cfg.Database)
+	}
 	if cfg.UploadContentRetention != 30*24*time.Hour || cfg.UploadContentMaxBytes != 10<<30 {
 		t.Fatalf("default upload content limits = retention %s, max bytes %d", cfg.UploadContentRetention, cfg.UploadContentMaxBytes)
 	}
@@ -173,6 +177,45 @@ func TestLoadConfigDefaultsQueueNamespaceToDefaultNamespace(t *testing.T) {
 	}
 	if cfg.StageXSDAckWait != 90*time.Second || cfg.StageXSDMaxAckPending != 64 || cfg.StageENAckWait != 120*time.Second || cfg.StageENMaxAckPending != 32 || cfg.StagePeppolAckWait != 120*time.Second || cfg.StagePeppolMaxAckPending != 32 {
 		t.Fatalf("default stage provisioning config = %+v", cfg)
+	}
+}
+
+func TestLoadConfigReadsVendorNeutralDatabaseSettings(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	t.Setenv("EUBL21_DATABASE_URL", "postgres://app:secret@yb.example:15433/accounting?sslmode=verify-full")
+	t.Setenv("EUBL21_DATABASE_CONNECT_TIMEOUT", "2s")
+	t.Setenv("EUBL21_DATABASE_QUERY_TIMEOUT", "3s")
+	t.Setenv("EUBL21_DATABASE_MAX_CONNECTIONS", "17")
+	t.Setenv("EUBL21_DATABASE_MIN_CONNECTIONS", "2")
+
+	cfg := &Config{}
+	if err := loadConfig(v, cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Database == nil {
+		t.Fatal("database config was not loaded")
+	}
+	if cfg.Database.Host() != "yb.example" || cfg.Database.Port() != 15433 || cfg.Database.Database() != "accounting" || cfg.Database.User() != "app" || cfg.Database.SSLMode() != "verify-full" {
+		t.Fatalf("database endpoint config = %+v", cfg.Database)
+	}
+	if cfg.Database.ConnectTimeout() != 2*time.Second || cfg.Database.QueryTimeout() != 3*time.Second || cfg.Database.MaxConnections() != 17 || cfg.Database.MinConnections() != 2 {
+		t.Fatalf("database pool config = %+v", cfg.Database)
+	}
+}
+
+func TestLoadConfigRejectsDatabaseSettingsWithoutLeakingPassword(t *testing.T) {
+	v := viper.New()
+	configureViper(v)
+	const password = "do-not-print-this"
+	t.Setenv("EUBL21_DATABASE_URL", "postgres://app:"+password+"@localhost:bad/eubl21")
+
+	err := loadConfig(v, &Config{})
+	if err == nil {
+		t.Fatal("expected malformed database configuration to fail")
+	}
+	if strings.Contains(err.Error(), password) {
+		t.Fatalf("configuration error leaked password: %v", err)
 	}
 }
 

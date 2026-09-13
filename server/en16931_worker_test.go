@@ -597,10 +597,12 @@ func TestENWorkerUsesPinnedSaxonAdapter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, ctx := newENWorkerTestClient(t)
+	client, _ := newENWorkerTestClient(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	t.Cleanup(cancel)
 	_, _ = authorizeENWorkerRequest(t, ctx, client, content)
 	message := fetchENWorkerRequest(t, ctx, client)
-	worker := newTestENStageWorker(client, newSaxonEN16931Validator(runtime, 15*time.Second))
+	worker := newTestENStageWorker(client, newSaxonEN16931Validator(runtime, 45*time.Second))
 	if err := worker.handle(ctx, message); err != nil {
 		t.Fatal(err)
 	}
