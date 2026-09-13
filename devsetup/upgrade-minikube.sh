@@ -96,7 +96,7 @@ curl --fail --location --silent --show-error --retry 3 \
 echo "$TARGET_MINIKUBE_SHA256  $TMP_DIR/minikube" | sha256sum --check
 chmod 0755 "$TMP_DIR/minikube"
 
-DOWNLOADED_VERSION="$($TMP_DIR/minikube version --short)"
+DOWNLOADED_VERSION="$("$TMP_DIR/minikube" version --short)"
 [[ "$DOWNLOADED_VERSION" == "$TARGET_MINIKUBE_VERSION" ]] || \
     fail "downloaded Minikube reports $DOWNLOADED_VERSION, expected $TARGET_MINIKUBE_VERSION"
 
@@ -134,8 +134,8 @@ for expected in 'host=Running' 'kubelet=Running' 'apiserver=Running' 'kubeconfig
     grep -Fq "$expected" <<<"$STATUS" || fail "Minikube status missing expected state: $expected"
 done
 
-NODE_VERSION="$(minikube kubectl --profile "$MINIKUBE_PROFILE" -- get nodes -o jsonpath='{.items[0].status.nodeInfo.kubeletVersion}')"
-CONTAINER_RUNTIME="$(minikube kubectl --profile "$MINIKUBE_PROFILE" -- get nodes -o jsonpath='{.items[0].status.nodeInfo.containerRuntimeVersion}')"
+NODE_VERSION="$(minikube -p "$MINIKUBE_PROFILE" kubectl -- get nodes -o jsonpath='{.items[0].status.nodeInfo.kubeletVersion}')"
+CONTAINER_RUNTIME="$(minikube -p "$MINIKUBE_PROFILE" kubectl -- get nodes -o jsonpath='{.items[0].status.nodeInfo.containerRuntimeVersion}')"
 
 [[ "$NODE_VERSION" == "$TARGET_KUBERNETES_VERSION" ]] || \
     fail "cluster kubelet is $NODE_VERSION, expected $TARGET_KUBERNETES_VERSION"
@@ -158,8 +158,8 @@ fi
     echo "docker_compose_version=$(docker compose version)"
 } | tee "$STATE_DIR/qualified-runtime.txt"
 
-minikube profile list | tee "$STATE_DIR/minikube-profile-list.txt"
-minikube kubectl --profile "$MINIKUBE_PROFILE" -- version | tee "$STATE_DIR/kubectl-version.txt"
+minikube profile list 2>&1 | tee "$STATE_DIR/minikube-profile-list.txt" || true
+minikube -p "$MINIKUBE_PROFILE" kubectl -- version | tee "$STATE_DIR/kubectl-version.txt"
 
 printf '\nRunning Go test suite on exact candidate %s...\n' "$COMMIT"
 go test ./... -count=1 2>&1 | tee "$STATE_DIR/go-test.log"
