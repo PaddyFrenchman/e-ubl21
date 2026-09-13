@@ -442,6 +442,10 @@ YugabyteDB/YSQL runtime and run its application integration test with:
 make database-test
 ```
 
+Local startup applies the embedded, versioned schema migrations. Their asset,
+locking, failure, and forward-fix contracts are documented in
+[`docs/YUGABYTEDB-SCHEMA-MIGRATIONS.md`](docs/YUGABYTEDB-SCHEMA-MIGRATIONS.md).
+
 Use `make database-stop` to retain its persistent volume or the destructive
 `make database-reset` to remove it. The full lifecycle and acceptance check are
 documented in [`docs/LOCAL-YUGABYTEDB.md`](docs/LOCAL-YUGABYTEDB.md).

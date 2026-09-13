@@ -30,12 +30,18 @@ repository wrapper runs `ysqlsh` inside the pinned container.
 
 ## Common lifecycle
 
-Start YugabyteDB, wait for authenticated YSQL readiness, verify the pinned
-build, and run `SELECT 1`:
+Start YugabyteDB, wait for authenticated YSQL readiness, apply all schema
+migrations, verify the pinned build, and run `SELECT 1`:
 
 ```bash
 make database-up
 ```
+
+`database-up` safely checks and reapplies the migration runner on every call.
+Run `make database-migrate` when an already-running database only needs its
+schema advanced. The migration design, history, locking, and recovery policy
+are documented in
+[`YUGABYTEDB-SCHEMA-MIGRATIONS.md`](YUGABYTEDB-SCHEMA-MIGRATIONS.md).
 
 Run the existing application database integration test against that runtime:
 
@@ -97,7 +103,8 @@ It automates the issue acceptance scenarios in order:
 2. proves readiness fails within a bounded deadline while the node is stopped;
 3. creates a marker table, restarts the node, and verifies the data survived;
 4. resets the persistent volume and verifies the marker was removed;
-5. runs `TestYugabyteDBIntegration` through the application database package;
+5. runs the connectivity and schema-migration integration gates through the
+   application database package;
 6. removes the disposable runtime on exit, including after a failed check.
 
 The local runtime deliberately uses `sslmode=disable`. The application keeps

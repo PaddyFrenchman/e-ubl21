@@ -1,4 +1,4 @@
-.PHONY: docker-verify database-up database-wait database-smoke database-test database-stop database-restart database-reset database-verify test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Verify the genuine Docker Engine and official Compose plugin through a
 # disposable image/container/network/volume/bind-mount/health-check lifecycle.
@@ -15,6 +15,9 @@ database-wait:
 
 database-smoke:
 	./devsetup/yugabytedb-local.sh smoke
+
+database-migrate:
+	./devsetup/yugabytedb-local.sh migrate
 
 database-test:
 	./devsetup/yugabytedb-local.sh test

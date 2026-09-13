@@ -26,6 +26,7 @@ Commands:
   up          Start the pinned local YugabyteDB and wait for a smoke query.
   wait        Wait for authenticated YSQL readiness.
   smoke       Check the exact YugabyteDB build and execute SELECT 1.
+  migrate     Apply pending embedded schema migrations.
   test        Start the runtime and run the database package integration test.
   stop        Stop the container while retaining its persistent volume.
   restart     Restart the container and verify readiness.
@@ -88,6 +89,16 @@ compose() {
 database_url() {
     printf 'postgresql://%s:%s@%s:%s/%s?sslmode=disable\n' \
         "$YSQL_USER" "$YSQL_PASSWORD" "$YSQL_HOST" "$YSQL_PORT" "$YSQL_DATABASE"
+}
+
+admin_database_url() {
+    printf 'postgresql://yugabyte:yugabyte@%s:%s/yugabyte?sslmode=disable\n' \
+        "$YSQL_HOST" "$YSQL_PORT"
+}
+
+run_migrations() {
+    EUBL21_DATABASE_URL="$(database_url)" \
+        go run . database migrate
 }
 
 ysql_as() {
@@ -178,6 +189,7 @@ up() {
     wait_admin_ready
     compose run --rm bootstrap
     wait_ready
+    run_migrations
     smoke
 }
 
@@ -194,7 +206,8 @@ reset_runtime() {
 run_integration_test() {
     up
     EUBL21_TEST_DATABASE_URL="$(database_url)" \
-        go test ./database -run '^TestYugabyteDBIntegration$' -count=1
+    EUBL21_TEST_DATABASE_ADMIN_URL="$(admin_database_url)" \
+        go test ./database -run '^TestYugabyteDB(Integration|Migrations)$' -count=1
 }
 
 verify_lifecycle() {
@@ -222,7 +235,8 @@ verify_lifecycle() {
     [[ -z "$reset_relation" ]] || die "clean reset retained test state"
 
     EUBL21_TEST_DATABASE_URL="$(database_url)" \
-        go test ./database -run '^TestYugabyteDBIntegration$' -count=1
+    EUBL21_TEST_DATABASE_ADMIN_URL="$(admin_database_url)" \
+        go test ./database -run '^TestYugabyteDB(Integration|Migrations)$' -count=1
     echo "Local YugabyteDB lifecycle verification passed."
 }
 
@@ -231,6 +245,7 @@ case "$command" in
     up) up ;;
     wait) wait_ready ;;
     smoke) smoke ;;
+    migrate) run_migrations ;;
     test) run_integration_test ;;
     stop) stop_runtime ;;
     restart)

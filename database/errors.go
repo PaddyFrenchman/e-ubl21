@@ -14,6 +14,7 @@ const (
 	ErrorConnectivity  ErrorKind = "connectivity"
 	ErrorQuery         ErrorKind = "query"
 	ErrorPool          ErrorKind = "pool"
+	ErrorMigration     ErrorKind = "migration"
 )
 
 // Error is a structured, credential-safe database error.

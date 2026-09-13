@@ -451,6 +451,13 @@ Against fresh YugabyteDB:
 
 Steps 2-3.
 
+Implemented by the contiguous embedded SQL assets in
+[`database/migrations`](../database/migrations), the checksummed advisory-lock
+migration runner and real-YugabyteDB compatibility tests in
+[`database`](../database), the `database migrate` command, the automatic local
+runtime migration step, and the documented forward-only recovery policy in
+[`YUGABYTEDB-SCHEMA-MIGRATIONS.md`](../docs/YUGABYTEDB-SCHEMA-MIGRATIONS.md).
+
 ---
 
 ## Step 5 — Replace CloudNativePG/PostgreSQL in the on-prem installer
