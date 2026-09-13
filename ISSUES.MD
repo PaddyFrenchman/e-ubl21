@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. The YugabyteDB migration program is tracked by issues #119 through #130; #119 is complete and #120 is the next issue in that migration sequence.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. The YugabyteDB migration program is tracked by issues #119 through #130; #119 and #120 are complete, and #121 is the next issue in that migration sequence.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -946,7 +946,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/119
 
 **Implementation assets:** [`database`](database), [`docs/YUGABYTEDB-CONNECTIVITY.md`](docs/YUGABYTEDB-CONNECTIVITY.md), and the vendor-neutral `EUBL21_DATABASE_*` root configuration in [`cmd/root.go`](cmd/root.go).
 
-**Status:** Implemented on `issue/120-yugabytedb-connectivity`; review/merge pending. The application database package, typed configuration, pgx pool, bounded operations, safe errors, and opt-in real-YugabyteDB integration contract are implemented and locally qualified without adding a production business-state dependency.
+**Status:** Complete / closed. PR #132 implements the application database package, typed configuration, pgx pool, bounded operations, credential-safe errors and formatting, and the opt-in real-YugabyteDB integration contract without adding a production business-state dependency.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/120
 
@@ -1095,4 +1095,4 @@ The Phase 9 YugabyteDB migration is a separate platform sequence with its own de
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
 - Issue #88 and #89 should be evaluated together when the future persistence architecture is revisited, while remaining separate issues because raw-content storage and metadata persistence have different migration and failure semantics.
-- Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Issue #119 is complete; #120 is the next implementation step. Their detailed scopes remain synchronized with `ideas/postgresql-to-yugabytedb-migration-plan.md`.
+- Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Issues #119 and #120 are complete; #121 is the next implementation step. Their detailed scopes remain synchronized with `ideas/postgresql-to-yugabytedb-migration-plan.md`.
