@@ -76,8 +76,8 @@ baseline rather than early access to a newer feature line.
 
 Deployment and test assets must pin a complete immutable release/build or image
 digest from the 2025.2 LTS series; floating tags such as `latest` and unqualified
-series tags are prohibited. The exact artifact pin will be introduced with the
-first reproducible runtime in #121. A later maintenance release within 2025.2
+series tags are prohibited. The first reproducible runtime introduced by #121
+pins `2025.2.6.0-b111`. A later maintenance release within 2025.2
 may replace it only through a reviewed change that runs database integration,
 migration, and applicable regression gates against the exact candidate.
 Changing release series requires a superseding ADR or an explicit amendment to

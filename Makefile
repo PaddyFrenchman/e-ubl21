@@ -1,4 +1,30 @@
-.PHONY: test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: database-up database-wait database-smoke database-test database-stop database-restart database-reset database-verify test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+
+# Manage the pinned, authenticated single-node YugabyteDB runtime used by local
+# development and database integration tests. database-reset is destructive.
+database-up:
+	./devsetup/yugabytedb-local.sh up
+
+database-wait:
+	./devsetup/yugabytedb-local.sh wait
+
+database-smoke:
+	./devsetup/yugabytedb-local.sh smoke
+
+database-test:
+	./devsetup/yugabytedb-local.sh test
+
+database-stop:
+	./devsetup/yugabytedb-local.sh stop
+
+database-restart:
+	./devsetup/yugabytedb-local.sh restart
+
+database-reset:
+	./devsetup/yugabytedb-local.sh reset
+
+database-verify:
+	./devsetup/yugabytedb-local.sh verify
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
