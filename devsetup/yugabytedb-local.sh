@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/devsetup/lib/docker-engine.sh"
 COMPOSE_FILE="$ROOT_DIR/deploy/local/yugabytedb-compose.yml"
 PROJECT_NAME="eubl21-yugabytedb-local"
 SERVICE_NAME="yugabytedb"
@@ -47,18 +48,8 @@ require_timeout() {
 
 detect_compose() {
     (( COMPOSE_READY == 0 )) || return 0
-    if docker compose version >/dev/null 2>&1; then
-        COMPOSE=(docker compose)
-    elif command -v docker-compose >/dev/null 2>&1; then
-        COMPOSE=(docker-compose)
-    else
-        die "Docker Compose is required (docker compose or docker-compose)"
-    fi
-    if ! YB_LOCAL_YSQL_PORT="$YSQL_PORT" \
-        "${COMPOSE[@]}" --project-name "$PROJECT_NAME" --file "$COMPOSE_FILE" \
-        ps >/dev/null 2>&1; then
-        die "the Docker-compatible container engine is not reachable by Compose"
-    fi
+    require_docker_compose || exit 1
+    COMPOSE=(docker compose)
     COMPOSE_READY=1
 }
 
@@ -79,7 +70,7 @@ require_free_space() {
     require_free_kib "$repository_available_kib" "repository"
 
     # Query the filesystem through the actual service volume. This remains
-    # accurate when Docker/Podman storage is on another disk or a remote host.
+    # accurate when Docker storage is on another disk or a remote host.
     volume_available_kib="$(
         compose run --rm --no-deps "$STORAGE_CHECK_SERVICE" \
             -Pk /home/yugabyte/yb_data |

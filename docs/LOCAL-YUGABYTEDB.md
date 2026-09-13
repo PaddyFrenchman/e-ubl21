@@ -20,7 +20,8 @@ storage policy.
 
 ## Prerequisites
 
-- Docker Engine with Compose v2, or Docker plus `docker-compose` v1.
+- Docker Engine with the official Docker Compose v2 plugin. See
+  [`DOCKER-DEVELOPMENT.md`](DOCKER-DEVELOPMENT.md) for setup and verification.
 - Enough local resources for a single YugabyteDB node.
 - Go 1.25 for the application integration test.
 

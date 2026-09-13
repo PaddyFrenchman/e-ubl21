@@ -14,9 +14,10 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/devsetup/lib/docker-engine.sh"
 cd "$ROOT_DIR"
 
-for cmd in minikube docker go curl; do
+for cmd in minikube go curl; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "ERROR: required command not found: $cmd" >&2
         exit 2
@@ -24,14 +25,8 @@ for cmd in minikube docker go curl; do
 done
 
 MINIKUBE_PROFILE="${MINIKUBE_PROFILE:-e-ubl21-i65}"
-if [[ -z "${MINIKUBE_DRIVER:-}" ]]; then
-    DOCKER_VERSION="$(docker --version 2>&1)"
-    if [[ "${DOCKER_VERSION,,}" == *podman* ]]; then
-        MINIKUBE_DRIVER=podman
-    else
-        MINIKUBE_DRIVER=docker
-    fi
-fi
+MINIKUBE_DRIVER="${MINIKUBE_DRIVER:-docker}"
+require_docker_engine
 if [[ "$MINIKUBE_DRIVER" == "podman" ]]; then
     export MINIKUBE_ROOTLESS="${MINIKUBE_ROOTLESS:-true}"
 fi

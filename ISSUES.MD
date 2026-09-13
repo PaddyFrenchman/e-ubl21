@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #121 are complete, and #122 is the next issue in that migration sequence.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #121 are complete. Priority workstation-runtime issue #133 is in progress before migration work resumes with #122.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -968,7 +968,19 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/120
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/121
 
-### 59. #122 — MIG-YB-004 — Establish YugabyteDB schema migration framework and compatibility gates
+### 59. #133 — PRIORITY — Convert local development runtime from Podman compatibility to Docker Engine
+
+**Goal:** Make genuine Docker Engine, the Docker CLI, Buildx, and the official Compose v2 plugin the primary local container runtime while retaining Podman as an optional independent tool.
+
+**Dependencies:** #121. Complete before #122.
+
+**Implementation assets:** [`ideas/podman-to-docker-conversion.md`](ideas/podman-to-docker-conversion.md), [`docs/DOCKER-DEVELOPMENT.md`](docs/DOCKER-DEVELOPMENT.md), and Docker prerequisite/setup/verification tooling in [`devsetup`](devsetup).
+
+**Status:** In progress on its issue branch; the host conversion and Docker-backed acceptance gates remain required before review.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/133
+
+### 60. #122 — MIG-YB-004 — Establish YugabyteDB schema migration framework and compatibility gates
 
 **Goal:** Add ordered, versioned, repeatable schema migrations and validate them against real YugabyteDB.
 
@@ -976,7 +988,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/121
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/122
 
-### 60. #123 — MIG-YB-005 — Replace CloudNativePG/PostgreSQL with YugabyteDB in on-prem installation
+### 61. #123 — MIG-YB-005 — Replace CloudNativePG/PostgreSQL with YugabyteDB in on-prem installation
 
 **Goal:** Make clean supported on-prem installations deploy YugabyteDB instead of CloudNativePG/PostgreSQL.
 
@@ -984,7 +996,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/122
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/123
 
-### 61. #124 — MIG-YB-006 — Add safe on-prem upgrade path from PostgreSQL/CloudNativePG deployment to YugabyteDB
+### 62. #124 — MIG-YB-006 — Add safe on-prem upgrade path from PostgreSQL/CloudNativePG deployment to YugabyteDB
 
 **Goal:** Provide a non-destructive upgrade path that detects old installations, preserves unknown data and retires PostgreSQL only after successful YugabyteDB verification and explicit operator intent.
 
@@ -992,7 +1004,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/123
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/124
 
-### 62. #125 — MIG-YB-007 — Integrate YugabyteDB into Minikube regression topology
+### 63. #125 — MIG-YB-007 — Integrate YugabyteDB into Minikube regression topology
 
 **Goal:** Make local Kubernetes regression exercise the same YugabyteDB technology used by deployment and record DB/migration readiness in regression evidence.
 
@@ -1000,7 +1012,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/124
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/125
 
-### 63. #126 — MIG-YB-008 — Add YugabyteDB unit/integration/regression CI gates
+### 64. #126 — MIG-YB-008 — Add YugabyteDB unit/integration/regression CI gates
 
 **Goal:** Prevent relational persistence changes from being accepted without running against the pinned YugabyteDB version and migration/runtime compatibility gates.
 
@@ -1008,7 +1020,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/125
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/126
 
-### 64. #127 — MIG-YB-009 — Define production YugabyteDB HA and multi-region deployment architecture
+### 65. #127 — MIG-YB-009 — Define production YugabyteDB HA and multi-region deployment architecture
 
 **Goal:** Replace PostgreSQL/Aurora/Azure-PostgreSQL assumptions with explicit single-node, production HA and cloud/multi-region YugabyteDB deployment contracts.
 
@@ -1016,7 +1028,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/126
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/127
 
-### 65. #128 — MIG-YB-010 — Establish YugabyteDB backup/restore, DR, security and observability
+### 66. #128 — MIG-YB-010 — Establish YugabyteDB backup/restore, DR, security and observability
 
 **Goal:** Make YugabyteDB production-operable through documented and tested backup/restore, disaster recovery, security, metrics, alerting and runbooks.
 
@@ -1024,7 +1036,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/127
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/128
 
-### 66. #129 — MIG-YB-011 — Remove stale PostgreSQL architecture and retarget future metadata persistence to YugabyteDB
+### 67. #129 — MIG-YB-011 — Remove stale PostgreSQL architecture and retarget future metadata persistence to YugabyteDB
 
 **Goal:** Remove stale PostgreSQL/CloudNativePG production assumptions and retarget issue #89's future metadata architecture to YugabyteDB without implementing that metadata migration yet.
 
@@ -1032,7 +1044,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/128
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/129
 
-### 67. #130 — MIG-YB-012 — Qualify YugabyteDB migration and retire PostgreSQL support
+### 68. #130 — MIG-YB-012 — Qualify YugabyteDB migration and retire PostgreSQL support
 
 **Goal:** Run final unit, DB integration, regression, fresh-install, upgrade, backup/restore and documentation qualification before PostgreSQL support is retired.
 
