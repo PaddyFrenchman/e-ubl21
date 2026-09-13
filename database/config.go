@@ -185,3 +185,9 @@ func (c Config) String() string {
 	return fmt.Sprintf("database host=%q port=%d name=%q sslmode=%q connect_timeout=%s query_timeout=%s max_connections=%d min_connections=%d",
 		c.host, c.port, c.database, c.sslMode, c.connectTimeout, c.queryTimeout, c.maxConnections, c.minConnections)
 }
+
+// GoString prevents %#v formatting from bypassing String and rendering the
+// private connection string, which can contain a password.
+func (c Config) GoString() string {
+	return c.String()
+}

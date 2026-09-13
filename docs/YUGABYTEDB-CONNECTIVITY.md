@@ -59,6 +59,9 @@ The normalized connection string remains private and the configuration's
 string representation omits all user information and passwords. Returned
 errors contain a stable operation and kind but do not render the underlying
 driver error, preventing connection credentials from entering normal logs.
+Both configuration and structured errors also provide safe Go-syntax
+formatting, so `%#v` cannot expose their private connection string or driver
+cause.
 Deadline checks remain available through
 `errors.Is(err, context.DeadlineExceeded)`.
 

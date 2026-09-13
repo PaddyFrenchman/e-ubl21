@@ -31,6 +31,12 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("database %s failed", e.Operation)
 }
 
+// GoString prevents %#v formatting from rendering the private driver cause,
+// which can contain connection credentials.
+func (e *Error) GoString() string {
+	return e.Error()
+}
+
 // Is preserves deadline/cancellation checks without exposing the underlying
 // driver's potentially sensitive diagnostic text through error formatting.
 func (e *Error) Is(target error) bool {

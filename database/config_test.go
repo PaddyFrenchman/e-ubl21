@@ -23,9 +23,8 @@ func TestParseConfigAppliesYSQLDefaults(t *testing.T) {
 	if config.ConnectTimeout() != DefaultConnectTimeout || config.QueryTimeout() != DefaultQueryTimeout || config.MaxConnections() != DefaultMaxConnections || config.MinConnections() != DefaultMinConnections {
 		t.Fatalf("pool defaults = %+v", config)
 	}
-	if strings.Contains(fmt.Sprintf("%+v", config), "secret") || strings.Contains(config.String(), "secret") {
-		t.Fatal("formatted config disclosed the password")
-	}
+	assertSecretNotFormatted(t, config, "secret")
+	assertSecretNotFormatted(t, &config, "secret")
 }
 
 func TestParseConfigPreservesExplicitValues(t *testing.T) {
@@ -134,7 +133,21 @@ func TestParseErrorsDoNotLeakCredentials(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected an error")
 	}
-	if strings.Contains(err.Error(), password) || strings.Contains(fmt.Sprintf("%+v", err), password) {
-		t.Fatalf("error disclosed password: %v", err)
+	assertSecretNotFormatted(t, err, password)
+}
+
+func TestOperationalErrorsDoNotFormatPrivateCause(t *testing.T) {
+	const password = "private-driver-password"
+	err := operationError(ErrorConnectivity, "connectivity probe", errors.New("driver included "+password))
+	assertSecretNotFormatted(t, err, password)
+}
+
+func assertSecretNotFormatted(t *testing.T, value any, secret string) {
+	t.Helper()
+	for _, format := range []string{"%v", "%+v", "%#v"} {
+		formatted := fmt.Sprintf(format, value)
+		if strings.Contains(formatted, secret) {
+			t.Fatalf("format %q disclosed secret: %s", format, formatted)
+		}
 	}
 }
