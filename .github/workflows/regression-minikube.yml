@@ -35,8 +35,8 @@ jobs:
     env:
       MINIKUBE_PROFILE: e-ubl21-regression
       MINIKUBE_DRIVER: docker
-      MINIKUBE_VERSION: v1.38.1
-      MINIKUBE_SHA256: 099477eaf248bcb5bcea8ce78a2898e93ac01461c35189da1848c3de82ecd22e
+      MINIKUBE_VERSION: v1.39.0
+      MINIKUBE_SHA256: b738496da01be06bbaf80c688f57ce25acd3849fbb518155f3a88e03ef555aa4
     steps:
       - uses: actions/checkout@v4
         with:
@@ -61,6 +61,7 @@ jobs:
           minikube start
           --profile "$MINIKUBE_PROFILE"
           --driver "$MINIKUBE_DRIVER"
+          --container-runtime docker
           --kubernetes-version v1.35.1
           --cpus 2
           --memory 4096mb
