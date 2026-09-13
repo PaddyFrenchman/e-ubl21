@@ -33,6 +33,11 @@ The normal flow is:
 ```text
 issue/<number>-<description>
         |
+        |  implementation/review commits
+        v
+   squash merge
+        |
+        |  exactly one commit per completed issue
         v
    development
         |
@@ -54,8 +59,9 @@ The branch model is a repository invariant, not a naming convention. GitHub must
 
 - Set `development` as the GitHub default branch.
 - Protect `main` from direct day-to-day development pushes, force pushes, and deletion. Changes to `main` must come only from an approved `release/vX.Y.Z` promotion and must pass the required release verification.
-- Protect `development` from force pushes and deletion. Normal changes reach it through issue-branch integration after required verification succeeds.
-- Keep linear history on `development` and `main` unless a specific exception is explicitly authorized.
+- Protect `development` from force pushes and deletion. Normal changes reach it through reviewed issue pull requests after required verification succeeds.
+- Keep linear, issue-level history on `development` and `main` unless a specific exception is explicitly authorized.
+- Normal issue pull requests into `development` must use **Squash and merge** so each completed issue produces exactly one canonical commit on `development`. Merge commits and GitHub's rebase-merge method are not used for normal issue integration. Where repository settings allow, enable squash merging and disable the other normal PR merge methods.
 - When hosted CI regression execution is enabled, require the applicable correctness, Minikube, and standards-validation checks for development and release integration. During the temporary suspension defined below, the local regression gate replaces those hosted regression checks.
 - Do not create a permanent `release` branch. Protect short-lived `release/vX.Y.Z` branches as release candidates where repository-plan capabilities permit.
 
@@ -90,7 +96,7 @@ The intended repository CI workflow model remains:
 - Pull requests targeting `development`, `release/vX.Y.Z`, or `main` normally run the relevant correctness and compliance gates.
 - Pushes to `development`, `release/vX.Y.Z`, and `main` normally run the relevant regression/compliance gates.
 - `main` CI is therefore a release-verification safety net, not the normal development integration path.
-- Cleanup of completed `issue/*` branches is based on containment in `development`, not containment in `main`.
+- Cleanup of completed `issue/*` branches is based on successful squash integration into `development` and verification that the squash commit tree represents the reviewed issue candidate, not on ancestry of the issue branch's individual commits.
 
 While the temporary local regression policy above is active, the hosted regression-execution requirements in this section are suspended and the local `./run-regression-tests.sh` result is the authoritative regression gate.
 
@@ -142,7 +148,7 @@ Each GitHub issue must be implemented on its own issue branch created from the s
 3. Synchronize it with `git pull --ff-only origin development`.
 4. Create the issue branch from local `development`, for example `git switch -c issue/61-safe-deployment-migration`.
 5. Implement and test on the issue branch.
-6. Commit the reviewable work and push the issue branch.
+6. Commit the reviewable work and push the issue branch. The branch may contain as many implementation and review-fix commits as are useful.
 7. Create a pull request from the issue branch into `development`.
 
 Issue branches must not be created from `main`, from a release branch, or directly from the `origin/development` remote-tracking ref.
@@ -170,13 +176,13 @@ The required review loop is:
 8. Findings that are fully addressed are recorded as resolved; unresolved findings remain blocking or advisory according to severity. New findings are added when necessary.
 9. Steps 6 through 8 repeat until the implementation fully satisfies the issue and ChatGPT reports no unresolved blocking findings.
 
-The PR and its review comments are retained as the audit trail connecting each finding to the commit that addressed it. Review comments must not be deleted merely because they are resolved.
+The PR and its review comments are retained as the audit trail connecting each finding to the commit that addressed it. Review comments must not be deleted merely because they are resolved. Individual issue-branch commits are also part of this detailed audit trail even though they are squashed into one canonical `development` commit at integration time.
 
 During this review loop:
 
 - do not ask Codex to run a redundant complete review after ChatGPT has already reviewed the same PR state unless the user explicitly wants an additional review;
 - do not rebase the issue branch onto `development` merely because a review iteration completed;
-- do not fast-forward the issue branch into `development`;
+- do not squash-merge or otherwise integrate the issue branch into `development`;
 - do not close the PR as merged;
 - do not close the GitHub issue;
 - do not interpret a clean ChatGPT PR review as authorization to integrate or close the issue.
@@ -185,37 +191,37 @@ During this review loop:
 
 Neither ChatGPT nor Codex must **ever close a GitHub issue unless the user explicitly instructs it to close that specific issue**. A request to implement, test, commit, push, create a PR, review a PR, add comments, address review findings, or otherwise continue the review cycle is not permission to close or integrate the issue.
 
-Until the user explicitly says to close the issue, the work remains on the issue branch and in its pull request. The branch may be committed and pushed repeatedly, and ChatGPT may review the PR repeatedly, but the closing/integration workflow must not begin: do not rebase for integration, switch to `development` for integration, fast-forward the issue branch into `development`, push the integrated `development`, or change the GitHub issue state.
+Until the user explicitly says to close the issue, the work remains on the issue branch and in its pull request. The branch may be committed and pushed repeatedly, and ChatGPT may review the PR repeatedly, but the closing/integration workflow must not begin: do not rebase for integration, squash-merge the PR, otherwise update `development` with the issue changes, or change the GitHub issue state.
 
 Mentioning this workflow, asking whether work is committed or pushed, or saying that the issue appears complete does not authorize issue closure or integration. If the user's intent to close a specific issue is ambiguous, ChatGPT or Codex must ask rather than infer permission.
 
-Only when explicitly told to **close a specific issue** must the following **rebase-first, fast-forward-only** integration workflow begin. The intent is to keep `development` linear while preserving the PR as the completed review record.
+Only when explicitly told to **close a specific issue** must the following **rebase-and-squash** integration workflow begin. The intent is to retain the PR and issue branch as the detailed implementation/review history while keeping `development` clean with exactly one canonical commit per completed issue.
 
 1. Fetch the latest remote state with `git fetch origin --prune` and ensure the working tree is clean.
 2. Switch to the issue branch.
 3. Rebase the issue branch onto the current `origin/development` with `git rebase origin/development`.
 4. Resolve any conflicts on the issue branch. If the rebase cannot be completed safely, abort it and report the problem rather than merging `development` into the issue branch.
-5. Run the tests and verification required by the issue/repository on the rebased branch. While the temporary hosted-CI suspension is active, this includes a successful local `./run-regression-tests.sh` whenever regression verification applies.
+5. Run the tests and verification required by the issue/repository on the exact rebased candidate. While the temporary hosted-CI suspension is active, this includes a successful local `./run-regression-tests.sh` whenever regression verification applies.
 6. A rebase normally rewrites existing commits; it does **not** require an additional commit unless resolving the rebase requires an actual content change. If published commits were rewritten, push the rebased issue branch with `git push --force-with-lease origin <issue-branch>`; otherwise use a normal push as appropriate.
 7. Re-check the PR after the rebase to ensure the reviewed implementation remains unchanged in substance and no new blocking finding or conflict-resolution regression was introduced. ChatGPT remains the designated reviewer for any substantive post-rebase review; Codex should not perform a redundant full review unless explicitly requested.
-8. Switch to `development` and update it with `git pull --ff-only origin development`.
-9. Integrate the issue branch with `git merge --ff-only <issue-branch>`.
-10. Run the final required verification on the integrated `development` state. While the temporary hosted-CI suspension is active, use the local regression runner as the authoritative regression gate.
-11. Push `development` with `git push origin development`.
-12. Close the PR as completed/merged according to the repository's chosen PR bookkeeping method.
-13. Only after the integrated `development` push succeeds should the GitHub issue be closed.
-14. Delete the completed issue branch only after its commits are confirmed contained in `development`.
-
-If `git merge --ff-only` fails because `development` advanced after the rebase, return to the issue branch, rebase it onto the new `origin/development`, repeat verification and the post-rebase PR check, then try the fast-forward integration again.
+8. Confirm that `development` has not advanced since the rebase. If it has advanced, rebase the issue branch again onto the new `origin/development`, repeat required verification, push the updated branch, and repeat the post-rebase PR check.
+9. Integrate the PR using GitHub **Squash and merge**. The squash commit title/message should identify the issue clearly, normally including the issue number and concise issue title. This squash commit is the single canonical `development` commit for that issue.
+10. Verify the integration immediately after the squash merge: the resulting squash commit must be on `development`, and its tree must match the reviewed/tested issue-branch candidate tree. Because the base was synchronized before the squash, tree equality proves that the code integrated into `development` is exactly the code that passed final candidate verification.
+11. If the squash commit tree does not match the reviewed/tested candidate tree, treat the integration as failed: do not silently accept the discrepancy, and investigate/review the difference before proceeding.
+12. Complete PR bookkeeping and close the GitHub issue if it was not automatically closed by the squash merge. Issue closure is valid only after the squash merge succeeds and the tree-equivalence check confirms the reviewed candidate was integrated.
+13. Delete the completed issue branch only after the squash commit is confirmed on `development` and tree equivalence has been established.
 
 **Do not:**
 
 - merge `development` into an issue branch;
 - integrate an issue branch directly into `main`;
 - integrate an issue branch directly into a `release/vX.Y.Z` branch;
-- create a merge commit when integrating an issue branch unless explicitly instructed;
-- use the GitHub PR merge button to bypass the documented rebase-first, fast-forward-only integration policy;
-- close the GitHub issue before the rebased branch has been successfully fast-forwarded into `development`, verified, and pushed.
+- create a merge commit for normal issue integration;
+- use GitHub's rebase-merge method for normal issue integration;
+- preserve the issue branch's individual commits on `development` when the issue can be represented by its single reviewed squash result;
+- close the GitHub issue before the squash merge has succeeded and the resulting `development` tree has been confirmed equivalent to the reviewed/tested candidate.
+
+The normal integration invariant is therefore: **one GitHub issue -> one squash commit on `development`**.
 
 ### Release preparation workflow
 
