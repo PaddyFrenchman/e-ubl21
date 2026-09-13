@@ -1,0 +1,72 @@
+services:
+  yugabytedb:
+    image: yugabytedb/yugabyte:2025.2.6.0-b111
+    hostname: eubl21-yugabytedb
+    stop_grace_period: 2m
+    command:
+      - bin/yugabyted
+      - start
+      - --base_dir=/home/yugabyte/yb_data
+      - --background=false
+      # Persist the stable hostname instead of the engine-assigned private IP,
+      # which can change after a stop/start on Docker-compatible engines.
+      - --advertise_address=eubl21-yugabytedb
+      - --ysql_enable_auth=true
+      # The Compose volume shares the container engine's host filesystem. Its
+      # production-oriented percentage threshold can reject an empty local DB
+      # on a large but mostly occupied developer disk; the lifecycle wrapper
+      # checks both the repository and mounted-volume filesystems instead.
+      - --master_flags=reject_writes_when_disk_full=false
+      - --tserver_flags=reject_writes_when_disk_full=false
+    ports:
+      - "127.0.0.1:${YB_LOCAL_YSQL_PORT:-5433}:5433"
+      - "127.0.0.1:${YB_LOCAL_UI_PORT:-15433}:15433"
+    volumes:
+      - yugabytedb-data:/home/yugabyte/yb_data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          PGPASSWORD=yugabyte
+          /home/yugabyte/bin/ysqlsh
+          --host eubl21-yugabytedb
+          --port 5433
+          --username yugabyte
+          --dbname yugabyte
+          --no-psqlrc
+          --tuples-only
+          --command 'SELECT 1' | grep -q 1
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 10s
+
+  bootstrap:
+    image: yugabytedb/yugabyte:2025.2.6.0-b111
+    restart: "no"
+    environment:
+      # Deterministic credentials are restricted to this isolated local/test
+      # topology. They must never be reused in a deployed environment.
+      # Compose guarantees the service name for inter-container discovery.
+      # The static hostname above remains dedicated to Yugabyte node identity.
+      YSQL_HOST: yugabytedb
+      YSQL_USER: eubl21
+      YSQL_PASSWORD: eubl21-local-only
+      YSQL_DB: eubl21
+    entrypoint:
+      - /bin/bash
+      - /opt/e-ubl21/yugabytedb-bootstrap.sh
+    volumes:
+      - ../../devsetup/yugabytedb-bootstrap.sh:/opt/e-ubl21/yugabytedb-bootstrap.sh:ro
+
+  storage-check:
+    image: yugabytedb/yugabyte:2025.2.6.0-b111
+    restart: "no"
+    network_mode: none
+    entrypoint:
+      - /bin/df
+    volumes:
+      - yugabytedb-data:/home/yugabyte/yb_data:ro
+
+volumes:
+  yugabytedb-data:

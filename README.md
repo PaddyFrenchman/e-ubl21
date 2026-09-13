@@ -435,6 +435,17 @@ For normal Go development:
 
 For the mandatory EN 16931 runtime/tests, Java/Saxon/XML Resolver and the pinned validation assets are also required. The production Docker image packages the controlled runtime.
 
+For relational database development, start the pinned authenticated
+YugabyteDB/YSQL runtime and run its application integration test with:
+
+```bash
+make database-test
+```
+
+Use `make database-stop` to retain its persistent volume or the destructive
+`make database-reset` to remove it. The full lifecycle and acceptance check are
+documented in [`docs/LOCAL-YUGABYTEDB.md`](docs/LOCAL-YUGABYTEDB.md).
+
 ### Docker Compose
 
 The easiest complete local topology is:

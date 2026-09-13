@@ -67,9 +67,16 @@ Deadline checks remain available through
 
 ## YugabyteDB integration test
 
-The integration test is opt-in until #121 supplies the reproducible repository
-runtime. Point it only at a real YugabyteDB instance with YSQL authentication
-enabled:
+Issue #121 supplies the reproducible repository runtime. Start the pinned,
+authenticated local YugabyteDB build and run the integration test with:
+
+```bash
+make database-test
+```
+
+The complete lifecycle and destructive acceptance check are documented in
+[`LOCAL-YUGABYTEDB.md`](LOCAL-YUGABYTEDB.md). To use another real YugabyteDB
+instance with YSQL authentication enabled, provide its URL directly:
 
 ```bash
 EUBL21_TEST_DATABASE_URL='postgresql://eubl21:REDACTED@127.0.0.1:5433/eubl21?sslmode=disable' \
@@ -88,5 +95,5 @@ EUBL21_TEST_DATABASE_TLS_URL='postgresql://eubl21:REDACTED@yb.example:5433/eubl2
 ```
 
 The initial qualification target is the accepted YugabyteDB 2025.2 LTS series.
-Issue #121 will pin and automate the exact container/runtime build; this issue
-does not pre-empt that lifecycle work.
+The local runtime pins build `2025.2.6.0-b111`; changing that build requires a
+reviewed compatibility update and applicable integration/regression evidence.

@@ -376,6 +376,17 @@ A new contributor can clone the repository and start the pinned YugabyteDB test 
 
 Steps 1-2.
 
+### Implementation
+
+Implemented by the pinned single-node Compose topology in
+[`deploy/local/yugabytedb-compose.yml`](../deploy/local/yugabytedb-compose.yml),
+the [`devsetup/yugabytedb-local.sh`](../devsetup/yugabytedb-local.sh) lifecycle
+wrapper, Make targets, and the
+[`local YugabyteDB runtime`](../docs/LOCAL-YUGABYTEDB.md) guide. The destructive
+`make database-verify` target covers clean start, bounded readiness failure,
+persistent restart, clean reset, smoke/version checks, and connectivity through
+the application database package.
+
 ---
 
 ## Step 4 — Add versioned schema migration infrastructure validated on YugabyteDB
