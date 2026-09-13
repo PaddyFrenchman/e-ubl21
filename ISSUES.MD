@@ -976,7 +976,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/121
 
 **Implementation assets:** [`ideas/podman-to-docker-conversion.md`](ideas/podman-to-docker-conversion.md), [`docs/DOCKER-DEVELOPMENT.md`](docs/DOCKER-DEVELOPMENT.md), and Docker prerequisite/setup/verification tooling in [`devsetup`](devsetup).
 
-**Status:** In progress on its issue branch; the host conversion and Docker-backed acceptance gates remain required before review.
+**Status:** Complete / closed. PR #138 provides the Docker Engine installer, genuine-engine prerequisite checks, disposable runtime verification, Docker-default local tooling, and setup/security/rollback documentation. The workstation now uses Docker Engine 29.8.0 and official Docker Compose v5.5.1 while retaining Podman independently; its full local regression report is recorded on the PR. The final documentation-only closure update was explicitly authorized without rerunning unit or regression tests.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/133
 
