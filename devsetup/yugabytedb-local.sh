@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/deploy/local/yugabytedb-compose.yml"
 PROJECT_NAME="eubl21-yugabytedb-local"
 SERVICE_NAME="yugabytedb"
+STORAGE_CHECK_SERVICE="storage-check"
 YSQL_HOST="127.0.0.1"
 YSQL_PORT="${YB_LOCAL_YSQL_PORT:-5433}"
 YSQL_USER="eubl21"
@@ -61,12 +62,30 @@ detect_compose() {
     COMPOSE_READY=1
 }
 
-require_free_space() {
-    local available_kib
-    available_kib="$(df -Pk "$ROOT_DIR" | awk 'NR == 2 {print $4}')"
-    [[ "$available_kib" =~ ^[0-9]+$ ]] || die "could not determine available local disk space"
+require_free_kib() {
+    local available_kib="$1"
+    local filesystem_name="$2"
+    [[ "$available_kib" =~ ^[0-9]+$ ]] ||
+        die "could not determine free space on the $filesystem_name filesystem"
     (( available_kib >= MIN_FREE_KIB )) ||
-        die "at least 2 GiB of free local disk space is required to start YugabyteDB"
+        die "at least 2 GiB must be free on the $filesystem_name filesystem to start YugabyteDB"
+    printf 'Disk preflight: %s has %s MiB free.\n' \
+        "$filesystem_name" "$((available_kib / 1024))"
+}
+
+require_free_space() {
+    local repository_available_kib volume_available_kib
+    repository_available_kib="$(df -Pk "$ROOT_DIR" | awk 'NR == 2 {print $4}')"
+    require_free_kib "$repository_available_kib" "repository"
+
+    # Query the filesystem through the actual service volume. This remains
+    # accurate when Docker/Podman storage is on another disk or a remote host.
+    volume_available_kib="$(
+        compose run --rm --no-deps "$STORAGE_CHECK_SERVICE" \
+            -Pk /home/yugabyte/yb_data |
+            awk '$4 ~ /^[0-9]+$/ {available = $4} END {print available}'
+    )"
+    require_free_kib "$volume_available_kib" "container-volume"
 }
 
 compose() {
@@ -172,22 +191,9 @@ up() {
 }
 
 stop_runtime() {
-    detect_compose
-    # Ask yugabyted to stop its database processes cleanly before Compose
-    # removes the container. This keeps the persisted universe restartable.
-    local stop_status=0
-    timeout --foreground 90s \
-        env YB_LOCAL_YSQL_PORT="$YSQL_PORT" \
-        "${COMPOSE[@]}" --project-name "$PROJECT_NAME" --file "$COMPOSE_FILE" \
-        exec -T "$SERVICE_NAME" /home/yugabyte/bin/yugabyted stop \
-        --base_dir=/home/yugabyte/yb_data || stop_status=$?
-    # Docker reports 137 when yugabyted's successful stop terminates the
-    # foreground container and consequently its exec session.
-    if (( stop_status != 0 && stop_status != 137 )); then
-        die "yugabyted graceful stop failed with status $stop_status"
-    fi
-    # Keep the stopped container and its named volume. Starting that same
-    # container preserves both its stable network identity and database state.
+    # Compose records an explicit stop and gives YugabyteDB its full configured
+    # grace period, keeping it unavailable until the next up/restart command.
+    compose stop --timeout 120 "$SERVICE_NAME"
 }
 
 reset_runtime() {

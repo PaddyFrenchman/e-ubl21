@@ -12,9 +12,11 @@ credentials outside this isolated runtime.
 The Compose volume shares the container engine's host filesystem. YugabyteDB's
 production percentage-based write floor can reject an empty test database on a
 large but mostly occupied developer disk, so this isolated node disables that
-server-side threshold and the lifecycle wrapper instead refuses to start with
-less than 2 GiB free. Monitor long-running local workloads yourself. This
-deliberately does not define or alter any production storage policy.
+server-side threshold. The lifecycle wrapper instead checks both the repository
+filesystem and the filesystem actually mounted for container-volume data, and
+refuses to start if either has less than 2 GiB free. Monitor long-running local
+workloads yourself. This deliberately does not define or alter any production
+storage policy.
 
 ## Prerequisites
 
@@ -46,6 +48,13 @@ Stop and later restart the node without deleting its data:
 make database-stop
 make database-up
 ```
+
+The service has no automatic restart policy. `database-stop` explicitly stops
+it through Compose with YugabyteDB's configured grace period, so it remains
+stopped until `database-up` or `database-restart` is run. Its named volume,
+static Yugabyte node hostname, and hostname-based advertise identity are
+retained across that lifecycle even if the engine assigns a different private
+IP.
 
 Remove the local container, Compose network, and persistent database volume:
 

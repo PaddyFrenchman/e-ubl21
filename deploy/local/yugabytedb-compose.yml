@@ -2,18 +2,20 @@ services:
   yugabytedb:
     image: yugabytedb/yugabyte:2025.2.6.0-b111
     hostname: eubl21-yugabytedb
-    restart: unless-stopped
     stop_grace_period: 2m
     command:
       - bin/yugabyted
       - start
       - --base_dir=/home/yugabyte/yb_data
       - --background=false
+      # Persist the stable hostname instead of the engine-assigned private IP,
+      # which can change after a stop/start on Docker-compatible engines.
+      - --advertise_address=eubl21-yugabytedb
       - --ysql_enable_auth=true
       # The Compose volume shares the container engine's host filesystem. Its
       # production-oriented percentage threshold can reject an empty local DB
       # on a large but mostly occupied developer disk; the lifecycle wrapper
-      # applies a host free-space preflight instead.
+      # checks both the repository and mounted-volume filesystems instead.
       - --master_flags=reject_writes_when_disk_full=false
       - --tserver_flags=reject_writes_when_disk_full=false
     ports:
@@ -45,7 +47,9 @@ services:
     environment:
       # Deterministic credentials are restricted to this isolated local/test
       # topology. They must never be reused in a deployed environment.
-      YSQL_HOST: eubl21-yugabytedb
+      # Compose guarantees the service name for inter-container discovery.
+      # The static hostname above remains dedicated to Yugabyte node identity.
+      YSQL_HOST: yugabytedb
       YSQL_USER: eubl21
       YSQL_PASSWORD: eubl21-local-only
       YSQL_DB: eubl21
@@ -54,6 +58,15 @@ services:
       - /opt/e-ubl21/yugabytedb-bootstrap.sh
     volumes:
       - ../../devsetup/yugabytedb-bootstrap.sh:/opt/e-ubl21/yugabytedb-bootstrap.sh:ro
+
+  storage-check:
+    image: yugabytedb/yugabyte:2025.2.6.0-b111
+    restart: "no"
+    network_mode: none
+    entrypoint:
+      - /bin/df
+    volumes:
+      - yugabytedb-data:/home/yugabyte/yb_data:ro
 
 volumes:
   yugabytedb-data:
