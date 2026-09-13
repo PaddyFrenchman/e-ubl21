@@ -2,13 +2,11 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/devsetup/lib/docker-engine.sh"
 IMAGE_NAME="${1:-e-ubl21:peppol-check}"
 SKIP_IMAGE_BUILD="${SKIP_IMAGE_BUILD:-0}"
 
-if ! command -v docker >/dev/null 2>&1; then
-    echo "ERROR: docker (or a Docker-compatible CLI) is required." >&2
-    exit 1
-fi
+require_docker_engine
 if ! command -v timeout >/dev/null 2>&1; then
     echo "ERROR: GNU timeout is required." >&2
     exit 1

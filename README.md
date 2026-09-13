@@ -448,6 +448,9 @@ documented in [`docs/LOCAL-YUGABYTEDB.md`](docs/LOCAL-YUGABYTEDB.md).
 
 ### Docker Compose
 
+Install and verify genuine Docker Engine and the official Compose v2 plugin as
+documented in [`docs/DOCKER-DEVELOPMENT.md`](docs/DOCKER-DEVELOPMENT.md).
+
 The easiest complete local topology is:
 
 ```bash

@@ -41,8 +41,9 @@ make regression-minikube \
   ARTIFACT_DIR=regression-results/minikube/ubl21
 ```
 
-Prerequisites are `minikube`, Docker, Go, `curl`, and `setsid` (normally
-provided by `util-linux`). A standalone `kubectl` is not required:
+Prerequisites are `minikube`, genuine Docker Engine, Go, `curl`, and `setsid`
+(normally provided by `util-linux`). Docker setup and verification are in
+[`docs/DOCKER-DEVELOPMENT.md`](../../docs/DOCKER-DEVELOPMENT.md). A standalone `kubectl` is not required:
 `devsetup/minikube-kubectl.sh` uses Minikube's pinned kubectl.
 Set `KEEP_DEPLOYMENT=1` to retain the namespace for interactive debugging, or
 run `make regression-minikube-clean` after an interrupted/retained run.
@@ -51,8 +52,9 @@ Useful overrides include `MINIKUBE_PROFILE`, `MINIKUBE_DRIVER`, `IMAGE`,
 `API_LOCAL_PORT`, `WORKER_LOCAL_PORT`, `NATS_LOCAL_PORT`, and
 `SOURCE_TIMEOUT`. The deployment is intentionally local/test-only; its HMAC
 secret, ephemeral NATS storage, and port-forwards are not production defaults.
-The script automatically selects rootless Podman when the installed `docker`
-command is the Podman compatibility wrapper; otherwise it defaults to Docker.
+The script defaults to the Docker driver. Independent Podman testing remains
+available by explicitly setting `MINIKUBE_DRIVER=podman`; Podman must be invoked
+as itself and must not replace the `docker` command.
 
 ## GitHub Actions
 

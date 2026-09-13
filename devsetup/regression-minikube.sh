@@ -2,17 +2,12 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/devsetup/lib/docker-engine.sh"
 cd "$ROOT_DIR"
 
 MINIKUBE_PROFILE="${MINIKUBE_PROFILE:-e-ubl21-regression}"
-if [[ -z "${MINIKUBE_DRIVER:-}" ]]; then
-	DOCKER_VERSION="$(docker --version 2>&1)"
-	if [[ "${DOCKER_VERSION,,}" == *podman* ]]; then
-        MINIKUBE_DRIVER=podman
-    else
-        MINIKUBE_DRIVER=docker
-    fi
-fi
+MINIKUBE_DRIVER="${MINIKUBE_DRIVER:-docker}"
+require_docker_engine
 if [[ "$MINIKUBE_DRIVER" == "podman" ]]; then
     export MINIKUBE_ROOTLESS="${MINIKUBE_ROOTLESS:-true}"
 fi
