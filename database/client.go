@@ -17,6 +17,19 @@ type Client struct {
 	closeOnce      sync.Once
 }
 
+// Connection is the bounded operation surface available during a WithConn
+// callback. It does not expose the raw pgx connection.
+type Connection interface {
+	ScanRow(sql string, arguments []any, destinations ...any) error
+	Exec(sql string, arguments ...any) (pgconn.CommandTag, error)
+}
+
+type leasedConnection struct {
+	mu         sync.RWMutex
+	connection *pgxpool.Conn
+	ctx        context.Context
+}
+
 // Open creates a connection pool without requiring an immediate database
 // connection. Use Connect when startup must prove connectivity.
 func Open(ctx context.Context, config Config) (*Client, error) {
@@ -27,9 +40,9 @@ func Open(ctx context.Context, config Config) (*Client, error) {
 	if err != nil {
 		return nil, operationError(ErrorConfiguration, "pool configuration", err)
 	}
-	poolConfig.MaxConns = config.MaxConnections
-	poolConfig.MinConns = config.MinConnections
-	poolConfig.ConnConfig.ConnectTimeout = config.ConnectTimeout
+	poolConfig.MaxConns = config.maxConnections
+	poolConfig.MinConns = config.minConnections
+	poolConfig.ConnConfig.ConnectTimeout = config.connectTimeout
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
@@ -37,8 +50,8 @@ func Open(ctx context.Context, config Config) (*Client, error) {
 	}
 	return &Client{
 		pool:           pool,
-		connectTimeout: config.ConnectTimeout,
-		queryTimeout:   config.QueryTimeout,
+		connectTimeout: config.connectTimeout,
+		queryTimeout:   config.queryTimeout,
 	}, nil
 }
 
@@ -86,16 +99,65 @@ func (c *Client) Exec(ctx context.Context, sql string, arguments ...any) (pgconn
 	return tag, nil
 }
 
-// Acquire obtains a pooled connection within the configured query deadline.
-// The caller must release a successful acquisition.
-func (c *Client) Acquire(ctx context.Context) (*pgxpool.Conn, error) {
+// WithConn leases one pooled connection for a callback. Acquisition and every
+// operation on Connection share the configured query deadline; the lease is
+// always released before WithConn returns.
+func (c *Client) WithConn(ctx context.Context, callback func(Connection) error) error {
+	if callback == nil {
+		return configError("database connection callback", "is required")
+	}
 	operationCtx, cancel := context.WithTimeout(ctx, c.queryTimeout)
 	defer cancel()
 	connection, err := c.pool.Acquire(operationCtx)
 	if err != nil {
-		return nil, operationError(ErrorPool, "connection acquisition", err)
+		return operationError(ErrorPool, "connection acquisition", err)
 	}
-	return connection, nil
+	lease := &leasedConnection{connection: connection, ctx: operationCtx}
+	defer func() {
+		cancel()
+		lease.invalidate()
+		connection.Release()
+	}()
+	if err := callback(lease); err != nil {
+		return err
+	}
+	if err := operationCtx.Err(); err != nil {
+		return operationError(ErrorQuery, "connection callback", err)
+	}
+	return nil
+}
+
+// ScanRow runs a single-row query on the leased connection.
+func (c *leasedConnection) ScanRow(sql string, arguments []any, destinations ...any) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.connection == nil {
+		return operationError(ErrorPool, "expired connection lease", context.Canceled)
+	}
+	if err := c.connection.QueryRow(c.ctx, sql, arguments...).Scan(destinations...); err != nil {
+		return operationError(ErrorQuery, "connection query", err)
+	}
+	return nil
+}
+
+// Exec runs a statement on the leased connection.
+func (c *leasedConnection) Exec(sql string, arguments ...any) (pgconn.CommandTag, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.connection == nil {
+		return pgconn.CommandTag{}, operationError(ErrorPool, "expired connection lease", context.Canceled)
+	}
+	tag, err := c.connection.Exec(c.ctx, sql, arguments...)
+	if err != nil {
+		return pgconn.CommandTag{}, operationError(ErrorQuery, "connection exec", err)
+	}
+	return tag, nil
+}
+
+func (c *leasedConnection) invalidate() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.connection = nil
 }
 
 // Close gracefully drains and closes the pool. It is safe to call repeatedly.

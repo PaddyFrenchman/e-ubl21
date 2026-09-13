@@ -43,6 +43,16 @@ func TestYugabyteDBIntegration(t *testing.T) {
 		if !strings.Contains(version, "YugabyteDB") && !strings.Contains(version, "-YB-") {
 			t.Fatalf("integration target is not YugabyteDB: %q", version)
 		}
+		var expiredLease appdb.Connection
+		if err := client.WithConn(context.Background(), func(connection appdb.Connection) error {
+			expiredLease = connection
+			return connection.ScanRow("SELECT 1", nil, &one)
+		}); err != nil {
+			t.Fatal(err)
+		}
+		if err := expiredLease.ScanRow("SELECT 1", nil, &one); !errors.Is(err, context.Canceled) {
+			t.Fatalf("connection remained usable after callback: %v", err)
+		}
 		client.Close()
 	})
 
@@ -59,17 +69,13 @@ func TestYugabyteDBIntegration(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer client.Close()
-		connection, err := client.Acquire(context.Background())
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer connection.Release()
-
 		started := time.Now()
-		_, err = client.Acquire(context.Background())
-		if err == nil {
-			t.Fatal("second acquisition unexpectedly succeeded")
-		}
+		err = client.WithConn(context.Background(), func(appdb.Connection) error {
+			return client.WithConn(context.Background(), func(appdb.Connection) error {
+				t.Fatal("second connection unexpectedly acquired")
+				return nil
+			})
+		})
 		if !errors.Is(err, context.DeadlineExceeded) || time.Since(started) > time.Second {
 			t.Fatalf("pool timeout was not bounded: duration=%s error=%v", time.Since(started), err)
 		}

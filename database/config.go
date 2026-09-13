@@ -43,16 +43,15 @@ func DefaultSettings() Settings {
 // Config is a validated database configuration. Its connection string is kept
 // private so ordinary formatting cannot disclose a password.
 type Config struct {
-	Host           string
-	Port           uint16
-	Database       string
-	User           string
-	SSLMode        string
-	ConnectTimeout time.Duration
-	QueryTimeout   time.Duration
-	MaxConnections int32
-	MinConnections int32
-
+	host             string
+	port             uint16
+	database         string
+	user             string
+	sslMode          string
+	connectTimeout   time.Duration
+	queryTimeout     time.Duration
+	maxConnections   int32
+	minConnections   int32
 	connectionString string
 }
 
@@ -122,23 +121,23 @@ func ParseConfigWithSettings(rawURL string, settings Settings) (Config, error) {
 	sslMode := strings.ToLower(query.Get("sslmode"))
 	if sslMode == "" {
 		sslMode = DefaultSSLMode
-		query.Set("sslmode", sslMode)
 	}
 	if !validSSLMode(sslMode) {
 		return Config{}, configError("database-url sslmode", "must be disable, allow, prefer, require, verify-ca, or verify-full")
 	}
+	query.Set("sslmode", sslMode)
 	parsed.RawQuery = query.Encode()
 
 	return Config{
-		Host:             parsed.Hostname(),
-		Port:             uint16(port),
-		Database:         databaseName,
-		User:             parsed.User.Username(),
-		SSLMode:          sslMode,
-		ConnectTimeout:   settings.ConnectTimeout,
-		QueryTimeout:     settings.QueryTimeout,
-		MaxConnections:   settings.MaxConnections,
-		MinConnections:   settings.MinConnections,
+		host:             parsed.Hostname(),
+		port:             uint16(port),
+		database:         databaseName,
+		user:             parsed.User.Username(),
+		sslMode:          sslMode,
+		connectTimeout:   settings.ConnectTimeout,
+		queryTimeout:     settings.QueryTimeout,
+		maxConnections:   settings.MaxConnections,
+		minConnections:   settings.MinConnections,
 		connectionString: parsed.String(),
 	}, nil
 }
@@ -171,8 +170,18 @@ func validSSLMode(mode string) bool {
 	}
 }
 
+func (c Config) Host() string                  { return c.host }
+func (c Config) Port() uint16                  { return c.port }
+func (c Config) Database() string              { return c.database }
+func (c Config) User() string                  { return c.user }
+func (c Config) SSLMode() string               { return c.sslMode }
+func (c Config) ConnectTimeout() time.Duration { return c.connectTimeout }
+func (c Config) QueryTimeout() time.Duration   { return c.queryTimeout }
+func (c Config) MaxConnections() int32         { return c.maxConnections }
+func (c Config) MinConnections() int32         { return c.minConnections }
+
 // String returns a credential-safe diagnostic representation.
 func (c Config) String() string {
 	return fmt.Sprintf("database host=%q port=%d name=%q sslmode=%q connect_timeout=%s query_timeout=%s max_connections=%d min_connections=%d",
-		c.Host, c.Port, c.Database, c.SSLMode, c.ConnectTimeout, c.QueryTimeout, c.MaxConnections, c.MinConnections)
+		c.host, c.port, c.database, c.sslMode, c.connectTimeout, c.queryTimeout, c.maxConnections, c.minConnections)
 }

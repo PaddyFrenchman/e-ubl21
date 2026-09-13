@@ -196,10 +196,10 @@ func TestLoadConfigReadsVendorNeutralDatabaseSettings(t *testing.T) {
 	if cfg.Database == nil {
 		t.Fatal("database config was not loaded")
 	}
-	if cfg.Database.Host != "yb.example" || cfg.Database.Port != 15433 || cfg.Database.Database != "accounting" || cfg.Database.User != "app" || cfg.Database.SSLMode != "verify-full" {
+	if cfg.Database.Host() != "yb.example" || cfg.Database.Port() != 15433 || cfg.Database.Database() != "accounting" || cfg.Database.User() != "app" || cfg.Database.SSLMode() != "verify-full" {
 		t.Fatalf("database endpoint config = %+v", cfg.Database)
 	}
-	if cfg.Database.ConnectTimeout != 2*time.Second || cfg.Database.QueryTimeout != 3*time.Second || cfg.Database.MaxConnections != 17 || cfg.Database.MinConnections != 2 {
+	if cfg.Database.ConnectTimeout() != 2*time.Second || cfg.Database.QueryTimeout() != 3*time.Second || cfg.Database.MaxConnections() != 17 || cfg.Database.MinConnections() != 2 {
 		t.Fatalf("database pool config = %+v", cfg.Database)
 	}
 }

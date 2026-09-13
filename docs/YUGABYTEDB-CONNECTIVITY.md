@@ -44,18 +44,23 @@ YugabyteDB cluster-operational settings.
 
 The [`database`](../database) package uses pgx v5 and provides:
 
-- typed URL and pool-setting parsing with bounded-value validation;
+- typed URL and pool-setting parsing with bounded-value validation and an
+  externally immutable configuration value exposed through getters;
 - `Open` for lazy pool creation and `Connect` for pool creation plus an
   immediate startup probe;
-- `Probe`, `ScanRow`, `Exec`, and bounded pool `Acquire` helpers;
+- `Probe`, `ScanRow`, `Exec`, and `WithConn` helpers; `WithConn` retains pool
+  ownership and applies one deadline to acquisition and every operation on its
+  restricted connection wrapper; the wrapper expires when the callback returns
+  and cannot be reused after its pool lease is released;
 - idempotent, graceful pool shutdown through `Client.Close`;
 - structured configuration, connectivity, query, and pool error kinds.
 
 The normalized connection string remains private and the configuration's
-string representation omits all user information and passwords. Returned errors contain a stable
-operation and kind but do not render the underlying driver error, preventing
-connection credentials from entering normal logs. Deadline checks remain
-available through `errors.Is(err, context.DeadlineExceeded)`.
+string representation omits all user information and passwords. Returned
+errors contain a stable operation and kind but do not render the underlying
+driver error, preventing connection credentials from entering normal logs.
+Deadline checks remain available through
+`errors.Is(err, context.DeadlineExceeded)`.
 
 ## YugabyteDB integration test
 

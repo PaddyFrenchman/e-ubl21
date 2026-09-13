@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -13,13 +14,13 @@ func TestParseConfigAppliesYSQLDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if config.Host != "db.example" || config.Port != DefaultPort || config.Database != DefaultDatabase {
-		t.Fatalf("endpoint defaults = host %q port %d database %q", config.Host, config.Port, config.Database)
+	if config.Host() != "db.example" || config.Port() != DefaultPort || config.Database() != DefaultDatabase {
+		t.Fatalf("endpoint defaults = host %q port %d database %q", config.Host(), config.Port(), config.Database())
 	}
-	if config.User != "app" || config.SSLMode != DefaultSSLMode {
-		t.Fatalf("identity/TLS defaults = user %q sslmode %q", config.User, config.SSLMode)
+	if config.User() != "app" || config.SSLMode() != DefaultSSLMode {
+		t.Fatalf("identity/TLS defaults = user %q sslmode %q", config.User(), config.SSLMode())
 	}
-	if config.ConnectTimeout != DefaultConnectTimeout || config.QueryTimeout != DefaultQueryTimeout || config.MaxConnections != DefaultMaxConnections || config.MinConnections != DefaultMinConnections {
+	if config.ConnectTimeout() != DefaultConnectTimeout || config.QueryTimeout() != DefaultQueryTimeout || config.MaxConnections() != DefaultMaxConnections || config.MinConnections() != DefaultMinConnections {
 		t.Fatalf("pool defaults = %+v", config)
 	}
 	if strings.Contains(fmt.Sprintf("%+v", config), "secret") || strings.Contains(config.String(), "secret") {
@@ -38,10 +39,10 @@ func TestParseConfigPreservesExplicitValues(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if config.Host != "2001:db8::1" || config.Port != 15433 || config.Database != "invoices" || config.User != "alice" || config.SSLMode != "verify-full" {
+	if config.Host() != "2001:db8::1" || config.Port() != 15433 || config.Database() != "invoices" || config.User() != "alice" || config.SSLMode() != "verify-full" {
 		t.Fatalf("parsed config = %+v", config)
 	}
-	if config.ConnectTimeout != 2*time.Second || config.QueryTimeout != 3*time.Second || config.MaxConnections != 23 || config.MinConnections != 4 {
+	if config.ConnectTimeout() != 2*time.Second || config.QueryTimeout() != 3*time.Second || config.MaxConnections() != 23 || config.MinConnections() != 4 {
 		t.Fatalf("settings = %+v", config)
 	}
 	if !strings.Contains(config.connectionString, "@[2001:db8::1]:15433") {
@@ -56,10 +57,30 @@ func TestParseConfigAcceptsSupportedSSLModes(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if config.SSLMode != mode {
-				t.Fatalf("sslmode = %q", config.SSLMode)
+			if config.SSLMode() != mode {
+				t.Fatalf("sslmode = %q", config.SSLMode())
 			}
 		})
+	}
+}
+
+func TestParseConfigNormalizesSSLModeInEffectiveURL(t *testing.T) {
+	config, err := ParseConfig("postgres://app@localhost/eubl21?sslmode=REQUIRE")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if config.SSLMode() != "require" || !strings.Contains(config.connectionString, "sslmode=require") {
+		t.Fatalf("sslmode was not normalized consistently: %v", config)
+	}
+}
+
+func TestConfigHasNoExternallyMutableFields(t *testing.T) {
+	configType := reflect.TypeOf(Config{})
+	for index := 0; index < configType.NumField(); index++ {
+		field := configType.Field(index)
+		if field.IsExported() {
+			t.Fatalf("Config field %q is externally mutable", field.Name)
+		}
 	}
 }
 
