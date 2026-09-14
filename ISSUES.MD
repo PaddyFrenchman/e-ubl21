@@ -16,7 +16,7 @@ Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-
 
 ### Current dependency checkpoint
 
-Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. Maintenance issue #139 completed the qualified Minikube v1.39.0 upgrade. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #121 and the priority Docker conversion #133 are complete, and #122 is in progress.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. Maintenance issue #139 completed the qualified Minikube v1.39.0 upgrade. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #122 and the priority Docker conversion #133 are complete.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -998,7 +998,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/133
 
 **Implementation assets:** [`database/migrations`](database/migrations), the migration runner in [`database`](database), the `database migrate` command, the local YugabyteDB lifecycle, and [`docs/YUGABYTEDB-SCHEMA-MIGRATIONS.md`](docs/YUGABYTEDB-SCHEMA-MIGRATIONS.md).
 
-**Status:** In progress on its issue branch.
+**Status:** Complete / closed. PR #141 establishes ordered embedded migrations, durable migration history and advisory-lock serialization, real-YugabyteDB compatibility gates, local lifecycle integration, credential-safe failure diagnostics, and the documented forward-fix/backup rollback policy.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/122
 
@@ -1132,4 +1132,4 @@ The Phase 9 YugabyteDB migration is a separate platform sequence with its own de
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
 - Issue #88 and #89 should be evaluated together when the future persistence architecture is revisited, while remaining separate issues because raw-content storage and metadata persistence have different migration and failure semantics.
-- Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Issues #119 through #121 are complete, and #122 is in progress. Their detailed scopes remain synchronized with `ideas/postgresql-to-yugabytedb-migration-plan.md`.
+- Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Issues #119 through #122 are complete. Their detailed scopes remain synchronized with `ideas/postgresql-to-yugabytedb-migration-plan.md`.
