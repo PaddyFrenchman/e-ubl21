@@ -16,6 +16,9 @@ deploy/on-prem/
 |   Architecture, prerequisites, required downloads, hardware/network/storage planning,
 |   installation manual, verification procedure, security, backups and scaling guidance.
 |
++-- yugabytedb-values.yaml
+|   Version-controlled single-server values for the pinned official YugabyteDB chart.
+|
 +-- scripts/
     |
     +-- install-on-prem.sh
@@ -36,7 +39,7 @@ Ubuntu / RHEL-family Linux
         +--> cert-manager
         +--> KEDA
         +--> NATS JetStream
-        +--> CloudNativePG / PostgreSQL
+        +--> YugabyteDB / YSQL
         +--> MinIO-compatible object storage
         +--> Prometheus
         +--> Grafana
@@ -66,8 +69,13 @@ Example:
 
 ```bash
 METALLB_ADDRESS_POOL=192.168.1.200-192.168.1.220 \
+EUBL21_IMAGE=registry.example/e-ubl21@sha256:REPLACE_ME \
 sudo -E bash deploy/on-prem/scripts/install-on-prem.sh
 ```
+
+`EUBL21_IMAGE` is required because the installer runs the embedded schema
+migrations after authenticated YSQL readiness. Supply an immutable registry
+digest or an image already imported into K3s.
 
 The installer can also stop after installing only K3s and Helm:
 
@@ -75,11 +83,37 @@ The installer can also stop after installing only K3s and Helm:
 INSTALL_PLATFORM=0 sudo -E bash deploy/on-prem/scripts/install-on-prem.sh
 ```
 
+Validate the chart and installer-owned Jobs statically, or run the clean
+two-pass test against the current disposable Kubernetes context:
+
+```bash
+make on-prem-database-test
+EUBL21_TEST_IMAGE=e-ubl21:local make on-prem-database-integration
+```
+
+The integration target owns and removes a uniquely named disposable namespace.
+If `EUBL21_TEST_NAMESPACE` names an existing namespace, namespace creation fails
+and the existing namespace is left untouched.
+
+### Product-regression scope
+
+This installer currently provisions the on-prem platform services; it does not
+deploy the e-ubl21 API or workers because the repository does not yet contain
+the final common production Helm chart. Consequently,
+`on-prem-database-integration` qualifies YugabyteDB readiness, identity/schema
+bootstrap, migrations and rerun safety, but cannot perform an in-namespace
+post-install product health check. For issue #123 this known limitation is
+paired with the existing deployed-product gate, `./run-regression-tests.sh`,
+which exercises API health and the applicable UBL 2.1 and EN 16931 validation
+suites in the repository's supported Minikube regression deployment. A future
+production chart must add the equivalent health/regression gate against the
+on-prem YugabyteDB connection before that chart is declared supported.
+
 ## Important limitations
 
 This is a **single-server** architecture. It provides Kubernetes deployment portability but does not provide physical high availability. Failure of the host stops all local workloads.
 
-PostgreSQL, NATS JetStream, object-storage and monitoring data must therefore have off-machine backups before this setup is treated as a serious production installation.
+YugabyteDB, NATS JetStream, object-storage and monitoring data must therefore have off-machine backups before this setup is treated as a serious production installation.
 
 The current repository does not yet contain the final common production Helm chart for e-ubl21. The existing `deploy/minikube/` definitions are regression/test infrastructure and must not be promoted directly into the on-premises production model.
 

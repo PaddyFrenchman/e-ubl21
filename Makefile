@@ -1,4 +1,4 @@
-.PHONY: docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify on-prem-database-test on-prem-database-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Verify the genuine Docker Engine and official Compose plugin through a
 # disposable image/container/network/volume/bind-mount/health-check lifecycle.
@@ -33,6 +33,14 @@ database-reset:
 
 database-verify:
 	./devsetup/yugabytedb-local.sh verify
+
+# Render the pinned on-prem YugabyteDB chart and installer-owned Jobs without
+# mutating a cluster. The integration target uses a disposable namespace.
+on-prem-database-test:
+	./devsetup/test-on-prem-yugabytedb.sh static
+
+on-prem-database-integration:
+	./devsetup/test-on-prem-yugabytedb.sh integration
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
