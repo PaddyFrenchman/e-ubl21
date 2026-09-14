@@ -78,6 +78,13 @@ func TestYugabyteDBMigrations(t *testing.T) {
 				t.Fatal("failed migration unexpectedly succeeded")
 			}
 			assertMigrationHistory(t, client, 1, "failed")
+			var failureReason string
+			if err := client.ScanRow(context.Background(), "SELECT failure_reason FROM public.eubl21_schema_migrations WHERE version = 1", nil, &failureReason); err != nil {
+				t.Fatal(err)
+			}
+			if !strings.HasPrefix(failureReason, "SQLSTATE ") || !strings.Contains(failureReason, "issue_122_missing_function") {
+				t.Fatalf("failed migration diagnostic = %q", failureReason)
+			}
 
 			var partialTable string
 			if err := client.ScanRow(context.Background(), "SELECT COALESCE(to_regclass('public.issue_122_partial_ddl')::text, '')", nil, &partialTable); err != nil {

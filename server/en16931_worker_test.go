@@ -603,6 +603,10 @@ func TestENWorkerUsesPinnedSaxonAdapter(t *testing.T) {
 	_, _ = authorizeENWorkerRequest(t, ctx, client, content)
 	message := fetchENWorkerRequest(t, ctx, client)
 	worker := newTestENStageWorker(client, newSaxonEN16931Validator(runtime, 45*time.Second))
+	// The shared unit-test worker uses a three-second attempt timeout. This test
+	// launches the real JVM, so its worker and validator need the same budget
+	// when other packages are also exercising Saxon under `go test ./...`.
+	worker.timeout = 45 * time.Second
 	if err := worker.handle(ctx, message); err != nil {
 		t.Fatal(err)
 	}

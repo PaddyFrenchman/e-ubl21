@@ -62,7 +62,7 @@ operator-repair error. They are never silently retried or marked complete.
 
 Recovery is deliberate:
 
-1. stop rollout and inspect the history row plus all partial schema effects;
+1. stop rollout and inspect the history row plus all partial schema effects; failed rows retain the SQLSTATE and normalized primary YSQL message, while excluding extended server detail, hints, and SQL text;
 2. restore the pre-migration backup when rollback is required; there are no
    automatic down migrations;
 3. for an unshipped migration, return the schema to its prior state, delete only

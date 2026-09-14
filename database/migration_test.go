@@ -1,10 +1,14 @@
 package database
 
 import (
+	"context"
 	"errors"
+	"strings"
 	"testing"
 	"testing/fstest"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func TestLoadMigrationsOrdersAndChecksumsAssets(t *testing.T) {
@@ -63,6 +67,26 @@ func TestNewMigratorRejectsInvalidTimeout(t *testing.T) {
 		if _, err := NewMigrator(timeout); err == nil {
 			t.Fatalf("timeout %s was accepted", timeout)
 		}
+	}
+}
+
+func TestMigrationFailureReasonRetainsOnlySanitizedDiagnostic(t *testing.T) {
+	postgresError := &pgconn.PgError{
+		Code: "42883", Message: "function issue_122_missing_function()\n does not exist",
+		Detail: "password=must-not-leak", Hint: "secret hint",
+	}
+	reason := migrationFailureReason(postgresError)
+	if reason != "SQLSTATE 42883: function issue_122_missing_function() does not exist" {
+		t.Fatalf("failure reason = %q", reason)
+	}
+	if strings.Contains(reason, "password") || strings.Contains(reason, "secret") {
+		t.Fatalf("failure reason exposed extended server diagnostic: %q", reason)
+	}
+	if reason := migrationFailureReason(context.DeadlineExceeded); reason != "execution timed out" {
+		t.Fatalf("deadline failure reason = %q", reason)
+	}
+	if reason := migrationFailureReason(errors.New("driver secret")); reason != "execution failed" {
+		t.Fatalf("generic failure reason = %q", reason)
 	}
 }
 

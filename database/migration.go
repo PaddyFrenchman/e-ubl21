@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
@@ -194,7 +195,7 @@ VALUES ($1, $2, $3, 'applying')`, candidate.version, candidate.name, candidate.c
 
 	_, executionErr := connection.Exec(ctx, candidate.SQL, pgx.QueryExecModeSimpleProtocol)
 	if executionErr != nil {
-		markErr := markMigrationFailed(connection, candidate.version)
+		markErr := markMigrationFailed(connection, candidate.version, migrationFailureReason(executionErr))
 		if markErr != nil {
 			executionErr = errors.Join(executionErr, markErr)
 		}
@@ -214,13 +215,13 @@ WHERE version = $1 AND state = 'applying'`, candidate.version)
 	return nil
 }
 
-func markMigrationFailed(connection *pgx.Conn, version int64) error {
+func markMigrationFailed(connection *pgx.Conn, version int64, reason string) error {
 	markCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	tag, err := connection.Exec(markCtx, `
 UPDATE public.eubl21_schema_migrations
-SET state = 'failed', finished_at = CURRENT_TIMESTAMP, failure_reason = 'execution failed'
-WHERE version = $1 AND state = 'applying'`, version)
+SET state = 'failed', finished_at = CURRENT_TIMESTAMP, failure_reason = $2
+WHERE version = $1 AND state = 'applying'`, version, reason)
 	if err != nil {
 		return err
 	}
@@ -228,6 +229,33 @@ WHERE version = $1 AND state = 'applying'`, version)
 		return fmt.Errorf("failed migration history state changed unexpectedly")
 	}
 	return nil
+}
+
+// migrationFailureReason retains the useful, credential-safe portion of a
+// YSQL diagnostic. Detail, hint, query and position fields are deliberately
+// excluded because they may echo migration contents or server configuration.
+func migrationFailureReason(err error) string {
+	var postgresError *pgconn.PgError
+	if errors.As(err, &postgresError) {
+		message := strings.Join(strings.Fields(postgresError.Message), " ")
+		reason := "SQLSTATE " + postgresError.Code
+		if message != "" {
+			reason += ": " + message
+		}
+		const maximumReasonRunes = 512
+		runes := []rune(reason)
+		if len(runes) > maximumReasonRunes {
+			reason = string(runes[:maximumReasonRunes-3]) + "..."
+		}
+		return reason
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "execution timed out"
+	}
+	if errors.Is(err, context.Canceled) {
+		return "execution canceled"
+	}
+	return "execution failed"
 }
 
 func releaseMigrationLock(connection *pgx.Conn) {
