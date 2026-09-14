@@ -22,6 +22,7 @@ set -Eeuo pipefail
 EUBL21_NAMESPACE="${EUBL21_NAMESPACE:-e-ubl21}"
 EUBL21_IMAGE="${EUBL21_IMAGE:-}"
 EUBL21_IMAGE_PULL_POLICY="${EUBL21_IMAGE_PULL_POLICY:-IfNotPresent}"
+EUBL21_DATABASE_SECRET_NAME="${EUBL21_DATABASE_SECRET_NAME:-eubl21-db-auth}"
 METALLB_ADDRESS_POOL="${METALLB_ADDRESS_POOL:-}"
 NATS_STORAGE_SIZE="${NATS_STORAGE_SIZE:-20Gi}"
 YB_MASTER_STORAGE_SIZE="${YB_MASTER_STORAGE_SIZE:-10Gi}"
@@ -86,8 +87,10 @@ validate_platform_config() {
   if [[ -n "${POSTGRES_STORAGE_SIZE+x}" || -n "${CLOUDNATIVEPG_CHART_VERSION+x}" ]]; then
     fail "PostgreSQL/CloudNativePG settings are retired; use YB_MASTER_STORAGE_SIZE and YB_TSERVER_STORAGE_SIZE"
   fi
-  if [[ "${YB_TEST_DISABLE_DISK_FULL_CHECK}" == "1" && "${EUBL21_NAMESPACE}" != eubl21-issue-123* ]]; then
-    fail "YB_TEST_DISABLE_DISK_FULL_CHECK is restricted to disposable issue #123 test namespaces"
+  if [[ "${YB_TEST_DISABLE_DISK_FULL_CHECK}" == "1" &&
+        "${EUBL21_NAMESPACE}" != eubl21-issue-123* &&
+        "${EUBL21_NAMESPACE}" != eubl21-issue-124* ]]; then
+    fail "YB_TEST_DISABLE_DISK_FULL_CHECK is restricted to disposable issue #123/#124 test namespaces"
   fi
 }
 
@@ -339,11 +342,11 @@ install_keda() {
 
 ensure_database_secret() {
   local password password_base64 password_encoded database_url database_url_base64 username
-  if kubectl get secret eubl21-db-auth --namespace "${EUBL21_NAMESPACE}" >/dev/null 2>&1; then
-    username="$(kubectl get secret eubl21-db-auth --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.username}' | base64 --decode)"
-    [[ "${username}" == "eubl21" ]] || fail "Existing eubl21-db-auth username must be eubl21"
-    password_base64="$(kubectl get secret eubl21-db-auth --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.password}')"
-    [[ -n "${password_base64}" ]] || fail "Existing eubl21-db-auth secret has no password"
+  if kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" >/dev/null 2>&1; then
+    username="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.username}' | base64 --decode)"
+    [[ "${username}" == "eubl21" ]] || fail "Existing ${EUBL21_DATABASE_SECRET_NAME} username must be eubl21"
+    password_base64="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.password}')"
+    [[ -n "${password_base64}" ]] || fail "Existing ${EUBL21_DATABASE_SECRET_NAME} secret has no password"
     password="$(printf '%s' "${password_base64}" | base64 --decode)"
     log "Database bootstrap secret already exists; preserving its username and password"
   else
@@ -358,7 +361,7 @@ ensure_database_secret() {
 apiVersion: v1
 kind: Secret
 metadata:
-  name: eubl21-db-auth
+  name: ${EUBL21_DATABASE_SECRET_NAME}
   namespace: ${EUBL21_NAMESPACE}
 type: kubernetes.io/basic-auth
 data:
@@ -369,15 +372,21 @@ EOF
 }
 
 reject_legacy_postgresql_cluster() {
+  local install_mode="${1:-fresh}"
   if kubectl get cluster.postgresql.cnpg.io e-ubl21-postgres --namespace "${EUBL21_NAMESPACE}" >/dev/null 2>&1; then
+    if [[ "${install_mode}" == "guarded-upgrade" ]]; then
+      log "Guarded upgrade verified the legacy PostgreSQL cluster; preserving it during YugabyteDB installation"
+      return
+    fi
     fail "Legacy e-ubl21-postgres exists; refusing a fresh-install conversion. Use the guarded #124 upgrade procedure."
   fi
 }
 
 install_yugabytedb() {
+  local install_mode="${1:-fresh}"
   local -a test_only_flags=()
   log "Installing single-node YugabyteDB ${YUGABYTEDB_IMAGE_TAG}"
-  reject_legacy_postgresql_cluster
+  reject_legacy_postgresql_cluster "${install_mode}"
   ensure_database_secret
 
   if [[ "${YB_TEST_DISABLE_DISK_FULL_CHECK}" == "1" ]]; then
@@ -434,12 +443,12 @@ spec:
             - name: YSQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: eubl21-db-auth
+                  name: ${EUBL21_DATABASE_SECRET_NAME}
                   key: username
             - name: YSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: eubl21-db-auth
+                  name: ${EUBL21_DATABASE_SECRET_NAME}
                   key: password
             - name: YSQL_DB
               value: eubl21
@@ -487,7 +496,7 @@ spec:
             - name: EUBL21_DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: eubl21-db-auth
+                  name: ${EUBL21_DATABASE_SECRET_NAME}
                   key: database-url
           securityContext:
             allowPrivilegeEscalation: false

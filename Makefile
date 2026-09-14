@@ -1,4 +1,4 @@
-.PHONY: docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify on-prem-database-test on-prem-database-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify on-prem-database-test on-prem-database-integration on-prem-database-upgrade-test on-prem-database-upgrade-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Verify the genuine Docker Engine and official Compose plugin through a
 # disposable image/container/network/volume/bind-mount/health-check lifecycle.
@@ -41,6 +41,12 @@ on-prem-database-test:
 
 on-prem-database-integration:
 	./devsetup/test-on-prem-yugabytedb.sh integration
+
+on-prem-database-upgrade-test:
+	./devsetup/test-on-prem-yugabytedb-upgrade.sh
+
+on-prem-database-upgrade-integration:
+	./devsetup/test-on-prem-yugabytedb-upgrade-integration.sh
 
 # Run positive and targeted-negative EN 16931 corpora, plus the XSD
 # short-circuit control, with runtime skipping disabled.
