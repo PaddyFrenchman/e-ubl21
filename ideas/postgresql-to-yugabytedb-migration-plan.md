@@ -528,6 +528,14 @@ bootstrap/readiness and migration Jobs in the on-prem installer, plus static and
 disposable two-pass installer qualification in
 [`test-on-prem-yugabytedb.sh`](../devsetup/test-on-prem-yugabytedb.sh).
 
+Known issue #123 qualification limitation: the on-prem installer provisions
+platform services but cannot deploy the API/workers until the final common
+production Helm chart exists. The database installer gate is therefore paired
+with the existing deployed-product Minikube API/validation regression. This
+does not claim that the product is connected to YugabyteDB in the disposable
+on-prem namespace; that connected post-install gate is required when the
+production chart is introduced.
+
 ---
 
 ## Step 6 — Add a safe upgrade path for existing PostgreSQL-oriented installations

@@ -91,6 +91,24 @@ make on-prem-database-test
 EUBL21_TEST_IMAGE=e-ubl21:local make on-prem-database-integration
 ```
 
+The integration target owns and removes a uniquely named disposable namespace.
+If `EUBL21_TEST_NAMESPACE` names an existing namespace, namespace creation fails
+and the existing namespace is left untouched.
+
+### Product-regression scope
+
+This installer currently provisions the on-prem platform services; it does not
+deploy the e-ubl21 API or workers because the repository does not yet contain
+the final common production Helm chart. Consequently,
+`on-prem-database-integration` qualifies YugabyteDB readiness, identity/schema
+bootstrap, migrations and rerun safety, but cannot perform an in-namespace
+post-install product health check. For issue #123 this known limitation is
+paired with the existing deployed-product gate, `./run-regression-tests.sh`,
+which exercises API health and the applicable UBL 2.1 and EN 16931 validation
+suites in the repository's supported Minikube regression deployment. A future
+production chart must add the equivalent health/regression gate against the
+on-prem YugabyteDB connection before that chart is declared supported.
+
 ## Important limitations
 
 This is a **single-server** architecture. It provides Kubernetes deployment portability but does not provide physical high availability. Failure of the host stops all local workloads.

@@ -542,6 +542,16 @@ The default run performs the following operations:
 
 The script is designed to be rerunnable. It uses `helm upgrade --install` and preserves generated Kubernetes secrets when they already exist.
 
+The current installer stops at platform provisioning: the repository does not
+yet contain the final common production Helm chart for the e-ubl21 API and
+workers. The disposable on-prem qualification therefore proves YugabyteDB
+readiness, the application identity/database, migrations and idempotency, while
+the repository's existing `./run-regression-tests.sh` Minikube deployment
+provides the API health and UBL 2.1/EN 16931 product-regression gate. This is an
+explicit issue #123 scope limitation, not evidence that the application has
+been deployed into the on-prem qualification namespace. The future production
+chart must add that connected post-install gate before it is supported.
+
 ### Step 7 - Verify Kubernetes
 
 ```bash

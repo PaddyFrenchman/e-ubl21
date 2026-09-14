@@ -6,13 +6,14 @@ installer="$root_dir/deploy/on-prem/scripts/install-on-prem.sh"
 values_file="$root_dir/deploy/on-prem/yugabytedb-values.yaml"
 chart_url="https://charts.yugabyte.com/yugabyte-2025.2.6.tgz"
 chart_sha256="26518b8dfb7389dd6e97bc034df59838236c1a0c15d6f7482a1cf9a7dd4b80a0"
-test_namespace="${EUBL21_TEST_NAMESPACE:-eubl21-issue-123}"
+test_namespace="${EUBL21_TEST_NAMESPACE:-eubl21-issue-123-$(date +%s)-$$}"
 test_image="${EUBL21_TEST_IMAGE:-localhost/e-ubl21:regression}"
 mode="${1:-static}"
 temporary_dir="$(mktemp -d)"
+namespace_created=0
 
 cleanup() {
-    if [[ "$mode" == "integration" && "$test_namespace" == eubl21-issue-123* ]]; then
+    if [[ "$mode" == "integration" && "$namespace_created" == "1" ]]; then
         kubectl delete namespace "$test_namespace" --ignore-not-found --wait=true >/dev/null 2>&1 || true
     fi
     rm -rf "$temporary_dir"
@@ -114,6 +115,7 @@ fi
 require_command kubectl
 
 kubectl create namespace "$test_namespace"
+namespace_created=1
 helm repo add yugabytedb https://charts.yugabyte.com --force-update >/dev/null
 helm repo update yugabytedb >/dev/null
 
