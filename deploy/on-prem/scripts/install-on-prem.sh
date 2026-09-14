@@ -11,7 +11,7 @@ set -Eeuo pipefail
 #   - MetalLB
 #   - cert-manager
 #   - KEDA
-#   - CloudNativePG + one PostgreSQL instance
+#   - one-node YugabyteDB/YSQL
 #   - NATS JetStream
 #   - single-node MinIO-compatible object storage
 #   - kube-prometheus-stack (Prometheus + Grafana)
@@ -20,9 +20,14 @@ set -Eeuo pipefail
 # Review this script before running it as root.
 
 EUBL21_NAMESPACE="${EUBL21_NAMESPACE:-e-ubl21}"
+EUBL21_IMAGE="${EUBL21_IMAGE:-}"
+EUBL21_IMAGE_PULL_POLICY="${EUBL21_IMAGE_PULL_POLICY:-IfNotPresent}"
 METALLB_ADDRESS_POOL="${METALLB_ADDRESS_POOL:-}"
 NATS_STORAGE_SIZE="${NATS_STORAGE_SIZE:-20Gi}"
-POSTGRES_STORAGE_SIZE="${POSTGRES_STORAGE_SIZE:-50Gi}"
+YB_MASTER_STORAGE_SIZE="${YB_MASTER_STORAGE_SIZE:-10Gi}"
+YB_TSERVER_STORAGE_SIZE="${YB_TSERVER_STORAGE_SIZE:-50Gi}"
+YB_STORAGE_CLASS="${YB_STORAGE_CLASS:-local-path}"
+YB_TEST_DISABLE_DISK_FULL_CHECK="${YB_TEST_DISABLE_DISK_FULL_CHECK:-0}"
 MINIO_STORAGE_SIZE="${MINIO_STORAGE_SIZE:-100Gi}"
 PROMETHEUS_STORAGE_SIZE="${PROMETHEUS_STORAGE_SIZE:-30Gi}"
 GRAFANA_STORAGE_SIZE="${GRAFANA_STORAGE_SIZE:-10Gi}"
@@ -30,7 +35,9 @@ MINIO_IMAGE="${MINIO_IMAGE:-quay.io/minio/minio:latest}"
 METALLB_CHART_VERSION="${METALLB_CHART_VERSION:-0.16.1}"
 CERT_MANAGER_CHART_VERSION="${CERT_MANAGER_CHART_VERSION:-v1.21.1}"
 KEDA_CHART_VERSION="${KEDA_CHART_VERSION:-2.20.2}"
-CLOUDNATIVEPG_CHART_VERSION="${CLOUDNATIVEPG_CHART_VERSION:-0.29.0}"
+YUGABYTEDB_CHART_VERSION="${YUGABYTEDB_CHART_VERSION:-2025.2.6}"
+YUGABYTEDB_IMAGE_REPOSITORY="${YUGABYTEDB_IMAGE_REPOSITORY:-yugabytedb/yugabyte}"
+YUGABYTEDB_IMAGE_TAG="${YUGABYTEDB_IMAGE_TAG:-2025.2.6.0-b111}"
 NATS_CHART_VERSION="${NATS_CHART_VERSION:-2.14.6}"
 PROMETHEUS_STACK_CHART_VERSION="${PROMETHEUS_STACK_CHART_VERSION:-88.6.2}"
 OTEL_COLLECTOR_CHART_VERSION="${OTEL_COLLECTOR_CHART_VERSION:-0.172.0}"
@@ -38,6 +45,10 @@ INSTALL_PLATFORM="${INSTALL_PLATFORM:-1}"
 DISABLE_SWAP="${DISABLE_SWAP:-1}"
 K3S_VERSION="${K3S_VERSION:-}"
 STATE_DIR="${STATE_DIR:-/var/lib/e-ubl21-onprem}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPOSITORY_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd)"
+YUGABYTEDB_VALUES_FILE="${REPOSITORY_ROOT}/deploy/on-prem/yugabytedb-values.yaml"
+YUGABYTEDB_BOOTSTRAP_SCRIPT="${REPOSITORY_ROOT}/devsetup/yugabytedb-bootstrap.sh"
 
 log() {
   printf '\n[e-ubl21] %s\n' "$*"
@@ -50,6 +61,34 @@ warn() {
 fail() {
   printf '\n[e-ubl21] ERROR: %s\n' "$*" >&2
   exit 1
+}
+
+urlencode() {
+  local LC_ALL=C value="$1" character index
+  for ((index = 0; index < ${#value}; index++)); do
+    character="${value:index:1}"
+    case "${character}" in
+      [a-zA-Z0-9.~_-]) printf '%s' "${character}" ;;
+      *) printf '%%%02X' "'${character}" ;;
+    esac
+  done
+}
+
+validate_platform_config() {
+  if [[ "${INSTALL_PLATFORM}" != "1" ]]; then
+    return
+  fi
+  [[ -n "${EUBL21_IMAGE}" ]] || fail "EUBL21_IMAGE is required so the installer can run schema migrations"
+  [[ "${EUBL21_IMAGE}" =~ ^[a-zA-Z0-9._:/@+-]+$ ]] || fail "EUBL21_IMAGE contains unsupported characters"
+  [[ "${EUBL21_IMAGE_PULL_POLICY}" =~ ^(Always|IfNotPresent|Never)$ ]] || fail "EUBL21_IMAGE_PULL_POLICY must be Always, IfNotPresent, or Never"
+  [[ -r "${YUGABYTEDB_VALUES_FILE}" ]] || fail "Missing YugabyteDB values file: ${YUGABYTEDB_VALUES_FILE}"
+  [[ -r "${YUGABYTEDB_BOOTSTRAP_SCRIPT}" ]] || fail "Missing YugabyteDB bootstrap script: ${YUGABYTEDB_BOOTSTRAP_SCRIPT}"
+  if [[ -n "${POSTGRES_STORAGE_SIZE+x}" || -n "${CLOUDNATIVEPG_CHART_VERSION+x}" ]]; then
+    fail "PostgreSQL/CloudNativePG settings are retired; use YB_MASTER_STORAGE_SIZE and YB_TSERVER_STORAGE_SIZE"
+  fi
+  if [[ "${YB_TEST_DISABLE_DISK_FULL_CHECK}" == "1" && "${EUBL21_NAMESPACE}" != eubl21-issue-123* ]]; then
+    fail "YB_TEST_DISABLE_DISK_FULL_CHECK is restricted to disposable issue #123 test namespaces"
+  fi
 }
 
 require_root() {
@@ -225,7 +264,7 @@ add_helm_repositories() {
   helm repo add nats https://nats-io.github.io/k8s/helm/charts/ --force-update
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
   helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts --force-update
-  helm repo add cnpg https://cloudnative-pg.github.io/charts --force-update
+  helm repo add yugabytedb https://charts.yugabyte.com --force-update
   helm repo update
 }
 
@@ -298,53 +337,194 @@ install_keda() {
     --timeout 10m
 }
 
-install_cloudnativepg() {
-  log "Installing CloudNativePG operator"
-  helm upgrade --install cnpg cnpg/cloudnative-pg \
-    --namespace cnpg-system \
-    --create-namespace \
-    --version "${CLOUDNATIVEPG_CHART_VERSION}" \
-    --wait \
-    --timeout 10m
-}
-
 ensure_database_secret() {
-  if kubectl get secret eubl21-db-auth -n "${EUBL21_NAMESPACE}" >/dev/null 2>&1; then
-    log "Database bootstrap secret already exists; preserving it"
-    return
+  local password password_base64 password_encoded database_url database_url_base64 username
+  if kubectl get secret eubl21-db-auth --namespace "${EUBL21_NAMESPACE}" >/dev/null 2>&1; then
+    username="$(kubectl get secret eubl21-db-auth --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.username}' | base64 --decode)"
+    [[ "${username}" == "eubl21" ]] || fail "Existing eubl21-db-auth username must be eubl21"
+    password_base64="$(kubectl get secret eubl21-db-auth --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.password}')"
+    [[ -n "${password_base64}" ]] || fail "Existing eubl21-db-auth secret has no password"
+    password="$(printf '%s' "${password_base64}" | base64 --decode)"
+    log "Database bootstrap secret already exists; preserving its username and password"
+  else
+    password="$(openssl rand -base64 32 | tr -d '\n')"
+    password_base64="$(printf '%s' "${password}" | base64 | tr -d '\n')"
   fi
 
-  local password
-  password="$(openssl rand -base64 32 | tr -d '\n')"
-
-  kubectl create secret generic eubl21-db-auth \
-    --namespace "${EUBL21_NAMESPACE}" \
-    --type kubernetes.io/basic-auth \
-    --from-literal=username=eubl21 \
-    --from-literal=password="${password}"
+  password_encoded="$(urlencode "${password}")"
+  database_url="postgresql://eubl21:${password_encoded}@yb-tservers.${EUBL21_NAMESPACE}.svc.cluster.local:5433/eubl21?sslmode=disable"
+  database_url_base64="$(printf '%s' "${database_url}" | base64 | tr -d '\n')"
+  cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: eubl21-db-auth
+  namespace: ${EUBL21_NAMESPACE}
+type: kubernetes.io/basic-auth
+data:
+  username: ZXVibDIx
+  password: ${password_base64}
+  database-url: ${database_url_base64}
+EOF
 }
 
-install_postgresql_cluster() {
-  log "Creating/updating the PostgreSQL cluster"
+reject_legacy_postgresql_cluster() {
+  if kubectl get cluster.postgresql.cnpg.io e-ubl21-postgres --namespace "${EUBL21_NAMESPACE}" >/dev/null 2>&1; then
+    fail "Legacy e-ubl21-postgres exists; refusing a fresh-install conversion. Use the guarded #124 upgrade procedure."
+  fi
+}
+
+install_yugabytedb() {
+  local -a test_only_flags=()
+  log "Installing single-node YugabyteDB ${YUGABYTEDB_IMAGE_TAG}"
+  reject_legacy_postgresql_cluster
   ensure_database_secret
 
-  cat <<EOF | kubectl apply -f -
-apiVersion: postgresql.cnpg.io/v1
-kind: Cluster
+  if [[ "${YB_TEST_DISABLE_DISK_FULL_CHECK}" == "1" ]]; then
+    warn "Disabling YugabyteDB disk-full write rejection for the disposable qualification namespace"
+    test_only_flags+=(
+      --set-string gflags.master.reject_writes_when_disk_full=false
+      --set-string gflags.tserver.reject_writes_when_disk_full=false
+    )
+  fi
+
+  helm upgrade --install yugabyte yugabytedb/yugabyte \
+    --namespace "${EUBL21_NAMESPACE}" \
+    --version "${YUGABYTEDB_CHART_VERSION}" \
+    --values "${YUGABYTEDB_VALUES_FILE}" \
+    --set-string "Image.repository=${YUGABYTEDB_IMAGE_REPOSITORY}" \
+    --set-string "Image.tag=${YUGABYTEDB_IMAGE_TAG}" \
+    --set-string "storage.master.size=${YB_MASTER_STORAGE_SIZE}" \
+    --set-string "storage.tserver.size=${YB_TSERVER_STORAGE_SIZE}" \
+    --set-string "storage.master.storageClass=${YB_STORAGE_CLASS}" \
+    --set-string "storage.tserver.storageClass=${YB_STORAGE_CLASS}" \
+    "${test_only_flags[@]}" \
+    --wait \
+    --timeout 15m
+
+  kubectl rollout status statefulset/yb-master --namespace "${EUBL21_NAMESPACE}" --timeout=10m
+  kubectl rollout status statefulset/yb-tserver --namespace "${EUBL21_NAMESPACE}" --timeout=10m
+}
+
+render_yugabytedb_bootstrap_job() {
+  cat <<EOF
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: e-ubl21-postgres
+  name: eubl21-yugabytedb-bootstrap
   namespace: ${EUBL21_NAMESPACE}
+  labels:
+    app.kubernetes.io/name: eubl21-yugabytedb-bootstrap
 spec:
-  instances: 1
-  bootstrap:
-    initdb:
-      database: eubl21
-      owner: eubl21
-      secret:
-        name: eubl21-db-auth
-  storage:
-    size: ${POSTGRES_STORAGE_SIZE}
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: eubl21-yugabytedb-bootstrap
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: bootstrap
+          image: ${YUGABYTEDB_IMAGE_REPOSITORY}:${YUGABYTEDB_IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          command: [/bin/bash, /opt/e-ubl21/yugabytedb-bootstrap.sh]
+          env:
+            - name: YSQL_HOST
+              value: yb-tservers.${EUBL21_NAMESPACE}.svc.cluster.local
+            - name: YSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: eubl21-db-auth
+                  key: username
+            - name: YSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eubl21-db-auth
+                  key: password
+            - name: YSQL_DB
+              value: eubl21
+            - name: YSQL_EXPECTED_VERSION
+              value: ${YUGABYTEDB_IMAGE_TAG}
+          volumeMounts:
+            - name: bootstrap-script
+              mountPath: /opt/e-ubl21
+              readOnly: true
+      volumes:
+        - name: bootstrap-script
+          configMap:
+            name: eubl21-yugabytedb-bootstrap
+            defaultMode: 0555
 EOF
+}
+
+render_database_migration_job() {
+  cat <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: eubl21-database-migrate
+  namespace: ${EUBL21_NAMESPACE}
+  labels:
+    app.kubernetes.io/name: eubl21-database-migrate
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: eubl21-database-migrate
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migrate
+          image: ${EUBL21_IMAGE}
+          imagePullPolicy: ${EUBL21_IMAGE_PULL_POLICY}
+          args: [database, migrate, --timeout, 5m]
+          env:
+            - name: EUBL21_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: eubl21-db-auth
+                  key: database-url
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+            readOnlyRootFilesystem: true
+EOF
+}
+
+run_checked_job() {
+  local job_name="$1" deadline complete failed
+  kubectl delete job "${job_name}" --namespace "${EUBL21_NAMESPACE}" --ignore-not-found --wait=true
+  cat | kubectl apply -f -
+  deadline=$((SECONDS + 600))
+  while true; do
+    complete="$(kubectl get job "${job_name}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}')"
+    failed="$(kubectl get job "${job_name}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}')"
+    [[ "${complete}" == "True" ]] && break
+    if [[ "${failed}" == "True" || ${SECONDS} -ge ${deadline} ]]; then
+      kubectl logs "job/${job_name}" --namespace "${EUBL21_NAMESPACE}" --all-containers=true || true
+      fail "${job_name} did not complete successfully"
+    fi
+    sleep 2
+  done
+  kubectl logs "job/${job_name}" --namespace "${EUBL21_NAMESPACE}" --all-containers=true
+}
+
+bootstrap_and_migrate_yugabytedb() {
+  log "Creating the eubl21 YSQL database and user"
+  kubectl create configmap eubl21-yugabytedb-bootstrap \
+    --namespace "${EUBL21_NAMESPACE}" \
+    --from-file="yugabytedb-bootstrap.sh=${YUGABYTEDB_BOOTSTRAP_SCRIPT}" \
+    --dry-run=client -o yaml | kubectl apply -f -
+  render_yugabytedb_bootstrap_job | run_checked_job eubl21-yugabytedb-bootstrap
+
+  log "Applying e-ubl21 schema migrations"
+  render_database_migration_job | run_checked_job eubl21-database-migrate
 }
 
 install_nats() {
@@ -523,10 +703,10 @@ State:     ${STATE_DIR}/install-state.txt
 Useful checks:
   kubectl get pods -A
   kubectl get pvc -A
-  kubectl get clusters.postgresql.cnpg.io -n ${EUBL21_NAMESPACE}
+  kubectl get statefulset,service,pvc -n ${EUBL21_NAMESPACE} -l app=yugabyte
   helm list -A
 
-Retrieve PostgreSQL credentials only when needed:
+Retrieve YugabyteDB/YSQL credentials only when needed:
   kubectl get secret eubl21-db-auth -n ${EUBL21_NAMESPACE} -o jsonpath='{.data.username}' | base64 -d; echo
   kubectl get secret eubl21-db-auth -n ${EUBL21_NAMESPACE} -o jsonpath='{.data.password}' | base64 -d; echo
 
@@ -547,6 +727,7 @@ EOF
 main() {
   require_root
   load_os
+  validate_platform_config
   install_base_packages
   warn_about_active_firewall
   disable_swap_if_requested
@@ -568,8 +749,8 @@ main() {
   install_metallb
   install_cert_manager
   install_keda
-  install_cloudnativepg
-  install_postgresql_cluster
+  install_yugabytedb
+  bootstrap_and_migrate_yugabytedb
   install_nats
   install_minio
   install_monitoring
@@ -578,4 +759,6 @@ main() {
   print_summary
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

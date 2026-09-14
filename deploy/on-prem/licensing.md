@@ -44,8 +44,7 @@ Avoid as mandatory bundled components: AGPL-3.0
 | cert-manager | Apache-2.0 | Yes | Preserve licence and notices |
 | KEDA | Apache-2.0 | Yes | Preserve licence and notices |
 | NATS Server / JetStream | Apache-2.0 | Yes | Preserve licence and notices |
-| CloudNativePG | Apache-2.0 | Yes | Preserve licence and notices |
-| PostgreSQL | PostgreSQL Licence | Yes | Very permissive; preserve licence text |
+| YugabyteDB | Apache-2.0 | Yes | Preserve licence and notices; this refers to YugabyteDB, not separately licensed YugabyteDB Anywhere |
 | Prometheus | Apache-2.0 | Yes | Preserve licence and notices |
 | OpenTelemetry Collector | Apache-2.0 | Yes | Preserve licence and notices |
 | Saxon-HE | MPL-2.0 | Yes | File-level copyleft applies to modified MPL-covered files |
@@ -69,8 +68,7 @@ MetalLB
 cert-manager
 KEDA
 NATS JetStream
-CloudNativePG
-PostgreSQL
+YugabyteDB
 Prometheus
 OpenTelemetry Collector
 ```
@@ -252,7 +250,6 @@ licenses/
     MIT.txt
     MPL-2.0.txt
     EUPL-1.2.txt
-    PostgreSQL.txt
 SBOM.spdx.json
 ```
 
@@ -413,7 +410,7 @@ Preferred pattern:
 ```text
 e-ubl21 API / workers
         |
-        +--> PostgreSQL protocol
+        +--> YSQL/PostgreSQL wire protocol
         +--> NATS protocol
         +--> S3-compatible protocol
         +--> OpenTelemetry protocol

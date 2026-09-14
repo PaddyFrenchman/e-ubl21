@@ -24,7 +24,7 @@ K3s
    +--> e-ubl21 API
    +--> e-ubl21 workers
    +--> NATS JetStream
-   +--> PostgreSQL / CloudNativePG
+   +--> YugabyteDB / YSQL
    +--> MinIO-compatible object storage
    +--> Prometheus
    +--> Grafana
@@ -46,7 +46,7 @@ Storage:   50 GB SSD
 Network:   1 Gbit/s recommended
 ```
 
-This is enough for a small API + worker + NATS test environment, but leaves little headroom for PostgreSQL, object storage and observability.
+This is enough for a small API + worker + NATS test environment, but leaves little headroom for YugabyteDB, object storage and observability.
 
 ### Recommended standalone installation
 
@@ -101,7 +101,7 @@ RKE2 is not required for the initial single-server e-ubl21 target.
 | Load balancer | AWS Load Balancer | Azure Load Balancer | MetalLB |
 | Ingress | ALB / ingress controller | Application Gateway / ingress | Traefik |
 | Messaging | SQS / NATS | Service Bus / NATS | NATS JetStream |
-| Database | Aurora PostgreSQL / RDS | Azure Database for PostgreSQL | PostgreSQL via CloudNativePG |
+| Database | Aurora PostgreSQL / RDS | Azure Database for PostgreSQL | Single-node YugabyteDB/YSQL |
 | Object storage | S3 | Blob Storage | MinIO-compatible object storage |
 | Secrets | Secrets Manager | Key Vault | Kubernetes Secrets initially; Vault/SOPS later |
 | Metrics | Managed Prometheus | Azure Monitor / Managed Prometheus | Prometheus |
@@ -230,25 +230,30 @@ https://github.com/nats-io/k8s
 https://docs.nats.io/
 ```
 
-### 4.8 PostgreSQL / CloudNativePG
+### 4.8 YugabyteDB
 
 Helm repository:
 
 ```text
-https://cloudnative-pg.github.io/charts
+https://charts.yugabyte.com
 ```
 
-Operator chart:
+Chart:
 
 ```text
-cnpg/cloudnative-pg
+yugabytedb/yugabyte
 ```
 
 Documentation:
 
 ```text
-https://cloudnative-pg.io/
+https://docs.yugabyte.com/stable/deploy/kubernetes/single-zone/oss/helm-chart/
 ```
+
+The installer pins chart `2025.2.6` and image
+`yugabytedb/yugabyte:2025.2.6.0-b111`. It deploys one YB-Master and one
+YB-TServer for the non-HA single-server baseline. Production HA and
+multi-region topology are intentionally deferred to issue #127.
 
 ### 4.9 Prometheus and Grafana
 
@@ -412,7 +417,7 @@ Persistent data will include at least:
 
 ```text
 NATS JetStream
-PostgreSQL
+YugabyteDB master and tablet-server data
 MinIO/object storage
 Prometheus
 Grafana state
@@ -424,7 +429,7 @@ Suggested capacity allocation for a 500 GB machine:
 
 ```text
 OS + K3s/container images:    80 GB
-PostgreSQL:                  100 GB
+YugabyteDB:                 110 GB
 Object storage:              200 GB
 NATS JetStream:               30 GB
 Prometheus/Grafana:           50 GB
@@ -520,18 +525,20 @@ The default run performs the following operations:
 4. installs K3s;
 5. disables K3s ServiceLB so MetalLB can own `LoadBalancer` addresses;
 6. installs Helm;
-7. installs MetalLB;
-8. optionally configures the MetalLB address pool;
-9. installs cert-manager;
-10. installs KEDA;
-11. installs the CloudNativePG operator;
-12. creates an initial single-instance PostgreSQL cluster;
-13. installs NATS with JetStream and persistent storage;
-14. deploys a single-node MinIO-compatible object store;
-15. installs kube-prometheus-stack, including Prometheus and Grafana;
-16. installs an OpenTelemetry Collector;
-17. creates the `e-ubl21` namespace;
-18. records installed component information under `/var/lib/e-ubl21-onprem/`.
+7. creates the `e-ubl21` namespace;
+8. installs MetalLB;
+9. optionally configures the MetalLB address pool;
+10. installs cert-manager;
+11. installs KEDA;
+12. installs one YB-Master and one YB-TServer from the pinned YugabyteDB chart and image;
+13. creates the authenticated `eubl21` YSQL user and database;
+14. verifies the exact YugabyteDB version and authenticated YSQL usability;
+15. runs the embedded e-ubl21 schema migrations from `EUBL21_IMAGE`;
+16. installs NATS with JetStream and persistent storage;
+17. deploys a single-node MinIO-compatible object store;
+18. installs kube-prometheus-stack, including Prometheus and Grafana;
+19. installs an OpenTelemetry Collector;
+20. records installed component information under `/var/lib/e-ubl21-onprem/`.
 
 The script is designed to be rerunnable. It uses `helm upgrade --install` and preserves generated Kubernetes secrets when they already exist.
 
@@ -562,20 +569,29 @@ Set the NATS server/account `max_payload` to at least `2097152` bytes so every
 V1 validation `StageResult`, including worst-case JSON-escaped diagnostics,
 fits the normative 2 MiB result stream ceiling.
 
-### Step 9 - Verify PostgreSQL
+### Step 9 - Verify YugabyteDB/YSQL
 
 ```bash
-kubectl get clusters.postgresql.cnpg.io -n e-ubl21
-kubectl get pods -n e-ubl21
+kubectl get statefulset yb-master yb-tserver -n e-ubl21
+kubectl get job eubl21-yugabytedb-bootstrap eubl21-database-migrate -n e-ubl21
+kubectl logs job/eubl21-yugabytedb-bootstrap -n e-ubl21
+kubectl logs job/eubl21-database-migrate -n e-ubl21
 ```
 
-The bootstrap script creates:
+The bootstrap Job checks the pinned YugabyteDB version, then creates or updates
+the following YSQL identity without granting superuser privileges:
 
 ```text
-e-ubl21-postgres
+database: eubl21
+user:     eubl21
 ```
 
-Database credentials are stored as a Kubernetes Secret and are not printed to the console.
+Database credentials remain in the generic `eubl21-db-auth` Kubernetes Secret
+and are not printed to the console. The installer preserves an existing
+`eubl21` username/password pair and adds the internal `database-url` key used by
+the migration Job. If a legacy `e-ubl21-postgres` resource exists, the fresh
+installer stops without deleting it; issue #124 supplies the guarded upgrade
+path.
 
 Retrieve them only when required:
 
@@ -710,7 +726,7 @@ A single server is a single failure domain.
 
 Minimum backup policy:
 
-- PostgreSQL logical and/or physical backups copied off-host;
+- YugabyteDB backups copied off-host using a procedure qualified by issue #128;
 - object-storage data copied or replicated off-host;
 - e-ubl21 configuration and Helm values retained in Git;
 - Kubernetes Secrets backed up securely or generated from an external secret-management system;
@@ -733,7 +749,7 @@ For a serious installation:
 - pin container images by version/digest;
 - use Kubernetes NetworkPolicies;
 - move long-lived secrets to Vault/SOPS/external secret management when the deployment matures;
-- do not expose Grafana, MinIO Console, PostgreSQL or NATS directly to the Internet;
+- do not expose Grafana, MinIO Console, YSQL or NATS directly to the Internet;
 - use TLS for public and cross-network traffic;
 - audit backup restoration regularly.
 
@@ -814,13 +830,20 @@ Usage:
 sudo -E bash deploy/on-prem/scripts/install-on-prem.sh
 ```
 
+The platform installation requires an immutable e-ubl21 application image so
+the schema migration Job can run. The image must be pullable by K3s or imported
+into its containerd image store before installation.
+
 Useful overrides:
 
 ```bash
 METALLB_ADDRESS_POOL=192.168.1.200-192.168.1.220 \
 NATS_STORAGE_SIZE=20Gi \
-POSTGRES_STORAGE_SIZE=50Gi \
+YB_MASTER_STORAGE_SIZE=10Gi \
+YB_TSERVER_STORAGE_SIZE=50Gi \
+YB_STORAGE_CLASS=local-path \
 MINIO_STORAGE_SIZE=100Gi \
+EUBL21_IMAGE=registry.example/e-ubl21@sha256:REPLACE_ME \
 sudo -E bash deploy/on-prem/scripts/install-on-prem.sh
 ```
 

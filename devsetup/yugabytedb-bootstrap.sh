@@ -8,8 +8,44 @@ app_user="${YSQL_USER:?YSQL_USER is required}"
 app_password="${YSQL_PASSWORD:?YSQL_PASSWORD is required}"
 app_database="${YSQL_DB:?YSQL_DB is required}"
 host="${YSQL_HOST:?YSQL_HOST is required}"
+expected_version="${YSQL_EXPECTED_VERSION:-}"
+ready_timeout_seconds="${YSQL_READY_TIMEOUT_SECONDS:-300}"
 
 export PGPASSWORD="$admin_password"
+
+deadline=$((SECONDS + ready_timeout_seconds))
+server_version=""
+until server_version="$(/home/yugabyte/bin/ysqlsh \
+    --host "$host" \
+    --port 5433 \
+    --username "$admin_user" \
+    --dbname "$admin_database" \
+    --no-psqlrc \
+    --no-align \
+    --tuples-only \
+    --command 'SELECT version()' 2>/dev/null)"; do
+    if ((SECONDS >= deadline)); then
+        echo "YugabyteDB admin YSQL did not become ready within ${ready_timeout_seconds}s" >&2
+        exit 1
+    fi
+    sleep 2
+done
+[[ "$server_version" == *"YugabyteDB"* || "$server_version" == *"-YB-"* ]] || {
+    echo "YSQL endpoint is not YugabyteDB" >&2
+    exit 1
+}
+if [[ -n "$expected_version" ]]; then
+    binary_version="$(/home/yugabyte/bin/yugabyted version)"
+    [[ "$binary_version" == *"$expected_version"* ]] || {
+        echo "YugabyteDB binary version does not match $expected_version" >&2
+        exit 1
+    }
+    expected_release="${expected_version%%-b*}"
+    [[ "$server_version" == *"$expected_release"* ]] || {
+        echo "YSQL server release does not match $expected_release" >&2
+        exit 1
+    }
+fi
 
 /home/yugabyte/bin/ysqlsh \
     --host "$host" \
