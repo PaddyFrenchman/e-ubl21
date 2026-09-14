@@ -522,10 +522,10 @@ A clean supported on-prem installation contains YugabyteDB and no CloudNativePG/
 
 Steps 1, 3 and 4.
 
-Implementation in progress through the checksum-qualified official YugabyteDB
-chart, single-server values, preserved generic database secret, bounded YSQL
-bootstrap/readiness and migration Jobs in the on-prem installer, plus static and
-disposable two-pass installer qualification in
+Implementation completed by PR #143 through the checksum-qualified official
+YugabyteDB chart, single-server values, preserved generic database secret,
+bounded YSQL bootstrap/readiness and migration Jobs in the on-prem installer,
+plus static and disposable two-pass installer qualification in
 [`test-on-prem-yugabytedb.sh`](../devsetup/test-on-prem-yugabytedb.sh).
 
 Known issue #123 qualification limitation: the on-prem installer provisions
