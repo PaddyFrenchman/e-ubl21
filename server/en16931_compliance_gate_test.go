@@ -242,7 +242,10 @@ func TestEN16931CrashRestartEndToEnd(t *testing.T) {
 		configureRealSaxonWorker(worker, runtime)
 	})
 	defer stopReplacement()
-	restarted := waitForComplianceStatus(t, handler, token, q, id, queue.StatusValid, true, 20*time.Second)
+	// Startup verification and validation each launch the real JVM. Keep the
+	// outer full-suite budget above the worker's 30-second validation timeout so
+	// host contention cannot expire the assertion before the bounded worker.
+	restarted := waitForComplianceStatus(t, handler, token, q, id, queue.StatusValid, true, 60*time.Second)
 	assertHTTPValidationPipeline(t, restarted, queue.StatusValid, true)
 	assertOnePermanentResult(t, q, id, queue.StatusValid)
 }
