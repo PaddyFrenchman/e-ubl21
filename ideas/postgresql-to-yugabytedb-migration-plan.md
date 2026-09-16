@@ -587,11 +587,11 @@ No supported upgrade path can silently destroy an existing PostgreSQL database.
 
 Step 5.
 
-Implementation in progress through a separate guarded upgrade command with
+Implemented by PR #144 through a separate guarded upgrade command with
 read-only source inspection, validated custom-format export, a durable verified
 cutover record, preservation of the legacy cluster as the rollback window, and
-backup- plus confirmation-gated retirement. Unknown legacy objects block
-cutover; no legacy business schema is currently recognized for automatic
+backup- plus confirmation-gated resumable retirement. Unknown legacy objects
+block cutover; no legacy business schema is currently recognized for automatic
 import.
 
 ---
