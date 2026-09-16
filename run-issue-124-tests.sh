@@ -301,11 +301,17 @@ context_status="${suite_statuses[${#suite_statuses[@]}-1]}"
 if [[ "$context_status" == "PASS" ]]; then
     run_suite \
         "on-prem YugabyteDB clean-install integration" \
-        env EUBL21_TEST_IMAGE="$TEST_IMAGE" make on-prem-database-integration
+        env \
+            KUBECONFIG="$RUN_DIR/minikube-kubeconfig" \
+            EUBL21_TEST_IMAGE="$TEST_IMAGE" \
+            make on-prem-database-integration
 
     run_suite \
         "#124 CloudNativePG-to-YugabyteDB integration" \
-        env EUBL21_TEST_IMAGE="$TEST_IMAGE" make on-prem-database-upgrade-integration
+        env \
+            KUBECONFIG="$RUN_DIR/minikube-kubeconfig" \
+            EUBL21_TEST_IMAGE="$TEST_IMAGE" \
+            make on-prem-database-upgrade-integration
 else
     echo "Skipping on-prem integration suites because Minikube context preparation failed." >&2
 fi
