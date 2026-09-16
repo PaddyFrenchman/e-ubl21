@@ -49,8 +49,11 @@ require_upgrade_tools() {
 }
 
 legacy_cluster_exists() {
-  kubectl get cluster.postgresql.cnpg.io "${LEGACY_CLUSTER_NAME}" \
-    --namespace "${EUBL21_NAMESPACE}" >/dev/null 2>&1
+  local resource_name
+  resource_name="$(kubectl get cluster.postgresql.cnpg.io "${LEGACY_CLUSTER_NAME}" \
+    --namespace "${EUBL21_NAMESPACE}" --ignore-not-found -o name)" ||
+    fail "Could not determine whether legacy Cluster/${LEGACY_CLUSTER_NAME} exists; refusing to assume it is absent"
+  [[ -n "${resource_name}" ]]
 }
 
 legacy_cluster_value() {
@@ -199,6 +202,16 @@ verify_promoted_database_secret() {
   done
 }
 
+verify_live_yugabytedb_database() {
+  # A new migration command opens a fresh authenticated YSQL connection through
+  # the promoted public URL and validates the complete history against the
+  # immutable migrations embedded in EUBL21_IMAGE. It is idempotent when the
+  # schema is current and fails on missing, failed, changed, or newer history.
+  render_database_migration_job \
+    eubl21-yugabytedb-retirement-check "${PUBLIC_DATABASE_SECRET_NAME}" |
+    run_checked_job eubl21-yugabytedb-retirement-check
+}
+
 perform_cutover() {
   local legacy_uid previous_database_url_base64 public_secret_resource_version promoted_database_url_base64
   validate_platform_config
@@ -287,26 +300,35 @@ verify_backup_archive() {
 }
 
 retire_legacy_cluster() {
-  local backup_file="$1" state_status recorded_uid legacy_uid backup_sha256 secret_owner_uids
+  local backup_file="$1" state_status recorded_uid recorded_backup_sha legacy_uid backup_sha256 secret_owner_uids
   [[ "${EUBL21_RETIRE_LEGACY_POSTGRESQL:-}" == "${RETIRE_CONFIRMATION}" ]] ||
     fail "Explicit retirement confirmation is missing; see --help"
   state_status="$(cutover_state_value status)"
   recorded_uid="$(cutover_state_value legacy_cluster_uid)"
+  recorded_backup_sha="$(cutover_state_value backup_sha256)"
 
   if ! legacy_cluster_exists; then
     if [[ "${state_status}" == "retired" ]]; then
       log "Legacy PostgreSQL cluster is already retired"
       return
     fi
-    if [[ "${state_status}" == "retiring" && -n "${recorded_uid}" ]]; then
-      record_cutover_state retired "${recorded_uid}" "$(cutover_state_value backup_sha256)"
+    if [[ "${state_status}" == "retiring" ]]; then
+      [[ -n "${recorded_uid}" && "${recorded_backup_sha}" =~ ^[0-9a-f]{64}$ ]] ||
+        fail "The interrupted retirement record is incomplete; refusing to mark the legacy cluster retired"
+      [[ -f "${backup_file}" && -s "${backup_file}" ]] ||
+        fail "The recorded retirement backup is required to complete recovery: ${backup_file}"
+      backup_sha256="$(sha256sum "${backup_file}" | awk '{print $1}')"
+      [[ "${backup_sha256}" == "${recorded_backup_sha}" ]] ||
+        fail "The supplied backup does not match the interrupted retirement record"
+      record_cutover_state retired "${recorded_uid}" "${recorded_backup_sha}"
       log "Recorded completion of the previously initiated retirement"
       return
     fi
     fail "Legacy cluster is absent without a completed retirement record"
   fi
 
-  [[ "${state_status}" == "verified" ]] || fail "A verified YugabyteDB cutover record is required before retirement"
+  [[ "${state_status}" == "verified" || "${state_status}" == "retiring" ]] ||
+    fail "A verified or interrupted-retirement YugabyteDB cutover record is required before retirement"
   legacy_uid="$(legacy_cluster_value '{.metadata.uid}')"
   [[ -n "${recorded_uid}" && "${legacy_uid}" == "${recorded_uid}" ]] ||
     fail "Legacy cluster identity changed after cutover; refusing retirement"
@@ -314,6 +336,7 @@ retire_legacy_cluster() {
   inspect_legacy_database
   verify_yugabytedb_cutover
   verify_promoted_database_secret
+  verify_live_yugabytedb_database
   secret_owner_uids="$(kubectl get secret "${PUBLIC_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" \
     -o jsonpath='{range .metadata.ownerReferences[*]}{.uid}{"\n"}{end}')" ||
     fail "Could not verify ownership of ${PUBLIC_DATABASE_SECRET_NAME}"
@@ -321,7 +344,13 @@ retire_legacy_cluster() {
     fail "${PUBLIC_DATABASE_SECRET_NAME} is owned by the legacy cluster; refusing retirement"
   fi
   backup_sha256="$(sha256sum "${backup_file}" | awk '{print $1}')"
-  record_cutover_state retiring "${legacy_uid}" "${backup_sha256}"
+  if [[ "${state_status}" == "retiring" ]]; then
+    [[ "${recorded_backup_sha}" =~ ^[0-9a-f]{64}$ && "${backup_sha256}" == "${recorded_backup_sha}" ]] ||
+      fail "The supplied backup does not match the interrupted retirement record"
+    log "Resuming the previously verified retirement for Cluster/${LEGACY_CLUSTER_NAME}"
+  else
+    record_cutover_state retiring "${legacy_uid}" "${backup_sha256}"
+  fi
 
   warn "Explicit confirmation accepted; deleting only Cluster/${LEGACY_CLUSTER_NAME}. The CNPG operator is retained."
   kubectl delete cluster.postgresql.cnpg.io "${LEGACY_CLUSTER_NAME}" \

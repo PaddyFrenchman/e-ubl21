@@ -467,20 +467,22 @@ EOF
 }
 
 render_database_migration_job() {
+  local job_name="${1:-eubl21-database-migrate}"
+  local database_secret_name="${2:-${EUBL21_DATABASE_SECRET_NAME}}"
   cat <<EOF
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: eubl21-database-migrate
+  name: ${job_name}
   namespace: ${EUBL21_NAMESPACE}
   labels:
-    app.kubernetes.io/name: eubl21-database-migrate
+    app.kubernetes.io/name: ${job_name}
 spec:
   backoffLimit: 1
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: eubl21-database-migrate
+        app.kubernetes.io/name: ${job_name}
     spec:
       restartPolicy: Never
       securityContext:
@@ -496,7 +498,7 @@ spec:
             - name: EUBL21_DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: ${EUBL21_DATABASE_SECRET_NAME}
+                  name: ${database_secret_name}
                   key: database-url
           securityContext:
             allowPrivilegeEscalation: false

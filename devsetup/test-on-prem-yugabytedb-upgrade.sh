@@ -17,6 +17,24 @@ source "${upgrade_script}"
 
 bash -n "${upgrade_script}" "${root_dir}/deploy/on-prem/scripts/install-on-prem.sh"
 
+# Legacy-cluster discovery treats only a successful empty --ignore-not-found
+# response as absence. API/RBAC failures are blocking.
+if (
+  kubectl() { return 1; }
+  legacy_cluster_exists
+) >/dev/null 2>&1; then
+  echo "Legacy cluster discovery treated an API failure as absence/presence" >&2
+  exit 1
+fi
+(
+  kubectl() { return 0; }
+  ! legacy_cluster_exists
+)
+(
+  kubectl() { printf '%s\n' "cluster.postgresql.cnpg.io/${LEGACY_CLUSTER_NAME}"; }
+  legacy_cluster_exists
+)
+
 # An empty legacy database qualifies without mutation.
 (
   legacy_cluster_exists() { return 0; }
@@ -58,6 +76,23 @@ jobs_file="${temporary_dir}/jobs.yaml"
 render_yugabytedb_bootstrap_job >"${jobs_file}"
 render_database_migration_job >>"${jobs_file}"
 grep -q 'name: eubl21-db-auth-yugabytedb-staging' "${jobs_file}"
+
+# The destructive-retirement check uses a newly created migration Job and the
+# promoted public Secret, not the staging Secret or historical Job status.
+verification_job_file="${temporary_dir}/verification-job.yaml"
+(
+  run_checked_job() {
+    [[ "$1" == eubl21-yugabytedb-retirement-check ]]
+    cat >"${verification_job_file}"
+  }
+  verify_live_yugabytedb_database
+)
+grep -q 'name: eubl21-yugabytedb-retirement-check' "${verification_job_file}"
+grep -q 'name: eubl21-db-auth' "${verification_job_file}"
+if grep -q 'name: eubl21-db-auth-yugabytedb-staging' "${verification_job_file}"; then
+  echo "Retirement verification Job used the staging Secret" >&2
+  exit 1
+fi
 
 # Promotion uses the snapshotted resource version to atomically publish only
 # the already-verified URL while keeping the legacy credentials unchanged.
@@ -249,6 +284,7 @@ fi
   inspect_legacy_database() { printf '%s\n' reinspection >>"${events_file}"; }
   verify_yugabytedb_cutover() { printf '%s\n' yb-verified >>"${events_file}"; }
   verify_promoted_database_secret() { printf '%s\n' secret-verified >>"${events_file}"; }
+  verify_live_yugabytedb_database() { printf '%s\n' live-ysql-verified >>"${events_file}"; }
   record_cutover_state() { printf 'state:%s:%s:%s\n' "$1" "$2" "$3" >>"${events_file}"; }
   kubectl() {
     if [[ "$1" == "get" && "$2" == "secret" ]]; then
@@ -265,9 +301,79 @@ fi
 grep -Fxq reinspection "${events_file}"
 grep -Fxq yb-verified "${events_file}"
 grep -Fxq secret-verified "${events_file}"
+grep -Fxq live-ysql-verified "${events_file}"
 grep -q '^state:retiring:legacy-uid:' "${events_file}"
 grep -Fxq cluster-deleted "${events_file}"
 grep -q '^state:retired:legacy-uid:' "${events_file}"
+
+# If deletion failed after the retiring record was written, the same source UID
+# and backup checksum re-run every gate and retry deletion without rewriting the
+# transition record.
+: >"${events_file}"
+expected_backup_sha256="$(sha256sum "${backup_file}" | awk '{print $1}')"
+(
+  export EUBL21_RETIRE_LEGACY_POSTGRESQL="${RETIRE_CONFIRMATION}"
+  cutover_state_value() {
+    case "$1" in
+      status) printf '%s\n' retiring ;;
+      legacy_cluster_uid) printf '%s\n' legacy-uid ;;
+      backup_sha256) printf '%s\n' "${expected_backup_sha256}" ;;
+    esac
+  }
+  legacy_cluster_exists() { return 0; }
+  legacy_cluster_value() { printf '%s\n' legacy-uid; }
+  verify_backup_archive() { [[ "$1" == "${backup_file}" ]]; }
+  inspect_legacy_database() { printf '%s\n' retry-reinspection >>"${events_file}"; }
+  verify_yugabytedb_cutover() { printf '%s\n' retry-yb-verified >>"${events_file}"; }
+  verify_promoted_database_secret() { printf '%s\n' retry-secret-verified >>"${events_file}"; }
+  verify_live_yugabytedb_database() { printf '%s\n' retry-live-ysql-verified >>"${events_file}"; }
+  record_cutover_state() { printf 'retry-state:%s:%s:%s\n' "$1" "$2" "$3" >>"${events_file}"; }
+  kubectl() {
+    if [[ "$1" == "get" && "$2" == "secret" ]]; then
+      return 0
+    fi
+    if [[ "$1" == "delete" && "$2" == "cluster.postgresql.cnpg.io" && "$3" == "${LEGACY_CLUSTER_NAME}" ]]; then
+      printf '%s\n' retry-cluster-deleted >>"${events_file}"
+      return 0
+    fi
+    return 1
+  }
+  retire_legacy_cluster "${backup_file}" >/dev/null
+)
+grep -Fxq retry-reinspection "${events_file}"
+grep -Fxq retry-yb-verified "${events_file}"
+grep -Fxq retry-secret-verified "${events_file}"
+grep -Fxq retry-live-ysql-verified "${events_file}"
+grep -Fxq retry-cluster-deleted "${events_file}"
+if grep -q '^retry-state:retiring:' "${events_file}"; then
+  echo "Retirement retry rewrote the retiring transition" >&2
+  exit 1
+fi
+grep -q '^retry-state:retired:legacy-uid:' "${events_file}"
+
+# A different backup cannot resume an interrupted retirement.
+if (
+  export EUBL21_RETIRE_LEGACY_POSTGRESQL="${RETIRE_CONFIRMATION}"
+  cutover_state_value() {
+    case "$1" in
+      status) printf '%s\n' retiring ;;
+      legacy_cluster_uid) printf '%s\n' legacy-uid ;;
+      backup_sha256) printf '%064d\n' 0 ;;
+    esac
+  }
+  legacy_cluster_exists() { return 0; }
+  legacy_cluster_value() { printf '%s\n' legacy-uid; }
+  verify_backup_archive() { :; }
+  inspect_legacy_database() { :; }
+  verify_yugabytedb_cutover() { :; }
+  verify_promoted_database_secret() { :; }
+  verify_live_yugabytedb_database() { :; }
+  kubectl() { return 0; }
+  retire_legacy_cluster "${backup_file}"
+) >/dev/null 2>&1; then
+  echo "Interrupted retirement accepted a different backup" >&2
+  exit 1
+fi
 
 # Missing confirmation blocks retirement before any state-changing command.
 : >"${events_file}"

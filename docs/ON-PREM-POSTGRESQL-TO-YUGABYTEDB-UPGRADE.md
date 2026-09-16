@@ -136,7 +136,11 @@ Deleting a CloudNativePG Cluster can also remove its pods and persistent
 volumes. This step is destructive and cannot be recovered without the backup.
 The script verifies the sidecar checksum and source UID, revalidates the backup
 through the live PostgreSQL primary, repeats the empty-database inspection and
-rechecks YugabyteDB immediately before deletion.
+rechecks YugabyteDB immediately before deletion. The final target check starts
+a new, authenticated migration command through the promoted public database
+URL. This opens a fresh YSQL connection and validates the complete migration
+history against the immutable migrations embedded in the application image;
+previously completed Jobs alone are not accepted as current database health.
 
 ```bash
 EUBL21_RETIRE_LEGACY_POSTGRESQL=delete-e-ubl21-postgres-after-verified-backup \
@@ -144,9 +148,13 @@ deploy/on-prem/scripts/upgrade-postgresql-to-yugabytedb.sh retire \
   /secure/off-host/e-ubl21/postgresql-before-yugabyte.dump
 ```
 
-The cutover record moves through `retiring` to `retired`, making recovery from
-an interruption after Kubernetes accepted deletion idempotent. The backup
-SHA-256 is recorded, but the backup itself is never stored in Kubernetes.
+The cutover record moves through `retiring` to `retired`. If deletion fails
+while the cluster still exists, rerunning the same command with the same backup
+repeats every verification gate and safely retries deletion. If Kubernetes has
+already removed the cluster, the retry verifies the recorded backup checksum
+before completing the `retired` record. API/RBAC failures are blocking and are
+never interpreted as cluster absence. The backup SHA-256 is recorded, but the
+backup itself is never stored in Kubernetes.
 
 The CloudNativePG operator remains installed so other clusters are never
 silently affected. After the required rollback-retention period, remove only
@@ -174,10 +182,11 @@ EUBL21_TEST_IMAGE=localhost/e-ubl21:regression make on-prem-database-upgrade-int
 
 It covers an empty source, an unknown relation, failed YugabyteDB installation,
 atomic Secret promotion and rollback, validated export/no-overwrite, fully
-gated explicit retirement, failed global cluster inventory, missing
-confirmation and idempotent rerun. The normal fresh-install and schema gates
-remain required as applicable. The integration target additionally creates a
-real legacy CloudNativePG cluster, repeats the safety scenarios, performs the
-two-pass YugabyteDB cutover, explicitly retires the source and operator, and
-cleans up only resources whose prior absence it verified. It refuses to run on
-a Kubernetes context that already contains CloudNativePG resources.
+gated explicit retirement, fresh target-schema verification, interrupted
+retirement recovery, failed cluster inventory, missing confirmation and
+idempotent rerun. The normal fresh-install and schema gates remain required as
+applicable. The integration target additionally creates a real legacy
+CloudNativePG cluster, repeats the safety scenarios, performs the two-pass
+YugabyteDB cutover, explicitly retires the source and operator, and cleans up
+only resources whose prior absence it verified. It refuses to run on a
+Kubernetes context that already contains CloudNativePG resources.
