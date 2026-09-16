@@ -600,8 +600,10 @@ Database credentials remain in the generic `eubl21-db-auth` Kubernetes Secret
 and are not printed to the console. The installer preserves an existing
 `eubl21` username/password pair and adds the internal `database-url` key used by
 the migration Job. If a legacy `e-ubl21-postgres` resource exists, the fresh
-installer stops without deleting it; issue #124 supplies the guarded upgrade
-path.
+installer stops without deleting it. Existing installations must use the
+guarded procedure in
+[`ON-PREM-POSTGRESQL-TO-YUGABYTEDB-UPGRADE.md`](../../docs/ON-PREM-POSTGRESQL-TO-YUGABYTEDB-UPGRADE.md);
+the old cluster is never retired as part of YugabyteDB installation.
 
 Retrieve them only when required:
 

@@ -89,6 +89,7 @@ two-pass test against the current disposable Kubernetes context:
 ```bash
 make on-prem-database-test
 EUBL21_TEST_IMAGE=e-ubl21:local make on-prem-database-integration
+make on-prem-database-upgrade-test
 ```
 
 The integration target owns and removes a uniquely named disposable namespace.
@@ -109,6 +110,16 @@ suites in the repository's supported Minikube regression deployment. A future
 production chart must add the equivalent health/regression gate against the
 on-prem YugabyteDB connection before that chart is declared supported.
 
+## Existing CloudNativePG installations
+
+Do not run the fresh installer through its legacy-deployment safety check.
+Follow
+[`ON-PREM-POSTGRESQL-TO-YUGABYTEDB-UPGRADE.md`](../../docs/ON-PREM-POSTGRESQL-TO-YUGABYTEDB-UPGRADE.md)
+and use `scripts/upgrade-postgresql-to-yugabytedb.sh`. The guarded path inspects
+and preserves the old database, installs YugabyteDB without retiring the
+source, and separates destructive retirement behind backup verification and
+exact operator confirmation.
+
 ## Important limitations
 
 This is a **single-server** architecture. It provides Kubernetes deployment portability but does not provide physical high availability. Failure of the host stops all local workloads.
@@ -118,6 +129,12 @@ YugabyteDB, NATS JetStream, object-storage and monitoring data must therefore ha
 The current repository does not yet contain the final common production Helm chart for e-ubl21. The existing `deploy/minikube/` definitions are regression/test infrastructure and must not be promoted directly into the on-premises production model.
 
 ## Related documentation
+
+The guarded legacy CloudNativePG upgrade and retirement procedure is:
+
+```text
+docs/ON-PREM-POSTGRESQL-TO-YUGABYTEDB-UPGRADE.md
+```
 
 The project-wide cloud deployment target is documented at:
 
