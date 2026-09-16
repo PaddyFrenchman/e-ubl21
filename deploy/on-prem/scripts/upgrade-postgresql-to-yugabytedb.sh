@@ -81,7 +81,7 @@ inspect_legacy_database() {
   unexpected_databases="$(legacy_psql "SELECT 'database|' || quote_ident(datname) FROM pg_database WHERE datallowconn AND NOT datistemplate AND datname NOT IN ('eubl21','postgres') UNION ALL SELECT 'role|' || quote_ident(rolname) FROM pg_roles WHERE rolname NOT IN ('postgres','streaming_replica','cnpg_metrics_exporter','eubl21') AND rolname NOT LIKE 'pg_%' UNION ALL SELECT 'tablespace|' || quote_ident(spcname) FROM pg_tablespace WHERE spcname NOT IN ('pg_default','pg_global') ORDER BY 1;" postgres)" ||
     fail "Could not inventory databases, roles, and tablespaces in the legacy cluster; PostgreSQL remains untouched"
   findings+="${unexpected_databases}"
-  query="SELECT 'schema|' || quote_ident(nspname) FROM pg_namespace WHERE nspname NOT IN ('pg_catalog','information_schema','public') AND nspname NOT LIKE 'pg_toast%' AND nspname NOT LIKE 'pg_temp_%' UNION ALL SELECT 'relation|' || quote_ident(n.nspname) || '.' || quote_ident(c.relname) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind IN ('r','p','v','m','S','f') AND n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%' UNION ALL SELECT 'routine|' || quote_ident(n.nspname) || '.' || quote_ident(p.proname) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%' UNION ALL SELECT 'type|' || quote_ident(n.nspname) || '.' || quote_ident(t.typname) FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typtype IN ('d','e','m','r') AND n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%' UNION ALL SELECT 'large-object|' || oid::text FROM pg_largeobject_metadata ORDER BY 1;"
+  query="SELECT 'schema|' || quote_ident(nspname) FROM pg_namespace WHERE nspname NOT IN ('pg_catalog','information_schema','public') AND nspname NOT LIKE 'pg_toast%' AND nspname NOT LIKE 'pg_temp_%' UNION ALL SELECT 'relation|' || quote_ident(n.nspname) || '.' || quote_ident(c.relname) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind IN ('r','p','v','m','S','f') AND n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%' UNION ALL SELECT 'routine|' || quote_ident(n.nspname) || '.' || quote_ident(p.proname) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%' UNION ALL SELECT 'type|' || quote_ident(n.nspname) || '.' || quote_ident(t.typname) FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typtype IN ('b','c','d','e','m','r') AND n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp_%' UNION ALL SELECT 'large-object|' || oid::text FROM pg_largeobject_metadata ORDER BY 1;"
   for database in eubl21 postgres; do
     database_findings="$(legacy_psql "${query}" "${database}")" ||
       fail "Could not inspect the legacy ${database} database; PostgreSQL remains untouched"
@@ -165,15 +165,26 @@ prepare_staged_database_secret() {
 }
 
 promote_staged_database_secret() {
-  local username_base64 password_base64 database_url_base64
+  local expected_resource_version="$1" username_base64 password_base64 database_url_base64
   username_base64="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.username}')"
   password_base64="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.password}')"
   database_url_base64="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.database-url}')"
   [[ -n "${username_base64}" && -n "${password_base64}" && -n "${database_url_base64}" ]] ||
     fail "Staged YugabyteDB credentials are incomplete"
   kubectl patch secret "${PUBLIC_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" \
-      --type=merge \
-    -p "{\"data\":{\"username\":\"${username_base64}\",\"password\":\"${password_base64}\",\"database-url\":\"${database_url_base64}\"}}" >/dev/null
+    --type=json \
+    -p "[{\"op\":\"test\",\"path\":\"/metadata/resourceVersion\",\"value\":\"${expected_resource_version}\"},{\"op\":\"add\",\"path\":\"/data/database-url\",\"value\":\"${database_url_base64}\"}]" >/dev/null
+}
+
+rollback_public_database_secret() {
+  local promoted_database_url_base64="$1" previous_database_url_base64="$2" patch
+  if [[ -n "${previous_database_url_base64}" ]]; then
+    patch="[{\"op\":\"test\",\"path\":\"/data/database-url\",\"value\":\"${promoted_database_url_base64}\"},{\"op\":\"replace\",\"path\":\"/data/database-url\",\"value\":\"${previous_database_url_base64}\"}]"
+  else
+    patch="[{\"op\":\"test\",\"path\":\"/data/database-url\",\"value\":\"${promoted_database_url_base64}\"},{\"op\":\"remove\",\"path\":\"/data/database-url\"}]"
+  fi
+  kubectl patch secret "${PUBLIC_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" \
+    --type=json -p "${patch}" >/dev/null
 }
 
 verify_promoted_database_secret() {
@@ -189,12 +200,18 @@ verify_promoted_database_secret() {
 }
 
 perform_cutover() {
-  local legacy_uid
+  local legacy_uid previous_database_url_base64 public_secret_resource_version promoted_database_url_base64
   validate_platform_config
   inspect_legacy_database || fail "Legacy PostgreSQL inspection did not qualify for cutover"
   legacy_uid="$(legacy_cluster_value '{.metadata.uid}')"
   [[ -n "${legacy_uid}" ]] || fail "Could not record the legacy cluster identity"
   prepare_staged_database_secret
+
+  previous_database_url_base64="$(kubectl get secret "${PUBLIC_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.database-url}')" ||
+    fail "Could not snapshot the public database URL before cutover"
+  public_secret_resource_version="$(kubectl get secret "${PUBLIC_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.metadata.resourceVersion}')" ||
+    fail "Could not snapshot the public database Secret version before cutover"
+  [[ -n "${public_secret_resource_version}" ]] || fail "Public database Secret has no resource version"
 
   log "Installing and verifying YugabyteDB; legacy PostgreSQL will remain available"
   if ! (
@@ -204,9 +221,19 @@ perform_cutover() {
   ); then
     fail "YugabyteDB cutover failed; legacy PostgreSQL and ${PUBLIC_DATABASE_SECRET_NAME} remain unchanged"
   fi
-  promote_staged_database_secret || fail "Could not promote verified YugabyteDB credentials; legacy PostgreSQL remains untouched"
-  verify_promoted_database_secret || fail "Could not verify promoted YugabyteDB credentials; legacy PostgreSQL remains untouched"
-  record_cutover_state verified "${legacy_uid}" || fail "Could not record the verified cutover; legacy PostgreSQL remains untouched"
+  promoted_database_url_base64="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.database-url}')" ||
+    fail "Could not read the verified staged YugabyteDB URL"
+  [[ -n "${promoted_database_url_base64}" ]] || fail "Verified staged YugabyteDB URL is empty"
+  promote_staged_database_secret "${public_secret_resource_version}" ||
+    fail "Could not atomically promote the verified YugabyteDB URL; legacy PostgreSQL remains untouched"
+  if ! (
+    verify_promoted_database_secret || exit 1
+    record_cutover_state verified "${legacy_uid}" || exit 1
+  ); then
+    rollback_public_database_secret "${promoted_database_url_base64}" "${previous_database_url_base64}" ||
+      fail "Cutover finalization failed and the public database URL could not be rolled back; stop and repair the Secret before retrying"
+    fail "Cutover finalization failed; the public database URL was restored and legacy PostgreSQL remains untouched"
+  fi
   log "Cutover verified. PostgreSQL remains intact for rollback; export a backup before explicit retirement."
 }
 
@@ -309,7 +336,8 @@ retire_cloudnativepg_operator() {
     fail "Explicit CloudNativePG operator retirement confirmation is missing; see --help"
   state_status="$(cutover_state_value status)"
   [[ "${state_status}" == "retired" ]] || fail "Legacy cluster retirement must be recorded before operator removal"
-  remaining_clusters="$(kubectl get clusters.postgresql.cnpg.io --all-namespaces -o name 2>/dev/null || true)"
+  remaining_clusters="$(kubectl get clusters.postgresql.cnpg.io --all-namespaces -o name)" ||
+    fail "Could not inventory CloudNativePG clusters; refusing to uninstall the operator"
   [[ -z "${remaining_clusters}" ]] || fail "CloudNativePG clusters still exist; refusing to uninstall the operator"
   if helm status cnpg --namespace cnpg-system >/dev/null 2>&1; then
     helm uninstall cnpg --namespace cnpg-system --wait

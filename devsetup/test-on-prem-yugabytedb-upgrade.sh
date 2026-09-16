@@ -59,8 +59,8 @@ render_yugabytedb_bootstrap_job >"${jobs_file}"
 render_database_migration_job >>"${jobs_file}"
 grep -q 'name: eubl21-db-auth-yugabytedb-staging' "${jobs_file}"
 
-# Promotion atomically publishes the already-verified staged URL while keeping
-# the legacy username/password unchanged.
+# Promotion uses the snapshotted resource version to atomically publish only
+# the already-verified URL while keeping the legacy credentials unchanged.
 secret_file="${temporary_dir}/promoted-secret-command"
 (
   kubectl() {
@@ -72,10 +72,27 @@ secret_file="${temporary_dir}/promoted-secret-command"
       *) return 1 ;;
     esac
   }
-  promote_staged_database_secret
+  promote_staged_database_secret 12345
 )
 grep -q '^patch secret eubl21-db-auth ' "${secret_file}"
+grep -q 'resourceVersion.*12345' "${secret_file}"
 grep -q 'database-url.*cG9zdGdyZXNxbDovL3li' "${secret_file}"
+
+# Rollback changes only the promoted URL and handles both an earlier URL and
+# the legacy Secret shape where the key did not exist.
+rollback_file="${temporary_dir}/rollback-secret-command"
+(
+  kubectl() { printf '%s\n' "$*" >"${rollback_file}"; }
+  rollback_public_database_secret new-url old-url
+)
+grep -q 'test.*database-url.*new-url' "${rollback_file}"
+grep -q 'replace.*database-url.*old-url' "${rollback_file}"
+(
+  kubectl() { printf '%s\n' "$*" >"${rollback_file}"; }
+  rollback_public_database_secret new-url ''
+)
+grep -q 'test.*database-url.*new-url' "${rollback_file}"
+grep -q 'remove.*database-url' "${rollback_file}"
 
 # A successful cutover installs in guarded mode and records verification without
 # invoking any legacy deletion.
@@ -88,10 +105,16 @@ grep -q 'database-url.*cG9zdGdyZXNxbDovL3li' "${secret_file}"
   install_yugabytedb() { printf 'install:%s\n' "$1" >>"${events_file}"; }
   bootstrap_and_migrate_yugabytedb() { printf '%s\n' migrate >>"${events_file}"; }
   verify_yugabytedb_cutover() { printf '%s\n' verify >>"${events_file}"; }
-  promote_staged_database_secret() { printf '%s\n' promote-secret >>"${events_file}"; }
+  kubectl() {
+    case "$*" in
+      *'{.metadata.resourceVersion}'*) printf '%s' 12345 ;;
+      *'{.data.database-url}'*) printf '%s' cG9zdGdyZXNxbDovL3li ;;
+      *) printf 'forbidden-kubectl:%s\n' "$*" >>"${events_file}"; return 1 ;;
+    esac
+  }
+  promote_staged_database_secret() { [[ "$1" == 12345 ]]; printf '%s\n' promote-secret >>"${events_file}"; }
   verify_promoted_database_secret() { printf '%s\n' verify-promoted-secret >>"${events_file}"; }
   record_cutover_state() { printf 'state:%s:%s\n' "$1" "$2" >>"${events_file}"; }
-  kubectl() { printf 'forbidden-kubectl:%s\n' "$*" >>"${events_file}"; return 1; }
   perform_cutover >/dev/null
 )
 grep -Fxq 'install:guarded-upgrade' "${events_file}"
@@ -111,6 +134,13 @@ if (
   inspect_legacy_database() { :; }
   legacy_cluster_value() { printf '%s\n' legacy-uid; }
   prepare_staged_database_secret() { printf '%s\n' staged-only >>"${events_file}"; }
+  kubectl() {
+    case "$*" in
+      *'{.metadata.resourceVersion}'*) printf '%s' 12345 ;;
+      *'{.data.database-url}'*) printf '%s' legacy-url ;;
+      *) return 1 ;;
+    esac
+  }
   install_yugabytedb() { return 1; }
   bootstrap_and_migrate_yugabytedb() { printf '%s\n' forbidden-migrate >>"${events_file}"; }
   promote_staged_database_secret() { printf '%s\n' forbidden-promote >>"${events_file}"; }
@@ -126,6 +156,37 @@ if grep -q '^forbidden-' "${events_file}"; then
   echo "Failed cutover advanced beyond staging" >&2
   exit 1
 fi
+
+# A finalization failure after URL promotion restores the previous public URL
+# and cannot publish a verified cutover record.
+: >"${events_file}"
+if (
+  validate_platform_config() { :; }
+  inspect_legacy_database() { :; }
+  legacy_cluster_value() { printf '%s\n' legacy-uid; }
+  prepare_staged_database_secret() { :; }
+  install_yugabytedb() { :; }
+  bootstrap_and_migrate_yugabytedb() { :; }
+  verify_yugabytedb_cutover() { :; }
+  kubectl() {
+    case "$*" in
+      *'{.metadata.resourceVersion}'*) printf '%s' 12345 ;;
+      *eubl21-db-auth-yugabytedb-staging*'{.data.database-url}'*) printf '%s' new-url ;;
+      *eubl21-db-auth*'{.data.database-url}'*) printf '%s' old-url ;;
+      *) return 1 ;;
+    esac
+  }
+  promote_staged_database_secret() { printf 'promote:%s\n' "$1" >>"${events_file}"; }
+  verify_promoted_database_secret() { :; }
+  record_cutover_state() { return 1; }
+  rollback_public_database_secret() { printf 'rollback:%s:%s\n' "$1" "$2" >>"${events_file}"; }
+  perform_cutover
+) >/dev/null 2>&1; then
+  echo "Failed cutover finalization unexpectedly qualified" >&2
+  exit 1
+fi
+grep -Fxq 'promote:12345' "${events_file}"
+grep -Fxq 'rollback:new-url:old-url' "${events_file}"
 
 # Export produces a non-empty validated archive and refuses overwrite.
 backup_file="${temporary_dir}/legacy.dump"
@@ -244,6 +305,21 @@ if (
   retire_cloudnativepg_operator
 ) >/dev/null 2>&1; then
   echo "Operator retirement ignored another CloudNativePG cluster" >&2
+  exit 1
+fi
+[[ ! -s "${events_file}" ]]
+
+# Failure to inventory clusters is blocking; it is never interpreted as an
+# empty cluster list.
+: >"${events_file}"
+if (
+  export EUBL21_RETIRE_CLOUDNATIVEPG_OPERATOR="${OPERATOR_RETIRE_CONFIRMATION}"
+  cutover_state_value() { printf '%s\n' retired; }
+  kubectl() { return 1; }
+  helm() { printf '%s\n' forbidden-uninstall >>"${events_file}"; }
+  retire_cloudnativepg_operator
+) >/dev/null 2>&1; then
+  echo "Operator retirement ignored a failed cluster inventory" >&2
   exit 1
 fi
 [[ ! -s "${events_file}" ]]

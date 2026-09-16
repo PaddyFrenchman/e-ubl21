@@ -100,10 +100,14 @@ deploy/on-prem/scripts/upgrade-postgresql-to-yugabytedb.sh cutover
 Only after all checks succeed does the script write the
 `eubl21-yugabytedb-cutover` ConfigMap with status `verified` and the immutable
 UID of the inspected legacy cluster. If installation, bootstrap, migration or
-verification fails, the legacy Cluster resource and public `eubl21-db-auth`
-contract are not changed and no verified state is recorded. The staging Secret
-may remain for diagnosis and a safe retry, but is not consumed by the legacy
-deployment.
+verification fails, the legacy Cluster resource is not changed and no verified
+state is recorded. Promotion uses the snapshotted Kubernetes Secret resource
+version, so a concurrent public-Secret change blocks cutover. If final Secret
+verification or cutover-state recording fails after promotion, the script
+restores the previous public database URL; a concurrent change also makes that
+rollback fail closed if it changes the promoted URL, with an explicit repair
+instruction. The staging Secret may remain for diagnosis and a safe retry, but
+is not consumed by the legacy deployment.
 
 The command is safe to rerun. A successful rerun upgrades the same pinned Helm
 release, reapplies idempotent bootstrap/migrations and refreshes the verified
@@ -154,9 +158,10 @@ deploy/on-prem/scripts/upgrade-postgresql-to-yugabytedb.sh retire-operator
 ```
 
 This refuses to proceed while any CloudNativePG Cluster exists in any
-namespace. It preserves the `cnpg-system` namespace and CRDs because they can
-contain independently managed state; remove those only through a separate,
-site-reviewed Kubernetes maintenance procedure.
+namespace. Failure to inventory clusters is also blocking rather than being
+treated as an empty result. It preserves the `cnpg-system` namespace and CRDs
+because they can contain independently managed state; remove those only through
+a separate, site-reviewed Kubernetes maintenance procedure.
 
 ## Qualification
 
@@ -168,7 +173,8 @@ EUBL21_TEST_IMAGE=localhost/e-ubl21:regression make on-prem-database-upgrade-int
 ```
 
 It covers an empty source, an unknown relation, failed YugabyteDB installation,
-validated export/no-overwrite, fully gated explicit retirement, missing
+atomic Secret promotion and rollback, validated export/no-overwrite, fully
+gated explicit retirement, failed global cluster inventory, missing
 confirmation and idempotent rerun. The normal fresh-install and schema gates
 remain required as applicable. The integration target additionally creates a
 real legacy CloudNativePG cluster, repeats the safety scenarios, performs the
