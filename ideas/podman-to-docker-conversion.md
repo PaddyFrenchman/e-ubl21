@@ -199,4 +199,4 @@ rerun #121 lifecycle under Docker
 #122  Continue YugabyteDB migration work
 ```
 
-This issue follows the repository workflow in `ISSUES.MD`: implementation on its own issue branch, PR review, explicit closure authorization, and one squash commit on `development` when completed.
+Repository process for this work is governed by [`workflow.md`](../workflow.md).
