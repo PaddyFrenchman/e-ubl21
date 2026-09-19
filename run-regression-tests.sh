@@ -148,6 +148,40 @@ append_failed_fixtures() {
     fi
 }
 
+append_database_readiness_failure_logs() {
+    local summary
+    local artifact_dir
+    local log_file
+    local rel
+    local found=0
+
+    # A Minikube database failure occurs before the normal suite evidence pass.
+    # regression-minikube's EXIT trap captures the affected pod logs in this
+    # location, so surface the YugabyteDB tails in the top-level report rather
+    # than requiring a reviewer to find them among the artifacts.
+    while IFS= read -r summary; do
+        if ! grep -Eq '"failedPhase"[[:space:]]*:[[:space:]]*"database-readiness"' "$summary"; then
+            continue
+        fi
+        artifact_dir="$(dirname "$(dirname "$summary")")"
+        while IFS= read -r log_file; do
+            found=1
+            rel="${log_file#"$ROOT_DIR/"}"
+            {
+                echo
+                echo "### YugabyteDB readiness evidence: \`$rel\`"
+                echo '```text'
+                tail -n 120 "$log_file"
+                echo '```'
+            } >> "$REPORT"
+        done < <(find "$artifact_dir/failure-evidence/logs" -type f -name '*yb-*.log' -print 2>/dev/null | sort)
+    done < <(find "$RUN_DIR" -type f -path '*/database/summary.json' | sort)
+
+    if (( found == 0 )); then
+        echo "No YugabyteDB readiness-evidence logs were captured for failed database readiness phases." >> "$REPORT"
+    fi
+}
+
 write_report() {
     local finished_at
     local branch
@@ -242,6 +276,16 @@ write_report() {
             } >> "$REPORT"
         fi
     done
+
+    if (( failures_present != 0 )); then
+        {
+            echo
+            echo "## YugabyteDB readiness failure-log tails"
+            echo
+            echo "The last 120 lines of each captured YugabyteDB pod log are included when database readiness failed."
+        } >> "$REPORT"
+        append_database_readiness_failure_logs
+    fi
 }
 
 print_summary() {
@@ -278,6 +322,7 @@ print_summary() {
     return "$overall"
 }
 
+main() {
 require_commands
 
 STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -324,3 +369,8 @@ if print_summary; then
     exit 0
 fi
 exit 1
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi

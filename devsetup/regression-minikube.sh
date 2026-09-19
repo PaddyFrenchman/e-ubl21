@@ -7,6 +7,9 @@ cd "$ROOT_DIR"
 
 MINIKUBE_PROFILE="${MINIKUBE_PROFILE:-e-ubl21-regression}"
 MINIKUBE_DRIVER="${MINIKUBE_DRIVER:-docker}"
+MINIKUBE_MEMORY="${MINIKUBE_MEMORY:-6144mb}"
+MINIKUBE_STATUS_TIMEOUT_SECONDS="${MINIKUBE_STATUS_TIMEOUT_SECONDS:-60}"
+MINIKUBE_START_TIMEOUT_SECONDS="${MINIKUBE_START_TIMEOUT_SECONDS:-300}"
 require_docker_engine
 if [[ "$MINIKUBE_DRIVER" == "podman" ]]; then
     export MINIKUBE_ROOTLESS="${MINIKUBE_ROOTLESS:-true}"
@@ -105,8 +108,26 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-if ! minikube status -p "$MINIKUBE_PROFILE" --format='{{.Host}}' 2>/dev/null | grep -qx Running; then
-    minikube start -p "$MINIKUBE_PROFILE" --driver="$MINIKUBE_DRIVER"
+reset_minikube_profile() {
+    local container_ids
+
+    minikube delete -p "$MINIKUBE_PROFILE" >/dev/null 2>&1 || true
+    # A corrupt Docker-driver profile can have an empty node IP, causing
+    # minikube delete to leave its control-plane container behind. The label is
+    # owned by this exact disposable regression profile, so this cleanup cannot
+    # affect unrelated Docker containers.
+    container_ids="$(docker ps --all --quiet --filter "label=mode.minikube.sigs.k8s.io=$MINIKUBE_PROFILE")"
+    if [[ -n "$container_ids" ]]; then
+        docker rm --force $container_ids >/dev/null
+    fi
+}
+
+if ! timeout "$MINIKUBE_STATUS_TIMEOUT_SECONDS" minikube status -p "$MINIKUBE_PROFILE" --format='{{.Host}}' 2>/dev/null | grep -qx Running; then
+    # This profile is disposable regression infrastructure. Recreate it when
+    # Minikube cannot establish a timely control-plane connection instead of
+    # allowing an unusable Docker-driver profile to hang the whole suite.
+    reset_minikube_profile
+    timeout "$MINIKUBE_START_TIMEOUT_SECONDS" minikube start -p "$MINIKUBE_PROFILE" --driver="$MINIKUBE_DRIVER" --memory="$MINIKUBE_MEMORY"
 fi
 
 echo "Building candidate image $IMAGE"

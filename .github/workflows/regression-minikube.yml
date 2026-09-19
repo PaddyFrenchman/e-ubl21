@@ -64,7 +64,7 @@ jobs:
           --container-runtime docker
           --kubernetes-version v1.35.1
           --cpus 2
-          --memory 4096mb
+          --memory 6144mb
       - name: Run deployed Kubernetes regression
         run: >-
           make regression-minikube

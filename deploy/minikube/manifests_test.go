@@ -46,6 +46,9 @@ func TestMinikubeDatabaseContract(t *testing.T) {
 		"CURRENT_PHASE=\"database-readiness\"",
 		"write_summary fail \"$CURRENT_PHASE\"",
 		"\"readiness\": \"${READINESS_RESULT}\"",
+		"s#apiVersion: policy/v1beta1#apiVersion: policy/v1#g",
+		"--namespace \"$NAMESPACE\" apply -f \"$TEMPORARY_DIR/yugabytedb.yaml\"",
+		"--command \"SELECT current_setting('server_version')\"",
 	} {
 		if !strings.Contains(databaseRunner, required) {
 			t.Errorf("database runner does not contain %q", required)
@@ -62,6 +65,14 @@ func TestMinikubeDatabaseContract(t *testing.T) {
 	}
 
 	topologyRunner := read("devsetup/regression-minikube.sh")
+	if !strings.Contains(topologyRunner, `MINIKUBE_MEMORY="${MINIKUBE_MEMORY:-6144mb}"`) ||
+		!strings.Contains(topologyRunner, `--memory="$MINIKUBE_MEMORY"`) ||
+		!strings.Contains(topologyRunner, `timeout "$MINIKUBE_STATUS_TIMEOUT_SECONDS" minikube status`) ||
+		!strings.Contains(topologyRunner, `minikube delete -p "$MINIKUBE_PROFILE"`) ||
+		!strings.Contains(topologyRunner, `docker rm --force $container_ids`) ||
+		!strings.Contains(topologyRunner, `timeout "$MINIKUBE_START_TIMEOUT_SECONDS" minikube start`) {
+		t.Error("Minikube runner does not provision enough memory for the database and application topology")
+	}
 	databaseIndex := strings.Index(topologyRunner, "minikube-yugabytedb.sh")
 	applicationIndex := strings.Index(topologyRunner, "apply -k deploy/minikube")
 	if databaseIndex < 0 || applicationIndex < 0 || databaseIndex > applicationIndex {
@@ -71,6 +82,16 @@ func TestMinikubeDatabaseContract(t *testing.T) {
 	localRunner := read("run-regression-tests.sh")
 	if !strings.Contains(localRunner, "helm minikube sha256sum") {
 		t.Error("comprehensive regression runner does not require the database deployment tools")
+	}
+	for _, required := range []string{
+		"append_database_readiness_failure_logs",
+		`"failedPhase"[[:space:]]*:[[:space:]]*"database-readiness"`,
+		"failure-evidence/logs",
+		"YugabyteDB readiness failure-log tails",
+	} {
+		if !strings.Contains(localRunner, required) {
+			t.Errorf("comprehensive regression runner does not publish %q", required)
+		}
 	}
 	workflow := read(".github/workflows/regression-minikube.yml")
 	if !strings.Contains(workflow, "database/summary.json") {

@@ -231,10 +231,10 @@ spec:
               export PGPASSWORD="\$YSQL_PASSWORD"
               ysql=(/home/yugabyte/bin/ysqlsh --host "\$YSQL_HOST" --port 5433 --username "\$YSQL_USER" --dbname eubl21 --no-psqlrc --no-align --tuples-only --set ON_ERROR_STOP=1)
               one="\$("\${ysql[@]}" --command 'SELECT 1')"
-              version="\$("\${ysql[@]}" --command \"SELECT current_setting('server_version')\")"
-              schema_version="\$("\${ysql[@]}" --command \"SELECT COALESCE(MAX(version), 0) FROM public.eubl21_schema_migrations WHERE state = 'applied'\")"
-              invalid_history="\$("\${ysql[@]}" --command \"SELECT COUNT(*) FROM public.eubl21_schema_migrations WHERE state <> 'applied'\")"
-              metadata="\$("\${ysql[@]}" --command \"SELECT COUNT(*) FROM eubl21.schema_metadata WHERE id = 1 AND product = 'e-ubl21'\")"
+              version="\$("\${ysql[@]}" --command "SELECT current_setting('server_version')")"
+              schema_version="\$("\${ysql[@]}" --command "SELECT COALESCE(MAX(version), 0) FROM public.eubl21_schema_migrations WHERE state = 'applied'")"
+              invalid_history="\$("\${ysql[@]}" --command "SELECT COUNT(*) FROM public.eubl21_schema_migrations WHERE state <> 'applied'")"
+              metadata="\$("\${ysql[@]}" --command "SELECT COUNT(*) FROM eubl21.schema_metadata WHERE id = 1 AND product = 'e-ubl21'")"
               [[ "\$one" == 1 && "\$schema_version" =~ ^[0-9]+\$ && "\$schema_version" -gt 0 && "\$invalid_history" == 0 && "\$metadata" == 1 ]]
               printf 'YUGABYTEDB_VERSION=%s\\nSCHEMA_VERSION=%s\\n' "\$version" "\$schema_version"
           env:
@@ -270,7 +270,11 @@ helm template yugabyte "$TEMPORARY_DIR/yugabyte.tgz" \
     --set-string storage.master.storageClass=standard \
     --set-string storage.tserver.storageClass=standard \
     >"$TEMPORARY_DIR/yugabytedb.yaml"
-"$KUBECTL_BIN" apply -f "$TEMPORARY_DIR/yugabytedb.yaml"
+# The pinned chart emits PodDisruptionBudget policy/v1beta1 resources. The
+# Kubernetes v1.35 API served by the regression profile only supports the
+# schema-compatible policy/v1 form.
+sed -i 's#apiVersion: policy/v1beta1#apiVersion: policy/v1#g' "$TEMPORARY_DIR/yugabytedb.yaml"
+"$KUBECTL_BIN" --namespace "$NAMESPACE" apply -f "$TEMPORARY_DIR/yugabytedb.yaml"
 CURRENT_PHASE="database-readiness"
 READINESS_RESULT="fail"
 "$KUBECTL_BIN" --namespace "$NAMESPACE" rollout status statefulset/yb-master --timeout="$ROLLOUT_TIMEOUT"
