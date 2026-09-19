@@ -101,7 +101,7 @@ RKE2 is not required for the initial single-server e-ubl21 target.
 | Load balancer | AWS Load Balancer | Azure Load Balancer | MetalLB |
 | Ingress | ALB / ingress controller | Application Gateway / ingress | Traefik |
 | Messaging | SQS / NATS | Service Bus / NATS | NATS JetStream |
-| Database | Aurora PostgreSQL / RDS | Azure Database for PostgreSQL | Single-node YugabyteDB/YSQL |
+| Database | YugabyteDB/YSQL, three-AZ RF-3 production topology | YugabyteDB/YSQL, three-AZ RF-3 production topology | Single-node YugabyteDB/YSQL baseline; three-rack RF-3 for HA |
 | Object storage | S3 | Blob Storage | MinIO-compatible object storage |
 | Secrets | Secrets Manager | Key Vault | Kubernetes Secrets initially; Vault/SOPS later |
 | Metrics | Managed Prometheus | Azure Monitor / Managed Prometheus | Prometheus |
@@ -252,8 +252,9 @@ https://docs.yugabyte.com/stable/deploy/kubernetes/single-zone/oss/helm-chart/
 
 The installer pins chart `2025.2.6` and image
 `yugabytedb/yugabyte:2025.2.6.0-b111`. It deploys one YB-Master and one
-YB-TServer for the non-HA single-server baseline. Production HA and
-multi-region topology are intentionally deferred to issue #127.
+YB-TServer for the non-HA single-server baseline. The production HA and
+multi-region contract is documented in
+[`YUGABYTEDB-HA-ARCHITECTURE.md`](../../docs/YUGABYTEDB-HA-ARCHITECTURE.md).
 
 ### 4.9 Prometheus and Grafana
 

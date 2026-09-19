@@ -58,12 +58,16 @@ metadata/status store until that separately reviewed change is delivered.
 | Deployment class | Initial contract |
 |---|---|
 | Developer and small on-premises | One YugabyteDB node. Convenient and resource-conscious, with no HA guarantee. |
-| Production on-premises | At least three nodes, with replication and placement across the available failure domains. Exact sizing and failure guarantees are established by #127. |
-| Cloud and SaaS | Multi-node YugabyteDB across availability zones, with a future multi-region and data-locality design. Exact topology is established by #127. |
+| Production on-premises | Three-master, three-or-more-tserver RF-3 topology across independent rack/failure domains. |
+| Cloud and SaaS | Three-AZ RF-3 baseline, with approved per-data-class multi-region placement when required. |
 
 Single-node operation is not evidence that an application feature works under
 distributed transactions or node failure. Persistence features must be tested
 against the topology characteristics they rely on.
+
+The operational placement, capacity, TLS, credentials, disruption, scaling,
+upgrade and multi-region contracts are defined in
+[YugabyteDB production HA and multi-region architecture](../YUGABYTEDB-HA-ARCHITECTURE.md).
 
 ## Initial supported version policy
 
