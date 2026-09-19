@@ -1,0 +1,70 @@
+name: YugabyteDB compatibility gate
+
+on:
+  pull_request:
+    branches:
+      - development
+      - main
+      - 'release/**'
+  push:
+    branches:
+      - development
+      - main
+      - 'release/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yugabytedb-compatibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go-unit:
+    name: Go unit and package tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Run uncached Go tests
+        run: go test ./... -count=1
+
+  yugabytedb-integration:
+    name: Pinned YugabyteDB integration and migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Run integration and schema migration suites against pinned YugabyteDB
+        run: make database-test
+      - name: Preserve YugabyteDB diagnostics
+        if: failure()
+        run: docker compose --project-name eubl21-yugabytedb-local --file deploy/local/yugabytedb-compose.yml logs --no-color || true
+      - name: Stop disposable YugabyteDB runtime
+        if: always()
+        run: make database-stop || true
+
+  deployment-compatibility:
+    name: Deployment rendering and legacy-reference guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Reject retired PostgreSQL production dependencies
+        run: make yugabytedb-compatibility-guard
+      - name: Validate Kubernetes deployment manifests
+        run: go test ./deploy/... -count=1
+      - name: Render pinned on-prem YugabyteDB deployment
+        run: make on-prem-database-test

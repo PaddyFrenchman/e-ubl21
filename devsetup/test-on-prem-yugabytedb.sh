@@ -97,7 +97,10 @@ assert_contains 'name: eubl21-database-migrate' "$temporary_dir/eubl21-database-
 assert_contains 'key: database-url' "$temporary_dir/eubl21-database-jobs.yaml"
 
 if command -v kubectl >/dev/null 2>&1; then
-    kubectl apply --dry-run=client --validate=false -f "$temporary_dir/eubl21-database-jobs.yaml" >/dev/null
+    # `apply` reads the current object before calculating a patch, even with a
+    # client dry run. `create` validates this generated manifest without
+    # reaching the active Kubernetes context, so static CI stays cluster-free.
+    kubectl create --dry-run=client --validate=false -f "$temporary_dir/eubl21-database-jobs.yaml" >/dev/null
 fi
 
 if [[ "$mode" == "static" ]]; then
