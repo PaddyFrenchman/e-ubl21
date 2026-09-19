@@ -1,18 +1,27 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# This guard deliberately examines only current production deployment inputs.
-# Historical migration documentation and the guarded legacy-retirement scripts
-# retain PostgreSQL terminology as evidence of the supported upgrade path.
+# Scan the repository rather than a hand-picked manifest list so a newly added
+# deployment script cannot silently reintroduce a retired dependency. The
+# exclusions below are historical records, migration/retirement procedures, or
+# their dedicated test harnesses; they are not active clean-install inputs.
 ROOT_DIR="${EUBL21_COMPATIBILITY_GUARD_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 readonly ROOT_DIR
 
-production_inputs=(
-    "Dockerfile"
-    "deploy/local/yugabytedb-compose.yml"
-    "deploy/minikube"
-    "deploy/kubernetes"
-    "deploy/on-prem/yugabytedb-values.yaml"
+historical_exclusions=(
+    "--glob=!docs/**"
+    "--glob=!ideas/**"
+    "--glob=!ISSUES.MD"
+    "--glob=!TODO*"
+    "--glob=!README.md"
+    "--glob=!deployment-target.md"
+    "--glob=!e-invoice/**"
+    "--glob=!run-issue-124-tests.sh"
+    "--glob=!deploy/on-prem/scripts/upgrade-postgresql-to-yugabytedb.sh"
+    "--glob=!devsetup/test-on-prem-yugabytedb-upgrade.sh"
+    "--glob=!devsetup/test-on-prem-yugabytedb-upgrade-integration.sh"
+    "--glob=!devsetup/test-on-prem-yugabytedb.sh"
+    "--glob=!devsetup/yugabytedb-compatibility-guard.sh"
 )
 prohibited_references=(
     "CloudNativePG"
@@ -20,16 +29,16 @@ prohibited_references=(
     "POSTGRES_STORAGE_SIZE"
 )
 
-for input in "${production_inputs[@]}"; do
-    [[ -e "$ROOT_DIR/$input" ]] || {
-        echo "ERROR: compatibility guard input is missing: $input" >&2
-        exit 2
-    }
-done
-
 failed=0
 for prohibited in "${prohibited_references[@]}"; do
-    if matches="$(rg --line-number --fixed-strings -- "$prohibited" "${production_inputs[@]/#/$ROOT_DIR/}" 2>/dev/null)" && [[ -n "$matches" ]]; then
+    matches="$({
+        rg --line-number --fixed-strings "${historical_exclusions[@]}" -- "$prohibited" "$ROOT_DIR" || true
+    } | rg -v \
+        -e 'deploy/on-prem/scripts/install-on-prem\.sh:87:.*POSTGRES_STORAGE_SIZE' \
+        -e 'deploy/on-prem/scripts/install-on-prem\.sh:88:.*settings are retired' \
+        -e 'deploy/on-prem/scripts/install-on-prem\.sh:376:.*e-ubl21-postgres' \
+        -e 'deploy/on-prem/scripts/install-on-prem\.sh:381:.*Legacy e-ubl21-postgres' || true)"
+    if [[ -n "$matches" ]]; then
         echo "ERROR: retired PostgreSQL deployment reference '$prohibited' is prohibited:" >&2
         echo "$matches" >&2
         failed=1
