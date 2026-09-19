@@ -58,7 +58,7 @@ FROM docker.io/library/alpine:3.21
 # silently changing Java or xmllint underneath the validator.
 RUN apk add --no-cache \
         libxml2-utils=2.13.9-r1 \
-        ca-certificates=20260413-r0 \
+        ca-certificates=20260909-r0 \
         openjdk21-jre-headless=21.0.10_p7-r0 && \
     addgroup -S -g 10001 eubl21 && adduser -S -u 10001 -G eubl21 eubl21
 

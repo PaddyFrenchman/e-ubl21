@@ -1032,6 +1032,10 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/124
 
 **Dependencies:** #121, #122, #123.
 
+**Implementation assets:** [`deploy/minikube/yugabytedb-values.yaml`](deploy/minikube/yugabytedb-values.yaml), [`devsetup/minikube-yugabytedb.sh`](devsetup/minikube-yugabytedb.sh), [`devsetup/regression-minikube.sh`](devsetup/regression-minikube.sh), and [`run-regression-tests.sh`](run-regression-tests.sh).
+
+**Status:** In progress on its issue branch.
+
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/125
 
 ### 65. #126 — MIG-YB-008 — Add YugabyteDB unit/integration/regression CI gates

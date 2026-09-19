@@ -656,6 +656,12 @@ Do not remove the existing suites:
 
 Steps 3-5.
 
+Implementation in progress through a checksum-pinned single-node YugabyteDB
+chart rendered into each disposable Minikube namespace, authenticated bootstrap
+and embedded migration Jobs, live schema smoke and tserver-restart checks,
+database configuration injection, namespace/PVC cleanup, and structured
+database evidence consumed by the comprehensive regression report.
+
 ---
 
 ## Step 8 — Add YugabyteDB CI integration and compatibility gates

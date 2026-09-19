@@ -1,0 +1,56 @@
+# Resource-bounded single-node YugabyteDB used only by the disposable Minikube
+# regression namespace. Image, chart, storage class and PVC sizes are pinned by
+# devsetup/minikube-yugabytedb.sh.
+oldNamingStyle: true
+enableLoadBalancer: false
+disableYsql: false
+
+replicas:
+  master: 1
+  tserver: 1
+  totalMasters: 1
+
+partition:
+  master: 0
+  tserver: 0
+
+storage:
+  ephemeral: false
+  master:
+    count: 1
+  tserver:
+    count: 1
+
+resource:
+  master:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  tserver:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+gflags:
+  master:
+    default_memory_limit_to_ram_ratio: 0.75
+    reject_writes_when_disk_full: "false"
+  tserver:
+    ysql_enable_auth: "true"
+    reject_writes_when_disk_full: "false"
+
+ybc:
+  enabled: false
+
+yugabytedUi:
+  enabled: false
+
+commonLabels:
+  app.kubernetes.io/part-of: e-ubl21
+  app.kubernetes.io/managed-by: minikube-regression

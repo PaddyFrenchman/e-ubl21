@@ -89,10 +89,9 @@ verify_corpus en16931 createsamples/samples-en16931
 go build -trimpath -o "$TEMP_DIR/e-ubl21" .
 docker run --detach --rm \
     --name "$NATS_CONTAINER" \
-    --publish "127.0.0.1:$NATS_LOCAL_PORT:4222" \
-    --publish "127.0.0.1:$NATS_MONITOR_PORT:8222" \
+    --network host \
     docker.io/library/nats:2.14.5-alpine \
-    -js -sd /data -m 8222 >/dev/null
+    -js -sd /data -a 127.0.0.1 -p "$NATS_LOCAL_PORT" -m "$NATS_MONITOR_PORT" >/dev/null
 
 wait_http() {
     local name=$1
