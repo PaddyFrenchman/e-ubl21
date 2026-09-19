@@ -34,7 +34,7 @@ first_line() {
 require_commands() {
     local missing=()
     local command
-    for command in bash git go make java xmllint docker curl diff helm minikube sha256sum grep sed find sort tee tail setsid; do
+    for command in bash git go make java xmllint docker curl diff helm minikube sha256sum grep sed find sort tee tail setsid timeout; do
         if ! command -v "$command" >/dev/null 2>&1; then
             missing+=("$command")
         fi

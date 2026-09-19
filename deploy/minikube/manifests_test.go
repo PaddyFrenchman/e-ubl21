@@ -69,6 +69,7 @@ func TestMinikubeDatabaseContract(t *testing.T) {
 		!strings.Contains(topologyRunner, `--memory="$MINIKUBE_MEMORY"`) ||
 		!strings.Contains(topologyRunner, `timeout "$MINIKUBE_STATUS_TIMEOUT_SECONDS" minikube status`) ||
 		!strings.Contains(topologyRunner, `minikube delete -p "$MINIKUBE_PROFILE"`) ||
+		!strings.Contains(topologyRunner, `name.minikube.sigs.k8s.io=$MINIKUBE_PROFILE`) ||
 		!strings.Contains(topologyRunner, `docker rm --force $container_ids`) ||
 		!strings.Contains(topologyRunner, `timeout "$MINIKUBE_START_TIMEOUT_SECONDS" minikube start`) {
 		t.Error("Minikube runner does not provision enough memory for the database and application topology")
@@ -80,7 +81,7 @@ func TestMinikubeDatabaseContract(t *testing.T) {
 	}
 
 	localRunner := read("run-regression-tests.sh")
-	if !strings.Contains(localRunner, "helm minikube sha256sum") {
+	if !strings.Contains(localRunner, "helm minikube sha256sum") || !strings.Contains(localRunner, "setsid timeout") {
 		t.Error("comprehensive regression runner does not require the database deployment tools")
 	}
 	for _, required := range []string{
@@ -92,6 +93,16 @@ func TestMinikubeDatabaseContract(t *testing.T) {
 		if !strings.Contains(localRunner, required) {
 			t.Errorf("comprehensive regression runner does not publish %q", required)
 		}
+	}
+	correctnessRunner := read("devsetup/regression-correctness.sh")
+	if !strings.Contains(correctnessRunner, "--network host") ||
+		!strings.Contains(correctnessRunner, "-a 127.0.0.1") {
+		t.Error("correctness NATS runner does not bind host-networked ports to loopback")
+	}
+	makefile := read("Makefile")
+	if !strings.Contains(makefile, "regression-correctness: regression-report-test") ||
+		!strings.Contains(makefile, "bash ./run-regression-tests_test.sh") {
+		t.Error("regression report behavior test is not wired into the correctness target")
 	}
 	workflow := read(".github/workflows/regression-minikube.yml")
 	if !strings.Contains(workflow, "database/summary.json") {

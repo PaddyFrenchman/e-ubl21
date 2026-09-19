@@ -91,7 +91,7 @@ docker run --detach --rm \
     --name "$NATS_CONTAINER" \
     --network host \
     docker.io/library/nats:2.14.5-alpine \
-    -js -sd /data -p "$NATS_LOCAL_PORT" -m "$NATS_MONITOR_PORT" >/dev/null
+    -js -sd /data -a 127.0.0.1 -p "$NATS_LOCAL_PORT" -m "$NATS_MONITOR_PORT" >/dev/null
 
 wait_http() {
     local name=$1

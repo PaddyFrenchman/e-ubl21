@@ -30,7 +30,7 @@ KUBECTL_BIN="${KUBECTL_BIN:-$ROOT_DIR/devsetup/minikube-kubectl.sh}"
 KEEP_DEPLOYMENT="${KEEP_DEPLOYMENT:-0}"
 EQUIVALENCE_BASELINE="${EQUIVALENCE_BASELINE:-}"
 
-for command in minikube docker go curl helm sha256sum setsid; do
+for command in minikube docker go curl helm sha256sum setsid timeout; do
     if ! command -v "$command" >/dev/null 2>&1; then
         echo "ERROR: required command not found: $command" >&2
         exit 2
@@ -116,7 +116,7 @@ reset_minikube_profile() {
     # minikube delete to leave its control-plane container behind. The label is
     # owned by this exact disposable regression profile, so this cleanup cannot
     # affect unrelated Docker containers.
-    container_ids="$(docker ps --all --quiet --filter "label=mode.minikube.sigs.k8s.io=$MINIKUBE_PROFILE")"
+    container_ids="$(docker ps --all --quiet --filter "label=name.minikube.sigs.k8s.io=$MINIKUBE_PROFILE")"
     if [[ -n "$container_ids" ]]; then
         docker rm --force $container_ids >/dev/null
     fi

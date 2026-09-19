@@ -56,7 +56,7 @@ these summaries and includes Minikube database startup failures in its normal
 failure-log tails.
 
 Prerequisites are `minikube`, genuine Docker Engine, Go, Helm, `curl`,
-`sha256sum`, and `setsid`
+`sha256sum`, `setsid`, and GNU `timeout`
 (normally provided by `util-linux`). Docker setup and verification are in
 [`docs/DOCKER-DEVELOPMENT.md`](../../docs/DOCKER-DEVELOPMENT.md). A standalone `kubectl` is not required:
 `devsetup/minikube-kubectl.sh` uses Minikube's pinned kubectl.
