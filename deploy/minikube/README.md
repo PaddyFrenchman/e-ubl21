@@ -4,6 +4,8 @@ This Kustomize base deploys the current distributed runtime into the dedicated
 `e-ubl21-regression` namespace:
 
 - one ephemeral, namespace-isolated NATS JetStream deployment;
+- one pinned single-node YugabyteDB deployment with authenticated YSQL and
+  namespace-owned persistent volumes;
 - one authenticated API deployment;
 - one validation-worker deployment using the pinned EN 16931 runtime in the
   candidate application image.
@@ -23,13 +25,18 @@ make regression-minikube
 ```
 
 The command builds and loads `localhost/e-ubl21:regression`, creates a
-short-lived local JWT signing secret, forces the API and worker Deployments to
-restart with the newly loaded image, waits for all rollouts and health
-endpoints, invokes the same `e-ubl21 regression` semantic runner used outside
-Kubernetes, collects the #40 evidence bundle, and deletes the namespace. On a
+short-lived local JWT signing secret, installs the checksum-pinned YugabyteDB
+chart, bootstraps the `eubl21` identity/database, applies embedded schema
+migrations, runs a live YSQL/schema smoke check, restarts the tserver, and
+repeats migration and smoke verification before starting the application. It
+then forces the API and worker Deployments to restart with the newly loaded
+image, waits for all rollouts and health endpoints, invokes the same `e-ubl21
+regression` semantic runner used outside Kubernetes, collects the #40 evidence
+bundle, and deletes the namespace. Namespace deletion also removes the
+YugabyteDB PVCs so each sequential corpus starts from zero state. On a
 post-deployment infrastructure failure it first writes best-effort Kubernetes
-events, pod state, and logs to `failure-evidence/` below the artifact
-directory. It leaves the Minikube profile running for faster subsequent runs.
+events, pod state, and logs to `failure-evidence/` below the artifact directory.
+It leaves the Minikube profile running for faster subsequent runs.
 
 Artifacts are written to a timestamped directory below
 `regression-results/minikube/`. Override the defaults when needed:
@@ -41,7 +48,15 @@ make regression-minikube \
   ARTIFACT_DIR=regression-results/minikube/ubl21
 ```
 
-Prerequisites are `minikube`, genuine Docker Engine, Go, `curl`, and `setsid`
+Each run writes `database/summary.json` with the live YugabyteDB version,
+bootstrap/migration result, application schema version, smoke result, and
+tserver restart result. Bootstrap, migration, and smoke logs are retained in
+the same directory. The comprehensive `./run-regression-tests.sh` report embeds
+these summaries and includes Minikube database startup failures in its normal
+failure-log tails.
+
+Prerequisites are `minikube`, genuine Docker Engine, Go, Helm, `curl`,
+`sha256sum`, and `setsid`
 (normally provided by `util-linux`). Docker setup and verification are in
 [`docs/DOCKER-DEVELOPMENT.md`](../../docs/DOCKER-DEVELOPMENT.md). A standalone `kubectl` is not required:
 `devsetup/minikube-kubectl.sh` uses Minikube's pinned kubectl.
@@ -51,7 +66,8 @@ run `make regression-minikube-clean` after an interrupted/retained run.
 Useful overrides include `MINIKUBE_PROFILE`, `MINIKUBE_DRIVER`, `IMAGE`,
 `API_LOCAL_PORT`, `WORKER_LOCAL_PORT`, `NATS_LOCAL_PORT`, and
 `SOURCE_TIMEOUT`. The deployment is intentionally local/test-only; its HMAC
-secret, ephemeral NATS storage, and port-forwards are not production defaults.
+secret, fixed disposable database credential, reduced YugabyteDB resources,
+ephemeral NATS storage, and port-forwards are not production defaults.
 The script defaults to the Docker driver. Independent Podman testing remains
 available by explicitly setting `MINIKUBE_DRIVER=podman`; Podman must be invoked
 as itself and must not replace the `docker` command.

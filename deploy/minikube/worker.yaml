@@ -41,6 +41,11 @@ spec:
               value: nats://127.0.0.1:4222
             - name: EUBL21_QUEUE_NAMESPACE
               value: eubl21.regression
+            - name: EUBL21_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: eubl21-db-auth
+                  key: database-url
             - name: EUBL21_WORKER_CONSUMER_NAME
               value: regression-validator
             - name: EUBL21_WORKER_METRICS_ADDR

@@ -27,7 +27,7 @@ KUBECTL_BIN="${KUBECTL_BIN:-$ROOT_DIR/devsetup/minikube-kubectl.sh}"
 KEEP_DEPLOYMENT="${KEEP_DEPLOYMENT:-0}"
 EQUIVALENCE_BASELINE="${EQUIVALENCE_BASELINE:-}"
 
-for command in minikube docker go curl setsid; do
+for command in minikube docker go curl helm sha256sum setsid; do
     if ! command -v "$command" >/dev/null 2>&1; then
         echo "ERROR: required command not found: $command" >&2
         exit 2
@@ -118,11 +118,18 @@ export EUBL21_REGRESSION_HMAC_SECRET="$HMAC_SECRET"
 TOKEN="$(go run ./tools/regression-token --issuer https://regression.e-ubl21.local --audience e-ubl21-regression --ttl 2h)"
 unset EUBL21_REGRESSION_HMAC_SECRET
 
+"$KUBECTL_BIN" delete namespace "$NAMESPACE" --ignore-not-found=true --wait=true --timeout=2m
 "$KUBECTL_BIN" apply -f deploy/minikube/namespace.yaml
 DEPLOYMENT_STARTED=1
 "$KUBECTL_BIN" --namespace "$NAMESPACE" create secret generic e-ubl21-regression-auth \
     --from-literal="hmac-secret=$HMAC_SECRET" --dry-run=client -o yaml | "$KUBECTL_BIN" apply -f -
 unset HMAC_SECRET
+EUBL21_DB_NAMESPACE="$NAMESPACE" \
+    IMAGE="$IMAGE" \
+    KUBECTL_BIN="$KUBECTL_BIN" \
+    ARTIFACT_DIR="$ARTIFACT_DIR" \
+    ROLLOUT_TIMEOUT="$ROLLOUT_TIMEOUT" \
+    "$ROOT_DIR/devsetup/minikube-yugabytedb.sh"
 "$KUBECTL_BIN" apply -k deploy/minikube
 "$KUBECTL_BIN" --namespace "$NAMESPACE" set image deployment/e-ubl21-api "api=$IMAGE"
 "$KUBECTL_BIN" --namespace "$NAMESPACE" set image deployment/e-ubl21-worker "worker=$IMAGE"

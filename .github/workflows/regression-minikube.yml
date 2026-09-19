@@ -79,6 +79,7 @@ jobs:
         shell: bash
         run: |
           summary="regression-results/minikube/${{ matrix.corpus }}/summary.json"
+          database_summary="regression-results/minikube/${{ matrix.corpus }}/database/summary.json"
           results="regression-results/minikube/${{ matrix.corpus }}/results.jsonl"
           {
             echo "## Minikube regression: ${{ matrix.corpus }}"
@@ -95,6 +96,14 @@ jobs:
               fi
             else
               echo "No semantic summary was produced; inspect the uploaded infrastructure evidence."
+            fi
+            if [[ -f "$database_summary" ]]; then
+              echo "YugabyteDB integration:"
+              echo '```json'
+              cat "$database_summary"
+              echo '```'
+            else
+              echo "No YugabyteDB summary was produced; inspect database and failure logs."
             fi
             if [[ -f "$results" ]]; then
               failures="$(grep '"result":"fail"' "$results" || true)"
