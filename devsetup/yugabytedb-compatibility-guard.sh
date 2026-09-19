@@ -15,6 +15,7 @@ historical_exclusions=(
     "--glob=!TODO*"
     "--glob=!README.md"
     "--glob=!deployment-target.md"
+    "--glob=!deploy/on-prem/deployment-on-prem.md"
     "--glob=!e-invoice/**"
     "--glob=!run-issue-124-tests.sh"
     "--glob=!deploy/on-prem/scripts/upgrade-postgresql-to-yugabytedb.sh"
