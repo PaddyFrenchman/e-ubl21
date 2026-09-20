@@ -12,6 +12,12 @@ cleanup() {
     KUBECONFIG="$kubeconfig" kubectl get pods -A -o wide >"$artifact_dir/pods.txt" 2>&1 || true
     KUBECONFIG="$kubeconfig" kubectl get events -A --sort-by=.lastTimestamp >"$artifact_dir/events.txt" 2>&1 || true
     KUBECONFIG="$kubeconfig" kubectl logs -n cert-manager -l app.kubernetes.io/instance=cert-manager --all-containers=true >"$artifact_dir/cert-manager.log" 2>&1 || true
+    for ns in eubl21-yb-zone-a eubl21-yb-zone-b eubl21-yb-zone-c; do
+      KUBECONFIG="$kubeconfig" kubectl get pods -n "$ns" -o yaml >"$artifact_dir/$ns-pods.yaml" 2>&1 || true
+      KUBECONFIG="$kubeconfig" kubectl describe pods -n "$ns" >"$artifact_dir/$ns-describe.txt" 2>&1 || true
+      KUBECONFIG="$kubeconfig" kubectl logs -n "$ns" -l app=yb-master --all-containers=true --prefix >"$artifact_dir/$ns-master.log" 2>&1 || true
+      KUBECONFIG="$kubeconfig" kubectl logs -n "$ns" -l app=yb-tserver --all-containers=true --prefix >"$artifact_dir/$ns-tserver.log" 2>&1 || true
+    done
   fi
   "$k3d_bin" cluster delete "$cluster" >/dev/null 2>&1 || true
   rm -rf "$tmp"
