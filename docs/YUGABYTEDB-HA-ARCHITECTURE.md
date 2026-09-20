@@ -30,7 +30,16 @@ Use one zone-specific namespace/release for each zone. Cluster-autoscaler scale-
 
 Start with per-node reservations of master request/limit 2 CPU / 8 GiB and tserver request 4 CPU / 16 GiB, limit 8 CPU / 32 GiB; revise them only with workload evidence. Every master PVC starts at 100 GiB and every tserver PVC at 500 GiB of SSD-backed, provisioned IOPS storage. Volumes must support retained PVC recovery, encryption at rest, snapshots, and the #128 backup/restore policy. Maintain 30% free tserver space for compaction, re-replication and repair.
 
-Apply PodDisruptionBudgets separately to master and tserver pods: `minAvailable: 2` for each set in an RF-3 universe. Drain one domain at a time and wait for tablet health and leader rebalance. PDBs do not protect against involuntary failures and do not replace replica placement.
+The chart's multi-zone topology uses three namespaces, so Kubernetes PDBs
+cannot express an RF-3 quorum across the universe: PDB selectors are namespace
+scoped. Do **not** apply `minAvailable: 2` to a zone release containing one
+master or one tserver; that would permanently deny its only voluntary eviction.
+If a PDB is required for a zone release, use `minAvailable: 1` only to protect
+that singleton from an unattended eviction. Cross-zone safety is instead an
+operational admission rule: drain one failure domain at a time, wait for master
+quorum and tablet health/leader rebalance, and do not begin another disruption
+until the universe is healthy. PDBs do not protect against involuntary failures
+and do not replace replica placement.
 
 ## Security, scaling and upgrades
 
