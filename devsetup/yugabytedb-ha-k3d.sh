@@ -39,8 +39,9 @@ helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manag
 kubectl apply -f - <<'EOF'
 apiVersion: cert-manager.io/v1
 kind: Certificate
-metadata: {name: eubl21-yb-ha-ca}
-namespace: cert-manager
+metadata:
+  name: eubl21-yb-ha-ca
+  namespace: cert-manager
 spec:
   isCA: true
   commonName: eubl21-yb-ha-ca
