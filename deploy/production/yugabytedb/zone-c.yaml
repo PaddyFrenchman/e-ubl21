@@ -4,6 +4,14 @@ AZ: zone-c
 masterAddresses: "yb-master-0.yb-masters.eubl21-yb-zone-a.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-b.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-c.svc.cluster.local:7100"
 enableLoadBalancer: false
 disableYsql: false
+tls:
+  enabled: true
+  nodeToNode: true
+  clientToServer: true
+  insecure: false
+  certManager:
+    enabled: true
+    bootstrapSelfsigned: true
 replicas:
   master: 1
   tserver: 1
@@ -53,4 +61,3 @@ tserver:
           - key: topology.kubernetes.io/zone
             operator: In
             values: [zone-c]
-

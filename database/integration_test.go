@@ -56,6 +56,42 @@ func TestYugabyteDBIntegration(t *testing.T) {
 		client.Close()
 	})
 
+	t.Run("same pool reconnects after failover", func(t *testing.T) {
+		readyFile := os.Getenv("EUBL21_TEST_DATABASE_FAILOVER_READY_FILE")
+		doneFile := os.Getenv("EUBL21_TEST_DATABASE_FAILOVER_DONE_FILE")
+		if readyFile == "" || doneFile == "" {
+			t.Skip("set failover ready and done files for a coordinated live failover test")
+		}
+		config, err := appdb.ParseConfig(rawURL)
+		if err != nil {
+			t.Fatal(err)
+		}
+		client, err := appdb.Connect(context.Background(), config)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer client.Close()
+		if err := os.WriteFile(readyFile, []byte("pool-ready\n"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		deadline := time.Now().Add(2 * time.Minute)
+		failoverDone := false
+		for {
+			var one int
+			err = client.ScanRow(context.Background(), "SELECT 1", nil, &one)
+			if _, statErr := os.Stat(doneFile); statErr == nil {
+				failoverDone = true
+			}
+			if failoverDone && err == nil && one == 1 {
+				return
+			}
+			if time.Now().After(deadline) {
+				t.Fatalf("same pool did not recover after failover: %v", err)
+			}
+			time.Sleep(500 * time.Millisecond)
+		}
+	})
+
 	t.Run("pool exhaustion is bounded", func(t *testing.T) {
 		settings := appdb.DefaultSettings()
 		settings.MaxConnections = 1
