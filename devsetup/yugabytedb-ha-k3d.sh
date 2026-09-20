@@ -23,7 +23,11 @@ command -v helm >/dev/null; command -v kubectl >/dev/null; [[ -x "$k3d_bin" ]]
 "$k3d_bin" kubeconfig get "$cluster" >"$kubeconfig"
 export KUBECONFIG="$kubeconfig"
 zones=(zone-a zone-b zone-c)
-for n in 0 1 2; do kubectl label node "k3d-$cluster-agent-$n" topology.kubernetes.io/zone="${zones[$n]}" --overwrite; done
+for n in 0 1 2; do
+  kubectl label node "k3d-$cluster-agent-$n" topology.kubernetes.io/zone="${zones[$n]}" --overwrite
+  # The pinned chart currently renders this deprecated selector as well.
+  kubectl label node "k3d-$cluster-agent-$n" failure-domain.beta.kubernetes.io/zone="${zones[$n]}" --overwrite
+done
 helm repo add jetstack https://charts.jetstack.io --force-update >/dev/null
 helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set crds.enabled=true --wait --timeout 10m
 kubectl apply -f - <<'EOF'
