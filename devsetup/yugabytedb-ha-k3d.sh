@@ -52,6 +52,7 @@ done
 # The chart generates this client credential from the shared ClusterIssuer.
 for key in ca.crt tls.crt tls.key; do
   kubectl -n eubl21-yb-zone-a get secret yugabyte-tls-client-cert -o "jsonpath={.data.$key}" | base64 -d >"$tmp/$key"
+  [[ -s "$tmp/$key" ]] || { echo "generated TLS client secret is missing $key" >&2; exit 1; }
 done
 chmod 0600 "$tmp/tls.key"
 
@@ -62,7 +63,9 @@ chmod 0600 "$tmp/tls.key"
 forwarder=$!
 trap 'kill "$forwarder" 2>/dev/null || true; cleanup' EXIT
 until nc -z 127.0.0.1 15433; do sleep 1; done
-url="postgresql://yugabyte:yugabyte@127.0.0.1:15433/yugabyte?sslmode=verify-ca&sslrootcert=$tmp/ca.crt&sslcert=$tmp/tls.crt&sslkey=$tmp/tls.key"
+# pgx accepts TLS file paths as URL query values; percent-encode them so the
+# generated path cannot be mistaken for URL syntax.
+url="postgresql://yugabyte:yugabyte@127.0.0.1:15433/yugabyte?sslmode=verify-ca&sslrootcert=$(printf %s "$tmp/ca.crt" | sed 's#/#%2F#g')&sslcert=$(printf %s "$tmp/tls.crt" | sed 's#/#%2F#g')&sslkey=$(printf %s "$tmp/tls.key" | sed 's#/#%2F#g')"
 EUBL21_HA_DATABASE_URL="$url" \
 EUBL21_HA_TSERVER_POD=yb-tserver-0 EUBL21_HA_TSERVER_NAMESPACE=eubl21-yb-zone-a \
 EUBL21_HA_MASTER_POD=yb-master-0 EUBL21_HA_MASTER_NAMESPACE=eubl21-yb-zone-a \
