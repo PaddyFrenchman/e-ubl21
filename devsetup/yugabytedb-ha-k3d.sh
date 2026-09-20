@@ -10,7 +10,7 @@ trap cleanup EXIT
 command -v helm >/dev/null; command -v kubectl >/dev/null; [[ -x "$k3d_bin" ]]
 "$root/devsetup/test-production-yugabytedb-ha.sh"
 "$k3d_bin" cluster create "$cluster" --agents 3 --wait
-"$k3d_bin" kubeconfig write "$cluster" >"$kubeconfig"
+"$k3d_bin" kubeconfig get "$cluster" >"$kubeconfig"
 export KUBECONFIG="$kubeconfig"
 zones=(zone-a zone-b zone-c)
 for n in 0 1 2; do kubectl label node "k3d-$cluster-agent-$n" topology.kubernetes.io/zone="${zones[$n]}" --overwrite; done
