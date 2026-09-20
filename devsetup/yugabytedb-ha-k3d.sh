@@ -5,7 +5,17 @@ root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 k3d_bin="${K3D_BIN:-$(go env GOPATH)/bin/k3d}"
 cluster="${EUBL21_HA_K3D_CLUSTER:-eubl21-yb-ha}"
 tmp="$(mktemp -d)"; kubeconfig="$tmp/kubeconfig"
-cleanup() { "$k3d_bin" cluster delete "$cluster" >/dev/null 2>&1 || true; rm -rf "$tmp"; }
+artifact_dir="${ARTIFACT_DIR:-$root/regression-results/yugabytedb-ha/$(date -u +%Y%m%dT%H%M%SZ)}"
+cleanup() {
+  mkdir -p "$artifact_dir"
+  if [[ -f "$kubeconfig" ]]; then
+    KUBECONFIG="$kubeconfig" kubectl get pods -A -o wide >"$artifact_dir/pods.txt" 2>&1 || true
+    KUBECONFIG="$kubeconfig" kubectl get events -A --sort-by=.lastTimestamp >"$artifact_dir/events.txt" 2>&1 || true
+    KUBECONFIG="$kubeconfig" kubectl logs -n cert-manager -l app.kubernetes.io/instance=cert-manager --all-containers=true >"$artifact_dir/cert-manager.log" 2>&1 || true
+  fi
+  "$k3d_bin" cluster delete "$cluster" >/dev/null 2>&1 || true
+  rm -rf "$tmp"
+}
 trap cleanup EXIT
 command -v helm >/dev/null; command -v kubectl >/dev/null; [[ -x "$k3d_bin" ]]
 "$root/devsetup/test-production-yugabytedb-ha.sh"
@@ -15,7 +25,7 @@ export KUBECONFIG="$kubeconfig"
 zones=(zone-a zone-b zone-c)
 for n in 0 1 2; do kubectl label node "k3d-$cluster-agent-$n" topology.kubernetes.io/zone="${zones[$n]}" --overwrite; done
 helm repo add jetstack https://charts.jetstack.io --force-update >/dev/null
-helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set crds.enabled=true --wait
+helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set crds.enabled=true --wait --timeout 10m
 kubectl apply -f - <<'EOF'
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
