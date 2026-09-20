@@ -60,6 +60,18 @@ Scale tservers out one failure domain at a time, allow rebalancing, and verify l
 
 Before a topology is supported, retain Helm renders for all three zone releases; a collision check across rendered manifests; PDB and placement inspection; controlled tserver and master failure evidence showing continued YSQL availability after election; and application reconnect evidence. The local and Minikube single-node installations are developer/test evidence only, not HA evidence.
 
+Run the tserver-failure/reconnect qualification only against the three-zone
+reference universe (never Minikube) with its endpoint and pod selector supplied
+by the deployment environment:
+
+```bash
+EUBL21_HA_DATABASE_URL='postgresql://.../?sslmode=verify-full' \\
+EUBL21_HA_TSERVER_POD=yb-tserver-0 \\
+EUBL21_HA_TSERVER_NAMESPACE=eubl21-yb-zone-a \\
+EUBL21_HA_READY_SELECTOR='app=yb-tserver' \\
+./devsetup/test-production-yugabytedb-ha-integration.sh
+```
+
 ## References
 
 - [Multi-zone Helm deployment](https://docs.yugabyte.com/stable/deploy/kubernetes/multi-zone/eks/helm-chart/)
