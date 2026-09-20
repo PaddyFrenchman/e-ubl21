@@ -60,11 +60,15 @@ spec:
   ca: {secretName: eubl21-yb-ha-ca}
 EOF
 kubectl -n cert-manager wait --for=condition=Ready certificate/eubl21-yb-ha-ca --timeout=5m
+kubectl wait --for=condition=Ready clusterissuer/eubl21-yb-ha-ca --timeout=5m
 for zone in zone-a zone-b zone-c; do
   ns="eubl21-yb-$zone"; kubectl create namespace "$ns"
   helm upgrade --install "eubl21-yb-$zone" https://charts.yugabyte.com/yugabyte-2025.2.6.tgz --namespace "$ns" -f "$root/deploy/production/yugabytedb/$zone.yaml"     --set-string storage.master.storageClass=local-path --set-string storage.tserver.storageClass=local-path     --set-string gflags.master.placement_region=local --set-string gflags.tserver.placement_region=local     --set tls.certManager.bootstrapSelfsigned=false --set tls.certManager.useCustomIssuer=true --set-string tls.certManager.customIssuer.kind=ClusterIssuer --set-string tls.certManager.customIssuer.name=eubl21-yb-ha-ca --set-string tls.certManager.customIssuer.group=cert-manager.io     --set preflight.skipUlimit=true     --set resource.master.requests.cpu=500m --set resource.master.requests.memory=1Gi --set resource.master.limits.cpu=1 --set resource.master.limits.memory=2Gi     --set resource.tserver.requests.cpu=500m --set resource.tserver.requests.memory=1Gi --set resource.tserver.limits.cpu=1 --set resource.tserver.limits.memory=2Gi
   kubectl -n "$ns" rollout status statefulset/yb-master --timeout=10m
   kubectl -n "$ns" rollout status statefulset/yb-tserver --timeout=10m
+  kubectl -n "$ns" wait --for=condition=Ready certificate/yb-master-yugabyte-tls-cert --timeout=5m
+  kubectl -n "$ns" wait --for=condition=Ready certificate/yb-tserver-yugabyte-tls-cert --timeout=5m
+  kubectl -n "$ns" wait --for=condition=Ready certificate/yugabyte-tls-client-cert --timeout=5m
 done
 
 # The chart generates this client credential from the shared ClusterIssuer.
