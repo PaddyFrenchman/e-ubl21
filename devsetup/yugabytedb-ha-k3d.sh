@@ -28,4 +28,24 @@ for zone in zone-a zone-b zone-c; do
   kubectl -n "$ns" rollout status statefulset/yb-master --timeout=10m
   kubectl -n "$ns" rollout status statefulset/yb-tserver --timeout=10m
 done
-echo "K3d three-zone YugabyteDB TLS topology qualified; failure/reconnect phase requires the generated client URL wiring."
+
+# The chart generates this client credential from the shared ClusterIssuer.
+for key in ca.crt tls.crt tls.key; do
+  kubectl -n eubl21-yb-zone-a get secret yugabyte-tls-client-cert -o "jsonpath={.data.$key}" | base64 -d >"$tmp/$key"
+done
+chmod 0600 "$tmp/tls.key"
+
+# Keep one local endpoint available while kubectl reconnects its forwarding
+# tunnel when the selected tserver disappears. The Go test retains its one
+# pool throughout this operation.
+( while true; do kubectl -n eubl21-yb-zone-a port-forward service/yb-tservers 15433:5433 >/dev/null 2>&1 || true; sleep 1; done ) &
+forwarder=$!
+trap 'kill "$forwarder" 2>/dev/null || true; cleanup' EXIT
+until nc -z 127.0.0.1 15433; do sleep 1; done
+url="postgresql://yugabyte:yugabyte@127.0.0.1:15433/yugabyte?sslmode=verify-ca&sslrootcert=$tmp/ca.crt&sslcert=$tmp/tls.crt&sslkey=$tmp/tls.key"
+EUBL21_HA_DATABASE_URL="$url" \
+EUBL21_HA_TSERVER_POD=yb-tserver-0 EUBL21_HA_TSERVER_NAMESPACE=eubl21-yb-zone-a \
+EUBL21_HA_MASTER_POD=yb-master-0 EUBL21_HA_MASTER_NAMESPACE=eubl21-yb-zone-a \
+EUBL21_HA_READY_SELECTOR='app=yb-tserver' EUBL21_HA_TSERVER_COUNT=3 \
+"$root/devsetup/test-production-yugabytedb-ha-integration.sh"
+echo "K3d three-zone YugabyteDB TLS HA qualification passed."

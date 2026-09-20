@@ -6,6 +6,8 @@ set -Eeuo pipefail
 : "${EUBL21_HA_TSERVER_POD:?set the tserver pod to terminate}"
 : "${EUBL21_HA_TSERVER_NAMESPACE:?set its namespace}"
 : "${EUBL21_HA_READY_SELECTOR:?set a selector matching all HA tservers}"
+: "${EUBL21_HA_MASTER_POD:?set the master pod to terminate}"
+: "${EUBL21_HA_MASTER_NAMESPACE:?set its namespace}"
 expected_tservers="${EUBL21_HA_TSERVER_COUNT:-3}"
 timeout="${EUBL21_HA_TIMEOUT:-10m}"
 
@@ -24,4 +26,11 @@ kubectl wait --for=condition=Ready pod -A -l "$EUBL21_HA_READY_SELECTOR" --timeo
 
 wait "$test_pid"
 
-echo "Production YugabyteDB HA tserver-failure and application reconnect qualification passed."
+# A surviving YSQL query after a master loss proves that the two remaining
+# masters retained quorum and the universe control plane remained available.
+kubectl delete pod "$EUBL21_HA_MASTER_POD" -n "$EUBL21_HA_MASTER_NAMESPACE" --wait=true
+kubectl wait --for=condition=Ready pod -A -l app=yb-master --timeout="$timeout"
+EUBL21_TEST_DATABASE_URL="$EUBL21_HA_DATABASE_URL" \
+  go test ./database -run '^TestYugabyteDBIntegration$/connect_and_query' -count=1
+
+echo "Production YugabyteDB HA tserver failover, same-pool reconnect, and master-quorum qualification passed."
