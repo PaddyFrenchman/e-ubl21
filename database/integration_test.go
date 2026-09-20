@@ -19,7 +19,9 @@ func TestYugabyteDBIntegration(t *testing.T) {
 	}
 
 	t.Run("connect and query", func(t *testing.T) {
-		config, err := appdb.ParseConfig(rawURL)
+		settings := appdb.DefaultSettings()
+		settings.MaxConnections = 1
+		config, err := appdb.ParseConfigWithSettings(rawURL, settings)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -28,6 +30,10 @@ func TestYugabyteDBIntegration(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer client.Close()
+		var preFailoverBackend int
+		if err := client.ScanRow(context.Background(), "SELECT pg_backend_pid()", nil, &preFailoverBackend); err != nil {
+			t.Fatal(err)
+		}
 
 		var one int
 		if err := client.ScanRow(context.Background(), "SELECT 1", nil, &one); err != nil {
@@ -76,13 +82,17 @@ func TestYugabyteDBIntegration(t *testing.T) {
 		}
 		deadline := time.Now().Add(2 * time.Minute)
 		failoverDone := false
+		observedFailure := false
 		for {
 			var one int
 			err = client.ScanRow(context.Background(), "SELECT 1", nil, &one)
 			if _, statErr := os.Stat(doneFile); statErr == nil {
 				failoverDone = true
 			}
-			if failoverDone && err == nil && one == 1 {
+			if failoverDone && err != nil {
+				observedFailure = true
+			}
+			if failoverDone && observedFailure && err == nil && one == 1 {
 				return
 			}
 			if time.Now().After(deadline) {
