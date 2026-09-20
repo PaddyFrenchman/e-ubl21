@@ -1,0 +1,56 @@
+oldNamingStyle: true
+isMultiAz: true
+AZ: zone-c
+masterAddresses: "yb-master-0.yb-masters.eubl21-yb-zone-a.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-b.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-c.svc.cluster.local:7100"
+enableLoadBalancer: false
+disableYsql: false
+replicas:
+  master: 1
+  tserver: 1
+  totalMasters: 3
+storage:
+  ephemeral: false
+  master:
+    count: 1
+    size: 100Gi
+    storageClass: REPLACE_WITH_SSD_STORAGE_CLASS
+  tserver:
+    count: 1
+    size: 500Gi
+    storageClass: REPLACE_WITH_SSD_STORAGE_CLASS
+resource:
+  master:
+    requests: {cpu: "2", memory: 8Gi}
+    limits: {cpu: "2", memory: 8Gi}
+  tserver:
+    requests: {cpu: "4", memory: 16Gi}
+    limits: {cpu: "8", memory: 32Gi}
+gflags:
+  master:
+    placement_cloud: kubernetes
+    placement_region: REPLACE_WITH_REGION
+    placement_zone: zone-c
+  tserver:
+    ysql_enable_auth: "true"
+    placement_cloud: kubernetes
+    placement_region: REPLACE_WITH_REGION
+    placement_zone: zone-c
+master:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values: [zone-c]
+tserver:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values: [zone-c]
+
