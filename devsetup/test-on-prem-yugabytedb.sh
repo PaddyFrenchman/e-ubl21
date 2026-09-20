@@ -96,9 +96,11 @@ assert_contains 'name: eubl21-yugabytedb-bootstrap' "$temporary_dir/eubl21-datab
 assert_contains 'name: eubl21-database-migrate' "$temporary_dir/eubl21-database-jobs.yaml"
 assert_contains 'key: database-url' "$temporary_dir/eubl21-database-jobs.yaml"
 
-if command -v kubectl >/dev/null 2>&1; then
-    kubectl apply --dry-run=client --validate=false -f "$temporary_dir/eubl21-database-jobs.yaml" >/dev/null
-fi
+# Keep static verification independent of the active Kubernetes context.
+# Recent kubectl versions perform API discovery for `create --dry-run=client`,
+# so even that command fails when a developer has a stale or offline context.
+# The generated manifest is exercised against a live API server by integration
+# mode below.
 
 if [[ "$mode" == "static" ]]; then
     echo "On-prem YugabyteDB static installer verification passed."
