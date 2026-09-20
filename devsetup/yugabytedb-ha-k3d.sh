@@ -61,9 +61,12 @@ spec:
 EOF
 kubectl -n cert-manager wait --for=condition=Ready certificate/eubl21-yb-ha-ca --timeout=5m
 kubectl wait --for=condition=Ready clusterissuer/eubl21-yb-ha-ca --timeout=5m
+kubectl -n cert-manager get secret eubl21-yb-ha-ca -o jsonpath='{.data.tls\.crt}' >"$tmp/shared-ca.b64"
+[[ -s "$tmp/shared-ca.b64" ]] || { echo "generated shared CA is missing" >&2; exit 1; }
+printf 'tls:\n  rootCA:\n    cert: %s\n' "$(<"$tmp/shared-ca.b64")" >"$tmp/shared-ca-values.yaml"
 for zone in zone-a zone-b zone-c; do
   ns="eubl21-yb-$zone"; kubectl create namespace "$ns"
-  helm upgrade --install "eubl21-yb-$zone" https://charts.yugabyte.com/yugabyte-2025.2.6.tgz --namespace "$ns" -f "$root/deploy/production/yugabytedb/$zone.yaml"     --set-string storage.master.storageClass=local-path --set-string storage.tserver.storageClass=local-path     --set-string gflags.master.placement_region=local --set-string gflags.tserver.placement_region=local     --set tls.certManager.bootstrapSelfsigned=false --set tls.certManager.useCustomIssuer=true --set-string tls.certManager.customIssuer.kind=ClusterIssuer --set-string tls.certManager.customIssuer.name=eubl21-yb-ha-ca --set-string tls.certManager.customIssuer.group=cert-manager.io     --set preflight.skipUlimit=true     --set resource.master.requests.cpu=500m --set resource.master.requests.memory=1Gi --set resource.master.limits.cpu=1 --set resource.master.limits.memory=2Gi     --set resource.tserver.requests.cpu=500m --set resource.tserver.requests.memory=1Gi --set resource.tserver.limits.cpu=1 --set resource.tserver.limits.memory=2Gi
+  helm upgrade --install "eubl21-yb-$zone" https://charts.yugabyte.com/yugabyte-2025.2.6.tgz --namespace "$ns" -f "$root/deploy/production/yugabytedb/$zone.yaml" -f "$tmp/shared-ca-values.yaml"     --set-string storage.master.storageClass=local-path --set-string storage.tserver.storageClass=local-path     --set-string gflags.master.placement_region=local --set-string gflags.tserver.placement_region=local     --set tls.certManager.bootstrapSelfsigned=false --set tls.certManager.useCustomIssuer=true --set-string tls.certManager.customIssuer.kind=ClusterIssuer --set-string tls.certManager.customIssuer.name=eubl21-yb-ha-ca --set-string tls.certManager.customIssuer.group=cert-manager.io     --set preflight.skipUlimit=true     --set resource.master.requests.cpu=500m --set resource.master.requests.memory=1Gi --set resource.master.limits.cpu=1 --set resource.master.limits.memory=2Gi     --set resource.tserver.requests.cpu=500m --set resource.tserver.requests.memory=1Gi --set resource.tserver.limits.cpu=1 --set resource.tserver.limits.memory=2Gi
   kubectl -n "$ns" rollout status statefulset/yb-master --timeout=10m
   kubectl -n "$ns" rollout status statefulset/yb-tserver --timeout=10m
   kubectl -n "$ns" wait --for=condition=Ready certificate/yb-master-yugabyte-tls-cert --timeout=5m
@@ -74,10 +77,9 @@ done
 # The chart generates this client credential from the shared ClusterIssuer.
 kubectl -n cert-manager get secret eubl21-yb-ha-ca -o jsonpath='{.data.tls\.crt}' | base64 -d >"$tmp/ca.crt"
 [[ -s "$tmp/ca.crt" ]] || { echo "generated shared CA is missing" >&2; exit 1; }
-for key in tls.crt tls.key; do
-  kubectl -n eubl21-yb-zone-a get secret yugabyte-tls-client-cert -o "jsonpath={.data.$key}" | base64 -d >"$tmp/$key"
-  [[ -s "$tmp/$key" ]] || { echo "generated TLS client secret is missing $key" >&2; exit 1; }
-done
+kubectl -n eubl21-yb-zone-a get secret yugabyte-tls-client-cert -o jsonpath='{.data.tls\.crt}' | base64 -d >"$tmp/tls.crt"
+kubectl -n eubl21-yb-zone-a get secret yugabyte-tls-client-cert -o jsonpath='{.data.tls\.key}' | base64 -d >"$tmp/tls.key"
+[[ -s "$tmp/tls.crt" && -s "$tmp/tls.key" ]] || { echo "generated TLS client secret is incomplete" >&2; exit 1; }
 chmod 0600 "$tmp/tls.key"
 
 # Keep one local endpoint available while kubectl reconnects its forwarding
