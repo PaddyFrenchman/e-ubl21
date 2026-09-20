@@ -39,6 +39,9 @@ database-verify:
 yugabytedb-compatibility-guard:
 	./devsetup/yugabytedb-compatibility-guard.sh
 
+yugabytedb-ha-test:
+	./devsetup/yugabytedb-ha-k3d.sh
+
 # Render the pinned on-prem YugabyteDB chart and installer-owned Jobs without
 # mutating a cluster. The integration target uses a disposable namespace.
 on-prem-database-test:
