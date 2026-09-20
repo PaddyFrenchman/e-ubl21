@@ -11,7 +11,14 @@ tls:
   insecure: false
   certManager:
     enabled: true
-    bootstrapSelfsigned: true
+    # This issuer and its CA are created once per universe by the platform.
+    # The CA certificate is injected at deploy time; it is never generated per zone.
+    bootstrapSelfsigned: false
+    useCustomIssuer: true
+    customIssuer:
+      kind: ClusterIssuer
+      name: eubl21-yugabytedb-ca
+      group: cert-manager.io
 replicas:
   master: 1
   tserver: 1

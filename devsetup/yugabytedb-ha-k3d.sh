@@ -3,9 +3,11 @@
 set -Eeuo pipefail
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 k3d_bin="${K3D_BIN:-$(go env GOPATH)/bin/k3d}"
-cluster="${EUBL21_HA_K3D_CLUSTER:-eubl21-yb-ha}"
+run_id="${EUBL21_HA_RUN_ID:-$(date -u +%y%m%d%H%M%S)-$$}"
+# K3d restricts cluster names to 32 characters.
+cluster="${EUBL21_HA_K3D_CLUSTER:-eubl21-ha-$run_id}"
 tmp="$(mktemp -d)"; kubeconfig="$tmp/kubeconfig"
-artifact_dir="${ARTIFACT_DIR:-$root/regression-results/yugabytedb-ha/$(date -u +%Y%m%dT%H%M%SZ)}"
+artifact_dir="${ARTIFACT_DIR:-$root/regression-results/yugabytedb-ha/$run_id}"
 cleanup() {
   mkdir -p "$artifact_dir"
   if [[ -f "$kubeconfig" ]]; then
@@ -18,12 +20,15 @@ cleanup() {
       KUBECONFIG="$kubeconfig" kubectl logs -n "$ns" -l app=yb-master --all-containers=true --prefix >"$artifact_dir/$ns-master.log" 2>&1 || true
       KUBECONFIG="$kubeconfig" kubectl logs -n "$ns" -l app=yb-tserver --all-containers=true --prefix >"$artifact_dir/$ns-tserver.log" 2>&1 || true
     done
+    helm list -A >"$artifact_dir/helm-releases.txt" 2>&1 || true
+    kubectl get certificate,clusterissuer -A -o yaml >"$artifact_dir/tls-resources.yaml" 2>&1 || true
   fi
   "$k3d_bin" cluster delete "$cluster" >/dev/null 2>&1 || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
 command -v helm >/dev/null; command -v kubectl >/dev/null; [[ -x "$k3d_bin" ]]
+mkdir -p "$artifact_dir"
 "$root/devsetup/test-production-yugabytedb-ha.sh"
 "$k3d_bin" cluster create "$cluster" --agents 3 --wait
 "$k3d_bin" kubeconfig get "$cluster" >"$kubeconfig"
@@ -72,6 +77,7 @@ for zone in zone-a zone-b zone-c; do
   kubectl -n "$ns" wait --for=condition=Ready certificate/yb-master-yugabyte-tls-cert --timeout=5m
   kubectl -n "$ns" wait --for=condition=Ready certificate/yb-tserver-yugabyte-tls-cert --timeout=5m
   kubectl -n "$ns" wait --for=condition=Ready certificate/yugabyte-tls-client-cert --timeout=5m
+  helm get manifest "eubl21-yb-$zone" -n "$ns" >"$artifact_dir/$zone-rendered.yaml"
 done
 
 # The chart generates this client credential from the shared ClusterIssuer.
@@ -82,19 +88,30 @@ kubectl -n eubl21-yb-zone-a get secret yugabyte-tls-client-cert -o jsonpath='{.d
 [[ -s "$tmp/tls.crt" && -s "$tmp/tls.key" ]] || { echo "generated TLS client secret is incomplete" >&2; exit 1; }
 chmod 0600 "$tmp/tls.key"
 
-# Keep one local endpoint available while kubectl reconnects its forwarding
-# tunnel when the selected tserver disappears. The Go test retains its one
-# pool throughout this operation.
-( while true; do kubectl -n eubl21-yb-zone-a port-forward service/yb-tservers 15433:5433 >/dev/null 2>&1 || true; sleep 1; done ) &
-forwarder=$!
-trap 'kill "$forwarder" 2>/dev/null || true; cleanup' EXIT
-until nc -z 127.0.0.1 15433; do sleep 1; done
+base_port=$((20000 + RANDOM % 20000))
+forwarders=()
+cleanup_forwarders() { for pid in "${forwarders[@]:-}"; do kill "$pid" 2>/dev/null || true; done; }
+trap 'cleanup_forwarders; cleanup' EXIT
+for index in 0 1 2; do
+  zone="${zones[$index]}"; port=$((base_port + index))
+  ( while true; do kubectl -n "eubl21-yb-$zone" port-forward "service/yb-tservers" "$port:5433" >/dev/null 2>&1 || true; sleep 1; done ) &
+  forwarders+=("$!")
+done
+for index in 0 1 2; do until nc -z 127.0.0.1 "$((base_port + index))"; do sleep 1; done; done
+go run "$root/devsetup/ha-tcp-proxy.go" -backends="127.0.0.1:$base_port,127.0.0.1:$((base_port + 1)),127.0.0.1:$((base_port + 2))" >"$tmp/proxy-address" 2>"$artifact_dir/tcp-proxy.log" &
+proxy_pid=$!
+trap 'kill "$proxy_pid" 2>/dev/null || true; cleanup_forwarders; cleanup' EXIT
+deadline=$((SECONDS + 60)); until [[ -s "$tmp/proxy-address" ]]; do (( SECONDS < deadline )) || { echo "TCP HA gateway did not start" >&2; exit 1; }; sleep 1; done
+proxy_port="$(sed 's/.*://' "$tmp/proxy-address")"
+expected_host="$(kubectl -n eubl21-yb-zone-a get pod yb-tserver-0 -o jsonpath='{.status.podIP}')"
+[[ -n "$expected_host" ]] || { echo "zone-a tserver pod IP is missing" >&2; exit 1; }
 # pgx accepts TLS file paths as URL query values; percent-encode them so the
 # generated path cannot be mistaken for URL syntax.
-url="postgresql://yugabyte:yugabyte@127.0.0.1:15433/yugabyte?sslmode=verify-ca&sslrootcert=$(printf %s "$tmp/ca.crt" | sed 's#/#%2F#g')&sslcert=$(printf %s "$tmp/tls.crt" | sed 's#/#%2F#g')&sslkey=$(printf %s "$tmp/tls.key" | sed 's#/#%2F#g')"
+url="postgresql://yugabyte:yugabyte@127.0.0.1:$proxy_port/yugabyte?sslmode=verify-ca&sslrootcert=$(printf %s "$tmp/ca.crt" | sed 's#/#%2F#g')&sslcert=$(printf %s "$tmp/tls.crt" | sed 's#/#%2F#g')&sslkey=$(printf %s "$tmp/tls.key" | sed 's#/#%2F#g')"
 EUBL21_HA_DATABASE_URL="$url" \
 EUBL21_HA_TSERVER_POD=yb-tserver-0 EUBL21_HA_TSERVER_NAMESPACE=eubl21-yb-zone-a \
 EUBL21_HA_MASTER_POD=yb-master-0 EUBL21_HA_MASTER_NAMESPACE=eubl21-yb-zone-a \
 EUBL21_HA_READY_SELECTOR='app=yb-tserver' EUBL21_HA_TSERVER_COUNT=3 \
+EUBL21_HA_FAILURE_NODE="k3d-$cluster-agent-0" EUBL21_HA_FAILOVER_EXPECTED_HOST="$expected_host" \
 "$root/devsetup/test-production-yugabytedb-ha-integration.sh"
 echo "K3d three-zone YugabyteDB TLS HA qualification passed."

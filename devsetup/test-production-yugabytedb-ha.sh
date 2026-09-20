@@ -7,8 +7,14 @@ tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 curl -fsSL "$chart_url" -o "$tmp/chart.tgz"
 printf '%s  %s\n' "$chart_sha256" "$tmp/chart.tgz" | sha256sum --check --status
 for zone in zone-a zone-b zone-c; do
-  helm template "eubl21-yb-$zone" "$tmp/chart.tgz" --namespace "eubl21-yb-$zone" --values "$root_dir/deploy/production/yugabytedb/$zone.yaml" --set-string storage.master.storageClass=standard --set-string storage.tserver.storageClass=standard >"$tmp/$zone.yaml"
+  values="$root_dir/deploy/production/yugabytedb/$zone.yaml"
+  rg -q 'enabled: true' "$values"
+  rg -q 'bootstrapSelfsigned: false' "$values"
+  rg -q 'useCustomIssuer: true' "$values"
+  rg -q 'name: eubl21-yugabytedb-ca' "$values"
+  helm template "eubl21-yb-$zone" "$tmp/chart.tgz" --namespace "eubl21-yb-$zone" --values "$values" --set-string storage.master.storageClass=standard --set-string storage.tserver.storageClass=standard --set-string gflags.master.placement_region=test --set-string gflags.tserver.placement_region=test --set-string tls.rootCA.cert=ZHVtbXktc2hhcmVkLWNh >"$tmp/$zone.yaml"
   rg -q 'totalMasters: 3' "$root_dir/deploy/production/yugabytedb/$zone.yaml"
+  rg -q 'topology.kubernetes.io/zone' "$tmp/$zone.yaml"
 done
 awk '/^kind:/{kind=$2} /^  name:/{name=$2} /^  namespace:/{print kind "/" $2 "/" name}' "$tmp"/*.yaml | sort | uniq -d | (! grep .)
 echo "Production YugabyteDB HA Helm renders and resource identities passed."

@@ -45,7 +45,7 @@ and do not replace replica placement.
 
 The application uses only the private YSQL service on port 5433. Master UI/RPC, tserver RPC and metrics endpoints are private management-plane services. NetworkPolicy permits application-to-YSQL and cluster-internal YB traffic only.
 
-YSQL uses TLS with `sslmode=verify-full`; applications trust the cluster CA and verify the service DNS name. Store passwords and client credentials in the platform secret manager and project them using workload identity. Do not put secrets in Helm values, ConfigMaps or images. Pools must list multiple YSQL endpoints or use an HA private service, with bounded timeouts and retry/reconnect for transaction-safe work after leader election.
+YSQL uses TLS with `sslmode=verify-full`; applications trust the cluster CA and verify the service DNS name. One platform-managed CA/issuer is created per universe and injected into every zone release; a zone release must never bootstrap its own CA. Store passwords and client credentials in the platform secret manager and project them using workload identity. Do not put secrets in Helm values, ConfigMaps or images. Pools must list multiple YSQL endpoints or use an HA private service, with bounded timeouts and retry/reconnect for transaction-safe work after leader election.
 
 The initial cloud offering is a single-region, three-AZ RF-3 universe. It is not a regional-DR claim. Multi-region is introduced per data class only after latency, residency, RPO/RTO and tenant-routing decisions are approved:
 
@@ -60,16 +60,18 @@ Scale tservers out one failure domain at a time, allow rebalancing, and verify l
 
 Before a topology is supported, retain Helm renders for all three zone releases; a collision check across rendered manifests; PDB and placement inspection; controlled tserver and master failure evidence showing continued YSQL availability after election; and application reconnect evidence. The local and Minikube single-node installations are developer/test evidence only, not HA evidence.
 
-Run the tserver-failure/reconnect qualification only against the three-zone
-reference universe (never Minikube) with its endpoint and pod selector supplied
-by the deployment environment:
+The development qualification is fully automated and creates a disposable
+three-agent K3d universe. It generates the shared CA, client TLS URL, all
+three local endpoints and a TLS-transparent local HA gateway; no URL, password,
+CA path, namespace, pod or selector is supplied manually. It holds zone-a
+unschedulable while deleting its serving tserver and master, records rendered
+manifests, TLS objects, pod state, events and logs under
+`regression-results/yugabytedb-ha/`, and always removes the cluster. The local
+gateway uses `verify-ca` only because its localhost address cannot match the
+production service DNS name; production clients use `verify-full`.
 
 ```bash
-EUBL21_HA_DATABASE_URL='postgresql://.../?sslmode=verify-full' \\
-EUBL21_HA_TSERVER_POD=yb-tserver-0 \\
-EUBL21_HA_TSERVER_NAMESPACE=eubl21-yb-zone-a \\
-EUBL21_HA_READY_SELECTOR='app=yb-tserver' \\
-./devsetup/test-production-yugabytedb-ha-integration.sh
+make yugabytedb-ha-test
 ```
 
 ## References

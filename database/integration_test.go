@@ -65,7 +65,8 @@ func TestYugabyteDBIntegration(t *testing.T) {
 	t.Run("same pool reconnects after failover", func(t *testing.T) {
 		readyFile := os.Getenv("EUBL21_TEST_DATABASE_FAILOVER_READY_FILE")
 		doneFile := os.Getenv("EUBL21_TEST_DATABASE_FAILOVER_DONE_FILE")
-		if readyFile == "" || doneFile == "" {
+		expectedHost := os.Getenv("EUBL21_TEST_DATABASE_FAILOVER_EXPECTED_HOST")
+		if readyFile == "" || doneFile == "" || expectedHost == "" {
 			t.Skip("set failover ready and done files for a coordinated live failover test")
 		}
 		config, err := appdb.ParseConfig(rawURL)
@@ -77,6 +78,14 @@ func TestYugabyteDBIntegration(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer client.Close()
+		var beforeHost string
+		var beforePID int
+		if err := client.ScanRow(context.Background(), "SELECT inet_server_addr()::text, pg_backend_pid()", nil, &beforeHost, &beforePID); err != nil {
+			t.Fatal(err)
+		}
+		if beforeHost != expectedHost {
+			t.Fatalf("pool was not established through the tserver selected for failover: got %q, want %q", beforeHost, expectedHost)
+		}
 		if err := os.WriteFile(readyFile, []byte("pool-ready\n"), 0600); err != nil {
 			t.Fatal(err)
 		}
@@ -93,7 +102,11 @@ func TestYugabyteDBIntegration(t *testing.T) {
 				observedFailure = true
 			}
 			if failoverDone && observedFailure && err == nil && one == 1 {
-				return
+				var afterHost string
+				var afterPID int
+				if err := client.ScanRow(context.Background(), "SELECT inet_server_addr()::text, pg_backend_pid()", nil, &afterHost, &afterPID); err == nil && afterHost != beforeHost && afterPID != beforePID {
+					return
+				}
 			}
 			if time.Now().After(deadline) {
 				t.Fatalf("same pool did not recover after failover: %v", err)
