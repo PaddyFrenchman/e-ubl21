@@ -98,13 +98,14 @@ for index in 0 1 2; do
   forwarders+=("$!")
 done
 for index in 0 1 2; do until nc -z 127.0.0.1 "$((base_port + index))"; do sleep 1; done; done
-go run "$root/devsetup/ha-tcp-proxy.go" -backends="127.0.0.1:$base_port,127.0.0.1:$((base_port + 1)),127.0.0.1:$((base_port + 2))" >"$tmp/proxy-address" 2>"$artifact_dir/tcp-proxy.log" &
+backend_file="$tmp/proxy-backends"
+printf '127.0.0.1:%s\n' "$base_port" >"$backend_file"
+all_backends="127.0.0.1:$base_port,127.0.0.1:$((base_port + 1)),127.0.0.1:$((base_port + 2))"
+go run "$root/devsetup/ha-tcp-proxy.go" -backends-file="$backend_file" >"$tmp/proxy-address" 2>"$artifact_dir/tcp-proxy.log" &
 proxy_pid=$!
 trap 'kill "$proxy_pid" 2>/dev/null || true; cleanup_forwarders; cleanup' EXIT
 deadline=$((SECONDS + 60)); until [[ -s "$tmp/proxy-address" ]]; do (( SECONDS < deadline )) || { echo "TCP HA gateway did not start" >&2; exit 1; }; sleep 1; done
 proxy_port="$(sed 's/.*://' "$tmp/proxy-address")"
-expected_host="$(kubectl -n eubl21-yb-zone-a get pod yb-tserver-0 -o jsonpath='{.status.podIP}')"
-[[ -n "$expected_host" ]] || { echo "zone-a tserver pod IP is missing" >&2; exit 1; }
 # pgx accepts TLS file paths as URL query values; percent-encode them so the
 # generated path cannot be mistaken for URL syntax.
 url="postgresql://yugabyte:yugabyte@127.0.0.1:$proxy_port/yugabyte?sslmode=verify-ca&sslrootcert=$(printf %s "$tmp/ca.crt" | sed 's#/#%2F#g')&sslcert=$(printf %s "$tmp/tls.crt" | sed 's#/#%2F#g')&sslkey=$(printf %s "$tmp/tls.key" | sed 's#/#%2F#g')"
@@ -119,6 +120,6 @@ EUBL21_HA_DATABASE_URL="$url" \
 EUBL21_HA_TSERVER_POD=yb-tserver-0 EUBL21_HA_TSERVER_NAMESPACE=eubl21-yb-zone-a \
 EUBL21_HA_MASTER_POD=yb-master-0 EUBL21_HA_MASTER_NAMESPACE=eubl21-yb-zone-a \
 EUBL21_HA_READY_SELECTOR='app=yb-tserver' EUBL21_HA_TSERVER_COUNT=3 \
-EUBL21_HA_FAILURE_NODE="k3d-$cluster-agent-0" EUBL21_HA_FAILOVER_EXPECTED_HOST="$expected_host" \
+EUBL21_HA_FAILURE_NODE="k3d-$cluster-agent-0" EUBL21_HA_BACKENDS_FILE="$backend_file" EUBL21_HA_FAILOVER_BACKENDS="$all_backends" \
 "$root/devsetup/test-production-yugabytedb-ha-integration.sh"
 echo "K3d three-zone YugabyteDB TLS HA qualification passed."

@@ -9,7 +9,8 @@ set -Eeuo pipefail
 : "${EUBL21_HA_MASTER_POD:?set the master pod to terminate}"
 : "${EUBL21_HA_MASTER_NAMESPACE:?set its namespace}"
 : "${EUBL21_HA_FAILURE_NODE:?set the node for the isolated failure domain}"
-: "${EUBL21_HA_FAILOVER_EXPECTED_HOST:?set the selected tserver pod IP}"
+: "${EUBL21_HA_BACKENDS_FILE:?set the local HA gateway backend file}"
+: "${EUBL21_HA_FAILOVER_BACKENDS:?set the post-failure HA gateway backends}"
 expected_tservers="${EUBL21_HA_TSERVER_COUNT:-3}"
 timeout="${EUBL21_HA_TIMEOUT:-10m}"
 
@@ -21,11 +22,16 @@ ready_file="$(mktemp)"; done_file="$(mktemp)"; rm -f "$ready_file" "$done_file"
 test_pid=""
 cleanup() { [[ -z "$test_pid" ]] || kill "$test_pid" 2>/dev/null || true; kubectl uncordon "$EUBL21_HA_FAILURE_NODE" >/dev/null 2>&1 || true; rm -f "$ready_file" "$done_file"; }
 trap cleanup EXIT
-EUBL21_TEST_DATABASE_URL="$EUBL21_HA_DATABASE_URL" EUBL21_TEST_DATABASE_FAILOVER_READY_FILE="$ready_file" EUBL21_TEST_DATABASE_FAILOVER_DONE_FILE="$done_file" EUBL21_TEST_DATABASE_FAILOVER_EXPECTED_HOST="$EUBL21_HA_FAILOVER_EXPECTED_HOST" \
+EUBL21_TEST_DATABASE_URL="$EUBL21_HA_DATABASE_URL" EUBL21_TEST_DATABASE_FAILOVER_READY_FILE="$ready_file" EUBL21_TEST_DATABASE_FAILOVER_DONE_FILE="$done_file" \
   go test ./database -run '^TestYugabyteDBIntegration$/same_pool_reconnects_after_failover' -count=1 &
 test_pid=$!
 deadline=$((SECONDS + 60))
 until [[ -f "$ready_file" ]]; do (( SECONDS < deadline )) || { echo "same-pool test did not establish its connection" >&2; exit 1; }; sleep 1; done
+# Before this marker the gateway exposed zone-a only, so this pool's existing
+# connection is necessarily served by the tserver being terminated.
+next_backends="$(mktemp "${EUBL21_HA_BACKENDS_FILE}.XXXX")"
+printf '%s\n' "$EUBL21_HA_FAILOVER_BACKENDS" >"$next_backends"
+mv "$next_backends" "$EUBL21_HA_BACKENDS_FILE"
 kubectl cordon "$EUBL21_HA_FAILURE_NODE"
 kubectl delete pod "$EUBL21_HA_TSERVER_POD" -n "$EUBL21_HA_TSERVER_NAMESPACE" --wait=true
 touch "$done_file"

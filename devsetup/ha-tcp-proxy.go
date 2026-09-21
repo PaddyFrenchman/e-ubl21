@@ -9,15 +9,17 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"strings"
 )
 
 func main() {
 	listen := flag.String("listen", "127.0.0.1:0", "listener address")
 	backends := flag.String("backends", "", "comma-separated ordered backends")
+	backendsFile := flag.String("backends-file", "", "file containing comma-separated ordered backends")
 	flag.Parse()
-	if *backends == "" {
-		log.Fatal("-backends is required")
+	if *backends == "" && *backendsFile == "" {
+		log.Fatal("-backends or -backends-file is required")
 	}
 	ln, err := net.Listen("tcp", *listen)
 	if err != nil {
@@ -30,7 +32,17 @@ func main() {
 			log.Print(err)
 			continue
 		}
-		go proxy(client, strings.Split(*backends, ","))
+		current := *backends
+		if *backendsFile != "" {
+			contents, readErr := os.ReadFile(*backendsFile)
+			if readErr != nil {
+				_ = client.Close()
+				log.Print(readErr)
+				continue
+			}
+			current = strings.TrimSpace(string(contents))
+		}
+		go proxy(client, strings.Split(current, ","))
 	}
 }
 
