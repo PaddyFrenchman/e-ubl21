@@ -1,0 +1,68 @@
+oldNamingStyle: true
+isMultiAz: true
+AZ: zone-b
+masterAddresses: "yb-master-0.yb-masters.eubl21-yb-zone-a.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-b.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-c.svc.cluster.local:7100"
+enableLoadBalancer: false
+disableYsql: false
+tls:
+  enabled: true
+  nodeToNode: true
+  clientToServer: true
+  insecure: false
+  certManager:
+    enabled: true
+    bootstrapSelfsigned: false
+    useCustomIssuer: true
+    customIssuer:
+      kind: ClusterIssuer
+      name: eubl21-yugabytedb-ca
+      group: cert-manager.io
+replicas:
+  master: 1
+  tserver: 1
+  totalMasters: 3
+storage:
+  ephemeral: false
+  master:
+    count: 1
+    size: 100Gi
+    storageClass: fast-ssd
+  tserver:
+    count: 1
+    size: 500Gi
+    storageClass: fast-ssd
+resource:
+  master:
+    requests: {cpu: "2", memory: 8Gi}
+    limits: {cpu: "2", memory: 8Gi}
+  tserver:
+    requests: {cpu: "4", memory: 16Gi}
+    limits: {cpu: "8", memory: 32Gi}
+gflags:
+  master:
+    placement_cloud: kubernetes
+    placement_region: primary-region
+    placement_zone: zone-b
+  tserver:
+    ysql_enable_auth: "true"
+    placement_cloud: kubernetes
+    placement_region: primary-region
+    placement_zone: zone-b
+master:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values: [zone-b]
+tserver:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values: [zone-b]

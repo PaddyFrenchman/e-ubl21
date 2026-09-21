@@ -36,7 +36,7 @@ Pulumi
    +--> IAM
    +--> ECR
    +--> S3
-   +--> RDS / Aurora
+   +--> YugabyteDB/YSQL (three-AZ RF-3)
    +--> Load Balancing
    +--> other AWS services
    |
@@ -254,7 +254,7 @@ The recommended Azure deployment stack is:
 - **Microsoft Entra ID**, **Managed Identities**, and **AKS Workload Identity** for service identity;
 - **Azure Key Vault** for secrets and keys;
 - **Azure Blob Storage** for durable object storage;
-- **Azure Database for PostgreSQL Flexible Server** for managed PostgreSQL;
+- **YugabyteDB/YSQL** in a three-AZ RF-3 Kubernetes topology;
 - **Azure Service Bus** when a managed Azure queue is preferred, while retaining the option to run NATS JetStream for cross-cloud runtime consistency;
 - **Azure Load Balancer** and/or **Application Gateway** for ingress and external traffic;
 - **Azure DNS** for public or private DNS;
@@ -272,7 +272,7 @@ The recommended Azure deployment stack is:
 | Container registry | Amazon ECR | Azure Container Registry (ACR) |
 | Network | VPC | Virtual Network (VNet) |
 | Object storage | Amazon S3 | Azure Blob Storage |
-| PostgreSQL | Amazon RDS / Aurora PostgreSQL | Azure Database for PostgreSQL Flexible Server |
+| Relational database | YugabyteDB/YSQL (three-AZ RF-3) | YugabyteDB/YSQL (three-AZ RF-3) |
 | Queue / messaging | Amazon SQS or NATS | Azure Service Bus or NATS |
 | Identity | AWS IAM | Microsoft Entra ID + Managed Identities |
 | Workload identity | IAM Roles for Service Accounts / Pod Identity | AKS Workload Identity |
@@ -306,7 +306,7 @@ Pulumi Azure Native
    +--> Managed Identities
    +--> Key Vault
    +--> Blob Storage
-   +--> PostgreSQL Flexible Server
+   +--> YugabyteDB/YSQL (three-AZ RF-3)
    +--> Service Bus
    +--> Load Balancer / Application Gateway
    +--> Azure DNS
@@ -418,10 +418,12 @@ Applications should access Blob Storage through managed workload identity rather
 The managed relational database target is:
 
 ```text
-Azure Database for PostgreSQL Flexible Server
+YugabyteDB/YSQL deployed across three availability zones
 ```
 
-It provides the Azure equivalent of the managed PostgreSQL role played by RDS/Aurora in the AWS architecture.
+It provides the same YSQL contract as AWS. See
+[`docs/YUGABYTEDB-HA-ARCHITECTURE.md`](docs/YUGABYTEDB-HA-ARCHITECTURE.md)
+for placement, TLS, credentials, scaling and multi-region policy.
 
 The same logical e-ubl21 database model should be used on both clouds, including the project's multi-tenant customer identifier strategy.
 

@@ -808,7 +808,7 @@ A compliant document may still fail delivery because of routing, network or reci
 
 The current Object Store + KV + JetStream design is strong for asynchronous document processing and should be retained for artifacts and work queues.
 
-The generic API introduces durable business configuration that is better suited to PostgreSQL:
+The generic API introduces durable business configuration that is better suited to YugabyteDB/YSQL:
 
 - tenants;
 - users/authorization mappings;
@@ -825,7 +825,7 @@ The generic API introduces durable business configuration that is better suited 
 Recommended split:
 
 ```text
-PostgreSQL
+YugabyteDB/YSQL
   -> business metadata, tenant data, canonical records, routing config
 
 JetStream Object Store
