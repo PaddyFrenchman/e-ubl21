@@ -41,12 +41,14 @@ echo "Creating disposable K3d cluster (timeout: $cluster_create_timeout)..."
   --runtime-ulimit nofile=1048576:1048576 \
   --k3s-arg '--disable=traefik@server:0' \
   --kubeconfig-update-default=false --kubeconfig-switch-context=false
-for n in 0 1 2; do
-  "$k3d_bin" node create "$cluster-agent-$n" --cluster "$cluster" --role agent --wait --timeout "$cluster_create_timeout" \
-    --runtime-ulimit nofile=1048576:1048576
-done
 "$k3d_bin" kubeconfig get "$cluster" >"$kubeconfig"
 export KUBECONFIG="$kubeconfig"
+for n in 0 1 2; do
+  agent_node="k3d-$cluster-agent-$n-0"
+  "$k3d_bin" node create "$cluster-agent-$n" --cluster "$cluster" --role agent --wait=false \
+    --runtime-ulimit nofile=1048576:1048576
+  kubectl wait --for=condition=Ready "node/$agent_node" --timeout="$cluster_create_timeout"
+done
 echo "Waiting for all K3d nodes to register..."
 deadline=$((SECONDS + 300))
 while true; do
@@ -60,9 +62,10 @@ while true; do
 done
 zones=(zone-a zone-b zone-c)
 for n in 0 1 2; do
-  kubectl label node "k3d-$cluster-agent-$n" topology.kubernetes.io/zone="${zones[$n]}" --overwrite
+  agent_node="k3d-$cluster-agent-$n-0"
+  kubectl label node "$agent_node" topology.kubernetes.io/zone="${zones[$n]}" --overwrite
   # The pinned chart currently renders this deprecated selector as well.
-  kubectl label node "k3d-$cluster-agent-$n" failure-domain.beta.kubernetes.io/zone="${zones[$n]}" --overwrite
+  kubectl label node "$agent_node" failure-domain.beta.kubernetes.io/zone="${zones[$n]}" --overwrite
 done
 helm repo add jetstack https://charts.jetstack.io --force-update >/dev/null
 helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set crds.enabled=true --wait --timeout 10m
@@ -153,6 +156,6 @@ EUBL21_HA_DATABASE_URL="$url" \
 EUBL21_HA_TSERVER_POD=yb-tserver-0 EUBL21_HA_TSERVER_NAMESPACE=eubl21-yb-zone-a \
 EUBL21_HA_MASTER_POD=yb-master-0 EUBL21_HA_MASTER_NAMESPACE=eubl21-yb-zone-a \
 EUBL21_HA_READY_SELECTOR='app=yb-tserver' EUBL21_HA_TSERVER_COUNT=3 \
-EUBL21_HA_FAILURE_NODE="k3d-$cluster-agent-0" EUBL21_HA_BACKENDS_FILE="$backend_file" EUBL21_HA_FAILOVER_BACKENDS="$all_backends" \
+EUBL21_HA_FAILURE_NODE="k3d-$cluster-agent-0-0" EUBL21_HA_BACKENDS_FILE="$backend_file" EUBL21_HA_FAILOVER_BACKENDS="$all_backends" \
 "$root/devsetup/test-production-yugabytedb-ha-integration.sh"
 echo "K3d three-zone YugabyteDB TLS HA qualification passed."
