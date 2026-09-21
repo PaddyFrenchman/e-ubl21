@@ -30,7 +30,12 @@ trap cleanup EXIT
 command -v helm >/dev/null; command -v kubectl >/dev/null; [[ -x "$k3d_bin" ]]
 mkdir -p "$artifact_dir"
 "$root/devsetup/test-production-yugabytedb-ha.sh"
-"$k3d_bin" cluster create "$cluster" --agents 3 --wait
+cluster_create_timeout="${EUBL21_HA_K3D_CREATE_TIMEOUT:-5m}"
+echo "Creating disposable K3d cluster (timeout: $cluster_create_timeout)..."
+"$k3d_bin" cluster create "$cluster" --agents 3 --wait --timeout "$cluster_create_timeout" \
+  --runtime-ulimit nofile=1048576:1048576 \
+  --k3s-arg '--disable=traefik@server:0' \
+  --kubeconfig-update-default=false --kubeconfig-switch-context=false
 "$k3d_bin" kubeconfig get "$cluster" >"$kubeconfig"
 export KUBECONFIG="$kubeconfig"
 zones=(zone-a zone-b zone-c)
