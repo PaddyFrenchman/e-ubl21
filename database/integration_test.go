@@ -25,9 +25,17 @@ func TestYugabyteDBIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		client, err := appdb.Connect(context.Background(), config)
-		if err != nil {
-			t.Fatal(err)
+		connectDeadline := time.Now().Add(2 * time.Minute)
+		var client *appdb.Client
+		for {
+			client, err = appdb.Connect(context.Background(), config)
+			if err == nil {
+				break
+			}
+			if time.Now().After(connectDeadline) {
+				t.Fatalf("same pool could not establish its initial connection: %v", err)
+			}
+			time.Sleep(500 * time.Millisecond)
 		}
 		defer client.Close()
 		var preFailoverBackend int
@@ -74,9 +82,17 @@ func TestYugabyteDBIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		client, err := appdb.Connect(context.Background(), config)
-		if err != nil {
-			t.Fatal(err)
+		connectDeadline := time.Now().Add(2 * time.Minute)
+		var client *appdb.Client
+		for {
+			client, err = appdb.Connect(context.Background(), config)
+			if err == nil {
+				break
+			}
+			if time.Now().After(connectDeadline) {
+				t.Fatalf("same pool could not establish its initial connection: %v", err)
+			}
+			time.Sleep(500 * time.Millisecond)
 		}
 		defer client.Close()
 		if err := os.WriteFile(readyFile, []byte("pool-ready\n"), 0600); err != nil {
