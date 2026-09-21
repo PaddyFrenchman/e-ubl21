@@ -28,11 +28,16 @@ cleanup() {
 }
 trap cleanup EXIT
 command -v helm >/dev/null; command -v kubectl >/dev/null; [[ -x "$k3d_bin" ]]
+[[ "$("$k3d_bin" version | head -n1)" == "k3d version v5.9.0" ]] || {
+  echo "K3d v5.9.0 release binary is required; development builds are unsupported" >&2
+  exit 2
+}
 mkdir -p "$artifact_dir"
 "$root/devsetup/test-production-yugabytedb-ha.sh"
 cluster_create_timeout="${EUBL21_HA_K3D_CREATE_TIMEOUT:-5m}"
 echo "Creating disposable K3d cluster (timeout: $cluster_create_timeout)..."
 "$k3d_bin" cluster create "$cluster" --agents 3 --wait --timeout "$cluster_create_timeout" \
+  --image rancher/k3s:v1.32.5-k3s1 \
   --runtime-ulimit nofile=1048576:1048576 \
   --k3s-arg '--disable=traefik@server:0' \
   --kubeconfig-update-default=false --kubeconfig-switch-context=false
