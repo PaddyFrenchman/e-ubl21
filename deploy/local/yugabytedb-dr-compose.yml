@@ -1,0 +1,13 @@
+# Disposable development-only source and restore-target universes. No volumes
+# are declared: every run begins with clean database state.
+services:
+  source:
+    image: yugabytedb/yugabyte:2025.2.6.0-b111
+    hostname: eubl21-dr-source
+    command: [bin/yugabyted, start, --base_dir=/tmp/yb, --background=false, --advertise_address=eubl21-dr-source, --ysql_enable_auth=true]
+  target:
+    image: yugabytedb/yugabyte:2025.2.6.0-b111
+    hostname: eubl21-dr-target
+    command: [bin/yugabyted, start, --base_dir=/tmp/yb, --background=false, --advertise_address=eubl21-dr-target, --ysql_enable_auth=true]
+    ports:
+      - "127.0.0.1:${EUBL21_DR_LOCAL_TARGET_PORT:-15435}:5433"

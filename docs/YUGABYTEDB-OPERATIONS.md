@@ -44,6 +44,12 @@ production exercise, run the YBC snapshot restore first, then this logical
 drill as the independent schema/data/application-access proof. Store the
 generated SHA-256 sidecar and command output as drill evidence.
 
+For development-only evidence without external infrastructure, run
+`make yugabytedb-dr-local-test`. It starts disposable source and target
+containers, retains the dump on the host outside both containers, restores it,
+and runs the application database integration test. It is explicitly not a
+substitute for the production off-cluster drill.
+
 ## Security
 
 TLS is mandatory for client-to-server and node-to-node traffic. The production
