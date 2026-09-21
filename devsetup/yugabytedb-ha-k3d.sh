@@ -36,11 +36,15 @@ mkdir -p "$artifact_dir"
 "$root/devsetup/test-production-yugabytedb-ha.sh"
 cluster_create_timeout="${EUBL21_HA_K3D_CREATE_TIMEOUT:-5m}"
 echo "Creating disposable K3d cluster (timeout: $cluster_create_timeout)..."
-"$k3d_bin" cluster create "$cluster" --agents 3 --wait=false --timeout "$cluster_create_timeout" \
+"$k3d_bin" cluster create "$cluster" --agents 0 --wait --timeout "$cluster_create_timeout" \
   --image rancher/k3s:v1.32.5-k3s1 \
   --runtime-ulimit nofile=1048576:1048576 \
   --k3s-arg '--disable=traefik@server:0' \
   --kubeconfig-update-default=false --kubeconfig-switch-context=false
+for n in 0 1 2; do
+  "$k3d_bin" node create "$cluster-agent-$n" --cluster "$cluster" --role agent --wait --timeout "$cluster_create_timeout" \
+    --runtime-ulimit nofile=1048576:1048576
+done
 "$k3d_bin" kubeconfig get "$cluster" >"$kubeconfig"
 export KUBECONFIG="$kubeconfig"
 echo "Waiting for all K3d nodes to register..."
