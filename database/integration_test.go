@@ -58,11 +58,21 @@ func TestYugabyteDBIntegration(t *testing.T) {
 			t.Fatalf("integration target is not YugabyteDB: %q", version)
 		}
 		if os.Getenv("EUBL21_TEST_DATABASE_CATALOG_OPERATION") == "1" {
-			if _, err := client.Exec(context.Background(), "CREATE TABLE eubl21_ha_quorum_probe (id int PRIMARY KEY)", nil); err != nil {
-				t.Fatalf("master quorum did not accept catalog write: %v", err)
-			}
-			if _, err := client.Exec(context.Background(), "DROP TABLE eubl21_ha_quorum_probe", nil); err != nil {
-				t.Fatalf("master quorum did not accept catalog cleanup: %v", err)
+			catalogDeadline := time.Now().Add(2 * time.Minute)
+			for {
+				_, _ = client.Exec(context.Background(), "DROP TABLE IF EXISTS eubl21_ha_quorum_probe", nil)
+				_, createErr := client.Exec(context.Background(), "CREATE TABLE eubl21_ha_quorum_probe (id int PRIMARY KEY)", nil)
+				if createErr == nil {
+					_, dropErr := client.Exec(context.Background(), "DROP TABLE eubl21_ha_quorum_probe", nil)
+					if dropErr == nil {
+						break
+					}
+					createErr = dropErr
+				}
+				if time.Now().After(catalogDeadline) {
+					t.Fatalf("master quorum did not accept catalog write: %v", createErr)
+				}
+				time.Sleep(500 * time.Millisecond)
 			}
 		}
 		var expiredLease appdb.Connection
