@@ -6,6 +6,7 @@ set -Eeuo pipefail
 : "${EUBL21_DR_SOURCE_URL:?set the source YSQL URL}"
 : "${EUBL21_DR_RESTORE_URL:?set the clean restore-target YSQL URL}"
 : "${EUBL21_DR_BACKUP_DIR:?set an off-machine/off-cluster mounted backup directory}"
+run_regression="${EUBL21_DR_RUN_REGRESSION:-0}"
 ysql_dump_bin="${EUBL21_DR_YSQL_DUMP:-ysql_dump}"
 ysqlsh_bin="${EUBL21_DR_YSQLSH:-ysqlsh}"
 
@@ -17,6 +18,9 @@ ysqlsh_bin="${EUBL21_DR_YSQLSH:-ysqlsh}"
 }
 command -v "$ysql_dump_bin" >/dev/null
 command -v "$ysqlsh_bin" >/dev/null
+[[ "$run_regression" == "0" || "$run_regression" == "1" ]] || {
+  echo "EUBL21_DR_RUN_REGRESSION must be 0 or 1" >&2; exit 2;
+}
 
 umask 077
 run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"
@@ -53,5 +57,14 @@ fi
 "$ysqlsh_bin" "$EUBL21_DR_RESTORE_URL" -Atqc \
   "SELECT payload FROM eubl21_dr_qualification WHERE id = 128" | \
   grep -Fxq 'eubl21-yugabytedb-dr-qualification'
+
+# Exercise the product's real pgx client after restoration, not only an admin
+# shell. This verifies the recovered endpoint is usable by e-ubl21.
+EUBL21_TEST_DATABASE_URL="$EUBL21_DR_RESTORE_URL" \
+  go test ./database -run '^TestYugabyteDBIntegration$' -count=1
+
+if [[ "$run_regression" == "1" ]]; then
+  ./run-regression-tests.sh
+fi
 
 echo "YugabyteDB DR drill passed; retained backup: $backup"

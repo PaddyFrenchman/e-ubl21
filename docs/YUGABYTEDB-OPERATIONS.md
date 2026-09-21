@@ -34,6 +34,7 @@ against the target. The executable logical drill is:
 EUBL21_DR_SOURCE_URL='postgresql://...' \
 EUBL21_DR_RESTORE_URL='postgresql://...' \
 EUBL21_DR_BACKUP_DIR=/mnt/off-cluster-backups/e-ubl21 \
+EUBL21_DR_RUN_REGRESSION=1 \
 ./devsetup/yugabytedb-dr-drill.sh
 ```
 
