@@ -110,10 +110,18 @@ proxy_port="$(sed 's/.*://' "$tmp/proxy-address")"
 # generated path cannot be mistaken for URL syntax.
 url="postgresql://yugabyte:yugabyte@127.0.0.1:$proxy_port/yugabyte?sslmode=verify-ca&sslrootcert=$(printf %s "$tmp/ca.crt" | sed 's#/#%2F#g')&sslcert=$(printf %s "$tmp/tls.crt" | sed 's#/#%2F#g')&sslkey=$(printf %s "$tmp/tls.key" | sed 's#/#%2F#g')"
 # Kubernetes marks the StatefulSet Ready before the chart's final tserver
-# startup delay. Do not race that delay with the coordinated failover test.
-deadline=$((SECONDS + 3 * 60))
-until EUBL21_TEST_DATABASE_URL="$url" go test ./database -run '^TestYugabyteDBIntegration$/connect_and_query$' -count=1 >/dev/null 2>&1; do
-  (( SECONDS < deadline )) || { echo "YSQL did not become ready through the TLS HA gateway" >&2; exit 1; }
+# startup delay and a newly formed RF-3 universe can take several minutes to
+# elect leaders. Do not race that process with the coordinated failover test.
+ysql_ready_log="$artifact_dir/ysql-readiness.log"
+ysql_ready_timeout_seconds="${EUBL21_HA_YSQL_READY_TIMEOUT_SECONDS:-600}"
+[[ "$ysql_ready_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || { echo "EUBL21_HA_YSQL_READY_TIMEOUT_SECONDS must be a positive integer" >&2; exit 2; }
+deadline=$((SECONDS + ysql_ready_timeout_seconds))
+until EUBL21_TEST_DATABASE_URL="$url" go test ./database -run '^TestYugabyteDBIntegration$/connect_and_query$' -count=1 >"$ysql_ready_log" 2>&1; do
+  if (( SECONDS >= deadline )); then
+    cat "$ysql_ready_log" >&2
+    echo "YSQL did not become ready through the TLS HA gateway within ${ysql_ready_timeout_seconds}s" >&2
+    exit 1
+  fi
   sleep 2
 done
 EUBL21_HA_DATABASE_URL="$url" \
