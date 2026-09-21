@@ -68,7 +68,9 @@ func TestYugabyteDBIntegration(t *testing.T) {
 		if readyFile == "" || doneFile == "" {
 			t.Skip("set failover ready and done files for a coordinated live failover test")
 		}
-		config, err := appdb.ParseConfig(rawURL)
+		settings := appdb.DefaultSettings()
+		settings.MaxConnections = 1
+		config, err := appdb.ParseConfigWithSettings(rawURL, settings)
 		if err != nil {
 			t.Fatal(err)
 		}
