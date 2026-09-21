@@ -26,7 +26,7 @@ The production reference is the official YugabyteDB Helm chart installed once pe
  PVCs on independent storage PVCs on independent storage PVCs on independent storage
 ```
 
-Use one zone-specific namespace/release for each zone. Cluster-autoscaler scale-down is disabled for database nodes. Every database pod has required pod anti-affinity and topology spread constraints against `topology.kubernetes.io/zone` (or a documented rack label on-prem), plus node affinity to its intended domain. Do not schedule two replicas of the same universe on one host, storage array, rack, or AZ.
+Use one zone-specific namespace/release for each zone. Cluster-autoscaler scale-down is disabled for database nodes. Each zone release has required node affinity to its intended failure domain. The YugabyteDB Helm chart additionally applies preferred pod anti-affinity by hostname. In the reference topology, one master and one tserver are deployed per zone-specific release, so failure-domain separation is enforced by the required zone node affinity. Do not schedule two replicas of the same universe on one host, storage array, rack, or AZ.
 
 Start with per-node reservations of master request/limit 2 CPU / 8 GiB and tserver request 4 CPU / 16 GiB, limit 8 CPU / 32 GiB; revise them only with workload evidence. Every master PVC starts at 100 GiB and every tserver PVC at 500 GiB of SSD-backed, provisioned IOPS storage. Volumes must support retained PVC recovery, encryption at rest, snapshots, and the #128 backup/restore policy. Maintain 30% free tserver space for compaction, re-replication and repair.
 
