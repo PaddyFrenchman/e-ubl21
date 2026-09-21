@@ -21,6 +21,13 @@ func TestYugabyteDBIntegration(t *testing.T) {
 	t.Run("connect and query", func(t *testing.T) {
 		settings := appdb.DefaultSettings()
 		settings.MaxConnections = 1
+		// Catalog changes can take longer than the application's ordinary
+		// request budget while a new RF-3 universe creates its initial
+		// tablets. This opt-in live qualification must distinguish that from
+		// a missing master quorum without weakening the product default.
+		if os.Getenv("EUBL21_TEST_DATABASE_CATALOG_OPERATION") == "1" {
+			settings.QueryTimeout = 30 * time.Second
+		}
 		config, err := appdb.ParseConfigWithSettings(rawURL, settings)
 		if err != nil {
 			t.Fatal(err)
@@ -60,10 +67,10 @@ func TestYugabyteDBIntegration(t *testing.T) {
 		if os.Getenv("EUBL21_TEST_DATABASE_CATALOG_OPERATION") == "1" {
 			catalogDeadline := time.Now().Add(2 * time.Minute)
 			for {
-				_, _ = client.Exec(context.Background(), "DROP TABLE IF EXISTS eubl21_ha_quorum_probe", nil)
-				_, createErr := client.Exec(context.Background(), "CREATE TABLE eubl21_ha_quorum_probe (id int PRIMARY KEY)", nil)
+				_, _ = client.Exec(context.Background(), "DROP TABLE IF EXISTS eubl21_ha_quorum_probe")
+				_, createErr := client.Exec(context.Background(), "CREATE TABLE eubl21_ha_quorum_probe (id int PRIMARY KEY)")
 				if createErr == nil {
-					_, dropErr := client.Exec(context.Background(), "DROP TABLE eubl21_ha_quorum_probe", nil)
+					_, dropErr := client.Exec(context.Background(), "DROP TABLE eubl21_ha_quorum_probe")
 					if dropErr == nil {
 						break
 					}

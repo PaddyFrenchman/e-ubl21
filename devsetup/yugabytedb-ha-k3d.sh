@@ -8,9 +8,27 @@ run_id="${EUBL21_HA_RUN_ID:-$(date -u +%y%m%d%H%M%S)-$$}"
 cluster="${EUBL21_HA_K3D_CLUSTER:-eubl21-ha-$run_id}"
 tmp="$(mktemp -d)"; kubeconfig="$tmp/kubeconfig"
 artifact_dir="${ARTIFACT_DIR:-$root/regression-results/yugabytedb-ha/$run_id}"
+master_addresses="yb-master-0.yb-masters.eubl21-yb-zone-a.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-b.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-c.svc.cluster.local:7100"
+capture_master_diagnostics() {
+  local ns
+  for ns in eubl21-yb-zone-a eubl21-yb-zone-b eubl21-yb-zone-c; do
+    kubectl -n "$ns" exec yb-master-0 -c yb-master -- \
+      /home/yugabyte/master/bin/yb-admin --master_addresses="$master_addresses" \
+      --certs_dir_name=/opt/certs/yugabyte list_all_masters \
+      >"$artifact_dir/$ns-master-membership.txt" 2>&1 || true
+    kubectl -n "$ns" exec yb-master-0 -c yb-master -- sh -c \
+      'for log in /mnt/disk0/yb-data/master/logs/*; do [ -f "$log" ] || continue; echo "--- $log"; tail -n 200 "$log"; done' \
+      >"$artifact_dir/$ns-master-internal.log" 2>&1 || true
+    kubectl -n "$ns" exec yb-tserver-0 -c yb-tserver -- sh -c \
+      'for log in /mnt/disk0/yb-data/tserver/logs/*; do [ -f "$log" ] || continue; echo "--- $log"; tail -n 200 "$log"; done' \
+      >"$artifact_dir/$ns-tserver-internal.log" 2>&1 || true
+  done
+}
 cleanup() {
   mkdir -p "$artifact_dir"
   if [[ -f "$kubeconfig" ]]; then
+    KUBECONFIG="$kubeconfig" kubectl get nodes -o wide >"$artifact_dir/nodes.txt" 2>&1 || true
+    KUBECONFIG="$kubeconfig" kubectl describe nodes >"$artifact_dir/nodes-describe.txt" 2>&1 || true
     KUBECONFIG="$kubeconfig" kubectl get pods -A -o wide >"$artifact_dir/pods.txt" 2>&1 || true
     KUBECONFIG="$kubeconfig" kubectl get events -A --sort-by=.lastTimestamp >"$artifact_dir/events.txt" 2>&1 || true
     KUBECONFIG="$kubeconfig" kubectl logs -n cert-manager -l app.kubernetes.io/instance=cert-manager --all-containers=true >"$artifact_dir/cert-manager.log" 2>&1 || true
@@ -20,9 +38,16 @@ cleanup() {
       KUBECONFIG="$kubeconfig" kubectl logs -n "$ns" -l app=yb-master --all-containers=true --prefix >"$artifact_dir/$ns-master.log" 2>&1 || true
       KUBECONFIG="$kubeconfig" kubectl logs -n "$ns" -l app=yb-tserver --all-containers=true --prefix >"$artifact_dir/$ns-tserver.log" 2>&1 || true
     done
+    capture_master_diagnostics
     helm list -A >"$artifact_dir/helm-releases.txt" 2>&1 || true
     kubectl get certificate,clusterissuer -A -o yaml >"$artifact_dir/tls-resources.yaml" 2>&1 || true
   fi
+  # An agent that fails before joining the API server has no Kubernetes pod or
+  # event with its K3s error. Retain its container log before cluster deletion.
+  for node in "server-0" "serverlb" "agent-0-0" "agent-1-0" "agent-2-0"; do
+    docker inspect "k3d-$cluster-$node" >"$artifact_dir/k3d-$node-inspect.json" 2>&1 || true
+    docker logs "k3d-$cluster-$node" >"$artifact_dir/k3d-$node.log" 2>&1 || true
+  done
   "$k3d_bin" cluster delete "$cluster" >/dev/null 2>&1 || true
   rm -rf "$tmp"
 }
@@ -46,11 +71,26 @@ echo "Creating disposable K3d cluster (timeout: $cluster_create_timeout)..."
 # retaining the generated port, certificate, and credentials unchanged.
 "$k3d_bin" kubeconfig get "$cluster" | sed 's#https://0\.0\.0\.0:#https://127.0.0.1:#' >"$kubeconfig"
 export KUBECONFIG="$kubeconfig"
+wait_for_node_ready() {
+  local node="$1" deadline=$((SECONDS + 300))
+  while true; do
+    if kubectl get "node/$node" >/dev/null 2>&1 &&
+      [[ "$(kubectl get "node/$node" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null)" == "True" ]]; then
+      return 0
+    fi
+    (( SECONDS < deadline )) || {
+      echo "K3d node $node did not register and become Ready within 5 minutes" >&2
+      return 1
+    }
+    sleep 2
+  done
+}
 for n in 0 1 2; do
   agent_node="k3d-$cluster-agent-$n-0"
   "$k3d_bin" node create "$cluster-agent-$n" --cluster "$cluster" --role agent --wait=false \
     --runtime-ulimit nofile=1048576:1048576
-  kubectl wait --for=condition=Ready "node/$agent_node" --timeout="$cluster_create_timeout"
+  echo "Waiting for K3d node $agent_node to become Ready..."
+  wait_for_node_ready "$agent_node"
 done
 echo "Waiting for all K3d nodes to register..."
 deadline=$((SECONDS + 300))
@@ -118,6 +158,7 @@ kubectl -n eubl21-yb-zone-a get secret yugabyte-tls-client-cert -o jsonpath='{.d
 kubectl -n eubl21-yb-zone-a get secret yugabyte-tls-client-cert -o jsonpath='{.data.tls\.key}' | base64 -d >"$tmp/tls.key"
 [[ -s "$tmp/tls.crt" && -s "$tmp/tls.key" ]] || { echo "generated TLS client secret is incomplete" >&2; exit 1; }
 chmod 0600 "$tmp/tls.key"
+capture_master_diagnostics
 
 base_port=$((20000 + RANDOM % 20000))
 forwarders=()
@@ -147,7 +188,11 @@ ysql_ready_log="$artifact_dir/ysql-readiness.log"
 ysql_ready_timeout_seconds="${EUBL21_HA_YSQL_READY_TIMEOUT_SECONDS:-600}"
 [[ "$ysql_ready_timeout_seconds" =~ ^[1-9][0-9]*$ ]] || { echo "EUBL21_HA_YSQL_READY_TIMEOUT_SECONDS must be a positive integer" >&2; exit 2; }
 deadline=$((SECONDS + ysql_ready_timeout_seconds))
-until EUBL21_TEST_DATABASE_URL="$url" go test ./database -run '^TestYugabyteDBIntegration$/connect_and_query$' -count=1 >"$ysql_ready_log" 2>&1; do
+# A successful SELECT can be served by an already-running tserver while the
+# master quorum is still electing a leader. Require a catalog write before
+# beginning either fault injection so the later master outage is measured from
+# a known-good control plane.
+until EUBL21_TEST_DATABASE_URL="$url" EUBL21_TEST_DATABASE_CATALOG_OPERATION=1 go test ./database -run '^TestYugabyteDBIntegration$/connect_and_query$' -count=1 >"$ysql_ready_log" 2>&1; do
   if (( SECONDS >= deadline )); then
     cat "$ysql_ready_log" >&2
     echo "YSQL did not become ready through the TLS HA gateway within ${ysql_ready_timeout_seconds}s" >&2
