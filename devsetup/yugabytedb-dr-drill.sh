@@ -10,6 +10,11 @@ run_regression="${EUBL21_DR_RUN_REGRESSION:-0}"
 ysql_dump_bin="${EUBL21_DR_YSQL_DUMP:-ysql_dump}"
 ysqlsh_bin="${EUBL21_DR_YSQLSH:-ysqlsh}"
 
+for endpoint in "$EUBL21_DR_SOURCE_URL" "$EUBL21_DR_RESTORE_URL"; do
+  [[ "$endpoint" != *"..."* && "$endpoint" != "postgresql://"*"@"*"..."* ]] || {
+    echo "DR URLs must be real, separately provisioned YSQL connection URLs; do not use the documentation placeholder" >&2; exit 2;
+  }
+done
 [[ "$EUBL21_DR_SOURCE_URL" != "$EUBL21_DR_RESTORE_URL" ]] || {
   echo "source and restore target URLs must be different" >&2; exit 2;
 }
