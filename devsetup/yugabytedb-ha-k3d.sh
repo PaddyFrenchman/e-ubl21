@@ -36,13 +36,24 @@ mkdir -p "$artifact_dir"
 "$root/devsetup/test-production-yugabytedb-ha.sh"
 cluster_create_timeout="${EUBL21_HA_K3D_CREATE_TIMEOUT:-5m}"
 echo "Creating disposable K3d cluster (timeout: $cluster_create_timeout)..."
-"$k3d_bin" cluster create "$cluster" --agents 3 --wait --timeout "$cluster_create_timeout" \
+"$k3d_bin" cluster create "$cluster" --agents 3 --wait=false --timeout "$cluster_create_timeout" \
   --image rancher/k3s:v1.32.5-k3s1 \
   --runtime-ulimit nofile=1048576:1048576 \
   --k3s-arg '--disable=traefik@server:0' \
   --kubeconfig-update-default=false --kubeconfig-switch-context=false
 "$k3d_bin" kubeconfig get "$cluster" >"$kubeconfig"
 export KUBECONFIG="$kubeconfig"
+echo "Waiting for all K3d nodes to register..."
+deadline=$((SECONDS + 300))
+while true; do
+  registered_nodes="$(kubectl get nodes --no-headers 2>/dev/null | wc -l || true)"
+  ready_nodes="$(kubectl get nodes --no-headers 2>/dev/null | awk '$2 == "Ready" { count++ } END { print count+0 }' || true)"
+  if [[ "$registered_nodes" -eq 4 && "$ready_nodes" -eq 4 ]]; then
+    break
+  fi
+  (( SECONDS < deadline )) || { echo "K3d nodes did not all register within 5 minutes (registered=$registered_nodes ready=$ready_nodes)" >&2; exit 1; }
+  sleep 2
+done
 zones=(zone-a zone-b zone-c)
 for n in 0 1 2; do
   kubectl label node "k3d-$cluster-agent-$n" topology.kubernetes.io/zone="${zones[$n]}" --overwrite
