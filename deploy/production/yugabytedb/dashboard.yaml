@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eubl21-yugabytedb-dashboard
+  namespace: monitoring
+  labels: {grafana_dashboard: "1"}
+data:
+  yugabytedb-overview.json: |
+    {"title":"e-ubl21 YugabyteDB","schemaVersion":39,"panels":[
+    {"type":"stat","title":"Scrape targets up","targets":[{"expr":"sum(up{namespace=~\"eubl21-yb-zone-[abc]\",app=~\"yb-master|yb-tserver\"})"}]},
+    {"type":"timeseries","title":"PVC free bytes","targets":[{"expr":"kubelet_volume_stats_available_bytes{namespace=~\"eubl21-yb-zone-[abc]\"}"}]},
+    {"type":"timeseries","title":"YSQL latency","targets":[{"expr":"histogram_quantile(0.99, sum(rate(handler_latency_bucket{server_type=\"yb_ysqlserver\"}[5m])) by (le))"}]}
+    ]}

@@ -21,6 +21,10 @@ replicas:
   master: 1
   tserver: 1
   totalMasters: 3
+ybc:
+  # Required for distributed snapshots to the external DR object store. Cloud
+  # access is supplied only through workload identity at deployment time.
+  enabled: true
 storage:
   ephemeral: false
   master:

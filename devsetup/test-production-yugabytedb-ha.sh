@@ -10,6 +10,7 @@ for zone in zone-a zone-b zone-c; do
   values="$root_dir/deploy/production/yugabytedb/$zone.yaml"
   ! rg -n 'REPLACE_|TODO|CHANGEME|<[^>]+>' "$values"
   rg -q 'enabled: true' "$values"
+	  rg -A3 '^ybc:' "$values" | rg -q 'enabled: true'
   rg -q 'bootstrapSelfsigned: false' "$values"
   rg -q 'useCustomIssuer: true' "$values"
   rg -q 'name: eubl21-yugabytedb-ca' "$values"

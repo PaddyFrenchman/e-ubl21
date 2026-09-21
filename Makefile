@@ -1,4 +1,4 @@
-.PHONY: docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify yugabytedb-compatibility-guard yugabytedb-ha-test on-prem-database-test on-prem-database-integration on-prem-database-upgrade-test on-prem-database-upgrade-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-report-test regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify yugabytedb-compatibility-guard yugabytedb-ha-test yugabytedb-dr-drill on-prem-database-test on-prem-database-integration on-prem-database-upgrade-test on-prem-database-upgrade-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-report-test regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Verify the genuine Docker Engine and official Compose plugin through a
 # disposable image/container/network/volume/bind-mount/health-check lifecycle.
@@ -41,6 +41,9 @@ yugabytedb-compatibility-guard:
 
 yugabytedb-ha-test:
 	./devsetup/yugabytedb-ha-k3d.sh
+
+yugabytedb-dr-drill:
+	./devsetup/yugabytedb-dr-drill.sh
 
 # Render the pinned on-prem YugabyteDB chart and installer-owned Jobs without
 # mutating a cluster. The integration target uses a disposable namespace.
