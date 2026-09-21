@@ -108,6 +108,13 @@ expected_host="$(kubectl -n eubl21-yb-zone-a get pod yb-tserver-0 -o jsonpath='{
 # pgx accepts TLS file paths as URL query values; percent-encode them so the
 # generated path cannot be mistaken for URL syntax.
 url="postgresql://yugabyte:yugabyte@127.0.0.1:$proxy_port/yugabyte?sslmode=verify-ca&sslrootcert=$(printf %s "$tmp/ca.crt" | sed 's#/#%2F#g')&sslcert=$(printf %s "$tmp/tls.crt" | sed 's#/#%2F#g')&sslkey=$(printf %s "$tmp/tls.key" | sed 's#/#%2F#g')"
+# Kubernetes marks the StatefulSet Ready before the chart's final tserver
+# startup delay. Do not race that delay with the coordinated failover test.
+deadline=$((SECONDS + 3 * 60))
+until EUBL21_TEST_DATABASE_URL="$url" go test ./database -run '^TestYugabyteDBIntegration$/connect_and_query$' -count=1 >/dev/null 2>&1; do
+  (( SECONDS < deadline )) || { echo "YSQL did not become ready through the TLS HA gateway" >&2; exit 1; }
+  sleep 2
+done
 EUBL21_HA_DATABASE_URL="$url" \
 EUBL21_HA_TSERVER_POD=yb-tserver-0 EUBL21_HA_TSERVER_NAMESPACE=eubl21-yb-zone-a \
 EUBL21_HA_MASTER_POD=yb-master-0 EUBL21_HA_MASTER_NAMESPACE=eubl21-yb-zone-a \
