@@ -41,7 +41,10 @@ echo "Creating disposable K3d cluster (timeout: $cluster_create_timeout)..."
   --runtime-ulimit nofile=1048576:1048576 \
   --k3s-arg '--disable=traefik@server:0' \
   --kubeconfig-update-default=false --kubeconfig-switch-context=false
-"$k3d_bin" kubeconfig get "$cluster" >"$kubeconfig"
+# K3d advertises the API listener's bind address (0.0.0.0) in this
+# environment. That is not a connectable client address; use loopback while
+# retaining the generated port, certificate, and credentials unchanged.
+"$k3d_bin" kubeconfig get "$cluster" | sed 's#https://0\.0\.0\.0:#https://127.0.0.1:#' >"$kubeconfig"
 export KUBECONFIG="$kubeconfig"
 for n in 0 1 2; do
   agent_node="k3d-$cluster-agent-$n-0"
