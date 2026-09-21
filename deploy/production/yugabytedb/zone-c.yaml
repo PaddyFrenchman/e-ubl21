@@ -26,11 +26,11 @@ storage:
   master:
     count: 1
     size: 100Gi
-    storageClass: REPLACE_WITH_SSD_STORAGE_CLASS
+    storageClass: fast-ssd
   tserver:
     count: 1
     size: 500Gi
-    storageClass: REPLACE_WITH_SSD_STORAGE_CLASS
+    storageClass: fast-ssd
 resource:
   master:
     requests: {cpu: "2", memory: 8Gi}
@@ -41,12 +41,12 @@ resource:
 gflags:
   master:
     placement_cloud: kubernetes
-    placement_region: REPLACE_WITH_REGION
+    placement_region: primary-region
     placement_zone: zone-c
   tserver:
     ysql_enable_auth: "true"
     placement_cloud: kubernetes
-    placement_region: REPLACE_WITH_REGION
+    placement_region: primary-region
     placement_zone: zone-c
 master:
   affinity:

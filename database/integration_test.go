@@ -57,6 +57,14 @@ func TestYugabyteDBIntegration(t *testing.T) {
 		if !strings.Contains(version, "YugabyteDB") && !strings.Contains(version, "-YB-") {
 			t.Fatalf("integration target is not YugabyteDB: %q", version)
 		}
+		if os.Getenv("EUBL21_TEST_DATABASE_CATALOG_OPERATION") == "1" {
+			if _, err := client.Exec(context.Background(), "CREATE TABLE eubl21_ha_quorum_probe (id int PRIMARY KEY)", nil); err != nil {
+				t.Fatalf("master quorum did not accept catalog write: %v", err)
+			}
+			if _, err := client.Exec(context.Background(), "DROP TABLE eubl21_ha_quorum_probe", nil); err != nil {
+				t.Fatalf("master quorum did not accept catalog cleanup: %v", err)
+			}
+		}
 		var expiredLease appdb.Connection
 		if err := client.WithConn(context.Background(), func(connection appdb.Connection) error {
 			expiredLease = connection
@@ -107,7 +115,7 @@ func TestYugabyteDBIntegration(t *testing.T) {
 			if _, statErr := os.Stat(doneFile); statErr == nil {
 				failoverDone = true
 			}
-			if failoverDone && err != nil {
+			if err != nil {
 				observedFailure = true
 			}
 			if failoverDone && observedFailure && err == nil && one == 1 {

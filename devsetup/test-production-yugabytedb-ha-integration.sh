@@ -51,7 +51,7 @@ while [[ "$(kubectl get pods -A -l app=yb-master --field-selector=status.phase=R
   (( SECONDS < deadline )) || { echo "master quorum did not retain two Ready members" >&2; exit 1; }
   sleep 1
 done
-EUBL21_TEST_DATABASE_URL="$EUBL21_HA_DATABASE_URL" \
+EUBL21_TEST_DATABASE_URL="$EUBL21_HA_DATABASE_URL" EUBL21_TEST_DATABASE_CATALOG_OPERATION=1 \
   go test ./database -run '^TestYugabyteDBIntegration$/connect_and_query' -count=1
 kubectl uncordon "$EUBL21_HA_FAILURE_NODE"
 kubectl wait --for=condition=Ready pod -A -l app=yb-master --timeout="$timeout"
