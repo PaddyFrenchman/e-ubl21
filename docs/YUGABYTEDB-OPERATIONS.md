@@ -76,9 +76,11 @@ or object-store credentials in Git, ConfigMaps, dashboards, or shell history.
 
 Prometheus scrapes each master on port 7000 and each tserver on port 9000 at
 `/prometheus-metrics`; node-exporter supplies host disk/CPU/memory metrics.
-Grafana dashboards must show master availability/leader status, live tservers,
-Raft replication health, YSQL latency and errors, PVC free space, compaction,
-and storage growth. Alert immediately for fewer than three live masters or
+Grafana dashboards show master availability and leader status, live tservers,
+Raft replication health, YSQL p99 statement latency, PVC free space, and
+storage growth. YSQL error and compaction investigation uses the retained
+YSQL and TServer Prometheus endpoints until dedicated dashboard panels are
+introduced. Alert immediately for fewer than three live masters or
 tservers, failed backup, or replication/consensus health loss. Page for disk
 free space below 30%; warn at 40%. Page for sustained YSQL p99 latency above
 the approved SLO and warn on sustained storage growth that exhausts provisioned

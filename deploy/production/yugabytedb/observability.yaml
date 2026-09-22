@@ -70,7 +70,7 @@ spec:
           labels: {severity: page}
           annotations: {summary: "A YBC backup Job failed"}
         - alert: YugabyteDBBackupLate
-          expr: time() - max(kube_job_status_completion_time{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"}) > 7 * 3600
+          expr: time() - max(kube_job_status_completion_time{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"}) > 7 * 3600 or absent(kube_job_status_completion_time{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"})
           for: 15m
           labels: {severity: page}
           annotations: {summary: "No successful YBC backup completed within seven hours"}
