@@ -13,6 +13,10 @@ backup_dir="$(mktemp -d)"
 # This is an isolated, disposable development credential. Keep it out of the
 # evidence directory and use it for both independently created universes.
 generated_ysql_password="ybdr-${run_id}-$(< /proc/sys/kernel/random/uuid)"
+app_password="app-${run_id}-$(< /proc/sys/kernel/random/uuid)"
+migration_password="migrator-${run_id}-$(< /proc/sys/kernel/random/uuid)"
+app_user="eubl21"
+migration_user="eubl21_migrator"
 ysql_password="yugabyte"
 # The image runs YBC as the unprivileged yugabyte user. This is a disposable
 # test-only NFS-style share, not a directory containing credentials.
@@ -54,6 +58,12 @@ ysql_database() {
   local service=$1 database=$2; shift 2
   "${compose[@]}" exec -T -e "PGPASSWORD=$ysql_password" "$service" /home/yugabyte/bin/ysqlsh \
     --host "eubl21-dr-$service" --port 5433 --username yugabyte --dbname "$database" \
+    --no-psqlrc --set ON_ERROR_STOP=1 "$@"
+}
+ysql_as_database() {
+  local service=$1 user=$2 password=$3 database=$4; shift 4
+  "${compose[@]}" exec -T -e "PGPASSWORD=$password" "$service" /home/yugabyte/bin/ysqlsh \
+    --host "eubl21-dr-$service" --port 5433 --username "$user" --dbname "$database" \
     --no-psqlrc --set ON_ERROR_STOP=1 "$@"
 }
 set_yugabyte_password() {
@@ -105,9 +115,13 @@ wait_ready source
 set_yugabyte_password source yugabyte
 ysql_password="$generated_ysql_password"
 source_version="$(yugabyted source version)"
-ysql source --command 'CREATE DATABASE eubl21;'
-wait_database_ready source eubl21
-ysql_database source eubl21 --command "CREATE TABLE eubl21_ybc_dr_qualification (id integer PRIMARY KEY, payload text NOT NULL); INSERT INTO eubl21_ybc_dr_qualification VALUES (128, 'eubl21-ybc-dr-qualification');"
+"${compose[@]}" cp "$root/devsetup/yugabytedb-bootstrap.sh" source:/tmp/yugabytedb-bootstrap.sh
+"${compose[@]}" exec -T -e "YSQL_HOST=eubl21-dr-source" -e "YSQL_ADMIN_PASSWORD=$ysql_password" -e "YSQL_USER=$app_user" -e "YSQL_PASSWORD=$app_password" -e "YSQL_MIGRATION_USER=$migration_user" -e "YSQL_MIGRATION_PASSWORD=$migration_password" -e YSQL_DB=eubl21 -e YSQL_EXPECTED_VERSION=2025.2.6.0-b111 source bash /tmp/yugabytedb-bootstrap.sh
+source_port="${EUBL21_DR_LOCAL_SOURCE_PORT:-15434}"
+EUBL21_DATABASE_URL="postgresql://$migration_user:$migration_password@127.0.0.1:$source_port/eubl21?sslmode=disable" go run . database migrate
+# Seed representative application-schema data through the DDL identity, then
+# prove the application identity receives only its granted data access.
+ysql_as_database source "$migration_user" "$migration_password" eubl21 --command "CREATE TABLE eubl21.ybc_dr_qualification (id integer PRIMARY KEY, payload text NOT NULL); GRANT SELECT ON eubl21.ybc_dr_qualification TO $app_user; INSERT INTO eubl21.ybc_dr_qualification VALUES (128, 'eubl21-ybc-dr-qualification');"
 
 # This is a real YBC request, not a logical dump.  Status is queried after it
 # completes to retain controller-level confirmation with the evidence.
@@ -130,14 +144,21 @@ wait_ready target
 set_yugabyte_password target yugabyte
 ysql_password="$generated_ysql_password"
 target_version="$(yugabyted target version)"
+# YBC restores the database, not cluster-global login roles. Recreate the
+# least-privilege identities in the fresh target before restoring its grants.
+ysql target --command "CREATE ROLE $app_user LOGIN PASSWORD '$app_password'; CREATE ROLE $migration_user LOGIN PASSWORD '$migration_password';"
 yugabyted target restore --base_dir=/tmp/yb --database=eubl21 --cloud_storage_uri=/nfs/eubl21-ybc | tee "$artifact_dir/restore-result.txt"
 wait_ybc_task restore target "$artifact_dir/restore-status.txt"
-ysql_database target eubl21 --tuples-only --no-align --command "SELECT payload FROM eubl21_ybc_dr_qualification WHERE id = 128" | grep -Fxq eubl21-ybc-dr-qualification
+ysql_as_database target "$app_user" "$app_password" eubl21 --tuples-only --no-align --command "SELECT payload FROM eubl21.ybc_dr_qualification WHERE id = 128" | grep -Fxq eubl21-ybc-dr-qualification
 
 port="${EUBL21_DR_LOCAL_TARGET_PORT:-15435}"
-EUBL21_TEST_DATABASE_URL="postgresql://yugabyte:$ysql_password@127.0.0.1:$port/eubl21?sslmode=disable" \
+EUBL21_TEST_DATABASE_URL="postgresql://$app_user:$app_password@127.0.0.1:$port/eubl21?sslmode=disable" \
   go test ./database -run '^TestYugabyteDBIntegration$' -count=1 | tee "$artifact_dir/application-integration.txt"
+rotated_app_password="rotated-${run_id}-$(< /proc/sys/kernel/random/uuid)"
+ysql_database target eubl21 --command "ALTER ROLE $app_user PASSWORD '$rotated_app_password';"
+ysql_as_database target "$app_user" "$rotated_app_password" eubl21 --tuples-only --no-align --command 'SELECT 1' | grep -Fxq 1
+! ysql_as_database target "$app_user" "$app_password" eubl21 --tuples-only --no-align --command 'SELECT 1' >/dev/null 2>&1
 REGRESSION_RUN_DIR="$artifact_dir/regression" ./run-regression-tests.sh | tee "$artifact_dir/application-regression.txt"
-printf 'source_version=%s\ntarget_version=%s\nbackup_identifier=%s\nbackup_location=%s\nbackup_status=passed\nrestore_status=passed\nschema_data_verification=passed\napplication_integration=passed\napplication_regression=passed\n' \
+printf 'source_version=%s\ntarget_version=%s\nbackup_identifier=%s\nbackup_location=%s\nbackup_status=passed\nrestore_status=passed\nschema_data_verification=passed\napplication_integration=passed\ncredential_rotation=passed\napplication_regression=passed\n' \
   "$source_version" "$target_version" "nfs/eubl21-ybc" "$backup_dir" >"$artifact_dir/summary.txt"
 echo "Disposable YBC DR qualification passed; evidence retained in $artifact_dir"

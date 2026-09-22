@@ -28,21 +28,20 @@ target is on a compatible or newer supported YugabyteDB release.
 At least quarterly, create an isolated target universe and restore a retained
 backup. It must be a clean cluster/database, not a destructive in-place test.
 Then run schema/data checks and the application database integration test
-against the target. The executable logical drill is:
+against the target. The executable production YBC drill is:
 
 ```bash
-EUBL21_DR_SOURCE_URL='postgresql://...' \
-EUBL21_DR_RESTORE_URL='postgresql://...' \
-EUBL21_DR_BACKUP_DIR=/mnt/off-cluster-backups/e-ubl21 \
-EUBL21_DR_RUN_REGRESSION=1 \
+EUBL21_DR_YBC_BACKUP_COMMAND='platform YBC backup command' \
+EUBL21_DR_RECREATE_TARGET='platform destroy/recreate clean target command' \
+EUBL21_DR_YBC_RESTORE_COMMAND='platform YBC restore command' \
+EUBL21_DR_APP_URL='postgresql://application-role@restored-target/eubl21?sslmode=verify-full' \
 ./devsetup/yugabytedb-dr-drill.sh
 ```
 
-The target URL must name an empty database created from `template0`; the
-runner refuses a matching source URL or an existing qualification table. For a
-production exercise, run the YBC snapshot restore first, then this logical
-drill as the independent schema/data/application-access proof. Store the
-generated SHA-256 sidecar and command output as drill evidence.
+The recreate command must wait for a genuinely new, clean target. The runner
+refuses logical dump/restore commands, verifies application-role access, and
+requires complete regression. Run `make yugabytedb-dr-local-test` separately
+as the independent logical portability drill.
 
 For development-only YBC data-plane evidence without external infrastructure,
 run `make yugabytedb-ybc-dr-test`. It unpacks the pinned YB Controller,

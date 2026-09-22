@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 admin_user="yugabyte"
-admin_password="yugabyte"
+admin_password="${YSQL_ADMIN_PASSWORD:-yugabyte}"
 admin_database="yugabyte"
 app_user="${YSQL_USER:?YSQL_USER is required}"
 app_password="${YSQL_PASSWORD:?YSQL_PASSWORD is required}"

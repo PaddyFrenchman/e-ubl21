@@ -48,17 +48,17 @@ spec:
           labels: {severity: page}
           annotations: {summary: "YugabyteDB PVC free space is below 30 percent"}
         - alert: YugabyteDBConsensusHealth
-          expr: count(up{namespace=~"eubl21-yb-zone-[abc]",app="yb-master"} == 1) < 3 or count(up{namespace=~"eubl21-yb-zone-[abc]",app="yb-tserver"} == 1) < 3
-          for: 2m
+          expr: max(follower_lag_ms{namespace=~"eubl21-yb-zone-[abc]",app="yb-tserver"}) > 30000
+          for: 5m
           labels: {severity: page}
-          annotations: {summary: "YugabyteDB cannot maintain its three-node consensus topology"}
+          annotations: {summary: "YugabyteDB Raft tablet replication lag exceeds 30 seconds"}
         - alert: YugabyteDBStorageGrowth
           expr: predict_linear(kubelet_volume_stats_used_bytes{namespace=~"eubl21-yb-zone-[abc]"}[6h], 30 * 24 * 3600) > kubelet_volume_stats_capacity_bytes{namespace=~"eubl21-yb-zone-[abc]"}
           for: 1h
           labels: {severity: warning}
           annotations: {summary: "YugabyteDB PVC is forecast to fill within 30 days"}
         - alert: YugabyteDBYSQLLatencyHigh
-          expr: 1000 * sum(rate(handler_latency_yb_ysqlserver_sum[5m])) / clamp_min(sum(rate(handler_latency_yb_ysqlserver_count[5m])), 1) > 250
+          expr: sum(rate({__name__=~"handler_latency_yb_ysqlserver_SQLProcessor_.*_sum"}[5m])) / clamp_min(sum(rate({__name__=~"handler_latency_yb_ysqlserver_SQLProcessor_.*_count"}[5m])), 1) / 1000 > 250
           for: 10m
           labels: {severity: page}
           annotations: {summary: "YSQL mean handler latency exceeds 250ms"}

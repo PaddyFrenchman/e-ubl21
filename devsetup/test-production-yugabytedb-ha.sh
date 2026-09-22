@@ -44,4 +44,11 @@ for rendered in "$tmp"/*.yaml; do
     END { emit() }
   ' "$rendered"
 done | sort | uniq -d | (! grep .)
+observability="$root_dir/deploy/production/yugabytedb/observability.yaml"
+dashboard="$root_dir/deploy/production/yugabytedb/dashboard.yaml"
+rg -q 'http-ysql-met' "$observability"
+rg -q 'follower_lag_ms' "$observability"
+rg -q 'YugabyteDBConsensusHealth' "$observability"
+rg -q 'YugabyteDBYSQLLatencyHigh' "$observability"
+rg -q 'handler_latency_yb_ysqlserver_SQLProcessor_' "$observability" "$dashboard"
 echo "Production YugabyteDB HA Helm renders and resource identities passed."
