@@ -1,0 +1,24 @@
+# Disposable development-only source and restore-target universes. No volumes
+# are declared: every run begins with clean database state.
+services:
+  source:
+    image: yugabytedb/yugabyte:2025.2.6.0-b111
+    hostname: eubl21-dr-source
+    # The stock image ships YBC as an archive.  Extract it before starting so
+    # yugabyted backup is backed by the real Controller daemon.
+    command: [bash, -ec, "mkdir -p ybc && tar -xzf share/ybc-*-linux-x86_64.tar.gz -C ybc --strip-components=1 && exec bin/yugabyted start --base_dir=/tmp/yb --background=false --advertise_address=eubl21-dr-source --ysql_enable_auth=true --backup_daemon=true"]
+    volumes:
+      # YB Controller resolves the NFS URI /nfs/... below /tmp/nfs/nfs/.
+      # Mount the host-owned test share at that resolved path so controller
+      # data is truly outside the universe's data directory/container.
+      - ${EUBL21_YBC_DR_BACKUP_DIR:?set by the YBC DR test}:/tmp/nfs/nfs
+    ports:
+      - "127.0.0.1:${EUBL21_DR_LOCAL_SOURCE_PORT:-15434}:5433"
+  target:
+    image: yugabytedb/yugabyte:2025.2.6.0-b111
+    hostname: eubl21-dr-target
+    command: [bash, -ec, "mkdir -p ybc && tar -xzf share/ybc-*-linux-x86_64.tar.gz -C ybc --strip-components=1 && exec bin/yugabyted start --base_dir=/tmp/yb --background=false --advertise_address=eubl21-dr-target --ysql_enable_auth=true --backup_daemon=true"]
+    volumes:
+      - ${EUBL21_YBC_DR_BACKUP_DIR:?set by the YBC DR test}:/tmp/nfs/nfs
+    ports:
+      - "127.0.0.1:${EUBL21_DR_LOCAL_TARGET_PORT:-15435}:5433"

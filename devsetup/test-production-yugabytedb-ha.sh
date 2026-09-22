@@ -10,6 +10,7 @@ for zone in zone-a zone-b zone-c; do
   values="$root_dir/deploy/production/yugabytedb/$zone.yaml"
   ! rg -n 'REPLACE_|TODO|CHANGEME|<[^>]+>' "$values"
   rg -q 'enabled: true' "$values"
+	  rg -A3 '^ybc:' "$values" | rg -q 'enabled: true'
   rg -q 'bootstrapSelfsigned: false' "$values"
   rg -q 'useCustomIssuer: true' "$values"
   rg -q 'name: eubl21-yugabytedb-ca' "$values"
@@ -43,4 +44,18 @@ for rendered in "$tmp"/*.yaml; do
     END { emit() }
   ' "$rendered"
 done | sort | uniq -d | (! grep .)
+observability="$root_dir/deploy/production/yugabytedb/observability.yaml"
+dashboard="$root_dir/deploy/production/yugabytedb/dashboard.yaml"
+rg -q 'http-ysql-met' "$observability"
+rg -q 'follower_lag_ms' "$observability"
+rg -q 'YugabyteDBConsensusHealth' "$observability"
+rg -q 'YugabyteDBYSQLLatencyHigh' "$observability"
+rg -q 'YugabyteDBTargetDown' "$observability"
+rg -q 'YugabyteDBDiskPressure' "$observability"
+rg -q 'YugabyteDBStorageGrowth' "$observability"
+rg -q 'YugabyteDBBackupFailed' "$observability"
+rg -q 'YugabyteDBBackupLate' "$observability"
+rg -Fq 'absent(kube_job_status_completion_time' "$observability"
+rg -q 'targetLabels: \[app\]' "$observability"
+rg -q 'handler_latency_yb_ysqlserver_SQLProcessor_.*quantile' "$observability" "$dashboard"
 echo "Production YugabyteDB HA Helm renders and resource identities passed."

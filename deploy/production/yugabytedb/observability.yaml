@@ -1,0 +1,76 @@
+# Apply after kube-prometheus-stack is installed. These objects intentionally
+# live with the monitoring stack; they do not expose YugabyteDB outside the
+# cluster. The Prometheus Operator discovers each headless service endpoint.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: eubl21-yugabytedb-masters
+  namespace: monitoring
+  labels: {release: monitoring}
+spec:
+  namespaceSelector:
+    matchNames: [eubl21-yb-zone-a, eubl21-yb-zone-b, eubl21-yb-zone-c]
+  selector: {matchLabels: {app: yb-master}}
+  targetLabels: [app]
+  endpoints: [{port: http-ui, path: /prometheus-metrics, interval: 30s}]
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: eubl21-yugabytedb-tservers
+  namespace: monitoring
+  labels: {release: monitoring}
+spec:
+  namespaceSelector:
+    matchNames: [eubl21-yb-zone-a, eubl21-yb-zone-b, eubl21-yb-zone-c]
+  selector: {matchLabels: {app: yb-tserver}}
+  targetLabels: [app]
+  endpoints:
+    - {port: http-ui, path: /prometheus-metrics, interval: 30s}
+    - {port: http-ysql-met, path: /prometheus-metrics, interval: 30s}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: eubl21-yugabytedb-alerts
+  namespace: monitoring
+  labels: {release: monitoring}
+spec:
+  groups:
+    - name: eubl21.yugabytedb.availability
+      rules:
+        - alert: YugabyteDBTargetDown
+          expr: up{namespace=~"eubl21-yb-zone-[abc]",app=~"yb-master|yb-tserver"} == 0
+          for: 2m
+          labels: {severity: page}
+          annotations: {summary: "YugabyteDB master or tserver is unreachable"}
+        - alert: YugabyteDBDiskPressure
+          expr: kubelet_volume_stats_available_bytes{namespace=~"eubl21-yb-zone-[abc]"} / kubelet_volume_stats_capacity_bytes{namespace=~"eubl21-yb-zone-[abc]"} < 0.30
+          for: 10m
+          labels: {severity: page}
+          annotations: {summary: "YugabyteDB PVC free space is below 30 percent"}
+        - alert: YugabyteDBConsensusHealth
+          expr: max(follower_lag_ms{namespace=~"eubl21-yb-zone-[abc]",app="yb-tserver"}) > 30000
+          for: 5m
+          labels: {severity: page}
+          annotations: {summary: "YugabyteDB Raft tablet replication lag exceeds 30 seconds"}
+        - alert: YugabyteDBStorageGrowth
+          expr: predict_linear(kubelet_volume_stats_used_bytes{namespace=~"eubl21-yb-zone-[abc]"}[6h], 30 * 24 * 3600) > kubelet_volume_stats_capacity_bytes{namespace=~"eubl21-yb-zone-[abc]"}
+          for: 1h
+          labels: {severity: warning}
+          annotations: {summary: "YugabyteDB PVC is forecast to fill within 30 days"}
+        - alert: YugabyteDBYSQLLatencyHigh
+          expr: max({__name__=~"handler_latency_yb_ysqlserver_SQLProcessor_.*",quantile="p99"}) / 1000 > 250
+          for: 10m
+          labels: {severity: page}
+          annotations: {summary: "YSQL p99 statement latency exceeds 250ms"}
+        - alert: YugabyteDBBackupFailed
+          expr: kube_job_status_failed{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"} > 0
+          for: 5m
+          labels: {severity: page}
+          annotations: {summary: "A YBC backup Job failed"}
+        - alert: YugabyteDBBackupLate
+          expr: time() - max(kube_job_status_completion_time{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"}) > 7 * 3600 or absent(kube_job_status_completion_time{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"})
+          for: 15m
+          labels: {severity: page}
+          annotations: {summary: "No successful YBC backup completed within seven hours"}
