@@ -23,7 +23,9 @@ spec:
   namespaceSelector:
     matchNames: [eubl21-yb-zone-a, eubl21-yb-zone-b, eubl21-yb-zone-c]
   selector: {matchLabels: {app: yb-tserver}}
-  endpoints: [{port: http-ui, path: /prometheus-metrics, interval: 30s}]
+  endpoints:
+    - {port: http-ui, path: /prometheus-metrics, interval: 30s}
+    - {port: http-ysql-met, path: /prometheus-metrics, interval: 30s}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -45,8 +47,28 @@ spec:
           for: 10m
           labels: {severity: page}
           annotations: {summary: "YugabyteDB PVC free space is below 30 percent"}
+        - alert: YugabyteDBConsensusHealth
+          expr: count(up{namespace=~"eubl21-yb-zone-[abc]",app="yb-master"} == 1) < 3 or count(up{namespace=~"eubl21-yb-zone-[abc]",app="yb-tserver"} == 1) < 3
+          for: 2m
+          labels: {severity: page}
+          annotations: {summary: "YugabyteDB cannot maintain its three-node consensus topology"}
         - alert: YugabyteDBStorageGrowth
           expr: predict_linear(kubelet_volume_stats_used_bytes{namespace=~"eubl21-yb-zone-[abc]"}[6h], 30 * 24 * 3600) > kubelet_volume_stats_capacity_bytes{namespace=~"eubl21-yb-zone-[abc]"}
           for: 1h
           labels: {severity: warning}
           annotations: {summary: "YugabyteDB PVC is forecast to fill within 30 days"}
+        - alert: YugabyteDBYSQLLatencyHigh
+          expr: 1000 * sum(rate(handler_latency_yb_ysqlserver_sum[5m])) / clamp_min(sum(rate(handler_latency_yb_ysqlserver_count[5m])), 1) > 250
+          for: 10m
+          labels: {severity: page}
+          annotations: {summary: "YSQL mean handler latency exceeds 250ms"}
+        - alert: YugabyteDBBackupFailed
+          expr: kube_job_status_failed{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"} > 0
+          for: 5m
+          labels: {severity: page}
+          annotations: {summary: "A YBC backup Job failed"}
+        - alert: YugabyteDBBackupLate
+          expr: time() - max(kube_job_status_completion_time{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"}) > 7 * 3600
+          for: 15m
+          labels: {severity: page}
+          annotations: {summary: "No successful YBC backup completed within seven hours"}

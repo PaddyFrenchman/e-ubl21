@@ -24,14 +24,14 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${compose[@]}" up --detach
+"${compose[@]}" up --detach source
 ysql() {
   local service="$1"; shift
   "${compose[@]}" exec -T -e PGPASSWORD=yugabyte "$service" /home/yugabyte/bin/ysqlsh \
     --host "eubl21-dr-$service" --port 5433 --username yugabyte --dbname yugabyte \
     --no-psqlrc --set ON_ERROR_STOP=1 "$@"
 }
-for service in source target; do
+for service in source; do
   deadline=$((SECONDS + 180))
   until ysql "$service" --tuples-only --no-align --command 'SELECT 1' 2>/dev/null | grep -Fxq 1; do
     (( SECONDS < deadline )) || { "${compose[@]}" logs >&2; echo "$service did not become ready" >&2; exit 1; }
@@ -45,6 +45,14 @@ backup="$backup_dir/eubl21.sql"
   --host eubl21-dr-source --port 5433 --username yugabyte --dbname yugabyte >"$backup"
 sha256sum "$backup" >"$backup.sha256"
 sha256sum --check --status "$backup.sha256"
+# Required DR sequence: the target did not exist while the backup was made.
+"${compose[@]}" rm --stop --force target >/dev/null 2>&1 || true
+"${compose[@]}" up --detach target
+deadline=$((SECONDS + 180))
+until ysql target --tuples-only --no-align --command 'SELECT 1' 2>/dev/null | grep -Fxq 1; do
+  (( SECONDS < deadline )) || { "${compose[@]}" logs >&2; echo "target did not become ready" >&2; exit 1; }
+  sleep 2
+done
 "${compose[@]}" exec -T -e PGPASSWORD=yugabyte target /home/yugabyte/bin/ysqlsh \
   --host eubl21-dr-target --port 5433 --username yugabyte --dbname yugabyte \
   --no-psqlrc --set ON_ERROR_STOP=1 <"$backup"

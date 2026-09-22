@@ -52,6 +52,8 @@ services:
       YSQL_HOST: yugabytedb
       YSQL_USER: eubl21
       YSQL_PASSWORD: eubl21-local-only
+      YSQL_MIGRATION_USER: eubl21_migrator
+      YSQL_MIGRATION_PASSWORD: eubl21-migrator-local-only
       YSQL_DB: eubl21
     entrypoint:
       - /bin/bash

@@ -11,6 +11,8 @@ YSQL_HOST="127.0.0.1"
 YSQL_PORT="${YB_LOCAL_YSQL_PORT:-5433}"
 YSQL_USER="eubl21"
 YSQL_PASSWORD="eubl21-local-only"
+YSQL_MIGRATION_USER="eubl21_migrator"
+YSQL_MIGRATION_PASSWORD="eubl21-migrator-local-only"
 YSQL_DATABASE="eubl21"
 READY_TIMEOUT="${YB_LOCAL_READY_TIMEOUT:-120}"
 EXPECTED_VERSION="2025.2.6.0-b111"
@@ -91,13 +93,18 @@ database_url() {
         "$YSQL_USER" "$YSQL_PASSWORD" "$YSQL_HOST" "$YSQL_PORT" "$YSQL_DATABASE"
 }
 
+migration_database_url() {
+    printf 'postgresql://%s:%s@%s:%s/%s?sslmode=disable\n' \
+        "$YSQL_MIGRATION_USER" "$YSQL_MIGRATION_PASSWORD" "$YSQL_HOST" "$YSQL_PORT" "$YSQL_DATABASE"
+}
+
 admin_database_url() {
     printf 'postgresql://yugabyte:yugabyte@%s:%s/yugabyte?sslmode=disable\n' \
         "$YSQL_HOST" "$YSQL_PORT"
 }
 
 run_migrations() {
-    EUBL21_DATABASE_URL="$(database_url)" \
+    EUBL21_DATABASE_URL="$(migration_database_url)" \
         go run . database migrate
 }
 

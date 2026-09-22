@@ -14,7 +14,10 @@ YUGABYTEDB_VALUES="$ROOT_DIR/deploy/minikube/yugabytedb-values.yaml"
 DATABASE_SECRET="eubl21-db-auth"
 DATABASE_USER="eubl21"
 DATABASE_PASSWORD="eubl21-minikube-regression-only"
+MIGRATION_USER="eubl21_migrator"
+MIGRATION_PASSWORD="eubl21-migrator-minikube-regression-only"
 DATABASE_URL="postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@yb-tservers.${NAMESPACE}.svc.cluster.local:5433/eubl21?sslmode=disable"
+MIGRATION_DATABASE_URL="postgresql://${MIGRATION_USER}:${MIGRATION_PASSWORD}@yb-tservers.${NAMESPACE}.svc.cluster.local:5433/eubl21?sslmode=disable"
 TEMPORARY_DIR="$(mktemp -d)"
 DATABASE_ARTIFACT_DIR="$ARTIFACT_DIR/database"
 CURRENT_PHASE="preflight"
@@ -140,6 +143,16 @@ spec:
                   key: password
             - name: YSQL_DB
               value: eubl21
+            - name: YSQL_MIGRATION_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ${DATABASE_SECRET}
+                  key: migration-username
+            - name: YSQL_MIGRATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ${DATABASE_SECRET}
+                  key: migration-password
             - name: YSQL_EXPECTED_VERSION
               value: 2025.2.6.0-b111
           volumeMounts:
@@ -190,7 +203,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: ${DATABASE_SECRET}
-                  key: database-url
+                  key: migration-database-url
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -287,6 +300,9 @@ CURRENT_PHASE="database-secret"
     --from-literal="username=$DATABASE_USER" \
     --from-literal="password=$DATABASE_PASSWORD" \
     --from-literal="database-url=$DATABASE_URL" \
+    --from-literal="migration-username=$MIGRATION_USER" \
+    --from-literal="migration-password=$MIGRATION_PASSWORD" \
+    --from-literal="migration-database-url=$MIGRATION_DATABASE_URL" \
     --dry-run=client -o yaml | "$KUBECTL_BIN" apply -f -
 
 CURRENT_PHASE="database-bootstrap"

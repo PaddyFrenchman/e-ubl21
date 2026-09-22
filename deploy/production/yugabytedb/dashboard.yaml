@@ -9,5 +9,5 @@ data:
     {"title":"e-ubl21 YugabyteDB","schemaVersion":39,"panels":[
     {"type":"stat","title":"Scrape targets up","targets":[{"expr":"sum(up{namespace=~\"eubl21-yb-zone-[abc]\",app=~\"yb-master|yb-tserver\"})"}]},
     {"type":"timeseries","title":"PVC free bytes","targets":[{"expr":"kubelet_volume_stats_available_bytes{namespace=~\"eubl21-yb-zone-[abc]\"}"}]},
-    {"type":"timeseries","title":"YSQL latency","targets":[{"expr":"histogram_quantile(0.99, sum(rate(handler_latency_bucket{server_type=\"yb_ysqlserver\"}[5m])) by (le))"}]}
+    {"type":"timeseries","title":"YSQL mean handler latency (ms)","targets":[{"expr":"1000 * sum(rate(handler_latency_yb_ysqlserver_sum[5m])) / clamp_min(sum(rate(handler_latency_yb_ysqlserver_count[5m])), 1)"}]}
     ]}

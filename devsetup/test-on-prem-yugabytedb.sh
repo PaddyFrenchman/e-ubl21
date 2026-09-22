@@ -94,7 +94,7 @@ EUBL21_NAMESPACE=e-ubl21 EUBL21_IMAGE="$test_image" bash -c \
     _ "$installer" >"$temporary_dir/eubl21-database-jobs.yaml"
 assert_contains 'name: eubl21-yugabytedb-bootstrap' "$temporary_dir/eubl21-database-jobs.yaml"
 assert_contains 'name: eubl21-database-migrate' "$temporary_dir/eubl21-database-jobs.yaml"
-assert_contains 'key: database-url' "$temporary_dir/eubl21-database-jobs.yaml"
+assert_contains 'key: migration-database-url' "$temporary_dir/eubl21-database-jobs.yaml"
 
 # Keep static verification independent of the active Kubernetes context.
 # Recent kubectl versions perform API discovery for `create --dry-run=client`,

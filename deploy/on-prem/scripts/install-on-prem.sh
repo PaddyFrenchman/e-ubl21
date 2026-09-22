@@ -341,22 +341,33 @@ install_keda() {
 }
 
 ensure_database_secret() {
-  local password password_base64 password_encoded database_url database_url_base64 username
+  local password password_base64 password_encoded database_url database_url_base64 username migration_password migration_password_base64 migration_password_encoded migration_database_url migration_database_url_base64
   if kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" >/dev/null 2>&1; then
     username="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.username}' | base64 --decode)"
     [[ "${username}" == "eubl21" ]] || fail "Existing ${EUBL21_DATABASE_SECRET_NAME} username must be eubl21"
     password_base64="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.password}')"
     [[ -n "${password_base64}" ]] || fail "Existing ${EUBL21_DATABASE_SECRET_NAME} secret has no password"
     password="$(printf '%s' "${password_base64}" | base64 --decode)"
+    migration_password_base64="$(kubectl get secret "${EUBL21_DATABASE_SECRET_NAME}" --namespace "${EUBL21_NAMESPACE}" -o jsonpath='{.data.migration-password}')"
+    if [[ -n "${migration_password_base64}" ]]; then
+      migration_password="$(printf '%s' "${migration_password_base64}" | base64 --decode)"
+    else
+      migration_password="$(openssl rand -base64 32 | tr -d '\n')"
+    fi
     log "Database bootstrap secret already exists; preserving its username and password"
   else
     password="$(openssl rand -base64 32 | tr -d '\n')"
+    migration_password="$(openssl rand -base64 32 | tr -d '\n')"
     password_base64="$(printf '%s' "${password}" | base64 | tr -d '\n')"
   fi
 
   password_encoded="$(urlencode "${password}")"
   database_url="postgresql://eubl21:${password_encoded}@yb-tservers.${EUBL21_NAMESPACE}.svc.cluster.local:5433/eubl21?sslmode=disable"
   database_url_base64="$(printf '%s' "${database_url}" | base64 | tr -d '\n')"
+  migration_password_base64="$(printf '%s' "${migration_password}" | base64 | tr -d '\n')"
+  migration_password_encoded="$(urlencode "${migration_password}")"
+  migration_database_url="postgresql://eubl21_migrator:${migration_password_encoded}@yb-tservers.${EUBL21_NAMESPACE}.svc.cluster.local:5433/eubl21?sslmode=disable"
+  migration_database_url_base64="$(printf '%s' "${migration_database_url}" | base64 | tr -d '\n')"
   cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
@@ -368,6 +379,9 @@ data:
   username: ZXVibDIx
   password: ${password_base64}
   database-url: ${database_url_base64}
+  migration-username: ZXVibDIxX21pZ3JhdG9y
+  migration-password: ${migration_password_base64}
+  migration-database-url: ${migration_database_url_base64}
 EOF
 }
 
@@ -452,6 +466,16 @@ spec:
                   key: password
             - name: YSQL_DB
               value: eubl21
+            - name: YSQL_MIGRATION_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ${EUBL21_DATABASE_SECRET_NAME}
+                  key: migration-username
+            - name: YSQL_MIGRATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ${EUBL21_DATABASE_SECRET_NAME}
+                  key: migration-password
             - name: YSQL_EXPECTED_VERSION
               value: ${YUGABYTEDB_IMAGE_TAG}
           volumeMounts:
@@ -499,7 +523,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: ${database_secret_name}
-                  key: database-url
+                  key: migration-database-url
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

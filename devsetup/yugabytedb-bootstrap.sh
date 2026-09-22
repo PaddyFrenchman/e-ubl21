@@ -6,6 +6,8 @@ admin_password="yugabyte"
 admin_database="yugabyte"
 app_user="${YSQL_USER:?YSQL_USER is required}"
 app_password="${YSQL_PASSWORD:?YSQL_PASSWORD is required}"
+migration_user="${YSQL_MIGRATION_USER:?YSQL_MIGRATION_USER is required}"
+migration_password="${YSQL_MIGRATION_PASSWORD:?YSQL_MIGRATION_PASSWORD is required}"
 app_database="${YSQL_DB:?YSQL_DB is required}"
 host="${YSQL_HOST:?YSQL_HOST is required}"
 expected_version="${YSQL_EXPECTED_VERSION:-}"
@@ -55,11 +57,18 @@ fi
     --no-psqlrc \
     --set ON_ERROR_STOP=1 \
     --set app_user="$app_user" \
-    --set app_password="$app_password" <<'SQL'
+    --set app_password="$app_password" \
+    --set migration_user="$migration_user" \
+    --set migration_password="$migration_password" <<'SQL'
 SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'app_user', :'app_password')
 WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = :'app_user')
 \gexec
 SELECT format('ALTER ROLE %I WITH LOGIN PASSWORD %L', :'app_user', :'app_password')
+\gexec
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'migration_user', :'migration_password')
+WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = :'migration_user')
+\gexec
+SELECT format('ALTER ROLE %I WITH LOGIN PASSWORD %L', :'migration_user', :'migration_password')
 \gexec
 SQL
 
@@ -84,12 +93,29 @@ if [[ "$database_exists" != "1" ]]; then
         --dbname "$admin_database" \
         --no-psqlrc \
         --set ON_ERROR_STOP=1 \
-        --set app_user="$app_user" \
+        --set migration_user="$migration_user" \
         --set app_database="$app_database" <<'SQL'
-SELECT format('CREATE DATABASE %I OWNER %I', :'app_database', :'app_user')
+SELECT format('CREATE DATABASE %I OWNER %I', :'app_database', :'migration_user')
 \gexec
 SQL
 fi
+
+# The migration identity owns DDL. The application identity has no ownership
+# or CREATE privilege; migrations grant its data access through defaults.
+/home/yugabyte/bin/ysqlsh \
+    --host "$host" --port 5433 --username "$admin_user" --dbname "$app_database" \
+    --no-psqlrc --set ON_ERROR_STOP=1 --set app_user="$app_user" \
+    --set migration_user="$migration_user" <<'SQL'
+SELECT format('ALTER DATABASE %I OWNER TO %I', current_database(), :'migration_user')
+\gexec
+SELECT format('GRANT CONNECT ON DATABASE %I TO %I', current_database(), :'app_user')
+\gexec
+GRANT USAGE ON SCHEMA public TO :"app_user";
+SELECT format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %I', :'migration_user', :'app_user')
+\gexec
+SELECT format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO %I', :'migration_user', :'app_user')
+\gexec
+SQL
 
 export PGPASSWORD="$app_password"
 /home/yugabyte/bin/ysqlsh \

@@ -44,11 +44,18 @@ production exercise, run the YBC snapshot restore first, then this logical
 drill as the independent schema/data/application-access proof. Store the
 generated SHA-256 sidecar and command output as drill evidence.
 
-For development-only evidence without external infrastructure, run
-`make yugabytedb-dr-local-test`. It starts disposable source and target
-containers, retains the dump on the host outside both containers, restores it,
-and runs the application database integration test. It is explicitly not a
-substitute for the production off-cluster drill.
+For development-only YBC data-plane evidence without external infrastructure,
+run `make yugabytedb-ybc-dr-test`. It unpacks the pinned YB Controller,
+starts a disposable source universe with `--backup_daemon=true`, writes the
+backup to a host-mounted NFS-style directory, deletes/recreates the restore
+universe, performs `yugabyted restore`, and runs the application database
+integration test. Its retained evidence records controller backup/restore
+results, versions, location, schema/data verification, and application test.
+This is not production scheduling, retention enforcement, object-store
+identity, or control-plane orchestration; those remain issue #149.
+
+`make yugabytedb-dr-local-test` remains the independent logical
+`ysql_dump`/`ysqlsh` portability and recovery check. It is not YBC evidence.
 
 ## Security
 
