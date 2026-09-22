@@ -154,11 +154,15 @@ ysql_as_database target "$app_user" "$app_password" eubl21 --tuples-only --no-al
 port="${EUBL21_DR_LOCAL_TARGET_PORT:-15435}"
 EUBL21_TEST_DATABASE_URL="postgresql://$app_user:$app_password@127.0.0.1:$port/eubl21?sslmode=disable" \
   go test ./database -run '^TestYugabyteDBIntegration$' -count=1 | tee "$artifact_dir/application-integration.txt"
+EUBL21_TEST_DATABASE_URL="postgresql://$app_user:$app_password@127.0.0.1:$port/eubl21?sslmode=disable" \
+  go test ./... -count=1 | tee "$artifact_dir/unit-tests.txt"
 rotated_app_password="rotated-${run_id}-$(< /proc/sys/kernel/random/uuid)"
 ysql_database target eubl21 --command "ALTER ROLE $app_user PASSWORD '$rotated_app_password';"
 ysql_as_database target "$app_user" "$rotated_app_password" eubl21 --tuples-only --no-align --command 'SELECT 1' | grep -Fxq 1
 ! ysql_as_database target "$app_user" "$app_password" eubl21 --tuples-only --no-align --command 'SELECT 1' >/dev/null 2>&1
-REGRESSION_RUN_DIR="$artifact_dir/regression" ./run-regression-tests.sh | tee "$artifact_dir/application-regression.txt"
+app_password="$rotated_app_password"
+EUBL21_RESTORED_DATABASE_URL="postgresql://$app_user:$app_password@127.0.0.1:$port/eubl21?sslmode=disable" \
+  REGRESSION_RUN_DIR="$artifact_dir/regression" ./run-regression-tests.sh | tee "$artifact_dir/application-regression.txt"
 printf 'source_version=%s\ntarget_version=%s\nbackup_identifier=%s\nbackup_location=%s\nbackup_status=passed\nrestore_status=passed\nschema_data_verification=passed\napplication_integration=passed\ncredential_rotation=passed\napplication_regression=passed\n' \
   "$source_version" "$target_version" "nfs/eubl21-ybc" "$backup_dir" >"$artifact_dir/summary.txt"
 echo "Disposable YBC DR qualification passed; evidence retained in $artifact_dir"

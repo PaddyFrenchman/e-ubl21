@@ -7,7 +7,10 @@ metadata:
 data:
   yugabytedb-overview.json: |
     {"title":"e-ubl21 YugabyteDB","schemaVersion":39,"panels":[
-    {"type":"stat","title":"Scrape targets up","targets":[{"expr":"sum(up{namespace=~\"eubl21-yb-zone-[abc]\",app=~\"yb-master|yb-tserver\"})"}]},
+    {"type":"stat","title":"Live YB tservers","targets":[{"expr":"sum(up{namespace=~\"eubl21-yb-zone-[abc]\",app=\"yb-tserver\"})"}]},
+    {"type":"stat","title":"Raft leaders","targets":[{"expr":"sum(is_raft_leader{namespace=~\"eubl21-yb-zone-[abc]\"})"}]},
+    {"type":"timeseries","title":"Raft follower lag (ms)","targets":[{"expr":"max(follower_lag_ms{namespace=~\"eubl21-yb-zone-[abc]\",app=\"yb-tserver\"})"}]},
     {"type":"timeseries","title":"PVC free bytes","targets":[{"expr":"kubelet_volume_stats_available_bytes{namespace=~\"eubl21-yb-zone-[abc]\"}"}]},
-    {"type":"timeseries","title":"YSQL mean statement latency (ms)","targets":[{"expr":"sum(rate({__name__=~\"handler_latency_yb_ysqlserver_SQLProcessor_.*_sum\"}[5m])) / clamp_min(sum(rate({__name__=~\"handler_latency_yb_ysqlserver_SQLProcessor_.*_count\"}[5m])), 1) / 1000"}]}
+    {"type":"timeseries","title":"YSQL p99 statement latency (ms)","targets":[{"expr":"max({__name__=~\"handler_latency_yb_ysqlserver_SQLProcessor_.*\",quantile=\"p99\"}) / 1000"}]},
+    {"type":"timeseries","title":"Storage growth (bytes)","targets":[{"expr":"kubelet_volume_stats_used_bytes{namespace=~\"eubl21-yb-zone-[abc]\"}"}]}
     ]}

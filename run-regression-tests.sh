@@ -339,6 +339,17 @@ run_suite \
     "$RUN_DIR" \
     make test-validation-chaos
 
+# When supplied by the YBC DR drill, execute the complete Go application
+# suite with its database integration tests bound to the recovered target.
+# The normal Minikube suites remain independent topology regression evidence.
+if [[ -n "${EUBL21_RESTORED_DATABASE_URL:-}" ]]; then
+run_suite \
+    "restored database application regression" \
+    "$RUN_DIR/restored-database" \
+    env EUBL21_TEST_DATABASE_URL="$EUBL21_RESTORED_DATABASE_URL" \
+        go test ./... -count=1
+fi
+
 run_suite \
     "correctness regression (ubl21 + en16931)" \
     "$RUN_DIR/correctness" \

@@ -11,6 +11,7 @@ spec:
   namespaceSelector:
     matchNames: [eubl21-yb-zone-a, eubl21-yb-zone-b, eubl21-yb-zone-c]
   selector: {matchLabels: {app: yb-master}}
+  targetLabels: [app]
   endpoints: [{port: http-ui, path: /prometheus-metrics, interval: 30s}]
 ---
 apiVersion: monitoring.coreos.com/v1
@@ -23,6 +24,7 @@ spec:
   namespaceSelector:
     matchNames: [eubl21-yb-zone-a, eubl21-yb-zone-b, eubl21-yb-zone-c]
   selector: {matchLabels: {app: yb-tserver}}
+  targetLabels: [app]
   endpoints:
     - {port: http-ui, path: /prometheus-metrics, interval: 30s}
     - {port: http-ysql-met, path: /prometheus-metrics, interval: 30s}
@@ -58,10 +60,10 @@ spec:
           labels: {severity: warning}
           annotations: {summary: "YugabyteDB PVC is forecast to fill within 30 days"}
         - alert: YugabyteDBYSQLLatencyHigh
-          expr: sum(rate({__name__=~"handler_latency_yb_ysqlserver_SQLProcessor_.*_sum"}[5m])) / clamp_min(sum(rate({__name__=~"handler_latency_yb_ysqlserver_SQLProcessor_.*_count"}[5m])), 1) / 1000 > 250
+          expr: max({__name__=~"handler_latency_yb_ysqlserver_SQLProcessor_.*",quantile="p99"}) / 1000 > 250
           for: 10m
           labels: {severity: page}
-          annotations: {summary: "YSQL mean handler latency exceeds 250ms"}
+          annotations: {summary: "YSQL p99 statement latency exceeds 250ms"}
         - alert: YugabyteDBBackupFailed
           expr: kube_job_status_failed{namespace=~"eubl21-yb-zone-[abc]",job_name=~"eubl21-ybc-backup.*"} > 0
           for: 5m
