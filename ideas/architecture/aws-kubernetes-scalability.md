@@ -128,7 +128,7 @@ Do not scale them together.
                  |                                    |
                  v                                    v
             Amazon S3                         Metadata database
-       immutable XML/object store             Aurora PostgreSQL
+       immutable XML/object store             YugabyteDB/YSQL
                  |                                    |
                  +-----------------+------------------+
                                    |
@@ -158,7 +158,7 @@ Do not scale them together.
           +----------+-----------+
           |                      |
           v                      v
-      Aurora metadata       S3 artefacts
+      YugabyteDB metadata   S3 artefacts
       status/issues         raw SVRL/reports
           |
           v
@@ -191,7 +191,7 @@ AWS service metrics
   +--> SQS
   +--> ALB
   +--> EKS
-  +--> RDS/Aurora
+  +--> YugabyteDB/YSQL
   +--> S3
   +--> Karpenter
 ```
@@ -298,9 +298,9 @@ Do not expose bucket/object keys directly as customer authorization boundaries. 
 
 ---
 
-## 4.4 Aurora PostgreSQL
+## 4.4 YugabyteDB/YSQL
 
-Use Aurora PostgreSQL or RDS PostgreSQL for:
+Use YugabyteDB/YSQL for:
 
 - job metadata;
 - tenant configuration;
@@ -314,7 +314,7 @@ Use Aurora PostgreSQL or RDS PostgreSQL for:
 
 Do not store every XML payload as a large database blob unless a customer contract requires it.
 
-Use S3 for document bodies and PostgreSQL for relational metadata.
+Use S3 for document bodies and YugabyteDB/YSQL for relational metadata.
 
 ---
 
@@ -328,7 +328,7 @@ Redis/Valkey through ElastiCache may later be useful for:
 - profile metadata cache;
 - distributed locks where genuinely required.
 
-It should not become the authoritative queue or authoritative validation store if SQS and Aurora already fill those roles.
+It should not become the authoritative queue or authoritative validation store if SQS and YugabyteDB already fill those roles.
 
 ---
 
@@ -438,7 +438,7 @@ The platform can support several commercial isolation levels.
 shared EKS cluster
 shared worker pools
 shared SQS queues
-shared Aurora cluster
+shared YugabyteDB cluster
 tenant_id row isolation
 S3 tenant prefixes
 ```
@@ -522,7 +522,7 @@ VPC
 +-- private application subnets, AZ-C
 |
 +-- isolated database subnets
-      +-- Aurora
+      +-- YugabyteDB
 ```
 
 Use at least **three Availability Zones** where the selected AWS Region permits it.
@@ -855,7 +855,7 @@ Layer 2: Kubernetes nodes
 
 Layer 3: managed AWS services
     SQS / S3 naturally elastic
-    Aurora scaled/configured independently
+    YugabyteDB scaled/configured independently
 ```
 
 Do not expect one autoscaler to solve all three.
@@ -2814,7 +2814,7 @@ That is a clear capacity incident.
 
 # 87. Circuit-breaking downstream pressure
 
-If Aurora becomes unhealthy:
+If YugabyteDB becomes unhealthy:
 
 ```text
 reduce or halt new worker consumption
@@ -2919,7 +2919,7 @@ Even if the first production version is single-region, design backups for region
 Requirements:
 
 ```text
-Aurora automated backups / snapshots
+YugabyteDB backups / snapshots
 S3 versioning and replication policy if required
 ECR replication if required
 IaC capable of rebuilding cluster
@@ -3289,7 +3289,7 @@ Workers can be destroyed/recreated without local state loss.
 
 ## Phase 3: externalize durable metadata
 
-Deploy PostgreSQL/Aurora-backed metadata persistence.
+Deploy YugabyteDB/YSQL-backed metadata persistence.
 
 Store:
 
@@ -3345,7 +3345,7 @@ EKS
 ECR
 SQS
 S3
-Aurora
+YugabyteDB
 IAM / Pod Identity
 Secrets
 ```
@@ -3478,7 +3478,7 @@ circuit-breaker policy
 
 ### Acceptance
 
-Scaling workers cannot accidentally collapse Aurora.
+Scaling workers cannot accidentally collapse YugabyteDB.
 
 ---
 
@@ -3584,7 +3584,7 @@ Cost per document falls without SLO regression.
 | Standard worker | KEDA | SQS queue depth | oldest age, throughput, CPU | 5-15 min stabilization |
 | Bulk worker | KEDA | bulk queue | age, throughput | can scale to zero |
 | EKS nodes | Karpenter | unschedulable pods | capacity availability, cost | consolidation after pod demand falls |
-| Aurora | DB-native/configured | connections/CPU/IO | latency, lock waits | conservative |
+| YugabyteDB | DB-native/configured | connections/CPU/IO | latency, lock waits | conservative |
 | Observability | managed services | ingestion | cardinality/cost | managed / policy-driven |
 
 ---
@@ -3733,7 +3733,7 @@ AWS Region
 |
 +-- S3 encrypted document/result storage
 |
-+-- Aurora PostgreSQL Multi-AZ metadata
++-- YugabyteDB/YSQL multi-AZ metadata
 |
 +-- EKS Pod Identity / least privilege IAM
 |
@@ -3940,10 +3940,10 @@ The next concrete work should be:
 3. define the versioned queue job schema;
 4. define idempotent job persistence;
 5. externalize raw XML to an object-store abstraction compatible with S3;
-6. establish PostgreSQL-backed metadata storage;
+6. establish YugabyteDB-backed metadata storage;
 7. create production API and worker Docker images;
 8. build a non-production EKS environment using IaC;
-9. deploy SQS, S3 and Aurora integration;
+9. deploy SQS, S3 and YugabyteDB integration;
 10. deploy Amazon Managed Service for Prometheus and Grafana;
 11. create the Queue and Worker Scaling dashboard;
 12. benchmark one worker and establish jobs/sec and memory/job;

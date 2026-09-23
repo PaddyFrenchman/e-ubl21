@@ -945,7 +945,7 @@ This is the first useful product milestone: **JSON in -> compliant validated UBL
 
 ### Work package H: Full multi-tenant persistence and operational API
 
-- PostgreSQL schema;
+- YugabyteDB/YSQL schema;
 - canonical invoice storage;
 - party/customer CRUD;
 - search;

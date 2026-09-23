@@ -26,7 +26,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/150
 
 ### Current dependency checkpoint
 
-Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. Maintenance issue #139 completed the qualified Minikube v1.39.0 upgrade. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #124 and the priority Docker conversion #133 are complete.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. Maintenance issue #139 completed the qualified Minikube v1.39.0 upgrade. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #128 and the priority Docker conversion #133 are complete.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -922,17 +922,17 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/87
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/88
 
-### 55. #89 — FUTURE IMPROVEMENT — Move upload metadata/status from JetStream KV to PostgreSQL
+### 55. #89 — FUTURE IMPROVEMENT — Move upload metadata/status from JetStream KV to YugabyteDB
 
-**Goal:** Evaluate PostgreSQL as the durable system of record for upload metadata/status, queryable lifecycle state, retry state, retention metadata, and future multi-tenant reporting.
+**Goal:** Evaluate YugabyteDB/YSQL as the durable system of record for upload metadata/status, queryable lifecycle state, retry state, retention metadata, and future multi-tenant reporting.
 
-**Target separation:** PostgreSQL stores metadata/status; S3-compatible storage stores raw XML; NATS/JetStream handles messaging and orchestration. The raw-content backend remains configurable, with **SeaweedFS proposed for local/on-prem deployment** and Amazon S3 for AWS.
+**Target separation:** YugabyteDB/YSQL stores metadata/status; S3-compatible storage stores raw XML; NATS/JetStream handles messaging and orchestration. The raw-content backend remains configurable, with **SeaweedFS proposed for local/on-prem deployment** and Amazon S3 for AWS.
 
-**Migration note:** This wording is intentionally retained until MIG-YB-011 / #129 retargets the future metadata design to YugabyteDB after the migration foundation is in place.
+**Migration note:** This is a future architecture change only. It must build on the qualified YugabyteDB connection, migrations, deployment and test infrastructure; it does not implement a JetStream-KV migration here.
 
 **Revisit:** Before the first production-grade on-prem release, or earlier if persistence is generalized for multi-environment deployment.
 
-**Acceptance:** Adopt PostgreSQL, explicitly retain JetStream KV, or document another metadata persistence architecture. Any accepted decision must be reflected in an ADR, deployment, retention, backup, and licensing documentation.
+**Acceptance:** Adopt YugabyteDB/YSQL, explicitly retain JetStream KV, or document another metadata persistence architecture. Any accepted decision must be reflected in an ADR, deployment, retention, backup, and licensing documentation.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/89
 
@@ -950,7 +950,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/139
 
 ## Phase 9 — PostgreSQL-to-YugabyteDB migration
 
-The detailed source of truth for this issue series is [`ideas/postgresql-to-yugabytedb-migration-plan.md`](ideas/postgresql-to-yugabytedb-migration-plan.md). The issues below correspond one-to-one with its numbered steps and follow the repository workflow defined above.
+The detailed source of truth for this issue series is [`ideas/active-plans/postgresql-to-yugabytedb-migration-plan.md`](ideas/active-plans/postgresql-to-yugabytedb-migration-plan.md). The issues below correspond one-to-one with its numbered steps and follow the repository workflow defined above.
 
 ### 57. #119 — MIG-YB-001 — Adopt YugabyteDB as the product relational database and freeze migration baseline
 
@@ -1044,7 +1044,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/124
 
 **Implementation assets:** [`deploy/minikube/yugabytedb-values.yaml`](deploy/minikube/yugabytedb-values.yaml), [`devsetup/minikube-yugabytedb.sh`](devsetup/minikube-yugabytedb.sh), [`devsetup/regression-minikube.sh`](devsetup/regression-minikube.sh), and [`run-regression-tests.sh`](run-regression-tests.sh).
 
-**Status:** In progress on its issue branch.
+**Status:** Complete / closed.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/125
 
@@ -1141,7 +1141,7 @@ Optional SBDH/envelope validation
 
 The Phase 8 items are deliberately outside this immediate dependency chain. They are future product/platform choices with explicit revisit triggers rather than prerequisites for the current validation/Peppol roadmap.
 
-The Phase 9 YugabyteDB migration is a separate platform sequence with its own dependency graph, beginning at #119 and ending with final qualification in #130. Its detailed dependency graph and acceptance matrix are maintained in `ideas/postgresql-to-yugabytedb-migration-plan.md`.
+The Phase 9 YugabyteDB migration is a separate platform sequence with its own dependency graph, beginning at #119 and ending with final qualification in #130. Its detailed dependency graph and acceptance matrix are maintained in `ideas/active-plans/postgresql-to-yugabytedb-migration-plan.md`.
 
 ## Notes
 
@@ -1154,4 +1154,4 @@ The Phase 9 YugabyteDB migration is a separate platform sequence with its own de
 - Issue #82 is intentionally last in the immediate standards roadmap because it extends transport-envelope conformity beyond the core UBL/EN/Peppol Billing payload contract.
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
 - Issue #88 and #89 should be evaluated together when the future persistence architecture is revisited, while remaining separate issues because raw-content storage and metadata persistence have different migration and failure semantics.
-- Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Issues #119 through #124 are complete. Their detailed scopes remain synchronized with `ideas/postgresql-to-yugabytedb-migration-plan.md`.
+- Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Issues #119 through #128 are complete. Their detailed scopes remain synchronized with `ideas/active-plans/postgresql-to-yugabytedb-migration-plan.md`.

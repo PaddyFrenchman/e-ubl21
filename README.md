@@ -46,7 +46,7 @@ The following are explicitly **not yet part of the current production validity c
 - country-specific CIUS/profile validators;
 - full generic JSON invoice creation and enrichment APIs;
 - comprehensive lossless XML/JSON access for every UBL document type;
-- multi-tenant PostgreSQL CRUD and search;
+- multi-tenant YugabyteDB/YSQL CRUD and search;
 - Peppol network transport, SMP/SML discovery, AS4 access-point operation, or certificate handling.
 
 See [`TODO-VALIDATION-SPLIT.md`](TODO-VALIDATION-SPLIT.md) and [`TODO-PEPPOL.md`](TODO-PEPPOL.md) for the next major architecture milestones.
@@ -797,7 +797,7 @@ Expose the complete UBL information model through OpenAPI and introduce a canoni
 
 ### 5. Multi-tenant persistence
 
-Add full insert/retrieve/update/delete support for every UBL document type, with tenant/customer isolation as an invariant and PostgreSQL as the baseline persistence platform.
+Add full insert/retrieve/update/delete support for every UBL document type, with tenant/customer isolation as an invariant and YugabyteDB/YSQL as the baseline persistence platform.
 
 ### 6. Broader e-invoicing gateway
 

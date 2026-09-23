@@ -338,11 +338,11 @@ The Go application remains responsible for process control, timeout handling, er
 
 A future native or embedded validator may replace this dependency only if it provides equivalent UBL 2.1/XSD compatibility.
 
-### PostgreSQL
+### YugabyteDB / YSQL
 
 **Required for Phase 3.**
 
-PostgreSQL is the baseline relational database platform.
+YugabyteDB / YSQL is the baseline relational database platform.
 
 It is suitable for:
 
@@ -489,7 +489,7 @@ Tenant isolation must be designed into the data model from the beginning even th
                           Phase 1│          │Phase 3
                                  ▼          ▼
                          ┌────────────┐  ┌──────────────┐
-                         │ xmllint /  │  │ PostgreSQL   │
+                         │ xmllint /  │  │ YugabyteDB   │
                          │ libxml2    │  │ multi-tenant │
                          └──────┬─────┘  └──────────────┘
                                 │
@@ -524,6 +524,6 @@ The project reaches its intended end state when:
 |---|---|---|
 | **Phase 1** | Validate all UBL 2.1 document types | Go validation web server with complete UBL 2.1 XSD coverage |
 | **Phase 2** | Expose complete UBL document contents through OpenAPI | Comprehensive APIs plus lossless XML/JSON representation and conversion |
-| **Phase 3** | Persist and manage all UBL document types | Multi-tenant PostgreSQL CRUD layer keyed by customer identity |
+| **Phase 3** | Persist and manage all UBL document types | Multi-tenant YugabyteDB/YSQL CRUD layer keyed by customer identity |
 
 This roadmap defines the destination and major architectural boundaries. Detailed implementation plans, package structures, API route definitions, data models, and milestone breakdowns belong in subsequent roadmap and architecture documents.

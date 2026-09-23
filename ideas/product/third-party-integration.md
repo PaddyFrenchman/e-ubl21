@@ -1532,9 +1532,9 @@ If a cache entry is absent or cannot be trusted, read YugabyteDB. If the databas
 
 # Migration from existing PostgreSQL support to YugabyteDB
 
-## Current repository position
+## Historical migration baseline
 
-The repository already describes and deploys PostgreSQL in several places, particularly the on-premises deployment architecture. The current on-prem bootstrap installs CloudNativePG and creates a single PostgreSQL cluster/database.
+This section records the pre-YugabyteDB migration baseline. The current on-prem bootstrap installs YugabyteDB/YSQL; PostgreSQL and CloudNativePG references below describe legacy installations and the guarded upgrade path only.
 
 PostgreSQL also appears in:
 
@@ -1547,11 +1547,11 @@ PostgreSQL also appears in:
 - `docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md`;
 - `e-invoice/E-INVOICE.md`;
 - AWS/deployment idea documents;
-- issue #89, which currently describes moving metadata/status from JetStream KV to PostgreSQL.
+- the then-future issue #89, which has since been retargeted to YugabyteDB/YSQL metadata persistence.
 
-A repository search at the time of this decision did **not** find application Go code importing `database/sql` or `pgx`, which indicates that PostgreSQL is currently much more deeply represented in deployment/documentation/future architecture than in implemented application persistence code.
+A repository search at the time of this decision did **not** find application Go code importing `database/sql` or `pgx`, which indicated that PostgreSQL was then much more deeply represented in deployment/documentation/future architecture than in implemented application persistence code.
 
-That makes this the preferred time to change the database decision. The migration cost is substantially lower now than after a large persistence layer has been written against PostgreSQL-specific behavior.
+That made this the preferred time to change the database decision. The migration cost was substantially lower than after a large persistence layer had been written against PostgreSQL-specific behavior.
 
 ## Migration goal
 
@@ -1633,9 +1633,9 @@ Any chosen migration tool must be validated against YSQL before adoption.
 
 ## On-premises deployment migration
 
-The current on-prem installer must eventually stop installing CloudNativePG/PostgreSQL and install/configure YugabyteDB instead.
+The current on-prem installer installs/configures YugabyteDB. The following retired names remain only to explain legacy detection and upgrade safety.
 
-Current concepts such as:
+The retired concepts included:
 
 ```text
 CLOUDNATIVEPG_CHART_VERSION
@@ -1645,9 +1645,9 @@ install_postgresql_cluster
 e-ubl21-postgres
 ```
 
-must be replaced with YugabyteDB equivalents.
+were replaced with YugabyteDB equivalents.
 
-The replacement must cover:
+The replacement scope covered:
 
 - Helm/operator or supported Kubernetes installation method;
 - storage sizing;
@@ -1742,7 +1742,7 @@ The PostgreSQL-to-YugabyteDB architecture change is complete only when:
 
 This design document records the decision but does not itself change all deployment/runtime files.
 
-A dedicated implementation issue should update the installer, manifests, architecture documentation and affected future issues. In particular, issue #89 should be revised from "move metadata/status to PostgreSQL" to a YugabyteDB-based persistence objective when that work is scheduled.
+The migration implementation updated the installer, manifests and active architecture. Issue #89 now targets YugabyteDB-based future metadata persistence.
 
 ---
 
