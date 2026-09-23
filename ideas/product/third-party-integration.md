@@ -1547,7 +1547,7 @@ PostgreSQL also appears in:
 - `docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md`;
 - `e-invoice/E-INVOICE.md`;
 - AWS/deployment idea documents;
-- issue #89, which currently describes moving metadata/status from JetStream KV to PostgreSQL.
+- the then-future issue #89, which has since been retargeted to YugabyteDB/YSQL metadata persistence.
 
 A repository search at the time of this decision did **not** find application Go code importing `database/sql` or `pgx`, which indicates that PostgreSQL is currently much more deeply represented in deployment/documentation/future architecture than in implemented application persistence code.
 
@@ -1635,7 +1635,7 @@ Any chosen migration tool must be validated against YSQL before adoption.
 
 The current on-prem installer installs/configures YugabyteDB. The following retired names remain only to explain legacy detection and upgrade safety.
 
-Current concepts such as:
+The retired concepts included:
 
 ```text
 CLOUDNATIVEPG_CHART_VERSION
@@ -1645,7 +1645,7 @@ install_postgresql_cluster
 e-ubl21-postgres
 ```
 
-must be replaced with YugabyteDB equivalents.
+were replaced with YugabyteDB equivalents.
 
 The replacement must cover:
 
