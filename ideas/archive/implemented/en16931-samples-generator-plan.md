@@ -2,7 +2,7 @@
 
 **Project:** UBL-21 Validator
 **Document:** `EN16931-samples-generator-plan.md`
-**Purpose:** Step-by-step plan to extend the existing UBL sample generator (`createsamples/`) so it can also produce an **EN 16931 semantically-compliant** positive/negative test corpus for Invoice and CreditNote, as required by the test-corpus strategy in [MAIN-EN16931-UBL-validation.md](/home/a/e-ubl21/ideas/MAIN-EN16931-UBL-validation.md) (§46–48).
+**Purpose:** Step-by-step plan to extend the existing UBL sample generator (`createsamples/`) so it can also produce an **EN 16931 semantically-compliant** positive/negative test corpus for Invoice and CreditNote, as required by the test-corpus strategy in [MAIN-EN16931-UBL-validation.md](/home/a/e-ubl21/ideas/archive/implemented/en16931-validation-implementation-roadmap.md) (§46–48).
 **Status:** Proposed implementation roadmap
 **Prepared:** 22 August 2026
 
@@ -16,7 +16,7 @@ Two documents already exist and must not be duplicated, only extended:
 
   > "The initial version guarantees XSD validity, not complete business-process validity. Schematron rules, PEPPOL rules, EN 16931 ... are follow-on concerns." (§2)
 
-- [ideas/MAIN-EN16931-UBL-validation.md](/home/a/e-ubl21/ideas/MAIN-EN16931-UBL-validation.md) — the EN 16931 Schematron validation roadmap. Its §46 "Test corpus strategy" names the generated UBL samples as one of three required test-corpus sources, but only for proving that `UBL-valid` does **not** imply `EN16931-valid` (§46.2). It does not yet define how a *positive* EN16931 corpus (documents that should pass) or a *targeted* negative corpus (documents that should fail one named rule) get built.
+- [ideas/archive/implemented/en16931-validation-implementation-roadmap.md](/home/a/e-ubl21/ideas/archive/implemented/en16931-validation-implementation-roadmap.md) — the EN 16931 Schematron validation roadmap. Its §46 "Test corpus strategy" names the generated UBL samples as one of three required test-corpus sources, but only for proving that `UBL-valid` does **not** imply `EN16931-valid` (§46.2). It does not yet define how a *positive* EN16931 corpus (documents that should pass) or a *targeted* negative corpus (documents that should fail one named rule) get built.
 
 This document is the missing piece: it defines **Phase EN-0 … EN-6**, a follow-on to the existing generator's Phase SG-0…SG-7 (see `.github/create-samples.md` §14), that adds a second, semantic-aware generation mode limited to `Invoice` and `CreditNote`.
 

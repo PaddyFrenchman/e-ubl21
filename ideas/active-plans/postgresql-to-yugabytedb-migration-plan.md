@@ -47,8 +47,8 @@ PostgreSQL is also referenced in:
 - `README.md`;
 - `.github/roadmap-0.md`;
 - `docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md`;
-- `ideas/deployment-on-aws.md`;
-- `ideas/AWS-KUBERNETES-SCALIBILITY.md`;
+- `ideas/architecture/deployment-on-aws.md`;
+- `ideas/architecture/aws-kubernetes-scalability.md`;
 - issue #89, which currently proposes moving upload metadata/status from JetStream KV to PostgreSQL.
 
 Repository searches did not find a current Go persistence layer based on `database/sql` or `pgx`, nor a checked-in relational schema/migration set. This means the migration can be performed before substantial PostgreSQL-specific application code exists.
@@ -894,8 +894,8 @@ Update all relevant documentation, scripts and diagrams, including at least:
 - `deploy/on-prem/deployment-on-prem.md`;
 - `deploy/on-prem/licensing.md`;
 - `docs/SERVER-FUNCTIONALITY-AND-INVOICE-PLATFORM-ARCHITECTURE.md`;
-- `ideas/deployment-on-aws.md`;
-- `ideas/AWS-KUBERNETES-SCALIBILITY.md`;
+- `ideas/architecture/deployment-on-aws.md`;
+- `ideas/architecture/aws-kubernetes-scalability.md`;
 - any other repository references discovered by the inventory.
 
 Update licensing documentation to remove CloudNativePG/PostgreSQL from the e-ubl21 bundled stack where they are no longer shipped and add YugabyteDB's applicable licensing/notice obligations for the selected distribution.

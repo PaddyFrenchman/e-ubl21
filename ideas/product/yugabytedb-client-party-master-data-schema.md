@@ -4,7 +4,7 @@
 
 This document defines the first relational model for client ownership and customer/supplier master data in e-ubl21.
 
-The design supports the third-party integration architecture described in `ideas/third-party-integration.md` and the planned migration to YugabyteDB described in `ideas/postgresql-to-yugabytedb-migration-plan.md`.
+The design supports the third-party integration architecture described in `ideas/product/third-party-integration.md` and the planned migration to YugabyteDB described in `ideas/active-plans/postgresql-to-yugabytedb-migration-plan.md`.
 
 The central rule is:
 

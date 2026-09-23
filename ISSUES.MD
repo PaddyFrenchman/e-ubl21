@@ -14,6 +14,16 @@ The order below is the recommended default execution path. Some documentation, c
 
 Whenever a tracked GitHub issue is created, closed, materially re-scoped, or re-ordered, `ISSUES.MD` must be updated in the same workflow so that the repository issue index remains synchronized with GitHub. Deferred maintenance and future-improvement issues must also be recorded here even when they are intentionally outside the immediate implementation path.
 
+## Documentation and information architecture
+
+### #150 — DOCS — Organize ideas catalogue and preserve incubated concepts
+
+**Goal:** Replace the flat `ideas/` directory with a lifecycle-based catalogue while preserving every proposal, including SiteSentinel, and clearly handing the Meshery concept to `e-ubl21-console`.
+
+**Acceptance:** Every prior idea remains present exactly once, `ideas/README.md` provides a one-line overview and next action, completed work is separated from active plans, and no runtime behavior changes.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/150
+
 ### Current dependency checkpoint
 
 Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. Maintenance issue #139 completed the qualified Minikube v1.39.0 upgrade. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #124 and the priority Docker conversion #133 are complete.
