@@ -192,7 +192,7 @@ EKS
 ECR
 SQS
 S3
-Aurora PostgreSQL
+YugabyteDB/YSQL
 IAM
 KMS
 WAF
@@ -220,7 +220,7 @@ Terraform
     +--> EKS
     +--> SQS
     +--> S3
-    +--> Aurora
+    +--> YugabyteDB/YSQL
     +--> IAM
     +--> KMS
     +--> observability
@@ -389,7 +389,7 @@ OpenTofu
     +--> ECR
     +--> SQS
     +--> S3
-    +--> Aurora
+    +--> YugabyteDB/YSQL
     +--> IAM
     +--> KMS
     +--> Secrets Manager
@@ -1209,7 +1209,7 @@ The cleanest ownership model is:
                     |
         +-----------+-----------+
         |                       |
-       EKS                  SQS/S3/Aurora
+       EKS                  SQS/S3/YugabyteDB
         |
         | Kubernetes boundary
         v
@@ -1299,7 +1299,7 @@ Development infrastructure can be cheaper and simpler.
 Possible:
 
 ```text
-smaller Aurora/RDS
+smaller YugabyteDB/YSQL deployment
 smaller EKS capacity
 lower KEDA minimum
 no Spot requirement
@@ -1589,7 +1589,7 @@ helm upgrade --install
 
 ## Stage 4
 
-Add Aurora PostgreSQL and Secrets Manager through OpenTofu.
+Add YugabyteDB/YSQL and Secrets Manager through OpenTofu.
 
 ---
 
@@ -1815,7 +1815,7 @@ Examples:
 EKS cluster name
 SQS queue URL
 S3 bucket name
-Aurora endpoint
+YugabyteDB/YSQL endpoint
 Prometheus workspace ID
 Grafana workspace URL
 ECR repository URL
@@ -1907,7 +1907,7 @@ This separation keeps each tool focused on the problem it solves best.
    EKS                   \               Karpenter
     |                     \                  |
     v                      +-----------------+
- Aurora / IAM / KMS / Observability
+ YugabyteDB / IAM / KMS / Observability
 ```
 
 ---
@@ -1998,7 +1998,7 @@ EKS
 Helm
 KEDA
 Karpenter
-Aurora
+YugabyteDB/YSQL
 Observability
 Argo CD
 ```

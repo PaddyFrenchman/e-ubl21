@@ -335,7 +335,7 @@ This product suits Go extremely well.
 
                     │
              ┌──────▼──────┐
-             │ PostgreSQL  │
+             │ YugabyteDB  │
              └─────────────┘
 ```
 

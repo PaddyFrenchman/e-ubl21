@@ -509,7 +509,7 @@ Azure VNet
    +--> monitoring connectivity
 ```
 
-Production deployments should support private endpoints and restricted public exposure for PostgreSQL, Blob Storage, Key Vault, ACR, and other managed services where appropriate.
+Production deployments should support private endpoints and restricted public exposure for YugabyteDB/YSQL, Blob Storage, Key Vault, ACR, and other managed services where appropriate.
 
 Network Security Groups, Kubernetes NetworkPolicies, ingress policy, and Azure firewalling should form complementary layers rather than substitutes for one another.
 

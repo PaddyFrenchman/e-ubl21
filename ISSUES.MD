@@ -922,17 +922,17 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/87
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/88
 
-### 55. #89 — FUTURE IMPROVEMENT — Move upload metadata/status from JetStream KV to PostgreSQL
+### 55. #89 — FUTURE IMPROVEMENT — Move upload metadata/status from JetStream KV to YugabyteDB
 
-**Goal:** Evaluate PostgreSQL as the durable system of record for upload metadata/status, queryable lifecycle state, retry state, retention metadata, and future multi-tenant reporting.
+**Goal:** Evaluate YugabyteDB/YSQL as the durable system of record for upload metadata/status, queryable lifecycle state, retry state, retention metadata, and future multi-tenant reporting.
 
-**Target separation:** PostgreSQL stores metadata/status; S3-compatible storage stores raw XML; NATS/JetStream handles messaging and orchestration. The raw-content backend remains configurable, with **SeaweedFS proposed for local/on-prem deployment** and Amazon S3 for AWS.
+**Target separation:** YugabyteDB/YSQL stores metadata/status; S3-compatible storage stores raw XML; NATS/JetStream handles messaging and orchestration. The raw-content backend remains configurable, with **SeaweedFS proposed for local/on-prem deployment** and Amazon S3 for AWS.
 
-**Migration note:** This wording is intentionally retained until MIG-YB-011 / #129 retargets the future metadata design to YugabyteDB after the migration foundation is in place.
+**Migration note:** This is a future architecture change only. It must build on the qualified YugabyteDB connection, migrations, deployment and test infrastructure; it does not implement a JetStream-KV migration here.
 
 **Revisit:** Before the first production-grade on-prem release, or earlier if persistence is generalized for multi-environment deployment.
 
-**Acceptance:** Adopt PostgreSQL, explicitly retain JetStream KV, or document another metadata persistence architecture. Any accepted decision must be reflected in an ADR, deployment, retention, backup, and licensing documentation.
+**Acceptance:** Adopt YugabyteDB/YSQL, explicitly retain JetStream KV, or document another metadata persistence architecture. Any accepted decision must be reflected in an ADR, deployment, retention, backup, and licensing documentation.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/89
 
