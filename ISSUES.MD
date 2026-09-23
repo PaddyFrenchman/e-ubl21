@@ -26,7 +26,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/150
 
 ### Current dependency checkpoint
 
-Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. Maintenance issue #139 completed the qualified Minikube v1.39.0 upgrade. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #124 and the priority Docker conversion #133 are complete.
+Issue #81 establishes the final public Peppol gate and the accepted normalized release baseline, completing #45 in substance and proving #64's native asynchronous Peppol-stage contract. Issues #37, #38, #44 through #47, and #48 through #81 are complete. Issue #82 remains open for the optional Peppol envelope/SBDH work and final qualification. Maintenance issue #139 completed the qualified Minikube v1.39.0 upgrade. The YugabyteDB migration program is tracked by issues #119 through #130; #119 through #128 and the priority Docker conversion #133 are complete.
 
 An empty, guessed, or implementation-derived Peppol baseline is forbidden. The #45 baseline must freeze already-verified external standards behavior; it must never manufacture the expectations it is intended to protect.
 
@@ -1044,7 +1044,7 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/124
 
 **Implementation assets:** [`deploy/minikube/yugabytedb-values.yaml`](deploy/minikube/yugabytedb-values.yaml), [`devsetup/minikube-yugabytedb.sh`](devsetup/minikube-yugabytedb.sh), [`devsetup/regression-minikube.sh`](devsetup/regression-minikube.sh), and [`run-regression-tests.sh`](run-regression-tests.sh).
 
-**Status:** In progress on its issue branch.
+**Status:** Complete / closed.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/125
 

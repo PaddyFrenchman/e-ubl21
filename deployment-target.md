@@ -485,11 +485,15 @@ Microsoft Entra ID
         +--> Blob Storage
         +--> Key Vault
         +--> Service Bus
-        +--> YugabyteDB/YSQL access
         +--> other Azure services
 ```
 
 Secrets that cannot be replaced by identity-based access should reside in **Azure Key Vault**.
+
+YugabyteDB/YSQL is reached through private Kubernetes networking with TLS and
+the database login roles, credentials and certificates defined in
+[`docs/YUGABYTEDB-OPERATIONS.md`](docs/YUGABYTEDB-OPERATIONS.md); it is not an
+Entra ID workload-identity login target.
 
 Kubernetes Secrets should contain only the minimum material required by the workload and should preferably be populated or mounted from Key Vault rather than becoming the authoritative secret store.
 
@@ -509,7 +513,7 @@ Azure VNet
    +--> monitoring connectivity
 ```
 
-Production deployments should support private endpoints and restricted public exposure for YugabyteDB/YSQL, Blob Storage, Key Vault, ACR, and other managed services where appropriate.
+Production deployments should provide private network/service access for YugabyteDB/YSQL, and private endpoints with restricted public exposure for supported Azure managed services such as Blob Storage, Key Vault and ACR.
 
 Network Security Groups, Kubernetes NetworkPolicies, ingress policy, and Azure firewalling should form complementary layers rather than substitutes for one another.
 

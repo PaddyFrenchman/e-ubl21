@@ -1549,9 +1549,9 @@ PostgreSQL also appears in:
 - AWS/deployment idea documents;
 - the then-future issue #89, which has since been retargeted to YugabyteDB/YSQL metadata persistence.
 
-A repository search at the time of this decision did **not** find application Go code importing `database/sql` or `pgx`, which indicates that PostgreSQL is currently much more deeply represented in deployment/documentation/future architecture than in implemented application persistence code.
+A repository search at the time of this decision did **not** find application Go code importing `database/sql` or `pgx`, which indicated that PostgreSQL was then much more deeply represented in deployment/documentation/future architecture than in implemented application persistence code.
 
-That makes this the preferred time to change the database decision. The migration cost is substantially lower now than after a large persistence layer has been written against PostgreSQL-specific behavior.
+That made this the preferred time to change the database decision. The migration cost was substantially lower than after a large persistence layer had been written against PostgreSQL-specific behavior.
 
 ## Migration goal
 
@@ -1647,7 +1647,7 @@ e-ubl21-postgres
 
 were replaced with YugabyteDB equivalents.
 
-The replacement must cover:
+The replacement scope covered:
 
 - Helm/operator or supported Kubernetes installation method;
 - storage sizing;
