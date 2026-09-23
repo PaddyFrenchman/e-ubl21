@@ -485,7 +485,7 @@ Microsoft Entra ID
         +--> Blob Storage
         +--> Key Vault
         +--> Service Bus
-        +--> Azure Database access where supported
+        +--> YugabyteDB/YSQL access
         +--> other Azure services
 ```
 

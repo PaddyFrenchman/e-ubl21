@@ -1532,9 +1532,9 @@ If a cache entry is absent or cannot be trusted, read YugabyteDB. If the databas
 
 # Migration from existing PostgreSQL support to YugabyteDB
 
-## Current repository position
+## Historical migration baseline
 
-The repository already describes and deploys PostgreSQL in several places, particularly the on-premises deployment architecture. The current on-prem bootstrap installs CloudNativePG and creates a single PostgreSQL cluster/database.
+This section records the pre-YugabyteDB migration baseline. The current on-prem bootstrap installs YugabyteDB/YSQL; PostgreSQL and CloudNativePG references below describe legacy installations and the guarded upgrade path only.
 
 PostgreSQL also appears in:
 
@@ -1633,7 +1633,7 @@ Any chosen migration tool must be validated against YSQL before adoption.
 
 ## On-premises deployment migration
 
-The current on-prem installer must eventually stop installing CloudNativePG/PostgreSQL and install/configure YugabyteDB instead.
+The current on-prem installer installs/configures YugabyteDB. The following retired names remain only to explain legacy detection and upgrade safety.
 
 Current concepts such as:
 
@@ -1742,7 +1742,7 @@ The PostgreSQL-to-YugabyteDB architecture change is complete only when:
 
 This design document records the decision but does not itself change all deployment/runtime files.
 
-A dedicated implementation issue should update the installer, manifests, architecture documentation and affected future issues. In particular, issue #89 should be revised from "move metadata/status to PostgreSQL" to a YugabyteDB-based persistence objective when that work is scheduled.
+The migration implementation updated the installer, manifests and active architecture. Issue #89 now targets YugabyteDB-based future metadata persistence.
 
 ---
 
