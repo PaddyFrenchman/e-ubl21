@@ -1,0 +1,14 @@
+# Apply this overlay only after replacing the routing placeholders. It contains
+# no object-store credential: the ServiceAccount identity is the sole source.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eubl21-ybc-backup-runtime
+  namespace: eubl21-yb-zone-a
+data:
+  database: eubl21
+  masterAddresses: yb-master-0.yb-masters.eubl21-yb-zone-a.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-b.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-c.svc.cluster.local:7100
+  objectStoreUri: s3://REPLACE_WITH_PRODUCTION_BUCKET/eubl21/yugabytedb
+  objectStoreEndpoint: https://s3.REPLACE_WITH_REGION.example
+  objectStoreRegion: REPLACE_WITH_REGION
+  retention: '{"keepFull":35,"keepIncremental":140}'
