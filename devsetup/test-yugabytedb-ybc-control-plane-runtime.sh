@@ -24,9 +24,29 @@ ctx=(kubectl --context "k3d-$cluster" -n "$namespace")
 # qualification. They are never printed or copied to the evidence directory.
 minio_user="minio-$run_id"; minio_password="$(od -An -N24 -tx1 /dev/urandom | tr -d ' \n')"
 "${ctx[@]}" create secret generic minio-test-identity --from-literal=MINIO_ROOT_USER="$minio_user" --from-literal=MINIO_ROOT_PASSWORD="$minio_password"
-"${ctx[@]}" create deployment minio --image=eubl21/minio:RELEASE.2025-10-15T17-29-55Z -- minio server /data
-"${ctx[@]}" set env deployment/minio --from=secret/minio-test-identity
-"${ctx[@]}" expose deployment minio --port=9000
+"${ctx[@]}" apply -f - <<'YAML'
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: minio}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: minio}}
+  template:
+    metadata: {labels: {app: minio}}
+    spec:
+      containers:
+      - name: minio
+        image: eubl21/minio:RELEASE.2025-10-15T17-29-55Z
+        command: [minio]
+        args: [server, /data]
+        envFrom: [{secretRef: {name: minio-test-identity}}]
+        ports: [{containerPort: 9000}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: minio}
+spec: {selector: {app: minio}, ports: [{port: 9000, targetPort: 9000}]}
+YAML
 "${ctx[@]}" rollout status deployment/minio --timeout=180s
 # Create two independent single-node universes. The target exists before the
 # drill but is intentionally empty; it is never used as the backup source.
