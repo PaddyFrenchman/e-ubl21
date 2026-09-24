@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Preflight the e-ubl21-owned YBC control-plane contract. The image invoked by
-# the CronJobs performs the K3d + MinIO runtime qualification and retains its
-# evidence under regression-results/yugabytedb-ybc-control-plane.
+# Static manifest guard. The executable K3d + MinIO qualification is run by
+# make yugabytedb-ybc-control-plane-test.
 set -Eeuo pipefail
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 manifest="$root/deploy/production/yugabytedb/backup-control-plane.yaml"

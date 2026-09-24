@@ -32,7 +32,14 @@ get_state() {
   fi
 }
 put_state() { aws "${aws_args[@]}" s3 cp "$work/state.json" "s3://$bucket/$state_key" --only-show-errors; }
-metric() { printf 'eubl21_ybc_last_successful_backup_timestamp_seconds{kind="%s"} %s\n' "$1" "$(date +%s)"; }
+metric() {
+  local name
+  case "$1" in
+    full) name=eubl21_ybc_last_successful_full_backup_timestamp_seconds;;
+    incremental) name=eubl21_ybc_last_successful_incremental_backup_timestamp_seconds;;
+  esac
+  printf '%s %s\n' "$name" "$(date +%s)"
+}
 backup() {
   [[ "$kind" == full || "$kind" == incremental ]] || die "backup requires --kind=full or --kind=incremental"
   get_state
@@ -44,10 +51,12 @@ backup() {
     chain="$(jq -r --arg id "$parent" '.chains[] | select(.id==$id and .status=="succeeded") | .chain' "$work/state.json")"
     [[ -n "$chain" ]] || die "incremental backup is blocked: successful full chain is unavailable"
   else chain="full-$(date -u +%Y%m%dT%H%M%SZ)"; fi
-  id="$kind-$(date -u +%Y%m%dT%H%M%SZ)-${HOSTNAME:-runner}"; location="$store_uri/backups/$chain/$id"
+  id="$kind-$(date -u +%Y%m%dT%H%M%SZ)-${HOSTNAME:-runner}"
+  location="$store_uri/backups/$chain/$id"; result="$work/$id.log"
   # --use_ybc makes this a Controller backup. ysql_dump is never invoked.
-  result="$work/$id.log"
-  /home/yugabyte/bin/yb_backup.py create --use_ybc --masters "$masters" --keyspace "$database" --backup_location "$location" ${parent:+--incremental_backup --backup_id "$parent"} >"$result" 2>&1
+  backup_args=(create --use_ybc --masters "$masters" --keyspace "$database" --backup_location "$location")
+  if [[ -n "$parent" ]]; then backup_args+=(--incremental_backup --backup_id "$parent"); fi
+  /home/yugabyte/bin/yb_backup.py "${backup_args[@]}" >"$result" 2>&1
   completed="$(now)"; manifest="$work/$id.json"
   jq -n --arg id "$id" --arg kind "$kind" --arg chain "$chain" --arg parent "$parent" --arg location "$location" --arg started "$started" --arg completed "$completed" --arg masters "$masters" \
     '{id:$id,kind:$kind,chain:$chain,parent:($parent|select(length>0)),location:$location,startedAt:$started,completedAt:$completed,sourceMasters:$masters,status:"succeeded"}' >"$manifest"
@@ -55,7 +64,7 @@ backup() {
   mv "$work/new.json" "$work/state.json"; put_state
   aws "${aws_args[@]}" s3 cp "$manifest" "s3://$bucket/$evidence_prefix/$id.json" --only-show-errors
   aws "${aws_args[@]}" s3 cp "$result" "s3://$bucket/$evidence_prefix/$id.log" --only-show-errors
-  metric "$kind" | aws "${aws_args[@]}" s3 cp - "s3://$bucket/$evidence_prefix/metrics.prom" --only-show-errors
+  metric "$kind" | tee "$work/$kind.metrics" | aws "${aws_args[@]}" s3 cp - "s3://$bucket/$evidence_prefix/$kind.metrics.prom" --only-show-errors
   echo "YBC $kind backup succeeded: id=$id chain=$chain location=$location manifest_sha256=$(sha "$manifest")"
 }
 enforce_retention() {

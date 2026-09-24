@@ -54,7 +54,7 @@ yugabytedb-ybc-dr-test:
 	./devsetup/test-yugabytedb-ybc-dr.sh
 
 yugabytedb-ybc-control-plane-test:
-	bash ./devsetup/test-yugabytedb-ybc-control-plane.sh
+	./devsetup/test-yugabytedb-ybc-control-plane-runtime.sh
 
 # Render the pinned on-prem YugabyteDB chart and installer-owned Jobs without
 # mutating a cluster. The integration target uses a disposable namespace.
