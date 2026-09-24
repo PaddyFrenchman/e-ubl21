@@ -51,8 +51,10 @@ yugabytedb-dr-local-test:
 # Development YBC data-plane qualification. This is distinct from the logical
 # dump drill above and intentionally does not claim production orchestration.
 yugabytedb-ybc-dr-test:
+	./devsetup/test-yugabytedb-ybc-dr.sh
+
 yugabytedb-ybc-control-plane-test:
-	./devsetup/test-yugabytedb-ybc-control-plane.sh
+	bash ./devsetup/test-yugabytedb-ybc-control-plane.sh
 
 	./devsetup/test-yugabytedb-ybc-dr.sh
 
