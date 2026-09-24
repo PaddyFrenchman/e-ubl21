@@ -5,7 +5,7 @@
 set -Eeuo pipefail
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 for binary in docker k3d kubectl; do command -v "$binary" >/dev/null || { echo "missing $binary" >&2; exit 2; }; done
-run_id="$(date -u +%Y%m%dT%H%M%SZ)-$$"; cluster="eybc-${RANDOM}-${RANDOM}"; namespace="ybc-$run_id"
+run_id="$(date -u +%Y%m%dt%H%M%sz)-$$"; cluster="eybc-${RANDOM}-${RANDOM}"; namespace="ybc-$run_id"
 artifact_dir="${ARTIFACT_DIR:-$root/regression-results/yugabytedb-ybc-control-plane/$run_id}"
 mkdir -p "$artifact_dir"
 cleanup() {
