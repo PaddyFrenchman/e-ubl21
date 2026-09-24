@@ -72,11 +72,11 @@ spec: {selector: {app: yb-target}, ports: [{name: master, port: 7100}, {name: ys
 YAML
 "${ctx[@]}" wait --for=condition=Available deployment/yb-source deployment/yb-target --timeout=10m
 "${ctx[@]}" create secret generic s3-test-identity --from-literal=AWS_ACCESS_KEY_ID="$minio_user" --from-literal=AWS_SECRET_ACCESS_KEY="$minio_password"
-"${ctx[@]}" create job minio-init --image=minio/mc:RELEASE.2025-02-21T16-00-46Z -- sh -ec "mc alias set local http://minio:9000 '$minio_user' '$minio_password'; mc mb --ignore-existing local/eubl21-ybc"
-"${ctx[@]}" wait --for=condition=complete job/minio-init --timeout=180s
-"${ctx[@]}" create configmap ybc-policy --from-literal=database=eubl21 --from-literal=controllerAddress=yb-source --from-literal=objectStoreUri=s3://eubl21-ybc/evidence --from-literal=objectStoreEndpoint=http://minio:9000 --from-literal=objectStoreRegion=us-east-1 --from-literal='retention={"keepFull":1}'
 docker build -t "eubl21-ybc-control-plane:$run_id" -f "$root/deploy/production/yugabytedb/ybc-control-plane/Dockerfile" "$root/deploy/production/yugabytedb/ybc-control-plane"
 k3d image import "eubl21-ybc-control-plane:$run_id" -c "$cluster"
+"${ctx[@]}" create job minio-init --image="eubl21-ybc-control-plane:$run_id" --overrides='{"spec":{"template":{"spec":{"restartPolicy":"Never","containers":[{"name":"minio-init","command":["aws"],"args":["--endpoint-url","http://minio:9000","--region","us-east-1","s3api","create-bucket","--bucket","eubl21-ybc"],"envFrom":[{"secretRef":{"name":"s3-test-identity"}}]}]}}}'
+"${ctx[@]}" wait --for=condition=complete job/minio-init --timeout=180s
+"${ctx[@]}" create configmap ybc-policy --from-literal=database=eubl21 --from-literal=controllerAddress=yb-source --from-literal=objectStoreUri=s3://eubl21-ybc/evidence --from-literal=objectStoreEndpoint=http://minio:9000 --from-literal=objectStoreRegion=us-east-1 --from-literal='retention={"keepFull":1}'
 run_control_plane() {
   local name=$1; shift
   # The full Pod template is supplied at creation; Jobs are never patched after
