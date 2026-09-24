@@ -21,4 +21,11 @@ backup(){
   printf 'eubl21_ybc_last_successful_%s_backup_timestamp_seconds %s\n' "$kind" "$(date +%s)" | tee "$tmp/$kind.prom" | "${aws[@]}" s3 cp - "s3://$bucket/$root/evidence/$kind.prom" --only-show-errors
 }
 restore(){ [[ -n $target ]] || die 'restore requires --target-controller=host'; dir=$(jq -r '.lastSuccessfulBackup // empty' "$tmp/state.json"); [[ -n $dir ]] || die 'no recovery point'; "$cli" restore --server_address="$target" --server_port=18018 --tserver_ip="$target" --ns="$db" --ns_type=ysql --cloud_type=s3 --bucket="$bucket" --cloud_dir="$dir" --wait; }
-case $op in backup) backup;; restore) restore;; *) die 'usage: backup|restore';; esac
+retention(){
+  keep=$(jq -r '.keepFull // 35' "$policy/retention")
+  # A chain is indivisible: select newest full chains, retain every member, and
+  # delete only complete older chains through YBC's backup_delete API.
+  jq -r --argjson keep "$keep" '[.chains | group_by(.chain) | map(sort_by(.completedAt)) | sort_by(.[0].completedAt) | reverse | .[$keep:][] | .[0].dir] | .[]' "$tmp/state.json" | while read -r old; do "$cli" backup_delete --server_address="$controller" --server_port=18018 --cloud_type=s3 --bucket="$bucket" --cloud_dir="$old"; done
+  jq --argjson keep "$keep" '.chains |= (group_by(.chain) | sort_by(.[0].completedAt) | reverse | .[:$keep] | flatten) | .lastSuccessfulBackup=(.chains|sort_by(.completedAt)|last.dir)' "$tmp/state.json" >"$tmp/new.json"; mv "$tmp/new.json" "$tmp/state.json"; save
+}
+case $op in backup) backup;; restore) restore;; retention) retention;; *) die 'usage: backup|restore|retention';; esac

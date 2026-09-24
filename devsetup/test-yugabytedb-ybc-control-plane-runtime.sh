@@ -43,12 +43,12 @@ spec:
       - name: yugabyte
         image: yugabytedb/yugabyte:2025.2.6.0-b111
         command: [bash, -ec, 'mkdir -p ybc && tar -xzf share/ybc-*-linux-x86_64.tar.gz -C ybc --strip-components=1 && exec bin/yugabyted start --base_dir=/tmp/yb --background=false --backup_daemon=true']
-        ports: [{containerPort: 7100}, {containerPort: 5433}]
+        ports: [{containerPort: 7100}, {containerPort: 5433}, {containerPort: 18018}]
 ---
 apiVersion: v1
 kind: Service
 metadata: {name: yb-source}
-spec: {selector: {app: yb-source}, ports: [{name: master, port: 7100}, {name: ysql, port: 5433}]}
+spec: {selector: {app: yb-source}, ports: [{name: master, port: 7100}, {name: ysql, port: 5433}, {name: controller, port: 18018}]}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -63,18 +63,18 @@ spec:
       - name: yugabyte
         image: yugabytedb/yugabyte:2025.2.6.0-b111
         command: [bash, -ec, 'mkdir -p ybc && tar -xzf share/ybc-*-linux-x86_64.tar.gz -C ybc --strip-components=1 && exec bin/yugabyted start --base_dir=/tmp/yb --background=false --backup_daemon=true']
-        ports: [{containerPort: 7100}, {containerPort: 5433}]
+        ports: [{containerPort: 7100}, {containerPort: 5433}, {containerPort: 18018}]
 ---
 apiVersion: v1
 kind: Service
 metadata: {name: yb-target}
-spec: {selector: {app: yb-target}, ports: [{name: master, port: 7100}, {name: ysql, port: 5433}]}
+spec: {selector: {app: yb-target}, ports: [{name: master, port: 7100}, {name: ysql, port: 5433}, {name: controller, port: 18018}]}
 YAML
 "${ctx[@]}" wait --for=condition=Available deployment/yb-source deployment/yb-target --timeout=10m
 "${ctx[@]}" create secret generic s3-test-identity --from-literal=AWS_ACCESS_KEY_ID="$minio_user" --from-literal=AWS_SECRET_ACCESS_KEY="$minio_password"
-"${ctx[@]}" run minio-init --image=minio/mc:RELEASE.2025-02-21T16-00-46Z --restart=Never --command -- sh -ec "mc alias set local http://minio:9000 '$minio_user' '$minio_password'; mc mb --ignore-existing local/eubl21-ybc"
+"${ctx[@]}" create job minio-init --image=minio/mc:RELEASE.2025-02-21T16-00-46Z -- sh -ec "mc alias set local http://minio:9000 '$minio_user' '$minio_password'; mc mb --ignore-existing local/eubl21-ybc"
 "${ctx[@]}" wait --for=condition=complete job/minio-init --timeout=180s
-"${ctx[@]}" create configmap ybc-policy --from-literal=database=eubl21 --from-literal=masterAddresses=yb-source:7100 --from-literal=objectStoreUri=s3://eubl21-ybc/evidence --from-literal=objectStoreEndpoint=http://minio:9000 --from-literal=objectStoreRegion=us-east-1 --from-literal='retention={"keepFull":1,"keepIncremental":1}'
+"${ctx[@]}" create configmap ybc-policy --from-literal=database=eubl21 --from-literal=controllerAddress=yb-source --from-literal=objectStoreUri=s3://eubl21-ybc/evidence --from-literal=objectStoreEndpoint=http://minio:9000 --from-literal=objectStoreRegion=us-east-1 --from-literal='retention={"keepFull":1}'
 docker build -t "eubl21-ybc-control-plane:$run_id" -f "$root/deploy/production/yugabytedb/ybc-control-plane/Dockerfile" "$root/deploy/production/yugabytedb/ybc-control-plane"
 k3d image import "eubl21-ybc-control-plane:$run_id" -c "$cluster"
 run_control_plane() {
@@ -92,7 +92,7 @@ run_control_plane ybc-full backup --kind=full --policy=/etc/eubl21
 "${ctx[@]}" exec deploy/yb-source -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -d eubl21 -c "INSERT INTO qualification VALUES (2, 'incremental');"
 run_control_plane ybc-incremental backup --kind=incremental --policy=/etc/eubl21
 run_control_plane ybc-retention retention --policy=/etc/eubl21
-run_control_plane ybc-restore restore --policy=/etc/eubl21 --target-masters=yb-target:7100
+run_control_plane ybc-restore restore --policy=/etc/eubl21 --target-controller=yb-target
 "${ctx[@]}" exec deploy/yb-target -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -d eubl21 -Atc 'SELECT payload FROM qualification ORDER BY id' | tee "$artifact_dir/restored-data.txt"
 grep -Fxq full "$artifact_dir/restored-data.txt"; grep -Fxq incremental "$artifact_dir/restored-data.txt"
 "${ctx[@]}" get configmap ybc-policy -o yaml >"$artifact_dir/policy.yaml"
