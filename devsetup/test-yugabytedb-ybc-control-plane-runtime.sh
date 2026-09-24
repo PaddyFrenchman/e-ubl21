@@ -21,7 +21,7 @@ ctx=(kubectl --context "k3d-$cluster" -n "$namespace")
 "${ctx[@]}" create namespace "$namespace"
 # Generated, namespace-local MinIO credentials are used only by the disposable
 # qualification. They are never printed or copied to the evidence directory.
-minio_user="minio-$run_id"; minio_password="$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)"
+minio_user="minio-$run_id"; minio_password="$(od -An -N24 -tx1 /dev/urandom | tr -d ' \n')"
 "${ctx[@]}" create secret generic minio-test-identity --from-literal=MINIO_ROOT_USER="$minio_user" --from-literal=MINIO_ROOT_PASSWORD="$minio_password"
 "${ctx[@]}" create deployment minio --image=minio/minio:RELEASE.2025-01-20T14-49-07Z -- server /data
 "${ctx[@]}" set env deployment/minio --from=secret/minio-test-identity
