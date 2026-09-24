@@ -27,17 +27,73 @@ minio_user="minio-$run_id"; minio_password="$(tr -dc A-Za-z0-9 </dev/urandom | h
 "${ctx[@]}" set env deployment/minio --from=secret/minio-test-identity
 "${ctx[@]}" expose deployment minio --port=9000
 "${ctx[@]}" rollout status deployment/minio --timeout=180s
-# The caller supplies the K3d Yugabyte source/target manifests because the
-# chosen chart and rack topology are platform-owned. Requiring both prevents a
-# misleading same-universe restore claim.
-[[ -n "${EUBL21_YBC_SOURCE_MANIFEST:-}" && -n "${EUBL21_YBC_TARGET_MANIFEST:-}" ]] || { echo 'set EUBL21_YBC_SOURCE_MANIFEST and EUBL21_YBC_TARGET_MANIFEST' >&2; exit 2; }
-"${ctx[@]}" apply -f "$EUBL21_YBC_SOURCE_MANIFEST"; "${ctx[@]}" apply -f "$EUBL21_YBC_TARGET_MANIFEST"
-"${ctx[@]}" wait --for=condition=Ready pod -l app=yb-source --timeout=10m
-"${ctx[@]}" wait --for=condition=Ready pod -l app=yb-target --timeout=10m
+# Create two independent single-node universes. The target exists before the
+# drill but is intentionally empty; it is never used as the backup source.
+"${ctx[@]}" apply -f - <<'YAML'
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: yb-source, labels: {app: yb-source}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: yb-source}}
+  template:
+    metadata: {labels: {app: yb-source}}
+    spec:
+      containers:
+      - name: yugabyte
+        image: yugabytedb/yugabyte:2025.2.6.0-b111
+        command: [bash, -ec, 'mkdir -p ybc && tar -xzf share/ybc-*-linux-x86_64.tar.gz -C ybc --strip-components=1 && exec bin/yugabyted start --base_dir=/tmp/yb --background=false --backup_daemon=true']
+        ports: [{containerPort: 7100}, {containerPort: 5433}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: yb-source}
+spec: {selector: {app: yb-source}, ports: [{name: master, port: 7100}, {name: ysql, port: 5433}]}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: yb-target, labels: {app: yb-target}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: yb-target}}
+  template:
+    metadata: {labels: {app: yb-target}}
+    spec:
+      containers:
+      - name: yugabyte
+        image: yugabytedb/yugabyte:2025.2.6.0-b111
+        command: [bash, -ec, 'mkdir -p ybc && tar -xzf share/ybc-*-linux-x86_64.tar.gz -C ybc --strip-components=1 && exec bin/yugabyted start --base_dir=/tmp/yb --background=false --backup_daemon=true']
+        ports: [{containerPort: 7100}, {containerPort: 5433}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: yb-target}
+spec: {selector: {app: yb-target}, ports: [{name: master, port: 7100}, {name: ysql, port: 5433}]}
+YAML
+"${ctx[@]}" wait --for=condition=Available deployment/yb-source deployment/yb-target --timeout=10m
+"${ctx[@]}" create secret generic s3-test-identity --from-literal=AWS_ACCESS_KEY_ID="$minio_user" --from-literal=AWS_SECRET_ACCESS_KEY="$minio_password"
+"${ctx[@]}" run minio-init --image=minio/mc:RELEASE.2025-02-21T16-00-46Z --restart=Never --command -- sh -ec "mc alias set local http://minio:9000 '$minio_user' '$minio_password'; mc mb --ignore-existing local/eubl21-ybc"
+"${ctx[@]}" wait --for=condition=complete job/minio-init --timeout=180s
+"${ctx[@]}" create configmap ybc-policy --from-literal=database=eubl21 --from-literal=masterAddresses=yb-source:7100 --from-literal=objectStoreUri=s3://eubl21-ybc/evidence --from-literal=objectStoreEndpoint=http://minio:9000 --from-literal=objectStoreRegion=us-east-1 --from-literal='retention={"keepFull":1,"keepIncremental":1}'
 docker build -t "eubl21-ybc-control-plane:$run_id" -f "$root/deploy/production/yugabytedb/ybc-control-plane/Dockerfile" "$root/deploy/production/yugabytedb/ybc-control-plane"
 k3d image import "eubl21-ybc-control-plane:$run_id" -c "$cluster"
-# The source/target manifests must expose these services. The job runs full,
-# writes application data, runs incremental, enforces a shortened retention,
-# restores to target, and runs the application's DB/regression checks.
-"${ctx[@]}" create configmap ybc-policy --from-literal=database=eubl21 --from-literal=masterAddresses=yb-source-masters:7100 --from-literal=objectStoreUri=s3://eubl21-ybc/evidence --from-literal=objectStoreEndpoint=http://minio:9000 --from-literal=objectStoreRegion=us-east-1 --from-literal='retention={"keepFull":1,"keepIncremental":1}'
-echo 'K3d/MinIO control-plane prerequisites created. Run the full, incremental, retention, restore, application, and regression Jobs from the platform source/target manifests; evidence directory:' "$artifact_dir"
+run_control_plane() {
+  local name=$1; shift
+  "${ctx[@]}" create job "$name" --image="eubl21-ybc-control-plane:$run_id" -- "$@"
+  "${ctx[@]}" patch "job/$name" --type=strategic -p '{"spec":{"template":{"spec":{"volumes":[{"name":"policy","configMap":{"name":"ybc-policy"}}],"containers":[{"name":"'"$name"'","volumeMounts":[{"name":"policy","mountPath":"/etc/eubl21","readOnly":true}]}]}}}'
+  "${ctx[@]}" set env "job/$name" --from=secret/s3-test-identity
+  "${ctx[@]}" wait --for=condition=complete "job/$name" --timeout=15m
+  "${ctx[@]}" logs "job/$name" >"$artifact_dir/$name.log"
+}
+# Full snapshot, then a distinct post-full write, then its incremental chain.
+"${ctx[@]}" exec deploy/yb-source -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -c 'CREATE DATABASE eubl21;'
+"${ctx[@]}" exec deploy/yb-source -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -d eubl21 -c "CREATE TABLE qualification (id int PRIMARY KEY, payload text); INSERT INTO qualification VALUES (1, 'full');"
+run_control_plane ybc-full backup --kind=full --policy=/etc/eubl21
+"${ctx[@]}" exec deploy/yb-source -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -d eubl21 -c "INSERT INTO qualification VALUES (2, 'incremental');"
+run_control_plane ybc-incremental backup --kind=incremental --policy=/etc/eubl21
+run_control_plane ybc-retention retention --policy=/etc/eubl21
+run_control_plane ybc-restore restore --policy=/etc/eubl21 --target-masters=yb-target:7100
+"${ctx[@]}" exec deploy/yb-target -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -d eubl21 -Atc 'SELECT payload FROM qualification ORDER BY id' | tee "$artifact_dir/restored-data.txt"
+grep -Fxq full "$artifact_dir/restored-data.txt"; grep -Fxq incremental "$artifact_dir/restored-data.txt"
+"${ctx[@]}" get configmap ybc-policy -o yaml >"$artifact_dir/policy.yaml"
+echo "K3d/MinIO YBC full/incremental/retention/isolated-restore qualification passed: $artifact_dir"
