@@ -79,10 +79,11 @@ docker build -t "eubl21-ybc-control-plane:$run_id" -f "$root/deploy/production/y
 k3d image import "eubl21-ybc-control-plane:$run_id" -c "$cluster"
 run_control_plane() {
   local name=$1; shift
-  "${ctx[@]}" create job "$name" --image="eubl21-ybc-control-plane:$run_id" -- "$@"
-  "${ctx[@]}" patch "job/$name" --type=strategic -p '{"spec":{"template":{"spec":{"volumes":[{"name":"policy","configMap":{"name":"ybc-policy"}}],"containers":[{"name":"'"$name"'","volumeMounts":[{"name":"policy","mountPath":"/etc/eubl21","readOnly":true}]}]}}}'
-  "${ctx[@]}" set env "job/$name" --from=secret/s3-test-identity
+  # The full Pod template is supplied at creation; Jobs are never patched after
+  # admission, so the mounted policy and short-lived test identity are immutable.
+  "${ctx[@]}" create job "$name" --image="eubl21-ybc-control-plane:$run_id" --overrides='{"spec":{"template":{"spec":{"restartPolicy":"Never","volumes":[{"name":"policy","configMap":{"name":"ybc-policy"}}],"containers":[{"name":"'"$name"'","envFrom":[{"secretRef":{"name":"s3-test-identity"}}],"volumeMounts":[{"name":"policy","mountPath":"/etc/eubl21","readOnly":true}]}]}}}' -- "$@"
   "${ctx[@]}" wait --for=condition=complete "job/$name" --timeout=15m
+  "${ctx[@]}" logs "job/$name" >"$artifact_dir/$name.log"
   "${ctx[@]}" logs "job/$name" >"$artifact_dir/$name.log"
 }
 # Full snapshot, then a distinct post-full write, then its incremental chain.
@@ -90,7 +91,35 @@ run_control_plane() {
 "${ctx[@]}" exec deploy/yb-source -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -d eubl21 -c "CREATE TABLE qualification (id int PRIMARY KEY, payload text); INSERT INTO qualification VALUES (1, 'full');"
 run_control_plane ybc-full backup --kind=full --policy=/etc/eubl21
 "${ctx[@]}" exec deploy/yb-source -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -d eubl21 -c "INSERT INTO qualification VALUES (2, 'incremental');"
-run_control_plane ybc-incremental backup --kind=incremental --policy=/etc/eubl21
+# Destroy the untouched target and create a fresh universe only after both
+# source backups exist; restoration can therefore never be in-place.
+"${ctx[@]}" delete deployment yb-target --wait=true
+"${ctx[@]}" apply -f - <<'YAML'
+# Exercise the real Go database client against the clean restored target. The
+# port-forward is retained only for the duration of this assertion and its log
+# is evidence; credentials are not printed.
+"${ctx[@]}" port-forward service/yb-target 15435:5433 >"$artifact_dir/target-port-forward.log" 2>&1 & pf=$!
+trap 'kill "$pf" >/dev/null 2>&1 || true; cleanup' EXIT
+sleep 3
+EUBL21_TEST_DATABASE_URL='postgresql://yugabyte@127.0.0.1:15435/eubl21?sslmode=disable' go test ./database -run '^TestYugabyteDBIntegration$' -count=1 | tee "$artifact_dir/application-integration.txt"
+kill "$pf" >/dev/null 2>&1 || true
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: yb-target, labels: {app: yb-target}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: yb-target}}
+  template:
+    metadata: {labels: {app: yb-target}}
+    spec:
+      containers:
+      - name: yugabyte
+        image: yugabytedb/yugabyte:2025.2.6.0-b111
+        command: [bash, -ec, 'mkdir -p ybc && tar -xzf share/ybc-*-linux-x86_64.tar.gz -C ybc --strip-components=1 && exec bin/yugabyted start --base_dir=/tmp/yb --background=false --backup_daemon=true']
+        ports: [{containerPort: 7100}, {containerPort: 5433}, {containerPort: 18018}]
+YAML
+"${ctx[@]}" wait --for=condition=Available deployment/yb-target --timeout=10m
+run_control_plane ybc-restore restore --policy=/etc/eubl21 --target-controller=yb-target
 run_control_plane ybc-retention retention --policy=/etc/eubl21
 run_control_plane ybc-restore restore --policy=/etc/eubl21 --target-controller=yb-target
 "${ctx[@]}" exec deploy/yb-target -- /home/yugabyte/bin/ysqlsh -h 127.0.0.1 -d eubl21 -Atc 'SELECT payload FROM qualification ORDER BY id' | tee "$artifact_dir/restored-data.txt"
