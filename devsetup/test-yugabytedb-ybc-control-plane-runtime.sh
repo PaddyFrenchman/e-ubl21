@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: minio
-        image: eubl21/minio:RELEASE.2025-10-15T17-29-55Z
+        command: [/minio]
         command: [minio]
         args: [server, /data]
         envFrom: [{secretRef: {name: minio-test-identity}}]
