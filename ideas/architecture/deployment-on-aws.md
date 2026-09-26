@@ -220,7 +220,6 @@ Terraform
     +--> EKS
     +--> SQS
     +--> S3
-    +--> YugabyteDB/YSQL
     +--> IAM
     +--> KMS
     +--> observability
@@ -228,6 +227,11 @@ Terraform
     v
    AWS
 ```
+
+Terraform/OpenTofu provisions the AWS foundation, including the EKS cluster and
+the AWS services YugabyteDB relies on (networking, IAM, KMS and object storage).
+It does **not** provision an AWS-managed YugabyteDB service: YugabyteDB/YSQL is
+deployed inside EKS by Helm or the YugabyteDB Kubernetes Operator.
 
 If the organization already standardizes on Terraform, there is no architectural requirement to move to OpenTofu.
 
@@ -1589,7 +1593,9 @@ helm upgrade --install
 
 ## Stage 4
 
-Add YugabyteDB/YSQL and Secrets Manager through OpenTofu.
+Use OpenTofu to add Secrets Manager and the AWS dependencies for the database;
+then deploy YugabyteDB/YSQL into EKS with Helm or the YugabyteDB Kubernetes
+Operator.
 
 ---
 
@@ -1907,7 +1913,7 @@ This separation keeps each tool focused on the problem it solves best.
    EKS                   \               Karpenter
     |                     \                  |
     v                      +-----------------+
- YugabyteDB / IAM / KMS / Observability
+ YugabyteDB/YSQL (Helm or Operator) / IAM / KMS / Observability
 ```
 
 ---
@@ -1946,7 +1952,8 @@ OpenTofu:
     creates the AWS/EKS foundation
 
 Argo CD:
-    owns everything inside Kubernetes
+    owns workloads inside Kubernetes, including the Helm/Operator-managed
+    YugabyteDB/YSQL deployment
 
 Git:
     is the authoritative desired state
