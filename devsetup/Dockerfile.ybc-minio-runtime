@@ -1,0 +1,15 @@
+# The local MinIO artifact contains only a dynamically linked /minio binary.
+# Run it on a locally available runtime with a sufficiently recent glibc rather
+# than treating the artifact itself as a complete OCI runtime image.
+ARG MINIO_SOURCE_IMAGE=eubl21/minio:RELEASE.2025-10-15T17-29-55Z
+ARG RUNTIME_BASE_IMAGE=gcr.io/k8s-minikube/kicbase:v0.0.51
+FROM ${MINIO_SOURCE_IMAGE} AS minio-binary
+
+FROM ${RUNTIME_BASE_IMAGE} AS glibc-runtime
+
+FROM scratch
+
+COPY --from=minio-binary /minio /minio
+COPY --from=glibc-runtime /lib64/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
+COPY --from=glibc-runtime /lib/x86_64-linux-gnu/libc.so.6 /lib/x86_64-linux-gnu/libc.so.6
+ENTRYPOINT ["/minio"]

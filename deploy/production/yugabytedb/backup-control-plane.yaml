@@ -1,0 +1,70 @@
+# Direct e-ubl21 YBC backup control plane. The platform deployment overlay
+# supplies the ServiceAccount workload-identity annotation; it must not supply
+# static S3 credentials.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eubl21-ybc-backup
+  namespace: eubl21-yb-zone-a
+automountServiceAccountToken: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eubl21-ybc-backup-policy
+  namespace: eubl21-yb-zone-a
+data:
+  database: eubl21
+  masterAddresses: yb-master-0.yb-masters.eubl21-yb-zone-a.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-b.svc.cluster.local:7100,yb-master-0.yb-masters.eubl21-yb-zone-c.svc.cluster.local:7100
+  retention: 35 daily, 12 monthly, 7 yearly
+  evidencePrefix: evidence/yugabytedb
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: eubl21-ybc-backup-full
+  namespace: eubl21-yb-zone-a
+  labels: {app.kubernetes.io/name: eubl21-ybc-backup, eubl21.io/backup-kind: full}
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 35
+  failedJobsHistoryLimit: 7
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          serviceAccountName: eubl21-ybc-backup
+          restartPolicy: Never
+          containers:
+          - name: runner
+            image: ghcr.io/paddyfrenchman/e-ubl21-ybc-control-plane:2025.2.6.0-b111
+            args: [backup, --kind=full, --policy=/etc/eubl21]
+            volumeMounts: [{name: policy, mountPath: /etc/eubl21, readOnly: true}]
+          volumes: [{name: policy, configMap: {name: eubl21-ybc-backup-policy}}]
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: eubl21-ybc-backup-incremental
+  namespace: eubl21-yb-zone-a
+  labels: {app.kubernetes.io/name: eubl21-ybc-backup, eubl21.io/backup-kind: incremental}
+spec:
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 28
+  failedJobsHistoryLimit: 7
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          serviceAccountName: eubl21-ybc-backup
+          restartPolicy: Never
+          containers:
+          - name: runner
+            image: ghcr.io/paddyfrenchman/e-ubl21-ybc-control-plane:2025.2.6.0-b111
+            args: [backup, --kind=incremental, --policy=/etc/eubl21]
+            volumeMounts: [{name: policy, mountPath: /etc/eubl21, readOnly: true}]
+          volumes: [{name: policy, configMap: {name: eubl21-ybc-backup-policy}}]
