@@ -106,6 +106,10 @@ func (machine *Machine) buildValidationResult(ctx context.Context, execution que
 	}
 	stages := make(queue.ValidationStages, 0, len(state.Stages))
 	for index, stage := range state.Stages {
+		if stage.Skipped {
+			stages = append(stages, queue.ValidationStageResult{Layer: execution.Plan.Stages[index].ID, Version: execution.Plan.Stages[index].RulesetVersion, Outcome: queue.StageOutcomeSkipped, ValidatedAt: state.FinalizedAt})
+			continue
+		}
 		if stage.TerminalOutcome == "" || (len(stage.Attempts) == 0 && stage.InheritedEvidence == nil) {
 			return queue.ValidationResult{}, fmt.Errorf("terminal validation stage %d has no accepted terminal evidence", index+1)
 		}

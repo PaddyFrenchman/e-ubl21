@@ -1,0 +1,6 @@
+{
+  "profile": "peppol-bis-billing-envelope",
+  "version": "3.0.21",
+  "source_url": "https://docs.peppol.eu/poacc/billing/3.0/files/PeppolBIS-Envelope-Rules.sch",
+  "source_sha256": "96648791fb824b6b58ddae9cc5575e8298e0061fc43dd0934a0b1459396d76f9"
+}

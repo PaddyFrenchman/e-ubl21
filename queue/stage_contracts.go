@@ -53,6 +53,9 @@ const (
 	StageOutcomePassed             StageOutcome = "passed"
 	StageOutcomeStandardsInvalid   StageOutcome = "standards-invalid"
 	StageOutcomeOperationalFailure StageOutcome = "operational-failure"
+	// StageOutcomeSkipped is orchestration evidence that a stage's prerequisite
+	// failed; it is never emitted by a worker.
+	StageOutcomeSkipped StageOutcome = "skipped"
 )
 
 // StageOperationalReason is a deliberately bounded, low-cardinality reason
@@ -505,7 +508,7 @@ func StageIssuesContainStandardsFailure(issues []ValidationIssue) bool {
 			return true
 		}
 		if issue.Kind == ValidationIssueFailedAssert {
-			if issue.Layer == ValidationLayerEN16931 || issue.Layer == ValidationLayerPeppolBISBilling {
+			if issue.Layer == ValidationLayerEN16931 || issue.Layer == ValidationLayerPeppolBISBilling || issue.Layer == ValidationLayerPeppolEnvelope {
 				switch strings.ToLower(strings.TrimSpace(issue.Severity)) {
 				case "warning", "warn":
 					continue

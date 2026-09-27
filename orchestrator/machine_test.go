@@ -113,6 +113,34 @@ func TestMachineStopsOnStandardsInvalidWithoutQueueingLaterStage(t *testing.T) {
 	assertNoRequest(t, ctx, client, queue.ValidationLayerEN16931)
 }
 
+func TestEnvelopeBranchCompletesAfterPayloadPrerequisiteFailure(t *testing.T) {
+	machine, client, ctx := newMachine(t)
+	plan := queue.FrozenValidationPlan{ID: "peppol-envelope", Version: "1", Stages: []queue.FrozenValidationStage{
+		{ID: queue.ValidationLayerUBL21XSD, Ordinal: 1, Requirement: queue.ValidationStageRequired, RulesetVersion: "2.1"},
+		{ID: queue.ValidationLayerEN16931, Ordinal: 2, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"},
+		{ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3, Requirement: queue.ValidationStageRequired, RulesetVersion: "3.0.21"},
+		{ID: queue.ValidationLayerPeppolEnvelope, Ordinal: 4, Requirement: queue.ValidationStageRequired, RulesetVersion: "3.0.21"},
+	}}
+	intent := testIntent(t, plan)
+	intent.RequestedProfile = queue.ValidationProfilePeppolEnvelope
+	if _, err := machine.Start(ctx, intent); err != nil {
+		t.Fatal(err)
+	}
+	// Both roots are durably authorized before either result is accepted.
+	xsd := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+	envelope := takeRequest(t, ctx, client, queue.ValidationLayerPeppolEnvelope)
+	if _, err := machine.HandleStageResult(ctx, resultFor(t, xsd, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone)); err != nil {
+		t.Fatal(err)
+	}
+	state, err := machine.HandleStageResult(ctx, resultFor(t, envelope, queue.StageOutcomePassed, queue.StageReasonNone))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state.Execution.Orchestration.Status != queue.ExecutionStatusInvalid || !state.Execution.Orchestration.Stages[1].Skipped || !state.Execution.Orchestration.Stages[2].Skipped {
+		t.Fatalf("envelope branch state = %+v", state.Execution.Orchestration)
+	}
+}
+
 func TestOptionalFrozenStageIsAuthoritativeOnceIncluded(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	plan := testPlan()

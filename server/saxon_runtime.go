@@ -66,6 +66,10 @@ func resolvePeppolSaxonRuntimeOverrides(overrides saxonRuntimeOverrides) saxonRu
 	return resolveProfileSaxonRuntimeOverrides(overrides, profile.RuntimeXSLTPath, profile.XSLTSHA256)
 }
 
+func resolvePeppolEnvelopeSaxonRuntimeOverrides(overrides saxonRuntimeOverrides) saxonRuntimeConfig {
+	return resolveProfileSaxonRuntimeOverrides(overrides, validationassets.PeppolEnvelopeRuntimeXSLTPath, validationassets.PeppolEnvelopeXSLTSHA256)
+}
+
 func resolveProfileSaxonRuntimeOverrides(overrides saxonRuntimeOverrides, defaultXSLTPath, xsltSHA256 string) saxonRuntimeConfig {
 	runtime := validationassets.Saxon()
 	resolved := saxonRuntimeConfig{
@@ -114,6 +118,13 @@ func ensurePeppolSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig) error
 		return fmt.Errorf("Peppol runtime: verify embedded source, provenance and compilation chain: %w", err)
 	}
 	return ensureProfileSaxonRuntime(ctx, cfg, "Peppol")
+}
+
+func ensurePeppolEnvelopeSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig) error {
+	if err := validationassets.VerifyPeppolEnvelope(); err != nil {
+		return fmt.Errorf("Peppol envelope runtime: verify embedded rules: %w", err)
+	}
+	return ensureProfileSaxonRuntime(ctx, cfg, "Peppol envelope")
 }
 
 func ensureProfileSaxonRuntime(ctx context.Context, cfg saxonRuntimeConfig, profileName string) error {

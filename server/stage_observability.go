@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	stages := []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931, queue.ValidationLayerPeppolBISBilling}
+	stages := []queue.ValidationLayer{queue.ValidationLayerUBL21XSD, queue.ValidationLayerEN16931, queue.ValidationLayerPeppolBISBilling, queue.ValidationLayerPeppolEnvelope}
 	outcomes := []queue.StageOutcome{queue.StageOutcomePassed, queue.StageOutcomeStandardsInvalid, queue.StageOutcomeOperationalFailure}
 	reasons := []queue.StageOperationalReason{queue.StageReasonTimeout, queue.StageReasonCancelled, queue.StageReasonRuntimeUnavailable, queue.StageReasonRuntimeFailure, queue.StageReasonContentUnavailable, queue.StageReasonResourceLimit, queue.StageReasonMalformedOutput, queue.StageReasonInternalError}
 	for _, stage := range stages {

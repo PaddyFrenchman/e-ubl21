@@ -53,6 +53,7 @@ func provisionInfrastructure(ctx context.Context, cfg *Config) error {
 		provisionStage(queue.ValidationLayerUBL21XSD, cfg.StageXSDAckWait, cfg.StageXSDMaxAckPending),
 		provisionStage(queue.ValidationLayerEN16931, cfg.StageENAckWait, cfg.StageENMaxAckPending),
 		provisionStage(queue.ValidationLayerPeppolBISBilling, cfg.StagePeppolAckWait, cfg.StagePeppolMaxAckPending),
+		provisionStage(queue.ValidationLayerPeppolEnvelope, cfg.StagePeppolAckWait, cfg.StagePeppolMaxAckPending),
 	}}
 	if err := client.ProvisionStageQueueInfra(ctx, stageConfig); err != nil {
 		return fmt.Errorf("provision stage infrastructure: %w", err)

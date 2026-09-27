@@ -30,6 +30,10 @@ var errPeppolStageRequestStale = errors.New("stale Peppol stage request")
 // PeppolWorkerConfig configures the independently deployable third-stage
 // worker. It consumes only Peppol requests and never invokes another stage.
 type PeppolWorkerConfig struct {
+	// Stage defaults to payload Peppol. The envelope worker reuses the durable
+	// delivery loop with its separately provisioned stage.
+	Stage                  queue.ValidationLayer
+	RulesetVersion         string
 	NATSURL                string
 	NATSOptions            []nats.Option
 	QueueNamespace         queue.Namespace
@@ -97,6 +101,20 @@ func validatePeppolWorkerCapacity(settings peppolWorkerSettings, delivery queue.
 
 // RunPeppolWorker consumes Peppol StageRequests until ctx is canceled.
 func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
+	stage := cfg.Stage
+	if stage == "" {
+		stage = queue.ValidationLayerPeppolBISBilling
+	}
+	if stage != queue.ValidationLayerPeppolBISBilling && stage != queue.ValidationLayerPeppolEnvelope {
+		return fmt.Errorf("worker-peppol: unsupported stage %q", stage)
+	}
+	rulesetVersion := cfg.RulesetVersion
+	if rulesetVersion == "" {
+		rulesetVersion = validationassets.Peppol().ValidationArtefactsVersion
+		if stage == queue.ValidationLayerPeppolEnvelope {
+			rulesetVersion = validationassets.PeppolEnvelopeVersion
+		}
+	}
 	settings := resolvePeppolWorkerSettings(cfg)
 	logger := cfg.Logger
 	if logger == nil {
@@ -105,26 +123,37 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 	validator := cfg.validator
 	wrapProfileResolution := validator == nil
 	if validator == nil {
-		runtime := resolvePeppolSaxonRuntimeOverrides(saxonRuntimeOverrides{
+		runtimeOverrides := saxonRuntimeOverrides{
 			javaExecutable: cfg.JavaExecutable, saxonJARPath: cfg.SaxonJARPath,
 			xmlResolverJARPath: cfg.XMLResolverJARPath, configurationPath: cfg.SaxonConfigurationPath,
 			xsltPath: cfg.PeppolXSLTPath, startupTimeout: cfg.SaxonStartupTimeout,
-		})
+		}
+		runtime := resolvePeppolSaxonRuntimeOverrides(runtimeOverrides)
+		if stage == queue.ValidationLayerPeppolEnvelope {
+			runtime = resolvePeppolEnvelopeSaxonRuntimeOverrides(runtimeOverrides)
+		}
 		verifyRuntime := cfg.verifyRuntime
 		if verifyRuntime == nil {
 			verifyRuntime = ensurePeppolSaxonRuntime
+			if stage == queue.ValidationLayerPeppolEnvelope {
+				verifyRuntime = ensurePeppolEnvelopeSaxonRuntime
+			}
 		}
 		if err := verifyRuntime(ctx, runtime); err != nil {
 			if ctx.Err() != nil {
 				return nil
 			}
-			stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerPeppolBISBilling), "runtime").Inc()
+			stageStartupErrorsTotal.WithLabelValues(string(stage), "runtime").Inc()
 			return fmt.Errorf("worker-peppol verify Saxon runtime: %w", err)
 		}
 		logPeppolValidationRuntimeVersions(logger)
-		validator = newSaxonPeppolValidator(runtime, settings.validationTimeout)
+		if stage == queue.ValidationLayerPeppolEnvelope {
+			validator = newSaxonPeppolEnvelopeValidator(runtime, settings.validationTimeout)
+		} else {
+			validator = newSaxonPeppolValidator(runtime, settings.validationTimeout)
+		}
 	}
-	if wrapProfileResolution {
+	if wrapProfileResolution && stage == queue.ValidationLayerPeppolBISBilling {
 		validator = peppolProfileAwareValidator{delegate: validator}
 	}
 	client := cfg.queueClient
@@ -144,12 +173,12 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 		}
 	}
 
-	delivery, err := client.VerifyStageWorkerInfra(ctx, queue.ValidationLayerPeppolBISBilling)
+	delivery, err := client.VerifyStageWorkerInfra(ctx, stage)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil
 		}
-		stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerPeppolBISBilling), "queue").Inc()
+		stageStartupErrorsTotal.WithLabelValues(string(stage), "queue").Inc()
 		return fmt.Errorf("worker-peppol verify stage worker infrastructure: %w", err)
 	}
 	if err := validatePeppolWorkerCapacity(settings, delivery); err != nil {
@@ -159,14 +188,14 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 		if ctx.Err() != nil {
 			return nil
 		}
-		stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerPeppolBISBilling), "content_store").Inc()
+		stageStartupErrorsTotal.WithLabelValues(string(stage), "content_store").Inc()
 		return fmt.Errorf("worker-peppol verify upload content infrastructure: %w", err)
 	}
 	if err := client.VerifyValidationExecutionInfra(ctx); err != nil {
 		if ctx.Err() != nil {
 			return nil
 		}
-		stageStartupErrorsTotal.WithLabelValues(string(queue.ValidationLayerPeppolBISBilling), "execution_store").Inc()
+		stageStartupErrorsTotal.WithLabelValues(string(stage), "execution_store").Inc()
 		return fmt.Errorf("worker-peppol verify validation execution infrastructure: %w", err)
 	}
 
@@ -174,7 +203,7 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 	if now == nil {
 		now = time.Now
 	}
-	consumer, err := client.StageRequestConsumer(ctx, queue.ValidationLayerPeppolBISBilling)
+	consumer, err := client.StageRequestConsumer(ctx, stage)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil
@@ -199,8 +228,8 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 
 	worker := &enStageWorker{
 		queue: client, validator: validator,
-		layer:          queue.ValidationLayerPeppolBISBilling,
-		rulesetVersion: validationassets.Peppol().ValidationArtefactsVersion,
+		layer:          stage,
+		rulesetVersion: rulesetVersion,
 		workerName:     "worker-peppol", supportsDocument: requiresEN16931,
 		operationalReason: peppolStageOperationalReason, staleError: errPeppolStageRequestStale,
 		timeout: settings.validationTimeout, logger: logger, now: now,
@@ -232,8 +261,8 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 	}
 	logger.Info("worker-peppol started",
 		"queueNamespace", nonEmpty(cfg.QueueNamespace.String(), "(default)"),
-		"stage", queue.ValidationLayerPeppolBISBilling,
-		"rulesetVersion", validationassets.Peppol().ValidationArtefactsVersion,
+		"stage", stage,
+		"rulesetVersion", rulesetVersion,
 		"bisVersion", validationassets.Peppol().Version,
 		"concurrency", settings.concurrency, "prefetch", settings.prefetch,
 		"validationTimeout", settings.validationTimeout)

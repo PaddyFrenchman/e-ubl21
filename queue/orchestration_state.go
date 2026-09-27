@@ -68,15 +68,18 @@ type ValidationStageEvidenceReference struct {
 // ValidationStageState is the orchestrator projection for one frozen plan
 // ordinal. AuthorizedAttempt is the only attempt a worker may currently run.
 type ValidationStageState struct {
-	Stage             ValidationLayer                   `json:"stage"`
-	Ordinal           uint32                            `json:"ordinal"`
-	AuthorizedAttempt uint32                            `json:"authorizedAttempt"`
-	RequestID         string                            `json:"requestId"`
-	RequestCreatedAt  string                            `json:"requestCreatedAt"`
-	DispatchStatus    ValidationStageDispatchStatus     `json:"dispatchStatus"`
-	DispatchedAt      string                            `json:"dispatchedAt,omitempty"`
-	Attempts          []ValidationStageAttempt          `json:"attempts,omitempty"`
-	TerminalOutcome   StageOutcome                      `json:"terminalOutcome,omitempty"`
+	Stage             ValidationLayer               `json:"stage"`
+	Ordinal           uint32                        `json:"ordinal"`
+	AuthorizedAttempt uint32                        `json:"authorizedAttempt"`
+	RequestID         string                        `json:"requestId"`
+	RequestCreatedAt  string                        `json:"requestCreatedAt"`
+	DispatchStatus    ValidationStageDispatchStatus `json:"dispatchStatus"`
+	DispatchedAt      string                        `json:"dispatchedAt,omitempty"`
+	Attempts          []ValidationStageAttempt      `json:"attempts,omitempty"`
+	TerminalOutcome   StageOutcome                  `json:"terminalOutcome,omitempty"`
+	// Skipped records a prerequisite-blocked stage.  It is deliberately state
+	// rather than worker evidence: no request is ever authorized for it.
+	Skipped           bool                              `json:"skipped,omitempty"`
 	InheritedEvidence *ValidationStageEvidenceReference `json:"inheritedEvidence,omitempty"`
 	DispatchTrace     *observability.TraceCarrier       `json:"dispatchTrace,omitempty"`
 }
@@ -116,6 +119,38 @@ func (state ValidationOrchestrationState) validate(execution ValidationExecution
 		if err := state.InitialDispatchTrace.Validate(); err != nil {
 			return fmt.Errorf("orchestration initial dispatch trace: %w", err)
 		}
+	}
+	// The envelope profile has two purpose-built branches: XSD -> EN -> payload
+	// and the independent SBDH envelope stage.  Unlike the historical linear
+	// profiles its projection keeps all four ordinal slots, including blocked
+	// payload slots, so a late envelope result is still durable evidence.
+	if execution.RequestedProfile == ValidationProfilePeppolEnvelope && state.Status != ExecutionStatusPending {
+		if len(state.Stages) != len(execution.Plan.Stages) {
+			return errors.New("envelope orchestration state requires every frozen-plan stage")
+		}
+		for i, s := range state.Stages {
+			if s.Stage != execution.Plan.Stages[i].ID || s.Ordinal != execution.Plan.Stages[i].Ordinal {
+				return fmt.Errorf("envelope orchestration stage %d does not match frozen plan", i+1)
+			}
+			if s.Skipped && s.TerminalOutcome != "" {
+				return fmt.Errorf("envelope orchestration stage %d is both skipped and terminal", i+1)
+			}
+		}
+		if state.Status == ExecutionStatusStageQueued {
+			if state.FinalizedAt != "" {
+				return errors.New("queued envelope orchestration is finalized")
+			}
+			return nil
+		}
+		if state.FinalizedAt == "" {
+			return errors.New("terminal envelope orchestration lacks finalization time")
+		}
+		for _, s := range state.Stages {
+			if s.TerminalOutcome == "" && !s.Skipped {
+				return errors.New("terminal envelope orchestration has unfinished stage")
+			}
+		}
+		return state.validateFinalResultState(execution)
 	}
 	if len(state.Stages) > len(execution.Plan.Stages) {
 		return errors.New("orchestration state contains more stages than the frozen plan")

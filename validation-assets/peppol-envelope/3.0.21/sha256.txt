@@ -1,0 +1,1 @@
+96648791fb824b6b58ddae9cc5575e8298e0061fc43dd0934a0b1459396d76f9  rules/PeppolBIS-Envelope-Rules.sch

@@ -28,6 +28,7 @@ const (
 	// ValidationProfilePeppolBISBilling is available to frozen execution and
 	// result contracts before the public HTTP selector is enabled by issue #75.
 	ValidationProfilePeppolBISBilling ValidationProfile = "peppol-bis-billing"
+	ValidationProfilePeppolEnvelope   ValidationProfile = "peppol-envelope"
 )
 
 // ValidValidationProfile reports whether profile is supported by durable
@@ -35,7 +36,7 @@ const (
 func ValidValidationProfile(profile ValidationProfile) bool {
 	return profile == ValidationProfileUBL21 ||
 		profile == ValidationProfileUBL21EN16931 ||
-		profile == ValidationProfilePeppolBISBilling
+		profile == ValidationProfilePeppolBISBilling || profile == ValidationProfilePeppolEnvelope
 }
 
 // ValidPublicValidationProfile reports whether the HTTP API may accept profile
@@ -66,6 +67,9 @@ const (
 	// queue topology for the future Peppol worker. It does not enable the
 	// public Peppol validation profile or runtime validator.
 	ValidationLayerPeppolBISBilling ValidationLayer = "peppol-bis-billing"
+	// ValidationLayerPeppolEnvelope reports optional SBDH failures separately
+	// from the embedded UBL payload's Peppol Billing result.
+	ValidationLayerPeppolEnvelope ValidationLayer = "peppol-envelope"
 
 	PeppolProcessProfile01 PeppolProcessProfile = "01"
 	PeppolProcessProfile02 PeppolProcessProfile = "02"

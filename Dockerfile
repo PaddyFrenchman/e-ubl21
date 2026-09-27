@@ -27,6 +27,15 @@ RUN go run ./tools/compile-peppol-schematron \
         -saxon-dir /out/saxon \
         -schxslt-dir /out/schxslt \
         -check validation-assets/peppol/3.0.21/runtime/PEPPOL-EN16931-UBL-validation.xslt
+RUN mkdir -p /out/validation-assets/peppol-envelope/3.0.21/runtime && \
+    java -cp /out/saxon/saxon-he-12.7.jar:/out/saxon/xmlresolver-6.0.17.jar \
+        net.sf.saxon.Transform \
+        -config:validation-assets/saxon/saxon-config.xml -ext:off \
+        -s:validation-assets/peppol-envelope/3.0.21/rules/PeppolBIS-Envelope-Rules.sch \
+        -xsl:/out/schxslt/schxslt-1.10.1/2.0/pipeline-for-svrl.xsl \
+        '?schxslt.compile.metadata=false()' \
+        -o:/out/validation-assets/peppol-envelope/3.0.21/runtime/PeppolBIS-Envelope-Rules.xslt && \
+    echo '46866949b94aabdc873622d5d4fec9be41903e20845a1587d6501c7b19ad1d6e  /out/validation-assets/peppol-envelope/3.0.21/runtime/PeppolBIS-Envelope-Rules.xslt' | sha256sum -c -
 RUN go run ./tools/verify-validation-assets \
         -stage-dir /out/validation-assets \
         -saxon-dir /out/saxon \

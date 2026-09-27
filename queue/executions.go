@@ -73,12 +73,13 @@ type FrozenValidationPlan struct {
 // FrozenValidationRetryPolicy makes operational-failure exhaustion a durable
 // execution decision rather than a process-local orchestrator setting.
 type FrozenValidationRetryPolicy struct {
-	ID                   string `json:"id"`
-	Version              string `json:"version"`
-	MaxAttempts          uint32 `json:"maxAttempts"`
-	XSDMaxAttempts       uint32 `json:"xsdMaxAttempts,omitempty"`
-	EN16931MaxAttempts   uint32 `json:"en16931MaxAttempts,omitempty"`
-	PeppolBISMaxAttempts uint32 `json:"peppolBisMaxAttempts,omitempty"`
+	ID                        string `json:"id"`
+	Version                   string `json:"version"`
+	MaxAttempts               uint32 `json:"maxAttempts"`
+	XSDMaxAttempts            uint32 `json:"xsdMaxAttempts,omitempty"`
+	EN16931MaxAttempts        uint32 `json:"en16931MaxAttempts,omitempty"`
+	PeppolBISMaxAttempts      uint32 `json:"peppolBisMaxAttempts,omitempty"`
+	PeppolEnvelopeMaxAttempts uint32 `json:"peppolEnvelopeMaxAttempts,omitempty"`
 }
 
 // MaxAttemptsFor returns the frozen operational-attempt budget for one stage.
@@ -97,6 +98,10 @@ func (policy FrozenValidationRetryPolicy) MaxAttemptsFor(stage ValidationLayer) 
 	case ValidationLayerPeppolBISBilling:
 		if policy.PeppolBISMaxAttempts != 0 {
 			return policy.PeppolBISMaxAttempts
+		}
+	case ValidationLayerPeppolEnvelope:
+		if policy.PeppolEnvelopeMaxAttempts != 0 {
+			return policy.PeppolEnvelopeMaxAttempts
 		}
 	}
 	return policy.MaxAttempts
@@ -445,6 +450,13 @@ func validateProfilePlan(profile ValidationProfile, plan FrozenValidationPlan) e
 			ValidationLayerUBL21XSD,
 			ValidationLayerEN16931,
 			ValidationLayerPeppolBISBilling,
+		}
+	case ValidationProfilePeppolEnvelope:
+		expected = []ValidationLayer{
+			ValidationLayerUBL21XSD,
+			ValidationLayerEN16931,
+			ValidationLayerPeppolBISBilling,
+			ValidationLayerPeppolEnvelope,
 		}
 	default:
 		return fmt.Errorf("invalid validation profile %q", profile)

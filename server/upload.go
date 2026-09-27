@@ -89,6 +89,20 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validationDocument := body
+	isEnvelope := localName == "StandardBusinessDocument" && namespace == standardBusinessDocumentNamespace
+	if isEnvelope {
+		validationDocument, _, _, err = peppolEnvelopePayload(body)
+		if err == nil {
+			localName, namespace, err = rootElementOfPayload(validationDocument)
+		}
+		if err != nil {
+			recordUploadOutcome("invalid_xml")
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid SBDH envelope: " + err.Error()})
+			return
+		}
+	}
+
 	documentType := strings.TrimSpace(r.URL.Query().Get("documentType"))
 	if documentType == "" {
 		documentType = localName
@@ -102,10 +116,15 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rootElement := documentType
-	resolution, err := requestedValidationProfile(r, rootElement, body)
+	resolution, err := requestedValidationProfile(r, rootElement, validationDocument)
 	if err != nil {
 		recordUploadOutcome("unsupported_profile")
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	if isEnvelope && resolution.ResolvedProfile != queue.ValidationProfilePeppolEnvelope {
+		recordUploadOutcome("unsupported_profile")
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "SBDH envelopes require validationProfile=peppol-envelope"})
 		return
 	}
 	if h.deploymentMode != nil {
@@ -121,7 +140,7 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "validation deployment is draining for migration; retry later"})
 			return
 		}
-		if mode == queue.DeploymentModeLegacy && resolution.ResolvedProfile == queue.ValidationProfilePeppolBISBilling {
+		if mode == queue.DeploymentModeLegacy && (resolution.ResolvedProfile == queue.ValidationProfilePeppolBISBilling || resolution.ResolvedProfile == queue.ValidationProfilePeppolEnvelope) {
 			recordUploadOutcome("profile_unavailable")
 			w.Header().Set("Retry-After", "30")
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "Peppol validation requires the split validation deployment"})

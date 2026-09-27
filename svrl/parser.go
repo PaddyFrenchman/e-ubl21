@@ -88,7 +88,7 @@ func ParseWithLimitsForLayer(reader io.Reader, limits Limits, layer queue.Valida
 	if reader == nil {
 		return Report{}, fmt.Errorf("read SVRL: reader is nil")
 	}
-	if layer != queue.ValidationLayerEN16931 && layer != queue.ValidationLayerPeppolBISBilling {
+	if layer != queue.ValidationLayerEN16931 && layer != queue.ValidationLayerPeppolBISBilling && layer != queue.ValidationLayerPeppolEnvelope {
 		return Report{}, fmt.Errorf("parse SVRL: unsupported validation layer %q", layer)
 	}
 	if err := validateLimits(limits); err != nil {

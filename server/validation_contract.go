@@ -63,6 +63,9 @@ func requiredValidationLayersForProfile(documentType string, profile queue.Valid
 		case queue.ValidationProfilePeppolBISBilling:
 			layers = peppolValidationLayers
 			withEN16931 = false
+		case queue.ValidationProfilePeppolEnvelope:
+			layers = append(peppolValidationLayers, queue.ValidationLayerPeppolEnvelope)
+			withEN16931 = false
 		case queue.ValidationProfileUBL21EN16931:
 			withEN16931 = true
 		default:
