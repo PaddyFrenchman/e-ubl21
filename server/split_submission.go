@@ -61,17 +61,20 @@ func frozenValidationPlanForResolvedProfile(documentType string, profile queue.V
 		ID: queue.ValidationLayerUBL21XSD, Ordinal: 1,
 		Requirement: queue.ValidationStageRequired, RulesetVersion: xsdschemas.Version,
 	}}
-	if profile == queue.ValidationProfileUBL21EN16931 || profile == queue.ValidationProfilePeppolBISBilling {
+	if profile == queue.ValidationProfileUBL21EN16931 || profile == queue.ValidationProfilePeppolBISBilling || profile == queue.ValidationProfilePeppolEnvelope {
 		stages = append(stages, queue.FrozenValidationStage{
 			ID: queue.ValidationLayerEN16931, Ordinal: 2,
 			Requirement: queue.ValidationStageRequired, RulesetVersion: validationassets.EN16931().Version,
 		})
 	}
-	if profile == queue.ValidationProfilePeppolBISBilling {
+	if profile == queue.ValidationProfilePeppolBISBilling || profile == queue.ValidationProfilePeppolEnvelope {
 		stages = append(stages, queue.FrozenValidationStage{
 			ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3,
 			Requirement: queue.ValidationStageRequired, RulesetVersion: validationassets.Peppol().ValidationArtefactsVersion,
 		})
+	}
+	if profile == queue.ValidationProfilePeppolEnvelope {
+		stages = append(stages, queue.FrozenValidationStage{ID: queue.ValidationLayerPeppolEnvelope, Ordinal: 4, Requirement: queue.ValidationStageRequired, RulesetVersion: validationassets.PeppolEnvelopeVersion})
 	}
 	return queue.FrozenValidationPlan{ID: string(profile), Version: splitValidationPlanVersion, Stages: stages}, nil
 }

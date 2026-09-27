@@ -33,6 +33,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - name: Reproduce pinned Peppol Schematron XSLT
         run: make test-peppol-schematron
+      - name: Run Peppol SBDH envelope fixtures
+        run: make test-peppol-envelope
       - name: Run positive Peppol conformity corpus
         run: make test-peppol-positive
       - name: Run rule-targeted negative Peppol conformity corpus

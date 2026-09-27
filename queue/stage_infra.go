@@ -79,6 +79,7 @@ func DefaultStageQueueInfraConfig() StageQueueInfraConfig {
 		ValidationLayerUBL21XSD,
 		ValidationLayerEN16931,
 		ValidationLayerPeppolBISBilling,
+		ValidationLayerPeppolEnvelope,
 	}
 	config := StageQueueInfraConfig{Stages: make([]StageQueueConfig, 0, len(stages))}
 	for _, stage := range stages {

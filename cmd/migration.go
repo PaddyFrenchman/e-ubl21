@@ -139,6 +139,7 @@ func migrationActivate(ctx context.Context, output io.Writer, cfg *Config, consu
 		queue.ValidationLayerUBL21XSD,
 		queue.ValidationLayerEN16931,
 		queue.ValidationLayerPeppolBISBilling,
+		queue.ValidationLayerPeppolEnvelope,
 	} {
 		if _, err := client.VerifyStageWorkerInfra(ctx, stage); err != nil {
 			return fmt.Errorf("verify %s stage infrastructure: %w", stage, err)

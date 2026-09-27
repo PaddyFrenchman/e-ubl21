@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -378,7 +379,7 @@ func (worker *enStageWorker) handle(ctx context.Context, message jetstream.Msg) 
 		diagnostic = fmt.Sprintf("%s does not support document type %s", worker.workerLabel(), request.DocumentType)
 	} else {
 		var validationResult queue.ValidationStageResult
-		validationErr := worker.withContent(attemptCtx, request.UploadID, func(reader io.Reader) error {
+		validationErr := worker.withContent(attemptCtx, request.UploadID, request.Plan, func(reader io.Reader) error {
 			validationCtx, validationSpan := beginStageOperation(attemptCtx, "stage.validator.execute", request)
 			var err error
 			validationResult, err = worker.validator.Validate(validationCtx, reader)
@@ -481,7 +482,8 @@ func (worker *enStageWorker) authorize(ctx context.Context, request queue.StageR
 		return queue.ValidationExecution{}, fmt.Errorf("%w: request does not match frozen plan stage", stale)
 	}
 	state := execution.Orchestration
-	if state.Status != queue.ExecutionStatusStageQueued || state.CurrentStageOrdinal != request.StageOrdinal || len(state.Stages) != int(request.StageOrdinal) {
+	if state.Status != queue.ExecutionStatusStageQueued || int(request.StageOrdinal) > len(state.Stages) ||
+		(execution.RequestedProfile != queue.ValidationProfilePeppolEnvelope && (state.CurrentStageOrdinal != request.StageOrdinal || len(state.Stages) != int(request.StageOrdinal))) {
 		return queue.ValidationExecution{}, fmt.Errorf("%w: request is not the current queued stage", stale)
 	}
 	current := state.Stages[request.StageOrdinal-1]
@@ -489,6 +491,12 @@ func (worker *enStageWorker) authorize(ctx context.Context, request queue.StageR
 		return queue.ValidationExecution{}, fmt.Errorf("%w: request is not the currently authorized attempt", stale)
 	}
 
+	// The SBDH envelope branch is deliberately independent from payload
+	// standards evidence.  The payload branch retains the normal prerequisite
+	// proof below.
+	if request.Stage == queue.ValidationLayerPeppolEnvelope && execution.RequestedProfile == queue.ValidationProfilePeppolEnvelope {
+		return execution, nil
+	}
 	xsdPassed := false
 	for index := 0; index < int(request.StageOrdinal)-1; index++ {
 		prerequisite := state.Stages[index]
@@ -582,7 +590,7 @@ func (worker *enStageWorker) requestStaleError() error {
 	return errENStageRequestStale
 }
 
-func (worker *enStageWorker) withContent(ctx context.Context, uploadID string, validate func(io.Reader) error) error {
+func (worker *enStageWorker) withContent(ctx context.Context, uploadID, plan string, validate func(io.Reader) error) error {
 	fetchCtx, fetchSpan := observability.Tracer().Start(ctx, "stage.xml.fetch", trace.WithAttributes(attribute.String("upload.id", uploadID)))
 	content, err := worker.queue.OpenUploadContent(fetchCtx, uploadID)
 	if err != nil {
@@ -590,7 +598,19 @@ func (worker *enStageWorker) withContent(ctx context.Context, uploadID string, v
 		return fmt.Errorf("%w: open upload content: %w", errValidationContentStream, err)
 	}
 	content = traceUploadContent(content, fetchSpan)
-	validationErr := validate(content)
+	var validationErr error
+	if plan == string(queue.ValidationProfilePeppolEnvelope) && worker.validationLayer() != queue.ValidationLayerPeppolEnvelope {
+		document, readErr := io.ReadAll(content)
+		if readErr != nil {
+			validationErr = readErr
+		} else if input, inputErr := stageInput(plan, worker.validationLayer(), document); inputErr != nil {
+			validationErr = inputErr
+		} else {
+			validationErr = validate(bytes.NewReader(input))
+		}
+	} else {
+		validationErr = validate(content)
+	}
 	streamErr := content.Error()
 	closeErr := content.Close()
 	if streamErr == nil {

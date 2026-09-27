@@ -121,6 +121,9 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 	}
 	switch execution.Orchestration.Status {
 	case queue.ExecutionStatusPending:
+		if execution.RequestedProfile == queue.ValidationProfilePeppolEnvelope {
+			return machine.startEnvelopeBranches(ctx, current)
+		}
 		ctx = observability.RestoreTrace(ctx, execution.Orchestration.InitialDispatchTrace)
 		request, err := queue.NewStageRequest(execution, 1, 1, machine.now())
 		if err != nil {
@@ -145,16 +148,18 @@ func (machine *Machine) EnsureDispatch(ctx context.Context, current queue.Versio
 		current = queue.VersionedValidationExecution{Execution: execution, Revision: revision}
 		return machine.dispatchPending(ctx, current, request)
 	case queue.ExecutionStatusStageQueued:
-		stage := execution.Orchestration.Stages[execution.Orchestration.CurrentStageOrdinal-1]
-		if stage.DispatchStatus == queue.StageDispatchPublished {
-			return current, nil
+		for _, stage := range execution.Orchestration.Stages {
+			if stage.DispatchStatus != queue.StageDispatchPending {
+				continue
+			}
+			request, err := machine.requestForStage(execution, stage)
+			if err != nil {
+				return queue.VersionedValidationExecution{}, err
+			}
+			ctx = observability.RestoreTrace(ctx, stage.DispatchTrace)
+			return machine.dispatchPending(ctx, current, request)
 		}
-		request, err := machine.currentRequest(execution)
-		if err != nil {
-			return queue.VersionedValidationExecution{}, err
-		}
-		ctx = observability.RestoreTrace(ctx, stage.DispatchTrace)
-		return machine.dispatchPending(ctx, current, request)
+		return current, nil
 	case queue.ExecutionStatusValid, queue.ExecutionStatusInvalid, queue.ExecutionStatusProcessingFailed:
 		return machine.EnsureFinalResult(ctx, current)
 	default:
@@ -203,8 +208,7 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 			return machine.EnsureDispatch(ctx, current)
 		}
 	}
-	if current.Execution.Orchestration.Status != queue.ExecutionStatusStageQueued ||
-		current.Execution.Orchestration.CurrentStageOrdinal != result.StageOrdinal || stageIndex != len(current.Execution.Orchestration.Stages)-1 {
+	if current.Execution.Orchestration.Status != queue.ExecutionStatusStageQueued || stageIndex >= len(current.Execution.Orchestration.Stages) {
 		return queue.VersionedValidationExecution{}, errors.New("stage result is not for the current queued plan ordinal")
 	}
 	stageState := current.Execution.Orchestration.Stages[stageIndex]
@@ -233,6 +237,11 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 	switch result.Outcome {
 	case queue.StageOutcomePassed:
 		nextStage.TerminalOutcome = result.Outcome
+		if next.RequestedProfile == queue.ValidationProfilePeppolEnvelope {
+			request = machine.advanceEnvelopeBranch(ctx, current.Execution, &next, result.StageOrdinal, now)
+			machine.finalizeEnvelopeIfTerminal(&next, now, ctx)
+			break
+		}
 		if int(result.StageOrdinal) == len(next.Plan.Stages) {
 			next.Orchestration.Status = queue.ExecutionStatusValid
 			next.Orchestration.FinalizedAt = now.UTC().Format(time.RFC3339Nano)
@@ -252,11 +261,20 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 		}
 	case queue.StageOutcomeStandardsInvalid:
 		nextStage.TerminalOutcome = result.Outcome
+		if next.RequestedProfile == queue.ValidationProfilePeppolEnvelope {
+			machine.skipBlockedEnvelopePayload(&next, result.StageOrdinal)
+			machine.finalizeEnvelopeIfTerminal(&next, now, ctx)
+			break
+		}
 		next.Orchestration.Status = queue.ExecutionStatusInvalid
 		next.Orchestration.FinalizedAt = now.UTC().Format(time.RFC3339Nano)
 	case queue.StageOutcomeOperationalFailure:
 		if result.Attempt >= current.Execution.RetryPolicy.MaxAttemptsFor(result.Stage) {
 			nextStage.TerminalOutcome = result.Outcome
+			if next.RequestedProfile == queue.ValidationProfilePeppolEnvelope {
+				machine.finalizeEnvelopeIfTerminal(&next, now, ctx)
+				break
+			}
 			next.Orchestration.Status = queue.ExecutionStatusProcessingFailed
 			next.Orchestration.FinalizedAt = now.UTC().Format(time.RFC3339Nano)
 		} else {
@@ -296,6 +314,9 @@ func (machine *Machine) HandleStageResult(ctx context.Context, result queue.Stag
 	if request != nil {
 		return machine.EnsureDispatch(ctx, updated)
 	}
+	if !terminalExecutionStatus(updated.Execution.Orchestration.Status) {
+		return updated, nil
+	}
 	return machine.EnsureFinalResult(ctx, updated)
 }
 
@@ -323,7 +344,7 @@ func (machine *Machine) dispatchPending(ctx context.Context, current queue.Versi
 	}
 	for {
 		next := cloneExecution(current.Execution)
-		stageIndex := int(next.Orchestration.CurrentStageOrdinal - 1)
+		stageIndex := int(request.StageOrdinal - 1)
 		stage := &next.Orchestration.Stages[stageIndex]
 		if stage.RequestID != request.RequestID || stage.DispatchStatus != queue.StageDispatchPending {
 			return machine.EnsureDispatch(ctx, current)
@@ -346,7 +367,7 @@ func (machine *Machine) dispatchPending(ctx context.Context, current queue.Versi
 		if latest.Execution.Orchestration.Status != queue.ExecutionStatusStageQueued {
 			return latest, nil
 		}
-		latestStage := latest.Execution.Orchestration.Stages[latest.Execution.Orchestration.CurrentStageOrdinal-1]
+		latestStage := latest.Execution.Orchestration.Stages[request.StageOrdinal-1]
 		if latestStage.RequestID != request.RequestID || latestStage.DispatchStatus == queue.StageDispatchPublished {
 			return machine.EnsureDispatch(ctx, latest)
 		}
@@ -392,6 +413,115 @@ func (machine *Machine) currentRequest(execution queue.ValidationExecution) (que
 		return queue.StageRequest{}, errors.New("durable queued request identity is inconsistent")
 	}
 	return request, nil
+}
+
+func (machine *Machine) requestForStage(execution queue.ValidationExecution, stage queue.ValidationStageState) (queue.StageRequest, error) {
+	createdAt, err := time.Parse(time.RFC3339Nano, stage.RequestCreatedAt)
+	if err != nil {
+		return queue.StageRequest{}, err
+	}
+	request, err := queue.NewStageRequest(execution, stage.Ordinal, stage.AuthorizedAttempt, createdAt)
+	if err != nil || request.RequestID != stage.RequestID {
+		return queue.StageRequest{}, errors.New("durable queued request identity is inconsistent")
+	}
+	return request, nil
+}
+
+// startEnvelopeBranches commits both root requests before publishing either.
+// The payload chain remains dependency-driven; the SBDH branch has no payload
+// prerequisite and may therefore complete in either order.
+func (machine *Machine) startEnvelopeBranches(ctx context.Context, current queue.VersionedValidationExecution) (queue.VersionedValidationExecution, error) {
+	execution := cloneExecution(current.Execution)
+	now := machine.now()
+	states := make([]queue.ValidationStageState, len(execution.Plan.Stages))
+	for _, ordinal := range []uint32{1, 4} {
+		r, err := queue.NewStageRequest(execution, ordinal, 1, now)
+		if err != nil {
+			return current, err
+		}
+		states[ordinal-1] = queue.ValidationStageState{Stage: r.Stage, Ordinal: ordinal, AuthorizedAttempt: 1, RequestID: r.RequestID, RequestCreatedAt: r.CreatedAt, DispatchStatus: queue.StageDispatchPending, DispatchTrace: observability.CaptureTrace(ctx)}
+	}
+	// Unauthorised stages retain their frozen identity, making skipped stages
+	// explicit and preserving ordinal presentation order.
+	for i, p := range execution.Plan.Stages {
+		if states[i].Ordinal == 0 {
+			states[i].Stage = p.ID
+			states[i].Ordinal = p.Ordinal
+		}
+	}
+	execution.Orchestration.Status = queue.ExecutionStatusStageQueued
+	execution.Orchestration.CurrentStageOrdinal = 1
+	execution.Orchestration.Stages = states
+	execution.Orchestration.InitialDispatchTrace = nil
+	execution.Orchestration.UpdatedAt = now.Format(time.RFC3339Nano)
+	rev, err := machine.Queue.UpdateValidationExecutionState(ctx, current, execution)
+	if err != nil {
+		if errors.Is(err, queue.ErrValidationExecutionConflict) {
+			return machine.EnsureDispatch(ctx, current)
+		}
+		return current, err
+	}
+	updated, err := machine.EnsureDispatch(ctx, queue.VersionedValidationExecution{Execution: execution, Revision: rev})
+	if err != nil {
+		return updated, err
+	}
+	return machine.EnsureDispatch(ctx, updated)
+}
+
+func (machine *Machine) advanceEnvelopeBranch(ctx context.Context, current queue.ValidationExecution, next *queue.ValidationExecution, ordinal uint32, now time.Time) *queue.StageRequest {
+	var target uint32
+	if ordinal == 1 {
+		target = 2
+	}
+	if ordinal == 2 {
+		target = 3
+	}
+	if target == 0 || next.Orchestration.Stages[target-1].TerminalOutcome != "" || next.Orchestration.Stages[target-1].Skipped {
+		return nil
+	}
+	r, err := queue.NewStageRequest(current, target, 1, now)
+	if err != nil {
+		return nil
+	}
+	s := &next.Orchestration.Stages[target-1]
+	*s = queue.ValidationStageState{Stage: r.Stage, Ordinal: target, AuthorizedAttempt: 1, RequestID: r.RequestID, RequestCreatedAt: r.CreatedAt, DispatchStatus: queue.StageDispatchPending, DispatchTrace: observability.CaptureTrace(ctx)}
+	return &r
+}
+
+func (machine *Machine) skipBlockedEnvelopePayload(next *queue.ValidationExecution, ordinal uint32) {
+	start := ordinal + 1
+	if ordinal > 2 {
+		return
+	}
+	for i := start; i <= 3; i++ {
+		s := &next.Orchestration.Stages[i-1]
+		if s.TerminalOutcome == "" {
+			s.Skipped = true
+		}
+	}
+}
+
+func (machine *Machine) finalizeEnvelopeIfTerminal(next *queue.ValidationExecution, now time.Time, ctx context.Context) {
+	for _, s := range next.Orchestration.Stages {
+		if s.TerminalOutcome == "" && !s.Skipped {
+			return
+		}
+	}
+	status := queue.ExecutionStatusValid
+	for _, s := range next.Orchestration.Stages {
+		if s.TerminalOutcome == queue.StageOutcomeOperationalFailure {
+			status = queue.ExecutionStatusProcessingFailed
+		}
+		if s.TerminalOutcome == queue.StageOutcomeStandardsInvalid && status != queue.ExecutionStatusProcessingFailed {
+			status = queue.ExecutionStatusInvalid
+		}
+	}
+	next.Orchestration.Status = status
+	next.Orchestration.FinalizedAt = now.Format(time.RFC3339Nano)
+	next.Orchestration.FinalResultStatus = queue.FinalResultPending
+	id, _ := queue.ValidationExecutionResultID(next.ValidationID, next.Generation)
+	next.Orchestration.FinalResultID = id
+	next.Orchestration.FinalResultTrace = observability.CaptureTrace(ctx)
 }
 
 func (machine *Machine) validate() error {

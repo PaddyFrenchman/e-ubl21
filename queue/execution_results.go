@@ -82,8 +82,10 @@ func (result ValidationResult) ValidateExecutionResult() error {
 		if !utf8.ValidString(stage.Diagnostic) || len(stage.Diagnostic) > MaxStageDiagnosticBytes {
 			return fmt.Errorf("validation result stage %d diagnostic exceeds %d bytes or is not UTF-8", index, MaxStageDiagnosticBytes)
 		}
-		if err := validateValidationStageIdentity(stage); err != nil {
-			return fmt.Errorf("validation result stage %d: %w", index, err)
+		if stage.Outcome != StageOutcomeSkipped {
+			if err := validateValidationStageIdentity(stage); err != nil {
+				return fmt.Errorf("validation result stage %d: %w", index, err)
+			}
 		}
 		if err := ValidateStageIssues(stage.Layer, stage.Issues); err != nil {
 			return fmt.Errorf("validation result stage %d: %w", index, err)
@@ -101,10 +103,14 @@ func (result ValidationResult) ValidateExecutionResult() error {
 			if stage.Valid || !validStageOperationalReason(stage.Reason) || len(stage.Issues) != 0 {
 				return fmt.Errorf("validation result stage %d has inconsistent operational-failure evidence", index)
 			}
+		case StageOutcomeSkipped:
+			if stage.Valid || stage.Reason != StageReasonNone || len(stage.Issues) != 0 {
+				return fmt.Errorf("validation result stage %d has inconsistent skipped evidence", index)
+			}
 		default:
 			return fmt.Errorf("validation result stage %d has invalid outcome %q", index, stage.Outcome)
 		}
-		if index < len(result.ValidationStages)-1 && stage.Outcome != StageOutcomePassed {
+		if index < len(result.ValidationStages)-1 && stage.Outcome != StageOutcomePassed && !(result.Profile == ValidationProfilePeppolEnvelope && (stage.Outcome == StageOutcomeStandardsInvalid || stage.Outcome == StageOutcomeSkipped)) {
 			return fmt.Errorf("validation result advanced beyond non-passing stage %d", index)
 		}
 	}
@@ -123,7 +129,7 @@ func (result ValidationResult) ValidateExecutionResult() error {
 			return errors.New("valid validation result requires every frozen-plan stage")
 		}
 	case StatusInvalid:
-		if last.Outcome != StageOutcomeStandardsInvalid {
+		if last.Outcome != StageOutcomeStandardsInvalid && result.Profile != ValidationProfilePeppolEnvelope {
 			return errors.New("invalid validation result requires terminal standards-invalid evidence")
 		}
 	case StatusProcessingFailed:

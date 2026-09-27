@@ -56,6 +56,66 @@ func TestPeppolPlanRequiresDurableThirdStageBeforeValid(t *testing.T) {
 	assertNoRequest(t, ctx, client, queue.ValidationLayerPeppolBISBilling)
 }
 
+func TestEnvelopePlanPersistsFullCombinationMatrix(t *testing.T) {
+	for _, tc := range []struct {
+		name, payload, envelope string
+		wantStatus              queue.ValidationStatus
+		wantOutcomes            []queue.StageOutcome
+	}{
+		{"payload valid envelope valid", "valid", "valid", queue.StatusValid, []queue.StageOutcome{queue.StageOutcomePassed, queue.StageOutcomePassed, queue.StageOutcomePassed, queue.StageOutcomePassed}},
+		{"payload invalid envelope valid", "invalid", "valid", queue.StatusInvalid, []queue.StageOutcome{queue.StageOutcomeStandardsInvalid, queue.StageOutcomeSkipped, queue.StageOutcomeSkipped, queue.StageOutcomePassed}},
+		{"payload valid envelope invalid", "valid", "invalid", queue.StatusInvalid, []queue.StageOutcome{queue.StageOutcomePassed, queue.StageOutcomePassed, queue.StageOutcomePassed, queue.StageOutcomeStandardsInvalid}},
+		{"payload invalid envelope invalid", "invalid", "invalid", queue.StatusInvalid, []queue.StageOutcome{queue.StageOutcomeStandardsInvalid, queue.StageOutcomeSkipped, queue.StageOutcomeSkipped, queue.StageOutcomeStandardsInvalid}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			machine, client, ctx := newMachine(t)
+			intent := testIntent(t, peppolEnvelopeTestPlan())
+			intent.RequestedProfile = queue.ValidationProfilePeppolEnvelope
+			if err := client.PutUploadContent(ctx, intent.UploadID, []byte(peppolIdentityDocument())); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := machine.Start(ctx, intent); err != nil {
+				t.Fatal(err)
+			}
+			xsd := takeRequest(t, ctx, client, queue.ValidationLayerUBL21XSD)
+			envelope := takeRequest(t, ctx, client, queue.ValidationLayerPeppolEnvelope)
+			if tc.payload == "invalid" {
+				if _, err := machine.HandleStageResult(ctx, resultFor(t, xsd, queue.StageOutcomeStandardsInvalid, queue.StageReasonNone)); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				if _, err := machine.HandleStageResult(ctx, resultFor(t, xsd, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+					t.Fatal(err)
+				}
+				en := takeRequest(t, ctx, client, queue.ValidationLayerEN16931)
+				if _, err := machine.HandleStageResult(ctx, resultFor(t, en, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+					t.Fatal(err)
+				}
+				payload := takeRequest(t, ctx, client, queue.ValidationLayerPeppolBISBilling)
+				if _, err := machine.HandleStageResult(ctx, resultFor(t, payload, queue.StageOutcomePassed, queue.StageReasonNone)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			completed, err := machine.HandleStageResult(ctx, resultFor(t, envelope, map[string]queue.StageOutcome{"valid": queue.StageOutcomePassed, "invalid": queue.StageOutcomeStandardsInvalid}[tc.envelope], queue.StageReasonNone))
+			if err != nil {
+				t.Fatal(err)
+			}
+			result, err := client.GetValidationExecutionResult(ctx, completed.Execution.ValidationID, completed.Execution.Generation)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.Status != tc.wantStatus || len(result.ValidationStages) != len(tc.wantOutcomes) {
+				t.Fatalf("result = %+v", result)
+			}
+			for i, want := range tc.wantOutcomes {
+				if got := result.ValidationStages[i].Outcome; got != want {
+					t.Fatalf("stage %d outcome = %q, want %q", i+1, got, want)
+				}
+			}
+		})
+	}
+}
+
 func TestPeppolPlanDoesNotQueueThirdStageAfterENFailure(t *testing.T) {
 	machine, client, ctx := newMachine(t)
 	intent := testIntent(t, peppolTestPlan())
@@ -209,6 +269,13 @@ func peppolTestPlan() queue.FrozenValidationPlan {
 		{ID: queue.ValidationLayerEN16931, Ordinal: 2, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"},
 		{ID: queue.ValidationLayerPeppolBISBilling, Ordinal: 3, Requirement: queue.ValidationStageRequired, RulesetVersion: "1.3.16"},
 	}}
+}
+
+func peppolEnvelopeTestPlan() queue.FrozenValidationPlan {
+	plan := peppolTestPlan()
+	plan.ID = "peppol-envelope"
+	plan.Stages = append(plan.Stages, queue.FrozenValidationStage{ID: queue.ValidationLayerPeppolEnvelope, Ordinal: 4, Requirement: queue.ValidationStageRequired, RulesetVersion: "3.0.21"})
+	return plan
 }
 
 func peppolIdentityDocument() string {

@@ -77,6 +77,15 @@ func validateOrchestrationTransition(current, next ValidationExecution) error {
 	if nextUpdatedAt.Before(currentUpdatedAt) {
 		return errors.New("orchestration updatedAt cannot move backwards")
 	}
+	// The envelope profile is the sole non-linear topology.  Its state
+	// validator verifies the frozen slots; CAS still supplies atomicity, while
+	// this deliberately avoids applying the legacy single-current-stage rule.
+	if current.RequestedProfile == ValidationProfilePeppolEnvelope {
+		if next.RequestedProfile != current.RequestedProfile || next.ValidationID != current.ValidationID || next.Generation != current.Generation {
+			return errors.New("envelope orchestration transition rewrites execution identity")
+		}
+		return nil
+	}
 
 	switch current.Orchestration.Status {
 	case ExecutionStatusValid, ExecutionStatusInvalid, ExecutionStatusProcessingFailed:

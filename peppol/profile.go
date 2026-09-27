@@ -78,7 +78,7 @@ type Resolution struct {
 // PeppolIdentifiersValid reports whether the resolution selected Peppol and
 // all supported identifier checks passed.
 func (resolution Resolution) PeppolIdentifiersValid() bool {
-	return resolution.ResolvedProfile == queue.ValidationProfilePeppolBISBilling &&
+	return (resolution.ResolvedProfile == queue.ValidationProfilePeppolBISBilling || resolution.ResolvedProfile == queue.ValidationProfilePeppolEnvelope) &&
 		len(resolution.Failures) == 0 &&
 		resolution.Identifiers.CustomizationID != "" &&
 		resolution.Identifiers.ProfileID != "" &&
@@ -95,7 +95,7 @@ func Resolve(documentType string, requested queue.ValidationProfile, document []
 	}
 	switch requested {
 	case queue.ValidationProfileAuto, queue.ValidationProfileUBL21,
-		queue.ValidationProfileUBL21EN16931, queue.ValidationProfilePeppolBISBilling:
+		queue.ValidationProfileUBL21EN16931, queue.ValidationProfilePeppolBISBilling, queue.ValidationProfilePeppolEnvelope:
 	default:
 		return Resolution{}, fmt.Errorf("%w %q", ErrUnsupportedProfile, requested)
 	}
@@ -130,9 +130,13 @@ func Resolve(documentType string, requested queue.ValidationProfile, document []
 	}
 
 	failures := parsed.profileFailures()
+	resolved := queue.ValidationProfilePeppolBISBilling
+	if requested == queue.ValidationProfilePeppolEnvelope {
+		resolved = queue.ValidationProfilePeppolEnvelope
+	}
 	return Resolution{
 		RequestedProfile: requested,
-		ResolvedProfile:  queue.ValidationProfilePeppolBISBilling,
+		ResolvedProfile:  resolved,
 		Identifiers:      identifiers,
 		Failures:         failures,
 	}, nil
