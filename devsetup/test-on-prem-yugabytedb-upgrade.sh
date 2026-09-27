@@ -78,7 +78,7 @@ render_database_migration_job >>"${jobs_file}"
 grep -q 'name: eubl21-db-auth-yugabytedb-staging' "${jobs_file}"
 
 # The destructive-retirement check uses a newly created migration Job and the
-# promoted public Secret, not the staging Secret or historical Job status.
+# verified staging Secret, not historical Job status.
 verification_job_file="${temporary_dir}/verification-job.yaml"
 (
   run_checked_job() {
@@ -88,9 +88,9 @@ verification_job_file="${temporary_dir}/verification-job.yaml"
   verify_live_yugabytedb_database
 )
 grep -q 'name: eubl21-yugabytedb-retirement-check' "${verification_job_file}"
-grep -q 'name: eubl21-db-auth' "${verification_job_file}"
-if grep -q 'name: eubl21-db-auth-yugabytedb-staging' "${verification_job_file}"; then
-  echo "Retirement verification Job used the staging Secret" >&2
+grep -q 'name: eubl21-db-auth-yugabytedb-staging' "${verification_job_file}"
+if grep -q 'name: eubl21-db-auth"' "${verification_job_file}"; then
+  echo "Retirement verification Job used the public Secret" >&2
   exit 1
 fi
 

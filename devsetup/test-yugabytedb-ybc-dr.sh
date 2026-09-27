@@ -118,7 +118,19 @@ source_version="$(yugabyted source version)"
 "${compose[@]}" cp "$root/devsetup/yugabytedb-bootstrap.sh" source:/tmp/yugabytedb-bootstrap.sh
 "${compose[@]}" exec -T -e "YSQL_HOST=eubl21-dr-source" -e "YSQL_ADMIN_PASSWORD=$ysql_password" -e "YSQL_USER=$app_user" -e "YSQL_PASSWORD=$app_password" -e "YSQL_MIGRATION_USER=$migration_user" -e "YSQL_MIGRATION_PASSWORD=$migration_password" -e YSQL_DB=eubl21 -e YSQL_EXPECTED_VERSION=2025.2.6.0-b111 source bash /tmp/yugabytedb-bootstrap.sh
 source_port="${EUBL21_DR_LOCAL_SOURCE_PORT:-15434}"
-EUBL21_DATABASE_URL="postgresql://$migration_user:$migration_password@127.0.0.1:$source_port/eubl21?sslmode=disable" go run . database migrate
+run_migrations() {
+  local deadline=$((SECONDS + 60)) migration_output
+  until migration_output="$(EUBL21_DATABASE_URL="postgresql://$migration_user:$migration_password@127.0.0.1:$source_port/eubl21?sslmode=disable" go run . database migrate 2>&1)"; do
+    if (( SECONDS >= deadline )); then
+      printf "%s\n" "$migration_output" >&2
+      return 1
+    fi
+    sleep 2
+  done
+  printf "%s\n" "$migration_output"
+}
+
+run_migrations
 # Seed representative application-schema data through the DDL identity, then
 # prove the application identity receives only its granted data access.
 ysql_as_database source "$migration_user" "$migration_password" eubl21 --command "CREATE TABLE eubl21.ybc_dr_qualification (id integer PRIMARY KEY, payload text NOT NULL); GRANT SELECT ON eubl21.ybc_dr_qualification TO $app_user; INSERT INTO eubl21.ybc_dr_qualification VALUES (128, 'eubl21-ybc-dr-qualification');"

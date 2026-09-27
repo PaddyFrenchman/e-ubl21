@@ -35,10 +35,10 @@ for prohibited in "${prohibited_references[@]}"; do
     matches="$({
         rg --line-number --fixed-strings "${historical_exclusions[@]}" -- "$prohibited" "$ROOT_DIR" || true
     } | rg -v \
-        -e 'deploy/on-prem/scripts/install-on-prem\.sh:87:.*POSTGRES_STORAGE_SIZE' \
-        -e 'deploy/on-prem/scripts/install-on-prem\.sh:88:.*settings are retired' \
-        -e 'deploy/on-prem/scripts/install-on-prem\.sh:376:.*e-ubl21-postgres' \
-        -e 'deploy/on-prem/scripts/install-on-prem\.sh:381:.*Legacy e-ubl21-postgres' || true)"
+        -e 'deploy/on-prem/scripts/install-on-prem\.sh:[0-9]+:.*POSTGRES_STORAGE_SIZE' \
+        -e 'deploy/on-prem/scripts/install-on-prem\.sh:[0-9]+:.*settings are retired' \
+        -e 'deploy/on-prem/scripts/install-on-prem\.sh:[0-9]+:.*get cluster\.postgresql\.cnpg\.io e-ubl21-postgres' \
+        -e 'deploy/on-prem/scripts/install-on-prem\.sh:[0-9]+:.*Legacy e-ubl21-postgres exists; refusing a fresh-install conversion' || true)"
     if [[ -n "$matches" ]]; then
         echo "ERROR: retired PostgreSQL deployment reference '$prohibited' is prohibited:" >&2
         echo "$matches" >&2

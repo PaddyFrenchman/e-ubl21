@@ -204,11 +204,11 @@ verify_promoted_database_secret() {
 
 verify_live_yugabytedb_database() {
   # A new migration command opens a fresh authenticated YSQL connection through
-  # the promoted public URL and validates the complete history against the
+  # the verified staged migration identity and validates the complete history against the
   # immutable migrations embedded in EUBL21_IMAGE. It is idempotent when the
   # schema is current and fails on missing, failed, changed, or newer history.
   render_database_migration_job \
-    eubl21-yugabytedb-retirement-check "${PUBLIC_DATABASE_SECRET_NAME}" |
+    eubl21-yugabytedb-retirement-check "${EUBL21_DATABASE_SECRET_NAME}" |
     run_checked_job eubl21-yugabytedb-retirement-check
 }
 

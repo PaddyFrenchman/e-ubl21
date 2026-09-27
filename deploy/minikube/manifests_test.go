@@ -68,6 +68,9 @@ func TestMinikubeDatabaseContract(t *testing.T) {
 	if !strings.Contains(topologyRunner, `MINIKUBE_MEMORY="${MINIKUBE_MEMORY:-6144mb}"`) ||
 		!strings.Contains(topologyRunner, `--memory="$MINIKUBE_MEMORY"`) ||
 		!strings.Contains(topologyRunner, `timeout "$MINIKUBE_STATUS_TIMEOUT_SECONDS" minikube status`) ||
+		!strings.Contains(topologyRunner, "minikube_profile_ready()") ||
+		!strings.Contains(topologyRunner, `minikube -p "$MINIKUBE_PROFILE" update-context`) ||
+		!strings.Contains(topologyRunner, `"$KUBECTL_BIN" get --raw=/readyz`) ||
 		!strings.Contains(topologyRunner, `minikube delete -p "$MINIKUBE_PROFILE"`) ||
 		!strings.Contains(topologyRunner, `name.minikube.sigs.k8s.io=$MINIKUBE_PROFILE`) ||
 		!strings.Contains(topologyRunner, `docker rm --force $container_ids`) ||

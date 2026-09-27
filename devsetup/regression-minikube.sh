@@ -122,7 +122,18 @@ reset_minikube_profile() {
     fi
 }
 
-if ! timeout "$MINIKUBE_STATUS_TIMEOUT_SECONDS" minikube status -p "$MINIKUBE_PROFILE" --format='{{.Host}}' 2>/dev/null | grep -qx Running; then
+minikube_profile_ready() {
+    timeout "$MINIKUBE_STATUS_TIMEOUT_SECONDS" minikube status -p "$MINIKUBE_PROFILE" --format='{{.Host}}' 2>/dev/null | grep -qx Running || return 1
+
+    # A running Docker container is not sufficient: a previously selected
+    # non-Minikube kubeconfig can make `minikube kubectl` authenticate against
+    # the wrong cluster. Refresh the profile context and prove that its API is
+    # reachable before reusing this disposable regression environment.
+    minikube -p "$MINIKUBE_PROFILE" update-context >/dev/null || return 1
+    timeout "$MINIKUBE_STATUS_TIMEOUT_SECONDS" "$KUBECTL_BIN" get --raw=/readyz >/dev/null 2>&1
+}
+
+if ! minikube_profile_ready; then
     # This profile is disposable regression infrastructure. Recreate it when
     # Minikube cannot establish a timely control-plane connection instead of
     # allowing an unusable Docker-driver profile to hang the whole suite.
