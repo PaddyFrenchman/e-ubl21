@@ -2,14 +2,20 @@ package queue
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"io"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/database"
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 )
+
+const recoveryQualificationUploadID = "0123456789abcdef0123456789abcdef"
 
 func TestYSQLUploadMetadataStore(t *testing.T) {
 	rawURL := os.Getenv("EUBL21_TEST_DATABASE_URL")
@@ -93,5 +99,58 @@ func TestYSQLUploadMetadataStore(t *testing.T) {
 	}
 	if _, err := store.Get(context.Background(), "not-a-valid-id"); !errors.Is(err, ErrRecordNotFound) {
 		t.Fatalf("invalid get = %v", err)
+	}
+}
+
+// TestYSQLUploadMetadataRecoveryQualification is enabled only by the YBC DR
+// drill. It proves that a restored upload_metadata row remains usable by the
+// application and still agrees with its separately restored object-store
+// content.
+func TestYSQLUploadMetadataRecoveryQualification(t *testing.T) {
+	rawURL, objectDirectory := os.Getenv("EUBL21_TEST_DATABASE_URL"), os.Getenv("EUBL21_RECOVERY_OBJECT_DIR")
+	if rawURL == "" || objectDirectory == "" {
+		t.Skip("set EUBL21_TEST_DATABASE_URL and EUBL21_RECOVERY_OBJECT_DIR for recovery qualification")
+	}
+	cfg, err := database.ParseConfig(rawURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client, err := database.Connect(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.Close)
+	namespace := MustNamespace("recovery.qualification")
+	metadata, err := NewYSQLUploadMetadataStore(client, namespace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := metadata.Get(context.Background(), recoveryQualificationUploadID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.Revision != 1 || loaded.Record.ID != recoveryQualificationUploadID || loaded.Record.DocumentType != "Invoice" || loaded.Record.Status != StatusEnqueuePending || loaded.Record.ReceivedAt != "2026-09-28T00:00:00Z" {
+		t.Fatalf("restored upload metadata = %+v, revision=%d", loaded.Record, loaded.Revision)
+	}
+	objects, err := documentstore.New(documentstore.Options{Backend: documentstore.BackendFilesystem, Directory: objectDirectory})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, err := objects.Get(context.Background(), documentstore.ObjectKey(loaded.Record.ID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content, readErr := io.ReadAll(body)
+	closeErr := body.Close()
+	if readErr != nil || closeErr != nil {
+		t.Fatalf("read restored object: %v %v", readErr, closeErr)
+	}
+	sum := sha256.Sum256(content)
+	if loaded.Record.ContentSHA256 != hex.EncodeToString(sum[:]) {
+		t.Fatalf("restored object checksum does not match metadata: got %s", loaded.Record.ContentSHA256)
+	}
+	loaded.Record.Status = StatusPending
+	if revision, err := metadata.Update(context.Background(), loaded.Record, loaded.Revision); err != nil || revision != 2 {
+		t.Fatalf("resume restored upload metadata revision=%d err=%v", revision, err)
 	}
 }

@@ -135,6 +135,16 @@ run_migrations
 # prove the application identity receives only its granted data access.
 ysql_as_database source "$migration_user" "$migration_password" eubl21 --command "CREATE TABLE eubl21.ybc_dr_qualification (id integer PRIMARY KEY, payload text NOT NULL); GRANT SELECT ON eubl21.ybc_dr_qualification TO $app_user; INSERT INTO eubl21.ybc_dr_qualification VALUES (128, 'eubl21-ybc-dr-qualification');"
 
+# Keep raw upload content outside the database backup, as in production. The
+# restored metadata must reconcile to this independently retained object.
+recovery_upload_id='0123456789abcdef0123456789abcdef'
+recovery_object_dir="$artifact_dir/recovery-objects"
+recovery_object_key="uploads/$recovery_upload_id/document.xml"
+mkdir -p "$(dirname "$recovery_object_dir/$recovery_object_key")"
+printf 'YSQL upload metadata recovery qualification\n' >"$recovery_object_dir/$recovery_object_key"
+recovery_checksum="$(sha256sum "$recovery_object_dir/$recovery_object_key" | awk '{print $1}')"
+ysql_as_database source "$migration_user" "$migration_password" eubl21 --command "INSERT INTO eubl21.upload_metadata (queue_namespace, upload_id, revision, document_type, received_at, content_object_key, content_sha256, status, processing_attempts, record) VALUES ('recovery.qualification', '$recovery_upload_id', 1, 'Invoice', '2026-09-28T00:00:00Z', '$recovery_object_key', '$recovery_checksum', 'enqueue_pending', 0, '{\"id\":\"$recovery_upload_id\",\"documentType\":\"Invoice\",\"status\":\"enqueue_pending\",\"receivedAt\":\"2026-09-28T00:00:00Z\",\"contentSha256\":\"$recovery_checksum\"}'::jsonb);"
+
 # This is a real YBC request, not a logical dump.  Status is queried after it
 # completes to retain controller-level confirmation with the evidence.
 # yugabyted parses the last two path components as the NFS bucket and backup
@@ -162,10 +172,14 @@ ysql target --command "CREATE ROLE $app_user LOGIN PASSWORD '$app_password'; CRE
 yugabyted target restore --base_dir=/tmp/yb --database=eubl21 --cloud_storage_uri=/nfs/eubl21-ybc | tee "$artifact_dir/restore-result.txt"
 wait_ybc_task restore target "$artifact_dir/restore-status.txt"
 ysql_as_database target "$app_user" "$app_password" eubl21 --tuples-only --no-align --command "SELECT payload FROM eubl21.ybc_dr_qualification WHERE id = 128" | grep -Fxq eubl21-ybc-dr-qualification
+ysql_as_database target "$app_user" "$app_password" eubl21 --tuples-only --no-align --command "SELECT upload_id || '|' || revision || '|' || status || '|' || content_object_key || '|' || content_sha256 FROM eubl21.upload_metadata WHERE queue_namespace = 'recovery.qualification'" | tee "$artifact_dir/restored-upload-metadata.txt" | grep -Fxq "$recovery_upload_id|1|enqueue_pending|$recovery_object_key|$recovery_checksum"
 
 port="${EUBL21_DR_LOCAL_TARGET_PORT:-15435}"
 EUBL21_TEST_DATABASE_URL="postgresql://$app_user:$app_password@127.0.0.1:$port/eubl21?sslmode=disable" \
   go test ./database -run '^TestYugabyteDBIntegration$' -count=1 | tee "$artifact_dir/application-integration.txt"
+EUBL21_TEST_DATABASE_URL="postgresql://$app_user:$app_password@127.0.0.1:$port/eubl21?sslmode=disable" \
+  EUBL21_RECOVERY_OBJECT_DIR="$recovery_object_dir" \
+  go test ./queue -run '^TestYSQLUploadMetadataRecoveryQualification$' -count=1 | tee "$artifact_dir/upload-metadata-recovery.txt"
 EUBL21_TEST_DATABASE_URL="postgresql://$app_user:$app_password@127.0.0.1:$port/eubl21?sslmode=disable" \
   go test ./... -count=1 | tee "$artifact_dir/unit-tests.txt"
 rotated_app_password="rotated-${run_id}-$(< /proc/sys/kernel/random/uuid)"
@@ -175,6 +189,6 @@ ysql_as_database target "$app_user" "$rotated_app_password" eubl21 --tuples-only
 app_password="$rotated_app_password"
 EUBL21_RESTORED_DATABASE_URL="postgresql://$app_user:$app_password@127.0.0.1:$port/eubl21?sslmode=disable" \
   REGRESSION_RUN_DIR="$artifact_dir/regression" ./run-regression-tests.sh | tee "$artifact_dir/application-regression.txt"
-printf 'source_version=%s\ntarget_version=%s\nbackup_identifier=%s\nbackup_location=%s\nbackup_status=passed\nrestore_status=passed\nschema_data_verification=passed\napplication_integration=passed\ncredential_rotation=passed\napplication_regression=passed\n' \
+printf 'source_version=%s\ntarget_version=%s\nbackup_identifier=%s\nbackup_location=%s\nbackup_status=passed\nrestore_status=passed\nschema_data_verification=passed\nupload_metadata_recovery=passed\napplication_integration=passed\ncredential_rotation=passed\napplication_regression=passed\n' \
   "$source_version" "$target_version" "nfs/eubl21-ybc" "$backup_dir" >"$artifact_dir/summary.txt"
 echo "Disposable YBC DR qualification passed; evidence retained in $artifact_dir"
