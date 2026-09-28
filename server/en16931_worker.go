@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
@@ -41,6 +42,7 @@ type EN16931WorkerConfig struct {
 	NATSURL                string
 	NATSOptions            []nats.Option
 	QueueNamespace         queue.Namespace
+	ObjectStore            documentstore.Options
 	MetricsAddr            string
 	ValidationTimeout      time.Duration
 	Concurrency            int
@@ -117,6 +119,16 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 			return fmt.Errorf("worker-en16931 connect to NATS: %w", err)
 		}
 		ownedClient = true
+	}
+	if cfg.ObjectStore.Backend != "" {
+		store, storeErr := documentstore.New(cfg.ObjectStore)
+		if storeErr != nil {
+			if ownedClient {
+				client.Close()
+			}
+			return fmt.Errorf("worker-en16931 open document store: %w", storeErr)
+		}
+		client.SetDocumentStore(store)
 	}
 	if ownedClient {
 		defer client.Close()

@@ -55,7 +55,7 @@ func en16931Worker(ctx context.Context, cfg *Config) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return runEN16931Worker(ctx, server.EN16931WorkerConfig{
-		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace,
+		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace, ObjectStore: cfg.ObjectStore,
 		MetricsAddr: cfg.ENWorkerMetricsAddr, ValidationTimeout: cfg.ENWorkerValidationTimeout,
 		Concurrency: cfg.ENWorkerConcurrency, Prefetch: cfg.ENWorkerPrefetch,
 		ProgressInterval: cfg.ENWorkerProgressInterval, JavaExecutable: cfg.ENWorkerJavaExecutable,

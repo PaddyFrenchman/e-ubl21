@@ -33,6 +33,9 @@ func (c *Client) ExpireUploadContent(ctx context.Context, retention time.Duratio
 	if retention < 0 {
 		return report, fmt.Errorf("upload content retention must be non-negative")
 	}
+	if c.DocumentStore() != nil {
+		return c.expireDocumentStoreContent(ctx, retention, now)
+	}
 	store, err := c.uploadContentStore(ctx)
 	if err != nil {
 		return report, err
@@ -121,6 +124,85 @@ func (c *Client) ExpireUploadContent(ctx context.Context, retention time.Duratio
 	return report, nil
 }
 
+// expireDocumentStoreContent uses durable upload metadata as the inventory.
+// Unlike JetStream Object Store, objstore has no common list-with-size API;
+// metadata is therefore the portable reconciliation source and physical usage
+// remains a backend monitoring concern.
+func (c *Client) expireDocumentStoreContent(ctx context.Context, retention time.Duration, now time.Time) (ContentExpiryReport, error) {
+	var report ContentExpiryReport
+	if now.IsZero() {
+		now = time.Now()
+	}
+	now = now.UTC()
+	keys, err := c.uploadsBucket(ctx)
+	if err != nil {
+		return report, err
+	}
+	ids, err := keys.Keys(ctx)
+	if err != nil {
+		return report, fmt.Errorf("list upload metadata for content expiry: %w", err)
+	}
+	for _, id := range ids {
+		versioned, err := c.GetUploadRecordVersion(ctx, id)
+		if err != nil {
+			report.Errors++
+			continue
+		}
+		record := versioned.Record
+		projected, err := c.ProjectUploadRecord(ctx, record)
+		if err != nil || (projected.Status != StatusValid && projected.Status != StatusInvalid) {
+			if err != nil {
+				report.Errors++
+			}
+			continue
+		}
+		report.Scanned++
+		if retention == 0 {
+			if record.ContentExpiresAt != "" {
+				record.ContentExpiresAt = ""
+				if _, err := c.UpdateUploadRecord(ctx, record, versioned.Revision); err == nil {
+					report.Unscheduled++
+				} else {
+					report.Errors++
+				}
+			}
+			continue
+		}
+		deadline, err := contentExpiryDeadline(projected, retention)
+		if err != nil {
+			report.Errors++
+			continue
+		}
+		record.ContentExpiresAt = deadline.Format(time.RFC3339)
+		if now.Before(deadline) {
+			if versioned.Record.ContentExpiresAt != record.ContentExpiresAt {
+				if _, err := c.UpdateUploadRecord(ctx, record, versioned.Revision); err == nil {
+					report.Scheduled++
+				} else {
+					report.Errors++
+				}
+			}
+			continue
+		}
+		if record.ContentExpiredAt == "" {
+			marked, err := c.markUploadContentExpired(ctx, versioned, deadline, now)
+			if err != nil {
+				report.Errors++
+				continue
+			}
+			if marked {
+				report.Expired++
+			}
+		}
+		if err := c.DeleteUploadContent(ctx, id); err != nil {
+			report.Errors++
+		} else {
+			report.Reclaimed++
+		}
+	}
+	return report, nil
+}
+
 type objectDeleter interface {
 	Delete(context.Context, string) error
 }
@@ -185,6 +267,13 @@ func contentExpiryDeadline(record UploadRecord, retention time.Duration) (time.T
 // UploadContentStorageSize reports the Object Store's current physical size,
 // including JetStream object metadata.
 func (c *Client) UploadContentStorageSize(ctx context.Context) (uint64, error) {
+	if c.DocumentStore() != nil {
+		size, err := c.DocumentStore().Size(ctx)
+		if err != nil {
+			return 0, fmt.Errorf("read configured object-store usage: %w", err)
+		}
+		return size, nil
+	}
 	// nats.go's ObjectStore Status refreshes mutable stream information on its
 	// handle. Use a maintenance-only handle so the cached hot-path handle can
 	// serve concurrent Get/Put/List calls without racing that refresh.

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	appdb "github.com/PaddyFrenchman/e-ubl21/database"
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/server"
 	"github.com/nats-io/nats.go"
@@ -39,6 +40,7 @@ type Config struct {
 	HTTPMaxHeaderBytes                 int
 	UploadContentRetention             time.Duration
 	UploadContentMaxBytes              int64
+	ObjectStore                        documentstore.Options
 	WorkerConsumerName                 string
 	WorkerSubjectFilter                string
 	WorkerMetricsAddr                  string
@@ -143,6 +145,15 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().Int("http-max-header-bytes", 64<<10, "Maximum total size of HTTP request headers")
 	rootCmd.PersistentFlags().Duration("upload-content-retention", 30*24*time.Hour, "How long raw XML remains available after validation; 0 disables expiry")
 	rootCmd.PersistentFlags().Int64("upload-content-max-bytes", 10<<30, "Maximum bytes allocated to the shared raw XML Object Store; 0 is unlimited")
+	rootCmd.PersistentFlags().String("objectstore-backend", "filesystem", "Raw XML object-store backend: filesystem or s3")
+	rootCmd.PersistentFlags().String("objectstore-directory", "/var/lib/e-ubl21/documents", "Filesystem object-store directory")
+	rootCmd.PersistentFlags().String("objectstore-endpoint", "", "S3-compatible object-store endpoint")
+	rootCmd.PersistentFlags().String("objectstore-bucket", "", "S3 object-store bucket")
+	rootCmd.PersistentFlags().String("objectstore-region", "", "S3 object-store region")
+	rootCmd.PersistentFlags().String("objectstore-access-key", "", "S3 object-store access key (optional; IAM chain is used when absent)")
+	rootCmd.PersistentFlags().String("objectstore-secret-key", "", "S3 object-store secret key")
+	rootCmd.PersistentFlags().Bool("objectstore-use-tls", true, "Use TLS for S3 object-store connections")
+	rootCmd.PersistentFlags().String("objectstore-immutability", documentstore.ImmutabilityNativeConditional, "Object immutability mode: native-conditional or guarded-write")
 
 	mustBindFlag(v, rootCmd, "config")
 	mustBindFlag(v, rootCmd, "host")
@@ -171,6 +182,9 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	mustBindFlag(v, rootCmd, "http-max-header-bytes")
 	mustBindFlag(v, rootCmd, "upload-content-retention")
 	mustBindFlag(v, rootCmd, "upload-content-max-bytes")
+	for _, key := range []string{"objectstore-backend", "objectstore-directory", "objectstore-endpoint", "objectstore-bucket", "objectstore-region", "objectstore-access-key", "objectstore-secret-key", "objectstore-use-tls", "objectstore-immutability"} {
+		mustBindFlag(v, rootCmd, key)
+	}
 
 	rootCmd.AddCommand(newServeCmd(cfg))
 	rootCmd.AddCommand(newWorkerCmd(v, cfg))
@@ -179,6 +193,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newPeppolWorkerCmd(v, cfg))
 	rootCmd.AddCommand(newOrchestratorCmd(v, cfg))
 	rootCmd.AddCommand(newProvisionCmd(v, cfg))
+	rootCmd.AddCommand(newObjectStoreCmd(cfg))
 	rootCmd.AddCommand(newDatabaseCmd(cfg))
 	rootCmd.AddCommand(newMigrationCmd(cfg))
 	rootCmd.AddCommand(newDeadLetterCmd(cfg))
@@ -321,6 +336,17 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 	}
 	cfg.UploadContentRetention = v.GetDuration("upload-content-retention")
 	cfg.UploadContentMaxBytes = v.GetInt64("upload-content-max-bytes")
+	backend, directory := v.GetString("objectstore-backend"), v.GetString("objectstore-directory")
+	if backend == "" {
+		backend = documentstore.BackendFilesystem
+	}
+	if directory == "" {
+		directory = "/var/lib/e-ubl21/documents"
+	}
+	cfg.ObjectStore = documentstore.Options{Backend: backend, Immutability: v.GetString("objectstore-immutability"), Directory: directory, Endpoint: v.GetString("objectstore-endpoint"), Bucket: v.GetString("objectstore-bucket"), Region: v.GetString("objectstore-region"), AccessKey: v.GetString("objectstore-access-key"), SecretKey: v.GetString("objectstore-secret-key"), UseTLS: !v.IsSet("objectstore-use-tls") || v.GetBool("objectstore-use-tls")}
+	if _, err := documentstore.New(cfg.ObjectStore); err != nil {
+		return fmt.Errorf("load object-store config: %w", err)
+	}
 	if err := validateUploadContentConfig(cfg); err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
@@ -383,6 +409,9 @@ func loadConfig(v *viper.Viper, cfg *Config) error {
 }
 
 func validateUploadContentConfig(cfg *Config) error {
+	if cfg.ObjectStore.Immutability == documentstore.ImmutabilityGuardedWrite && cfg.Database == nil {
+		return fmt.Errorf("objectstore-immutability=guarded-write requires --database-url for YugabyteDB YSQL")
+	}
 	return server.ValidateUploadContentLimits(cfg.UploadContentRetention, cfg.UploadContentMaxBytes)
 }
 

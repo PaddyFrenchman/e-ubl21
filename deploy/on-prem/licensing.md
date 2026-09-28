@@ -184,6 +184,15 @@ e-ubl21
            +--> approved on-prem implementation
 ```
 
+### SeaweedFS production profile
+
+SeaweedFS is the preferred on-prem S3-compatible production profile for issue
+#88. Its upstream project is licensed under Apache License 2.0, a permissive
+license suitable for the intended commercial deployment model. It remains a
+separate service selected through the S3 endpoint configuration rather than an
+application dependency. Reconfirm the selected SeaweedFS release's licence and
+security posture during each distribution review.
+
 ---
 
 ## 8. Grafana OSS licensing risk

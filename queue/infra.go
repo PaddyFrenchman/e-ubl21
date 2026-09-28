@@ -36,9 +36,10 @@ type InfraConfig struct {
 	UploadContentMaxBytes int64
 }
 
-// EnsureInfra idempotently creates the streams, metadata KV bucket and raw
-// XML Object Store the queue package depends on. Both the HTTP API and the
-// validation worker call this on startup, since either may start first.
+// EnsureInfra idempotently creates the streams and metadata KV bucket the
+// queue package depends on. When a DocumentStore is configured, raw XML is
+// deliberately outside JetStream; otherwise the legacy Object Store remains
+// available for migration compatibility.
 func (c *Client) EnsureInfra(ctx context.Context) error {
 	return c.EnsureInfraWithConfig(ctx, InfraConfig{})
 }
@@ -99,19 +100,24 @@ func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) err
 		return fmt.Errorf("ensure %s KV bucket: %w", uploadsBucketName, err)
 	}
 
+	c.handlesMu.Lock()
+	c.cachedUploadsKV = uploadsKV
+	c.handlesMu.Unlock()
+	if c.DocumentStore() != nil {
+		return nil
+	}
+
 	uploadContentBucketName := c.Namespace.UploadContentBucketName()
 	uploadContentStore, err := c.JS.CreateOrUpdateObjectStore(ctx, jetstream.ObjectStoreConfig{
 		Bucket:      uploadContentBucketName,
-		Description: "Immutable raw XML content of every UBL upload, keyed by upload id and chunked by JetStream Object Store.",
+		Description: "Legacy immutable raw XML content of every UBL upload, keyed by upload id and chunked by JetStream Object Store.",
 		Storage:     jetstream.FileStorage,
 		MaxBytes:    cfg.UploadContentMaxBytes,
 	})
 	if err != nil {
 		return fmt.Errorf("ensure %s Object Store: %w", uploadContentBucketName, err)
 	}
-
 	c.handlesMu.Lock()
-	c.cachedUploadsKV = uploadsKV
 	c.cachedUploadContentStore = uploadContentStore
 	c.handlesMu.Unlock()
 	return nil

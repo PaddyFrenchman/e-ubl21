@@ -81,6 +81,7 @@ func worker(ctx context.Context, cfg *Config) error {
 		NATSURL:                  cfg.NATSURL,
 		NATSOptions:              cfg.NATSOptions,
 		QueueNamespace:           cfg.QueueNamespace,
+		ObjectStore:              cfg.ObjectStore,
 		ConsumerName:             cfg.WorkerConsumerName,
 		SubjectFilter:            cfg.WorkerSubjectFilter,
 		MetricsAddr:              cfg.WorkerMetricsAddr,

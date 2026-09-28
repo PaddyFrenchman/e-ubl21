@@ -215,6 +215,8 @@ run_integration_test() {
     EUBL21_TEST_DATABASE_URL="$(database_url)" \
     EUBL21_TEST_DATABASE_ADMIN_URL="$(admin_database_url)" \
         go test ./database -run '^TestYugabyteDB(Integration|Migrations)$' -count=1
+    EUBL21_TEST_DATABASE_URL="$(database_url)" \
+        go test ./documentstore -run '^TestGuardedWriteClaims$' -count=1
 }
 
 verify_lifecycle() {

@@ -15,6 +15,8 @@ import (
 	"sync"
 	"time"
 
+	appdb "github.com/PaddyFrenchman/e-ubl21/database"
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
@@ -33,6 +35,8 @@ type Config struct {
 	RateLimitBurst         int
 	UploadContentRetention time.Duration
 	UploadContentMaxBytes  int64
+	ObjectStore            documentstore.Options
+	Database               *appdb.Config
 	Logger                 *slog.Logger
 }
 
@@ -41,6 +45,7 @@ type Config struct {
 type Application struct {
 	Handler   http.Handler
 	queue     *queue.Client
+	database  *appdb.Client
 	closeOnce sync.Once
 	cancel    context.CancelFunc
 	workers   sync.WaitGroup
@@ -57,6 +62,9 @@ func (a *Application) Close() {
 		a.workers.Wait()
 		if a.queue != nil {
 			a.queue.Close()
+		}
+		if a.database != nil {
+			a.database.Close()
 		}
 	})
 }
@@ -81,7 +89,37 @@ func NewApplication(cfg Config) (*Application, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect to NATS: %w", err)
 	}
+	var claimDB *appdb.Client
+	if cfg.ObjectStore.Backend != "" {
+		store, storeErr := documentstore.New(cfg.ObjectStore)
+		if storeErr != nil {
+			q.Close()
+			return nil, fmt.Errorf("open document store: %w", storeErr)
+		}
+		q.SetDocumentStore(store)
+		if cfg.ObjectStore.Immutability == documentstore.ImmutabilityGuardedWrite {
+			if cfg.Database == nil {
+				q.Close()
+				return nil, fmt.Errorf("guarded object-store writes require database configuration")
+			}
+			claimDB, err = appdb.Connect(context.Background(), *cfg.Database)
+			if err != nil {
+				q.Close()
+				return nil, fmt.Errorf("connect object-write claim database: %w", err)
+			}
+			claims, claimErr := documentstore.NewClaimStore(claimDB)
+			if claimErr != nil {
+				claimDB.Close()
+				q.Close()
+				return nil, claimErr
+			}
+			q.SetClaimStore(claims)
+		}
+	}
 	if err := q.EnsureInfraWithConfig(context.Background(), queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
+		if claimDB != nil {
+			claimDB.Close()
+		}
 		q.Close()
 		return nil, fmt.Errorf("ensure JetStream infrastructure: %w", err)
 	}
@@ -144,10 +182,13 @@ func NewApplication(cfg Config) (*Application, error) {
 	register("/api/v1/ubl/{id}", "/api/v1/ubl/{id}", false, uploads.handleGetUpload)
 
 	reconcileCtx, cancelReconcile := context.WithCancel(context.Background())
-	application := &Application{Handler: limiter.middleware(mux), queue: q, cancel: cancelReconcile}
+	application := &Application{Handler: limiter.middleware(mux), queue: q, database: claimDB, cancel: cancelReconcile}
 	uploadContentStorageLimitBytes.Set(float64(cfg.UploadContentMaxBytes))
 	for _, outcome := range []string{"scheduled", "unscheduled", "expired", "reclaimed", "already_missing", "error"} {
 		uploadContentExpirations.WithLabelValues(outcome)
+	}
+	for _, outcome := range []string{"completed", "deferred", "error"} {
+		objectWriteClaimReconciliations.WithLabelValues(outcome)
 	}
 	application.workers.Add(1)
 	go func() {
@@ -174,9 +215,19 @@ func ValidateUploadContentLimits(retention time.Duration, maxBytes int64) error 
 
 const uploadReconcileInterval = 30 * time.Second
 const uploadReconcileMinAge = time.Minute
+const objectWriteClaimRecoveryLimit = 100
 
 func runUploadMaintenance(ctx context.Context, q *queue.Client, contentRetention time.Duration, logger *slog.Logger) {
 	reconcile := func() {
+		if claims := q.ClaimStore(); claims != nil {
+			report, claimErr := claims.Recover(ctx, q.DocumentStore(), uploadReconcileMinAge, objectWriteClaimRecoveryLimit)
+			objectWriteClaimReconciliations.WithLabelValues("completed").Add(float64(report.Completed))
+			objectWriteClaimReconciliations.WithLabelValues("deferred").Add(float64(report.Deferred))
+			objectWriteClaimReconciliations.WithLabelValues("error").Add(float64(report.Errors))
+			if claimErr != nil && ctx.Err() == nil {
+				logger.Error("guarded object-write claim recovery failed", "error", claimErr, "scanned", report.Scanned)
+			}
+		}
 		report, err := q.ReconcileUploadsWithPublisher(ctx, uploadReconcileMinAge, func(ctx context.Context, record queue.UploadRecord, receivedAt time.Time) error {
 			return dispatchAcceptedUpload(ctx, q, record, receivedAt)
 		})

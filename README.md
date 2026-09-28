@@ -126,6 +126,8 @@ KEDA JetStream autoscalers, and capacity formula are documented in
 durable execution, stage, and deployment-generation topology before these
 runtime roles start. The controlled stop/drain/reconcile/activate procedure is
 documented in [`docs/DEPLOYMENT-MIGRATION.md`](docs/DEPLOYMENT-MIGRATION.md).
+Raw XML storage configuration, S3-compatible deployment, retention, and
+migration guidance are in [`docs/OBJECT-STORAGE.md`](docs/OBJECT-STORAGE.md).
 
 They communicate through NATS JetStream.
 
@@ -133,7 +135,7 @@ They communicate through NATS JetStream.
 flowchart LR
     C[API client]
     A[e-ubl21 serve]
-    O[(JetStream Object Store\nraw XML)]
+    O[(Configured document store\nraw XML)]
     K[(JetStream KV\nupload state)]
     Q[(JetStream WorkQueue\ncompact descriptors)]
     W[e-ubl21 worker]

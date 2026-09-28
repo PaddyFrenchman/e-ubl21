@@ -15,6 +15,7 @@ import (
 	"time"
 
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
@@ -28,6 +29,7 @@ type WorkerConfig struct {
 	NATSURL        string
 	NATSOptions    []nats.Option
 	QueueNamespace queue.Namespace
+	ObjectStore    documentstore.Options
 	ConsumerName   string
 	SubjectFilter  string
 	MetricsAddr    string
@@ -151,6 +153,14 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
 	if err != nil {
 		return fmt.Errorf("connect to NATS: %w", err)
+	}
+	if cfg.ObjectStore.Backend != "" {
+		store, storeErr := documentstore.New(cfg.ObjectStore)
+		if storeErr != nil {
+			q.Close()
+			return fmt.Errorf("worker open document store: %w", storeErr)
+		}
+		q.SetDocumentStore(store)
 	}
 	defer q.Close()
 

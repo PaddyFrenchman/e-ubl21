@@ -128,6 +128,11 @@ export EUBL21_NATS_URL="nats://127.0.0.1:$NATS_LOCAL_PORT"
 export EUBL21_QUEUE_NAMESPACE="$QUEUE_NAMESPACE"
 export EUBL21_UPLOAD_CONTENT_RETENTION=1h
 export EUBL21_UPLOAD_CONTENT_MAX_BYTES=1073741824
+# The API and worker are separate processes. Give their default filesystem
+# object-store backend one shared writable directory instead of /var/lib,
+# which is neither disposable nor generally writable in local regression.
+export EUBL21_OBJECTSTORE_BACKEND=filesystem
+export EUBL21_OBJECTSTORE_DIRECTORY="$TEMP_DIR/documents"
 
 EUBL21_HOST=127.0.0.1 \
 EUBL21_PORT="$API_LOCAL_PORT" \

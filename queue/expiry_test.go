@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 )
@@ -134,6 +135,45 @@ func TestExpireUploadContentRetainsMetadataAndSkipsPendingWork(t *testing.T) {
 	}
 	if _, err := client.GetUploadContent(ctx, scheduledID); err != nil {
 		t.Fatalf("disabling retention removed content: %v", err)
+	}
+}
+
+func TestExpireUploadContentReconcilesConfiguredDocumentStore(t *testing.T) {
+	client := newTestClient(t)
+	store, err := documentstore.New(documentstore.Options{Backend: documentstore.BackendFilesystem, Directory: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.SetDocumentStore(store)
+	ctx := context.Background()
+	now := time.Date(2026, 9, 27, 12, 0, 0, 0, time.UTC)
+	id, err := queue.NewID()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PutUploadRecord(ctx, queue.UploadRecord{
+		ID: id, DocumentType: "Invoice", Status: queue.StatusValid,
+		ReceivedAt:  now.Add(-3 * time.Hour).Format(time.RFC3339),
+		ValidatedAt: now.Add(-2 * time.Hour).Format(time.RFC3339),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.PutUploadContent(ctx, id, []byte("<Invoice/>")); err != nil {
+		t.Fatal(err)
+	}
+	if size, err := client.UploadContentStorageSize(ctx); err != nil || size != uint64(len("<Invoice/>")) {
+		t.Fatalf("external object-store size = %d, %v", size, err)
+	}
+
+	report, err := client.ExpireUploadContent(ctx, time.Hour, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Scanned != 1 || report.Expired != 1 || report.Reclaimed != 1 || report.Errors != 0 || report.ExpiredBytes != 0 {
+		t.Fatalf("expiry report = %+v", report)
+	}
+	if _, err := client.GetUploadContent(ctx, id); !errors.Is(err, queue.ErrRecordNotFound) {
+		t.Fatalf("expired external content error = %v, want record not found", err)
 	}
 }
 

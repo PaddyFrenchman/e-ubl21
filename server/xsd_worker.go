@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"unicode/utf8"
 
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
@@ -37,6 +39,7 @@ type XSDWorkerConfig struct {
 	NATSURL           string
 	NATSOptions       []nats.Option
 	QueueNamespace    queue.Namespace
+	ObjectStore       documentstore.Options
 	MetricsAddr       string
 	ValidationTimeout time.Duration
 	Concurrency       int
@@ -111,6 +114,16 @@ func RunXSDWorker(ctx context.Context, cfg XSDWorkerConfig) error {
 			return fmt.Errorf("worker-xsd connect to NATS: %w", err)
 		}
 		ownedClient = true
+	}
+	if cfg.ObjectStore.Backend != "" {
+		store, storeErr := documentstore.New(cfg.ObjectStore)
+		if storeErr != nil {
+			if ownedClient {
+				client.Close()
+			}
+			return fmt.Errorf("worker-xsd open document store: %w", storeErr)
+		}
+		client.SetDocumentStore(store)
 	}
 	if ownedClient {
 		defer client.Close()

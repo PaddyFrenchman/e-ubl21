@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -40,6 +41,13 @@ func provisionInfrastructure(ctx context.Context, cfg *Config) error {
 		return fmt.Errorf("provision connect to NATS: %w", err)
 	}
 	defer client.Close()
+	if cfg.ObjectStore.Backend != "" {
+		store, err := documentstore.New(cfg.ObjectStore)
+		if err != nil {
+			return fmt.Errorf("provision open document store: %w", err)
+		}
+		client.SetDocumentStore(store)
+	}
 	if err := client.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
 		return fmt.Errorf("provision upload infrastructure: %w", err)
 	}

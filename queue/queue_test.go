@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/PaddyFrenchman/e-ubl21/queue/queuetest"
 	"github.com/nats-io/nats.go/jetstream"
@@ -42,6 +43,29 @@ func TestVerifyUploadContentInfraUsesProvisionedObjectStore(t *testing.T) {
 	client := newTestClient(t)
 	if err := client.VerifyUploadContentInfra(context.Background()); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestConfiguredDocumentStoreDoesNotProvisionLegacyObjectStore(t *testing.T) {
+	server := queuetest.StartServer(t)
+	client, err := queue.ConnectWithOptions(server.URL, queue.DefaultNamespace, server.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.Close)
+	store, err := documentstore.New(documentstore.Options{Backend: documentstore.BackendFilesystem, Directory: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.SetDocumentStore(store)
+	if err := client.EnsureInfra(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.VerifyUploadContentInfra(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.JS.ObjectStore(context.Background(), client.Namespace.UploadContentBucketName()); !errors.Is(err, jetstream.ErrBucketNotFound) {
+		t.Fatalf("legacy object store error = %v, want bucket not found", err)
 	}
 }
 

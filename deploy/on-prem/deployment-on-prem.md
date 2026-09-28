@@ -25,7 +25,7 @@ K3s
    +--> e-ubl21 workers
    +--> NATS JetStream
    +--> YugabyteDB / YSQL
-   +--> MinIO-compatible object storage
+   +--> SeaweedFS S3-compatible object storage
    +--> Prometheus
    +--> Grafana
    +--> OpenTelemetry Collector
@@ -102,7 +102,7 @@ RKE2 is not required for the initial single-server e-ubl21 target.
 | Ingress | ALB / ingress controller | Application Gateway / ingress | Traefik |
 | Messaging | SQS / NATS | Service Bus / NATS | NATS JetStream |
 | Database | YugabyteDB/YSQL, three-AZ RF-3 production topology | YugabyteDB/YSQL, three-AZ RF-3 production topology | Single-node YugabyteDB/YSQL baseline; three-rack RF-3 for HA |
-| Object storage | S3 | Blob Storage | MinIO-compatible object storage |
+| Object storage | S3 | Blob Storage | SeaweedFS S3-compatible storage (MinIO bootstrap remains development-only) |
 | Secrets | Secrets Manager | Key Vault | Kubernetes Secrets initially; Vault/SOPS later |
 | Metrics | Managed Prometheus | Azure Monitor / Managed Prometheus | Prometheus |
 | Dashboards | Managed Grafana | Managed Grafana | Grafana |
@@ -294,7 +294,16 @@ https://opentelemetry.io/docs/platforms/kubernetes/helm/
 
 ### 4.11 MinIO-compatible object storage
 
-For the initial single-server target the bootstrap script can deploy a simple single-node MinIO-compatible service using the MinIO container image.
+SeaweedFS is the recommended S3-compatible store for production-grade
+on-premises deployments. Configure e-ubl21 with `objectstore-backend=s3` and
+the SeaweedFS endpoint, bucket, TLS, and credentials; the application has no
+SeaweedFS-specific integration. See
+[`docs/OBJECT-STORAGE.md`](../../docs/OBJECT-STORAGE.md) for the configuration,
+retention, migration, and recovery contract.
+
+For the initial single-server development target the bootstrap script can
+deploy a simple single-node MinIO-compatible service using the MinIO container
+image. It is not the recommended production on-prem object-store profile.
 
 Image source:
 
@@ -620,7 +629,7 @@ kubectl get secret eubl21-db-auth -n e-ubl21 -o jsonpath='{.data.password}' | ba
 kubectl get statefulset,svc,pvc -n e-ubl21 | grep minio
 ```
 
-The bootstrap MinIO service is internal to Kubernetes by default. Do not expose its administrative console publicly.
+The bootstrap MinIO service is internal to Kubernetes by default. Do not expose its administrative console publicly. Production SeaweedFS administration endpoints must likewise remain private.
 
 ### Step 11 - Verify monitoring
 

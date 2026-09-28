@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -11,6 +12,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -23,7 +25,7 @@ import (
 // worker once validation completes.
 //
 // UploadRecord deliberately does not carry the upload's raw XML content:
-// that is stored separately in JetStream Object Store (see
+// that is stored separately in the configured document store (see
 // PutUploadContent/GetUploadContent), so status updates never have to read
 // or rewrite the potentially large document body.
 type UploadRecord struct {
@@ -240,6 +242,18 @@ func (c *Client) PutUploadContent(ctx context.Context, id string, content []byte
 	if !ValidID(id) {
 		return fmt.Errorf("invalid upload id %q", id)
 	}
+	if store := c.DocumentStore(); store != nil {
+		if claims := c.ClaimStore(); claims != nil {
+			if err := claims.Put(ctx, store, documentstore.ObjectKey(id), content); err != nil {
+				return fmt.Errorf("guarded put upload content %s: %w", id, err)
+			}
+			return nil
+		}
+		if err := store.Put(ctx, documentstore.ObjectKey(id), bytes.NewReader(content)); err != nil {
+			return fmt.Errorf("put upload content %s: %w", id, err)
+		}
+		return nil
+	}
 	store, err := c.uploadContentStore(ctx)
 	if err != nil {
 		return err
@@ -275,6 +289,16 @@ func (c *Client) OpenUploadContent(ctx context.Context, id string) (UploadConten
 	if !ValidID(id) {
 		return nil, ErrRecordNotFound
 	}
+	if store := c.DocumentStore(); store != nil {
+		content, err := store.Get(ctx, documentstore.ObjectKey(id))
+		if err != nil {
+			if isNotFound(store, err) {
+				return nil, ErrRecordNotFound
+			}
+			return nil, fmt.Errorf("get upload content %s: %w", id, err)
+		}
+		return contentReader{ReadCloser: content}, nil
+	}
 	store, err := c.uploadContentStore(ctx)
 	if err != nil {
 		return nil, err
@@ -293,6 +317,15 @@ func (c *Client) OpenUploadContent(ctx context.Context, id string) (UploadConten
 // immutable XML Object Store exists and can be opened. Stage workers use this
 // at startup instead of provisioning or mutating infrastructure.
 func (c *Client) VerifyUploadContentInfra(ctx context.Context) error {
+	if c.DocumentStore() != nil {
+		// Exists is a read-only request that verifies the configured bucket,
+		// credentials, and network path without creating a probe object.
+		_, err := c.DocumentStore().Exists(ctx, ".eubl21-readiness-probe")
+		if err != nil {
+			return fmt.Errorf("verify configured document store: %w", err)
+		}
+		return nil
+	}
 	_, err := c.uploadContentStore(ctx)
 	return err
 }
@@ -302,6 +335,13 @@ func (c *Client) VerifyUploadContentInfra(ctx context.Context) error {
 func (c *Client) DeleteUploadContent(ctx context.Context, id string) error {
 	if !ValidID(id) {
 		return fmt.Errorf("invalid upload id %q", id)
+	}
+	if store := c.DocumentStore(); store != nil {
+		err := store.Delete(ctx, documentstore.ObjectKey(id))
+		if err != nil && !isNotFound(store, err) {
+			return fmt.Errorf("delete upload content %s: %w", id, err)
+		}
+		return nil
 	}
 	store, err := c.uploadContentStore(ctx)
 	if err != nil {
@@ -318,6 +358,9 @@ func (c *Client) HasUploadContent(ctx context.Context, id string) (bool, error) 
 	if !ValidID(id) {
 		return false, nil
 	}
+	if store := c.DocumentStore(); store != nil {
+		return store.Exists(ctx, documentstore.ObjectKey(id))
+	}
 	store, err := c.uploadContentStore(ctx)
 	if err != nil {
 		return false, err
@@ -329,6 +372,13 @@ func (c *Client) HasUploadContent(ctx context.Context, id string) (bool, error) 
 		return false, fmt.Errorf("inspect upload content %s: %w", id, err)
 	}
 	return true, nil
+}
+
+type contentReader struct{ io.ReadCloser }
+
+func (contentReader) Error() error { return nil }
+func isNotFound(store documentstore.Store, err error) bool {
+	return store.IsNotFound(err)
 }
 
 func (c *Client) uploadsBucket(ctx context.Context) (jetstream.KeyValue, error) {

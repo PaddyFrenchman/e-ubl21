@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
@@ -54,6 +55,10 @@ type uploadQueue interface {
 	GetUploadContent(context.Context, string) ([]byte, error)
 	DeleteUploadContent(context.Context, string) error
 	PublishDocument(context.Context, string, string, time.Time) error
+}
+
+type guardedWriteQueue interface {
+	ClaimStore() *documentstore.ClaimStore
 }
 
 func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
@@ -175,7 +180,14 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.queue.PutUploadContent(r.Context(), id, body); err != nil {
-		deleteErr := h.queue.DeleteUploadContent(r.Context(), id)
+		// A guarded write may have reached object storage just before a timeout
+		// or process failure. Its claim reconciler owns verification and cleanup;
+		// deleting it here would turn an idempotent recovery into data loss.
+		var deleteErr error
+		guarded, _ := h.queue.(guardedWriteQueue)
+		if guarded == nil || guarded.ClaimStore() == nil {
+			deleteErr = h.queue.DeleteUploadContent(r.Context(), id)
+		}
 		record.Status = queue.StatusAcceptanceFailed
 		if deleteErr != nil {
 			record.Status = queue.StatusCleanupPending

@@ -41,6 +41,10 @@ var (
 		Name: "e_ubl21_upload_reconciliations_total",
 		Help: "Upload acceptance records handled by reconciliation, labeled by outcome.",
 	}, []string{"outcome"})
+	objectWriteClaimReconciliations = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "e_ubl21_object_write_claim_reconciliations_total",
+		Help: "Guarded object-write claims handled by recovery, labeled by outcome.",
+	}, []string{"outcome"})
 	uploadContentExpirations = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "e_ubl21_upload_content_expirations_total",
 		Help: "Raw upload-content records handled by retention sweeping, labeled by outcome.",

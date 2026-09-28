@@ -134,6 +134,8 @@ func serverConfig(cfg *Config) server.Config {
 		RateLimitBurst:         cfg.RateLimitBurst,
 		UploadContentRetention: cfg.UploadContentRetention,
 		UploadContentMaxBytes:  cfg.UploadContentMaxBytes,
+		ObjectStore:            cfg.ObjectStore,
+		Database:               cfg.Database,
 		Logger:                 slog.Default(),
 	}
 }

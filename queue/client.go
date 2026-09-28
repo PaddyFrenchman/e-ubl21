@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -38,6 +39,35 @@ type Client struct {
 	cachedValidationEvidenceKV   jetstream.KeyValue
 	cachedDeploymentGenerationKV jetstream.KeyValue
 	cachedUploadContentStore     jetstream.ObjectStore
+	documentStore                documentstore.Store
+	claimStore                   *documentstore.ClaimStore
+}
+
+func (c *Client) SetClaimStore(store *documentstore.ClaimStore) {
+	c.handlesMu.Lock()
+	c.claimStore = store
+	c.handlesMu.Unlock()
+}
+
+func (c *Client) ClaimStore() *documentstore.ClaimStore {
+	c.handlesMu.RLock()
+	defer c.handlesMu.RUnlock()
+	return c.claimStore
+}
+
+// SetDocumentStore selects the backend-neutral raw-document store for this
+// client. It is set by the runtime configuration layer before upload or
+// worker work begins; JetStream Object Store remains only for migration.
+func (c *Client) SetDocumentStore(store documentstore.Store) {
+	c.handlesMu.Lock()
+	c.documentStore = store
+	c.handlesMu.Unlock()
+}
+
+func (c *Client) DocumentStore() documentstore.Store {
+	c.handlesMu.RLock()
+	defer c.handlesMu.RUnlock()
+	return c.documentStore
 }
 
 // Connect dials the NATS server at url and opens a JetStream context on

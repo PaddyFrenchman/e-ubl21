@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	peppolprofile "github.com/PaddyFrenchman/e-ubl21/peppol"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	validationassets "github.com/PaddyFrenchman/e-ubl21/validation-assets"
@@ -37,6 +38,7 @@ type PeppolWorkerConfig struct {
 	NATSURL                string
 	NATSOptions            []nats.Option
 	QueueNamespace         queue.Namespace
+	ObjectStore            documentstore.Options
 	MetricsAddr            string
 	ValidationTimeout      time.Duration
 	Concurrency            int
@@ -165,6 +167,16 @@ func RunPeppolWorker(ctx context.Context, cfg PeppolWorkerConfig) error {
 			return fmt.Errorf("worker-peppol connect to NATS: %w", err)
 		}
 		ownedClient = true
+	}
+	if cfg.ObjectStore.Backend != "" {
+		store, storeErr := documentstore.New(cfg.ObjectStore)
+		if storeErr != nil {
+			if ownedClient {
+				client.Close()
+			}
+			return fmt.Errorf("worker-peppol open document store: %w", storeErr)
+		}
+		client.SetDocumentStore(store)
 	}
 	if ownedClient {
 		defer client.Close()

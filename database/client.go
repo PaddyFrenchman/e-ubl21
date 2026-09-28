@@ -99,6 +99,31 @@ func (c *Client) Exec(ctx context.Context, sql string, arguments ...any) (pgconn
 	return tag, nil
 }
 
+// ForEachRow runs a bounded query and invokes callback once for every row.
+// It keeps pgx rows internal to this package while allowing small operational
+// inventories to be read without exposing the pool.
+func (c *Client) ForEachRow(ctx context.Context, sql string, arguments []any, callback func(func(...any) error) error) error {
+	if callback == nil {
+		return configError("row callback", "is required")
+	}
+	operationCtx, cancel := context.WithTimeout(ctx, c.queryTimeout)
+	defer cancel()
+	rows, err := c.pool.Query(operationCtx, sql, arguments...)
+	if err != nil {
+		return operationError(ErrorQuery, "query", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := callback(rows.Scan); err != nil {
+			return err
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return operationError(ErrorQuery, "query rows", err)
+	}
+	return nil
+}
+
 // WithConn leases one pooled connection for a callback. Acquisition and every
 // operation on Connection share the configured query deadline; the lease is
 // always released before WithConn returns.

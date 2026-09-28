@@ -910,15 +910,15 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/85
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/87
 
-### 54. #88 — FUTURE IMPROVEMENT — Replace JetStream raw XML storage with S3-compatible object storage
+### 54. #88 — IMPLEMENTATION IN PROGRESS — Replace JetStream raw XML storage with S3-compatible object storage
 
 **Goal:** Move raw XML persistence out of NATS JetStream Object Store into a backend-neutral S3-compatible storage layer, leaving NATS focused on messaging/orchestration.
 
 **Configuration principle:** The object-storage backend must be selected by configuration rather than hard-wired into application logic. Amazon S3 is the cloud target, while **SeaweedFS is the proposed standard local/on-prem S3-compatible alternative**. Customer-provided S3-compatible stores, including Ceph RGW, should also be supportable through the same endpoint/bucket/credential contract.
 
-**Revisit:** Before the first production-grade on-prem release, or earlier if storage is generalized for multi-environment deployment.
+**Implemented:** Raw XML now uses the backend-neutral `documentstore` package backed by `thanos-io/objstore`. Filesystem is the default; S3 and S3-compatible endpoints are selected through runtime configuration. JetStream Object Store remains only as a legacy compatibility path for deployments that do not configure a document store.
 
-**Acceptance:** Adopt S3-compatible raw-content storage with SeaweedFS available as the local/on-prem configuration option, explicitly retain JetStream Object Store, or document another selected storage architecture in an ADR and deployment documentation.
+**Follow-up:** Qualify a production SeaweedFS deployment and AWS S3 in the deployment regression environment before declaring those specific deployment profiles production-ready.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/88
 

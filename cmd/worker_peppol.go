@@ -50,7 +50,7 @@ func peppolWorker(ctx context.Context, cfg *Config) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return runPeppolWorker(ctx, server.PeppolWorkerConfig{
-		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace,
+		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace, ObjectStore: cfg.ObjectStore,
 		MetricsAddr: cfg.PeppolWorkerMetricsAddr, ValidationTimeout: cfg.PeppolWorkerValidationTimeout,
 		Concurrency: cfg.PeppolWorkerConcurrency, Prefetch: cfg.PeppolWorkerPrefetch,
 		ProgressInterval: cfg.PeppolWorkerProgressInterval, JavaExecutable: cfg.PeppolWorkerJavaExecutable,

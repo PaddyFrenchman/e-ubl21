@@ -43,7 +43,7 @@ func xsdWorker(ctx context.Context, cfg *Config) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return runXSDWorker(ctx, server.XSDWorkerConfig{
-		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace,
+		NATSURL: cfg.NATSURL, NATSOptions: cfg.NATSOptions, QueueNamespace: cfg.QueueNamespace, ObjectStore: cfg.ObjectStore,
 		MetricsAddr: cfg.XSDWorkerMetricsAddr, ValidationTimeout: cfg.XSDWorkerValidationTimeout,
 		Concurrency: cfg.XSDWorkerConcurrency, Prefetch: cfg.XSDWorkerPrefetch,
 		ProgressInterval: cfg.XSDWorkerProgressInterval, Logger: slog.Default(),
