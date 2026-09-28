@@ -139,4 +139,7 @@ Migrate with a controlled drain:
    and accepted recovery evidence, then remove it by normal NATS operations.
 
 Do not run API and worker processes against different raw-content backends.
-Issue #89 separately covers moving metadata/status out of JetStream KV.
+Issue #89 selects YSQL as the future upload-metadata/status system of record;
+the current JetStream KV remains authoritative until the controlled migration
+specified in [Upload metadata persistence](UPLOAD-METADATA-PERSISTENCE.md) is
+implemented and qualified.
