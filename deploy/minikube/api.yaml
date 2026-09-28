@@ -77,13 +77,15 @@ spec:
             timeoutSeconds: 2
             failureThreshold: 90
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /healthz
               port: http
             periodSeconds: 2
             timeoutSeconds: 2
             failureThreshold: 60
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /healthz
               port: http
             periodSeconds: 10
             timeoutSeconds: 2

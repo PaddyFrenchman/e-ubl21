@@ -199,7 +199,7 @@ func RunEN16931Worker(ctx context.Context, cfg EN16931WorkerConfig) error {
 
 	var metricsServer *http.Server
 	if cfg.MetricsAddr != "" {
-		metricsServer = &http.Server{Addr: cfg.MetricsAddr, Handler: workerMetricsMux(client)}
+		metricsServer = &http.Server{Addr: cfg.MetricsAddr, Handler: workerMetricsMux(client, nil)}
 		go func() {
 			if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				logger.Error("worker-en16931 metrics server error", "error", err)

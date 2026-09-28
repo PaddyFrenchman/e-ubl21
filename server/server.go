@@ -176,7 +176,17 @@ func NewApplication(cfg Config) (*Application, error) {
 		})
 	}))
 
-	register("/healthz", "/healthz", false, requireGET(func(w http.ResponseWriter, _ *http.Request) {
+	register("/healthz", "/healthz", true, requireGET(func(w http.ResponseWriter, r *http.Request) {
+		if q.NC.Status() != nats.CONNECTED {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "unavailable", "nats": q.NC.Status().String()})
+			return
+		}
+		if databaseClient != nil {
+			if err := databaseClient.Probe(r.Context()); err != nil {
+				writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "unavailable", "database": "unavailable"})
+				return
+			}
+		}
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	}))
 	register("/metrics", "/metrics", false, requireGET(metricsHandler()))

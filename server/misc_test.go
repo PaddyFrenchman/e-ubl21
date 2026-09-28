@@ -67,7 +67,7 @@ func TestWorkerMetricsMuxHealthStates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	h := workerMetricsMux(q)
+	h := workerMetricsMux(q, nil)
 	for path, want := range map[string]int{"/healthz": http.StatusOK, "/metrics": http.StatusOK} {
 		res := httptest.NewRecorder()
 		h.ServeHTTP(res, httptest.NewRequest(http.MethodGet, path, nil))

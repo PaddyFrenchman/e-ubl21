@@ -217,7 +217,7 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 
 	var metricsServer *http.Server
 	if cfg.MetricsAddr != "" {
-		metricsServer = &http.Server{Addr: cfg.MetricsAddr, Handler: workerMetricsMux(q)}
+		metricsServer = &http.Server{Addr: cfg.MetricsAddr, Handler: workerMetricsMux(q, databaseClient)}
 		go func() {
 			if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 				logger.Error("worker metrics server error", "error", err)
