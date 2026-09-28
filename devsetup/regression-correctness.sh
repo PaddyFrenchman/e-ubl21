@@ -20,6 +20,7 @@ SAXON_JAR="$SAXON_DIR/saxon-he-12.7.jar"
 RESOLVER_JAR="$SAXON_DIR/xmlresolver-6.0.17.jar"
 SAXON_CONFIG="$ROOT_DIR/validation-assets/saxon/saxon-config.xml"
 EN16931_XSLT="$ROOT_DIR/validation-assets/en16931/1.3.16/EN16931-UBL-validation.xslt"
+DATABASE_URL="${EUBL21_DATABASE_URL:-}"
 
 for command in go java xmllint docker curl diff; do
     if ! command -v "$command" >/dev/null 2>&1; then
@@ -85,6 +86,16 @@ verify_corpus() {
 
 verify_corpus ubl21 createsamples/samples
 verify_corpus en16931 createsamples/samples-en16931
+
+# Upload metadata/status is authoritative in YugabyteDB. Local correctness
+# runs use the repository-pinned runtime unless a caller supplies a qualified
+# database URL (for example, a disposable CI instance).
+if [[ -z "$DATABASE_URL" ]]; then
+    "$ROOT_DIR/devsetup/yugabytedb-local.sh" up
+    "$ROOT_DIR/devsetup/yugabytedb-local.sh" migrate
+    DATABASE_URL="$("$ROOT_DIR/devsetup/yugabytedb-local.sh" url)"
+fi
+export EUBL21_DATABASE_URL="$DATABASE_URL"
 
 go build -trimpath -o "$TEMP_DIR/e-ubl21" .
 docker run --detach --rm \
