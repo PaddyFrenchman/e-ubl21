@@ -15,6 +15,7 @@ import (
 	"time"
 
 	xsdschemas "github.com/PaddyFrenchman/e-ubl21/XSD"
+	appdb "github.com/PaddyFrenchman/e-ubl21/database"
 	"github.com/PaddyFrenchman/e-ubl21/documentstore"
 	"github.com/PaddyFrenchman/e-ubl21/observability"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
@@ -30,6 +31,7 @@ type WorkerConfig struct {
 	NATSOptions    []nats.Option
 	QueueNamespace queue.Namespace
 	ObjectStore    documentstore.Options
+	Database       *appdb.Config
 	ConsumerName   string
 	SubjectFilter  string
 	MetricsAddr    string
@@ -154,6 +156,21 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 	if err != nil {
 		return fmt.Errorf("connect to NATS: %w", err)
 	}
+	var databaseClient *appdb.Client
+	if cfg.Database != nil {
+		databaseClient, err = appdb.Connect(ctx, *cfg.Database)
+		if err != nil {
+			q.Close()
+			return fmt.Errorf("worker connect upload metadata database: %w", err)
+		}
+		metadata, metadataErr := queue.NewYSQLUploadMetadataStore(databaseClient, cfg.QueueNamespace)
+		if metadataErr != nil {
+			databaseClient.Close()
+			q.Close()
+			return metadataErr
+		}
+		q.SetUploadMetadataStore(metadata)
+	}
 	if cfg.ObjectStore.Backend != "" {
 		store, storeErr := documentstore.New(cfg.ObjectStore)
 		if storeErr != nil {
@@ -163,6 +180,9 @@ func RunWorker(ctx context.Context, cfg WorkerConfig) error {
 		q.SetDocumentStore(store)
 	}
 	defer q.Close()
+	if databaseClient != nil {
+		defer databaseClient.Close()
+	}
 
 	if err := q.EnsureInfraWithConfig(ctx, queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
 		if ctx.Err() != nil {

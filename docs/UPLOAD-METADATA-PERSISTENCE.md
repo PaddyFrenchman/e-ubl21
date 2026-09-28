@@ -60,6 +60,20 @@ best-effort dual-write period:
 6. Prove an idempotent rerun, an interrupted-import recovery, rollback before
    final cutover, and a post-cutover backup/restore.
 
+The import command is deliberately explicit and must be run only while API and
+worker writers are quiesced:
+
+```bash
+e-ubl21 upload-metadata migrate-legacy --confirm
+```
+
+It reads the namespace-scoped legacy `*_UPLOADS` KV bucket, verifies every
+corresponding configured document-store object, records its SHA-256 in YSQL,
+and refuses a missing object, checksum divergence, or a non-equivalent existing
+YSQL row. It emits a count of scanned/imported/skipped/verified records. A
+successful rerun reports equivalent rows as skipped; do not resume legacy KV
+writes after the first successful cutover.
+
 Do not run long-lived unsynchronised KV and SQL writers. If a short dual-read
 or dual-write compatibility phase is needed, its authority, conflict rule,
 metrics, rollback boundary and finite end date must be specified and tested.
@@ -118,4 +132,3 @@ Before the migration can replace JetStream KV, it must demonstrate:
 - migration checksums/counts, idempotent rerun and rollback/recovery evidence;
 - backup/restore and object reconciliation evidence; and
 - an updated deployment guide, retention runbook and licence/SBOM review.
-

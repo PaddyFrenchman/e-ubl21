@@ -12,6 +12,8 @@ package server
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -37,6 +39,11 @@ import (
 const maxUploadBytes = 10 << 20
 
 var errPayloadTooLarge = fmt.Errorf("request body exceeds the maximum allowed size of %d bytes", maxUploadBytes)
+
+func uploadSHA256(body []byte) string {
+	sum := sha256.Sum256(body)
+	return hex.EncodeToString(sum[:])
+}
 
 type uploadHandlers struct {
 	catalog        *documentCatalog
@@ -171,7 +178,9 @@ func (h *uploadHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 		Profile:          resolution.ResolvedProfile,
 		Status:           queue.StatusAccepting,
 		ReceivedAt:       receivedAt.Format(time.RFC3339), EnqueueTrace: observability.CaptureTrace(r.Context()),
+		ContentSHA256: uploadSHA256(body),
 	}
+
 	revision, err := h.queue.CreateUploadRecord(r.Context(), record)
 	if err != nil {
 		recordUploadOutcome("internal_error")

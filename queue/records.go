@@ -43,6 +43,7 @@ type UploadRecord struct {
 	ValidationStages   ValidationStages            `json:"validationStages,omitempty"`
 	ContentExpiresAt   string                      `json:"contentExpiresAt,omitempty"`
 	ContentExpiredAt   string                      `json:"contentExpiredAt,omitempty"`
+	ContentSHA256      string                      `json:"contentSha256,omitempty"`
 	ResultPending      bool                        `json:"resultPending,omitempty"`
 	LastError          string                      `json:"lastError,omitempty"`
 	ProcessingAttempts uint64                      `json:"processingAttempts,omitempty"`
@@ -91,6 +92,9 @@ type UploadContentReader interface {
 // PutUploadRecord creates or overwrites the metadata record for record.ID.
 // It never reads or writes raw XML content.
 func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error {
+	if store := c.UploadMetadataStore(); store != nil {
+		return store.Put(ctx, record)
+	}
 	if !ValidID(record.ID) {
 		return fmt.Errorf("invalid upload id %q", record.ID)
 	}
@@ -113,6 +117,9 @@ func (c *Client) PutUploadRecord(ctx context.Context, record UploadRecord) error
 
 // CreateUploadRecord creates durable intent only if the key does not exist.
 func (c *Client) CreateUploadRecord(ctx context.Context, record UploadRecord) (uint64, error) {
+	if store := c.UploadMetadataStore(); store != nil {
+		return store.Create(ctx, record)
+	}
 	if !ValidID(record.ID) {
 		return 0, fmt.Errorf("invalid upload id %q", record.ID)
 	}
@@ -136,6 +143,9 @@ func (c *Client) CreateUploadRecord(ctx context.Context, record UploadRecord) (u
 
 // UpdateUploadRecord performs a CAS update at expectedRevision.
 func (c *Client) UpdateUploadRecord(ctx context.Context, record UploadRecord, expectedRevision uint64) (uint64, error) {
+	if store := c.UploadMetadataStore(); store != nil {
+		return store.Update(ctx, record, expectedRevision)
+	}
 	if !ValidID(record.ID) {
 		return 0, fmt.Errorf("invalid upload id %q", record.ID)
 	}
@@ -180,6 +190,9 @@ func (c *Client) GetUploadRecordVersion(ctx context.Context, id string) (Version
 	if !ValidID(id) {
 		return VersionedUploadRecord{}, ErrRecordNotFound
 	}
+	if store := c.UploadMetadataStore(); store != nil {
+		return store.Get(ctx, id)
+	}
 	kv, err := c.uploadsBucket(ctx)
 	if err != nil {
 		return VersionedUploadRecord{}, err
@@ -205,6 +218,9 @@ func (c *Client) GetUploadRecordVersion(ctx context.Context, id string) (Version
 // Callers must load each record by version so concurrent state transitions
 // remain protected by compare-and-swap.
 func (c *Client) UploadRecordKeys(ctx context.Context) ([]string, error) {
+	if store := c.UploadMetadataStore(); store != nil {
+		return store.Keys(ctx)
+	}
 	kv, err := c.uploadsBucket(ctx)
 	if err != nil {
 		return nil, err

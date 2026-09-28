@@ -1,0 +1,124 @@
+package cmd
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+
+	"github.com/PaddyFrenchman/e-ubl21/database"
+	"github.com/PaddyFrenchman/e-ubl21/documentstore"
+	"github.com/PaddyFrenchman/e-ubl21/queue"
+	"github.com/nats-io/nats.go/jetstream"
+	"github.com/spf13/cobra"
+)
+
+type legacyUploadMetadataMigrationReport struct{ Scanned, Imported, Skipped, Verified int }
+
+func newUploadMetadataCmd(cfg *Config) *cobra.Command {
+	command := &cobra.Command{Use: "upload-metadata", Short: "Manage YugabyteDB upload metadata"}
+	migrate := &cobra.Command{Use: "migrate-legacy", Short: "Import legacy JetStream upload KV into YugabyteDB after writers are quiesced", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		confirm, _ := cmd.Flags().GetBool("confirm")
+		if !confirm {
+			return errors.New("--confirm is required after quiescing API and worker writers")
+		}
+		if cfg.Database == nil {
+			return errors.New("--database-url is required")
+		}
+		store, err := documentstore.New(cfg.ObjectStore)
+		if err != nil {
+			return fmt.Errorf("open document store: %w", err)
+		}
+		client, err := database.Connect(cmd.Context(), *cfg.Database)
+		if err != nil {
+			return err
+		}
+		defer client.Close()
+		metadata, err := queue.NewYSQLUploadMetadataStore(client, cfg.QueueNamespace)
+		if err != nil {
+			return err
+		}
+		q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+		if err != nil {
+			return err
+		}
+		defer q.Close()
+		legacy, err := q.JS.KeyValue(cmd.Context(), cfg.QueueNamespace.UploadsBucketName())
+		if err != nil {
+			return fmt.Errorf("open legacy uploads KV: %w", err)
+		}
+		keys, err := legacy.Keys(cmd.Context())
+		if errors.Is(err, jetstream.ErrNoKeysFound) {
+			keys = nil
+			err = nil
+		}
+		if err != nil {
+			return fmt.Errorf("list legacy uploads KV: %w", err)
+		}
+		report, err := migrateLegacyUploadMetadata(cmd.Context(), legacy, keys, store, metadata)
+		if writeErr := json.NewEncoder(cmd.OutOrStdout()).Encode(report); writeErr != nil {
+			return writeErr
+		}
+		return err
+	}}
+	migrate.Flags().Bool("confirm", false, "Confirm writers have been quiesced and the legacy KV is read-only")
+	command.AddCommand(migrate)
+	return command
+}
+
+func migrateLegacyUploadMetadata(ctx context.Context, legacy jetstream.KeyValue, keys []string, objects documentstore.Store, target queue.UploadMetadataStore) (legacyUploadMetadataMigrationReport, error) {
+	var report legacyUploadMetadataMigrationReport
+	for _, id := range keys {
+		report.Scanned++
+		entry, err := legacy.Get(ctx, id)
+		if err != nil {
+			return report, fmt.Errorf("read legacy upload %s: %w", id, err)
+		}
+		var record queue.UploadRecord
+		if err := json.Unmarshal(entry.Value(), &record); err != nil {
+			return report, fmt.Errorf("decode legacy upload %s: %w", id, err)
+		}
+		if record.ID != id || !queue.ValidID(id) {
+			return report, fmt.Errorf("legacy upload has invalid identity %q", id)
+		}
+		body, err := objects.Get(ctx, documentstore.ObjectKey(id))
+		if err != nil {
+			return report, fmt.Errorf("reconcile object for %s: %w", id, err)
+		}
+		content, readErr := io.ReadAll(body)
+		closeErr := body.Close()
+		if readErr != nil || closeErr != nil {
+			return report, fmt.Errorf("read object for %s: %w", id, firstError(readErr, closeErr))
+		}
+		sum := sha256.Sum256(content)
+		checksum := hex.EncodeToString(sum[:])
+		if record.ContentSHA256 != "" && record.ContentSHA256 != checksum {
+			return report, fmt.Errorf("legacy upload checksum mismatch for %s", id)
+		}
+		record.ContentSHA256 = checksum
+		if _, err := target.Create(ctx, record); err == nil {
+			report.Imported++
+			report.Verified++
+			continue
+		}
+		existing, getErr := target.Get(ctx, id)
+		if getErr != nil {
+			return report, fmt.Errorf("import %s: %w", id, err)
+		}
+		if !equivalentUploadMetadata(existing.Record, record) {
+			return report, fmt.Errorf("legacy migration conflict for %s", id)
+		}
+		report.Skipped++
+		report.Verified++
+	}
+	return report, nil
+}
+
+func equivalentUploadMetadata(a, b queue.UploadRecord) bool {
+	left, _ := json.Marshal(a)
+	right, _ := json.Marshal(b)
+	return string(left) == string(right)
+}

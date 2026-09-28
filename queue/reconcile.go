@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/PaddyFrenchman/e-ubl21/observability"
-	"github.com/nats-io/nats.go/jetstream"
 )
 
 // ReconcileReport summarizes one acceptance reconciliation scan.
@@ -35,15 +34,8 @@ func (c *Client) ReconcileUploadsWithPublisher(ctx context.Context, minAge time.
 	if publish == nil {
 		return report, errors.New("upload work publisher is required")
 	}
-	kv, err := c.uploadsBucket(ctx)
+	keys, err := c.UploadRecordKeys(ctx)
 	if err != nil {
-		return report, err
-	}
-	keys, err := kv.Keys(ctx)
-	if err != nil {
-		if errors.Is(err, jetstream.ErrNoKeysFound) {
-			return report, nil
-		}
 		return report, fmt.Errorf("list upload records for reconciliation: %w", err)
 	}
 	now := time.Now()
