@@ -1,11 +1,12 @@
 # Upload metadata persistence architecture
 
 Issue [#89](https://github.com/PaddyFrenchman/e-ubl21/issues/89) selects
-**YugabyteDB/YSQL** as the future durable system of record for upload metadata
-and lifecycle status. This is an architecture decision, not a JetStream-KV
-migration. The current runtime continues to use the namespace-scoped
-`*_UPLOADS` JetStream KV bucket until a separately reviewed implementation
-delivers the schema, cutover, and data migration described here.
+**YugabyteDB/YSQL** as the durable system of record for upload metadata and
+lifecycle status. The implementation includes the YSQL schema, metadata-store
+integration, controlled JetStream-KV import, verification, and rollback. In
+normal operation API and worker processes use YSQL; the namespace-scoped
+`*_UPLOADS` JetStream KV bucket is retained read-only only for the rollback
+window described here.
 
 ## Target separation
 
@@ -19,10 +20,9 @@ delivers the schema, cutover, and data migration described here.
 The existing YugabyteDB object-write claim table is not the upload-metadata
 model; it remains a narrow fencing mechanism for guarded object writes.
 
-## Required future relational model
+## Relational model
 
-The implementation must add a versioned YSQL migration for an upload table
-whose immutable identity is the upload ID and whose rows include, at minimum:
+The versioned YSQL upload table has immutable upload identity and includes:
 
 - tenant/owner identity and request-idempotency key where the public contract
   supports them;
@@ -39,9 +39,9 @@ worker transitions, retry/dead-letter handling and retention updates must
 remain idempotent under duplicate JetStream delivery. A terminal state must not
 be overwritten by an earlier non-terminal delivery.
 
-The database schema is deliberately not introduced by this decision. Do not
-create an application table merely to mirror KV without the transition,
-privacy, indexing and migration contract below.
+The schema is not a blind KV mirror: it indexes lifecycle and retention fields
+while preserving the canonical record, under the transition, privacy, indexing
+and migration contract below.
 
 ## Cutover requirements
 
@@ -51,8 +51,9 @@ best-effort dual-write period:
 1. Add the YSQL schema and read/write code behind an explicit cutover setting.
 2. Quiesce new uploads and drain or otherwise account for in-flight work.
 3. Export each upload KV record with its revision, import it transactionally,
-   and verify count, identifiers, statuses, timestamps, object keys and
-   checksums.
+   reload and compare the YSQL row (identifiers, statuses, timestamps, object
+   keys and checksums), then re-read the KV entry and require its revision to
+   be unchanged. The migration report records each observed legacy revision.
 4. Reconcile imported rows against the document store; a missing object or a
    checksum mismatch is an integrity failure, not a successful migration.
 5. Enable YSQL reads and writes only after verification, while retaining the

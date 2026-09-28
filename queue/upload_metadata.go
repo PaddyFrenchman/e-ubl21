@@ -104,7 +104,8 @@ RETURNING revision`, arguments, &revision)
 func (s *ysqlUploadMetadataStore) Get(ctx context.Context, id string) (VersionedUploadRecord, error) {
 	var encoded []byte
 	var revision uint64
-	err := s.client.ScanRow(ctx, `SELECT record, revision FROM eubl21.upload_metadata WHERE queue_namespace = $1 AND upload_id = $2`, []any{s.namespace, id}, &encoded, &revision)
+	var objectKey string
+	err := s.client.ScanRow(ctx, `SELECT record, revision, content_object_key FROM eubl21.upload_metadata WHERE queue_namespace = $1 AND upload_id = $2`, []any{s.namespace, id}, &encoded, &revision, &objectKey)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return VersionedUploadRecord{}, ErrRecordNotFound
@@ -114,6 +115,9 @@ func (s *ysqlUploadMetadataStore) Get(ctx context.Context, id string) (Versioned
 	var record UploadRecord
 	if err := json.Unmarshal(encoded, &record); err != nil {
 		return VersionedUploadRecord{}, fmt.Errorf("decode upload metadata %s: %w", id, err)
+	}
+	if objectKey != documentstore.ObjectKey(record.ID) {
+		return VersionedUploadRecord{}, fmt.Errorf("decode upload metadata %s: content object key mismatch", id)
 	}
 	if err := validateUploadTrace(record); err != nil {
 		return VersionedUploadRecord{}, fmt.Errorf("decode upload metadata %s: %w", id, err)
@@ -148,20 +152,40 @@ func uploadMetadataValues(record UploadRecord) ([]any, error) {
 	if err != nil {
 		return nil, fmt.Errorf("marshal upload metadata %s: %w", record.ID, err)
 	}
-	return []any{record.ID, record.DocumentType, parseRecordTime(record.ReceivedAt), documentstore.ObjectKey(record.ID), record.ContentSHA256, string(record.Status), parseRecordTime(record.ValidatedAt), record.ProcessingAttempts, parseRecordTime(record.ProcessingFailedAt), parseRecordTime(record.ContentExpiresAt), parseRecordTime(record.ContentExpiredAt), string(encoded)}, nil
+	receivedAt, err := parseRecordTime(record.ReceivedAt)
+	if err != nil {
+		return nil, fmt.Errorf("upload metadata %s receivedAt: %w", record.ID, err)
+	}
+	validatedAt, err := parseRecordTime(record.ValidatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("upload metadata %s validatedAt: %w", record.ID, err)
+	}
+	processingFailedAt, err := parseRecordTime(record.ProcessingFailedAt)
+	if err != nil {
+		return nil, fmt.Errorf("upload metadata %s processingFailedAt: %w", record.ID, err)
+	}
+	contentExpiresAt, err := parseRecordTime(record.ContentExpiresAt)
+	if err != nil {
+		return nil, fmt.Errorf("upload metadata %s contentExpiresAt: %w", record.ID, err)
+	}
+	contentExpiredAt, err := parseRecordTime(record.ContentExpiredAt)
+	if err != nil {
+		return nil, fmt.Errorf("upload metadata %s contentExpiredAt: %w", record.ID, err)
+	}
+	return []any{record.ID, record.DocumentType, receivedAt, documentstore.ObjectKey(record.ID), record.ContentSHA256, string(record.Status), validatedAt, record.ProcessingAttempts, processingFailedAt, contentExpiresAt, contentExpiredAt, string(encoded)}, nil
 }
 
 func prefixArguments(namespace string, input []any) []any {
 	return append([]any{namespace}, input...)
 }
 
-func parseRecordTime(value string) any {
+func parseRecordTime(value string) (any, error) {
 	if value == "" {
-		return nil
+		return nil, nil
 	}
 	parsed, err := time.Parse(time.RFC3339, value)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("must be RFC3339: %w", err)
 	}
-	return parsed.UTC()
+	return parsed.UTC(), nil
 }

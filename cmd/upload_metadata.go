@@ -16,7 +16,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type legacyUploadMetadataMigrationReport struct{ Scanned, Imported, Skipped, Verified int }
+type legacyUploadMetadataMigrationReport struct {
+	Scanned         int               `json:"scanned"`
+	Imported        int               `json:"imported"`
+	Skipped         int               `json:"skipped"`
+	Verified        int               `json:"verified"`
+	LegacyRevisions map[string]uint64 `json:"legacyRevisions,omitempty"`
+}
 
 func newUploadMetadataCmd(cfg *Config) *cobra.Command {
 	command := &cobra.Command{Use: "upload-metadata", Short: "Manage YugabyteDB upload metadata"}
@@ -149,7 +155,7 @@ func rollbackUploadMetadata(ctx context.Context, source queue.UploadMetadataStor
 }
 
 func migrateLegacyUploadMetadata(ctx context.Context, legacy jetstream.KeyValue, keys []string, objects documentstore.Store, target queue.UploadMetadataStore) (legacyUploadMetadataMigrationReport, error) {
-	var report legacyUploadMetadataMigrationReport
+	report := legacyUploadMetadataMigrationReport{LegacyRevisions: make(map[string]uint64, len(keys))}
 	for _, id := range keys {
 		report.Scanned++
 		entry, err := legacy.Get(ctx, id)
@@ -163,6 +169,8 @@ func migrateLegacyUploadMetadata(ctx context.Context, legacy jetstream.KeyValue,
 		if record.ID != id || !queue.ValidID(id) {
 			return report, fmt.Errorf("legacy upload has invalid identity %q", id)
 		}
+		legacyRevision := entry.Revision()
+		report.LegacyRevisions[id] = legacyRevision
 		body, err := objects.Get(ctx, documentstore.ObjectKey(id))
 		if err != nil {
 			return report, fmt.Errorf("reconcile object for %s: %w", id, err)
@@ -178,10 +186,22 @@ func migrateLegacyUploadMetadata(ctx context.Context, legacy jetstream.KeyValue,
 			return report, fmt.Errorf("legacy upload checksum mismatch for %s", id)
 		}
 		record.ContentSHA256 = checksum
-		if _, err := target.Create(ctx, record); err == nil {
+		if _, createErr := target.Create(ctx, record); createErr == nil {
+			imported, getErr := target.Get(ctx, id)
+			if getErr != nil {
+				return report, fmt.Errorf("verify imported %s: %w", id, getErr)
+			}
+			if !equivalentUploadMetadata(imported.Record, record) {
+				return report, fmt.Errorf("import verification mismatch for %s", id)
+			}
+			if err := verifyLegacyUploadRevision(ctx, legacy, id, legacyRevision); err != nil {
+				return report, err
+			}
 			report.Imported++
 			report.Verified++
 			continue
+		} else {
+			err = createErr
 		}
 		existing, getErr := target.Get(ctx, id)
 		if getErr != nil {
@@ -190,10 +210,26 @@ func migrateLegacyUploadMetadata(ctx context.Context, legacy jetstream.KeyValue,
 		if !equivalentUploadMetadata(existing.Record, record) {
 			return report, fmt.Errorf("legacy migration conflict for %s", id)
 		}
+		if err := verifyLegacyUploadRevision(ctx, legacy, id, legacyRevision); err != nil {
+			return report, err
+		}
 		report.Skipped++
 		report.Verified++
 	}
 	return report, nil
+}
+
+// verifyLegacyUploadRevision makes the required writer quiescence observable:
+// the source KV entry must still be the exact revision that was imported.
+func verifyLegacyUploadRevision(ctx context.Context, legacy jetstream.KeyValue, id string, expected uint64) error {
+	entry, err := legacy.Get(ctx, id)
+	if err != nil {
+		return fmt.Errorf("verify legacy upload %s: %w", id, err)
+	}
+	if entry.Revision() != expected {
+		return fmt.Errorf("legacy upload %s changed during migration: revision %d became %d", id, expected, entry.Revision())
+	}
+	return nil
 }
 
 func equivalentUploadMetadata(a, b queue.UploadRecord) bool {
