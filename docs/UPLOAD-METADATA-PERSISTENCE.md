@@ -74,6 +74,17 @@ YSQL row. It emits a count of scanned/imported/skipped/verified records. A
 successful rerun reports equivalent rows as skipped; do not resume legacy KV
 writes after the first successful cutover.
 
+During the declared rollback window only, quiesce writers and run:
+
+```bash
+e-ubl21 upload-metadata rollback-legacy --confirm
+```
+
+It verifies each YSQL row against the content object's SHA-256 before restoring
+the legacy KV record. Start every recovering API/legacy worker with
+`EUBL21_ALLOW_LEGACY_UPLOAD_METADATA_ROLLBACK=true` and without a database URL;
+this is an incident-only escape hatch, not an alternate steady-state backend.
+
 Do not run long-lived unsynchronised KV and SQL writers. If a short dual-read
 or dual-write compatibility phase is needed, its authority, conflict rule,
 metrics, rollback boundary and finite end date must be specified and tested.

@@ -29,7 +29,7 @@ func newServeCmd(cfg *Config) *cobra.Command {
 }
 
 func serve(ctx context.Context, stdout io.Writer, cfg *Config) error {
-	if cfg.Database == nil {
+	if cfg.Database == nil && os.Getenv("EUBL21_ALLOW_LEGACY_UPLOAD_METADATA_ROLLBACK") != "true" {
 		return fmt.Errorf("serve: --database-url is required for YugabyteDB upload metadata")
 	}
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)

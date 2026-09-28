@@ -66,7 +66,86 @@ func newUploadMetadataCmd(cfg *Config) *cobra.Command {
 	}}
 	migrate.Flags().Bool("confirm", false, "Confirm writers have been quiesced and the legacy KV is read-only")
 	command.AddCommand(migrate)
+	rollback := &cobra.Command{Use: "rollback-legacy", Short: "Restore verified YSQL upload metadata to legacy JetStream KV", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		confirm, _ := cmd.Flags().GetBool("confirm")
+		if !confirm {
+			return errors.New("--confirm is required after quiescing API and worker writers")
+		}
+		if cfg.Database == nil {
+			return errors.New("--database-url is required")
+		}
+		objects, err := documentstore.New(cfg.ObjectStore)
+		if err != nil {
+			return err
+		}
+		client, err := database.Connect(cmd.Context(), *cfg.Database)
+		if err != nil {
+			return err
+		}
+		defer client.Close()
+		metadata, err := queue.NewYSQLUploadMetadataStore(client, cfg.QueueNamespace)
+		if err != nil {
+			return err
+		}
+		q, err := queue.ConnectWithOptions(cfg.NATSURL, cfg.QueueNamespace, cfg.NATSOptions...)
+		if err != nil {
+			return err
+		}
+		defer q.Close()
+		if err := q.EnsureInfra(cmd.Context()); err != nil {
+			return err
+		}
+		legacy, err := q.JS.KeyValue(cmd.Context(), cfg.QueueNamespace.UploadsBucketName())
+		if err != nil {
+			return err
+		}
+		report, err := rollbackUploadMetadata(cmd.Context(), metadata, legacy, objects)
+		if writeErr := json.NewEncoder(cmd.OutOrStdout()).Encode(report); writeErr != nil {
+			return writeErr
+		}
+		return err
+	}}
+	rollback.Flags().Bool("confirm", false, "Confirm writers are quiesced before restoring legacy KV")
+	command.AddCommand(rollback)
 	return command
+}
+
+func rollbackUploadMetadata(ctx context.Context, source queue.UploadMetadataStore, legacy jetstream.KeyValue, objects documentstore.Store) (legacyUploadMetadataMigrationReport, error) {
+	var report legacyUploadMetadataMigrationReport
+	keys, err := source.Keys(ctx)
+	if err != nil {
+		return report, err
+	}
+	for _, id := range keys {
+		report.Scanned++
+		versioned, err := source.Get(ctx, id)
+		if err != nil {
+			return report, err
+		}
+		body, err := objects.Get(ctx, documentstore.ObjectKey(id))
+		if err != nil {
+			return report, fmt.Errorf("reconcile object for %s: %w", id, err)
+		}
+		content, readErr := io.ReadAll(body)
+		closeErr := body.Close()
+		if readErr != nil || closeErr != nil {
+			return report, firstError(readErr, closeErr)
+		}
+		sum := sha256.Sum256(content)
+		if versioned.Record.ContentSHA256 != hex.EncodeToString(sum[:]) {
+			return report, fmt.Errorf("rollback checksum mismatch for %s", id)
+		}
+		encoded, err := json.Marshal(versioned.Record)
+		if err != nil {
+			return report, err
+		}
+		if _, err := legacy.Put(ctx, id, encoded); err != nil {
+			return report, err
+		}
+		report.Imported++
+		report.Verified++
+	}
+	return report, nil
 }
 
 func migrateLegacyUploadMetadata(ctx context.Context, legacy jetstream.KeyValue, keys []string, objects documentstore.Store, target queue.UploadMetadataStore) (legacyUploadMetadataMigrationReport, error) {

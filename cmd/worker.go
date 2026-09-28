@@ -75,7 +75,7 @@ func newWorkerCmd(v *viper.Viper, cfg *Config) *cobra.Command {
 // Ctrl-C) doesn't abandon a message mid-processing and force an avoidable
 // redelivery.
 func worker(ctx context.Context, cfg *Config) error {
-	if cfg.Database == nil {
+	if cfg.Database == nil && os.Getenv("EUBL21_ALLOW_LEGACY_UPLOAD_METADATA_ROLLBACK") != "true" {
 		return fmt.Errorf("worker: --database-url is required for YugabyteDB upload metadata")
 	}
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)

@@ -47,7 +47,64 @@ func (s *testMetadataStore) Get(_ context.Context, id string) (queue.VersionedUp
 	}
 	return record, nil
 }
-func (s *testMetadataStore) Keys(context.Context) ([]string, error) { return nil, nil }
+func (s *testMetadataStore) Keys(context.Context) ([]string, error) {
+	keys := make([]string, 0, len(s.records))
+	for id := range s.records {
+		keys = append(keys, id)
+	}
+	return keys, nil
+}
+
+func TestRollbackUploadMetadataRestoresVerifiedLegacyKV(t *testing.T) {
+	ctx := context.Background()
+	nats := queuetest.StartServer(t)
+	client, err := queue.ConnectWithOptions(nats.URL, queue.MustNamespace("metadata.rollback"), nats.Options...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(client.Close)
+	if err := client.EnsureInfra(ctx); err != nil {
+		t.Fatal(err)
+	}
+	id := "0123456789abcdef0123456789abcdef"
+	objects, err := documentstore.New(documentstore.Options{Backend: documentstore.BackendFilesystem, Directory: t.TempDir()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := objects.Put(ctx, documentstore.ObjectKey(id), strings.NewReader("rollback-content")); err != nil {
+		t.Fatal(err)
+	}
+	legacy, err := client.JS.KeyValue(ctx, client.Namespace.UploadsBucketName())
+	if err != nil {
+		t.Fatal(err)
+	}
+	source := &testMetadataStore{records: map[string]queue.VersionedUploadRecord{}}
+	if _, err := migrateLegacyUploadMetadata(ctx, legacy, []string{}, objects, source); err != nil {
+		t.Fatal(err)
+	}
+	// Populate the authoritative source directly with the checksum created by
+	// the importer path, then restore it into the legacy bucket.
+	if err := client.PutUploadRecord(ctx, queue.UploadRecord{ID: id, DocumentType: "Invoice", Status: queue.StatusValid, ReceivedAt: time.Now().UTC().Format(time.RFC3339)}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := migrateLegacyUploadMetadata(ctx, legacy, []string{id}, objects, source); err != nil {
+		t.Fatal(err)
+	}
+	if err := legacy.Purge(ctx, id); err != nil {
+		t.Fatal(err)
+	}
+	report, err := rollbackUploadMetadata(ctx, source, legacy, objects)
+	if err != nil || report.Imported != 1 || report.Verified != 1 {
+		t.Fatalf("rollback report=%+v err=%v", report, err)
+	}
+	entry, err := legacy.Get(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(entry.Value()), "contentSha256") {
+		t.Fatalf("restored record lacks checksum: %s", entry.Value())
+	}
+}
 
 func TestMigrateLegacyUploadMetadataRecoversInterruptedRerun(t *testing.T) {
 	ctx := context.Background()
