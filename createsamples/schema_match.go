@@ -13,6 +13,7 @@ type schemaFrame struct {
 	typ      xsdComplexType
 	typeName string
 	targets  map[string]int
+	siblings map[string]int
 }
 
 func elementDeclaration(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) (*schemaDoc, xsdElementDecl, string, string) {
@@ -66,7 +67,7 @@ func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
 	if !ok {
 		return schemaFrame{}, false
 	}
-	return schemaFrame{doc: doc, typ: typ, typeName: name, targets: f.targets}, true
+	return schemaFrame{doc: doc, typ: typ, typeName: name, targets: f.targets, siblings: map[string]int{}}, true
 }
 func recordInheritance(index schemaIndex, f schemaFrame) {
 	if f.typ.ComplexContent == nil {
@@ -161,7 +162,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 				id := fmt.Sprintf("%s|%s|element|global/%s", d.TargetNamespace, d.File, v.Name.Local)
 				out[id]++
 				out[fmt.Sprintf("%s|%s|complexType|%s", td.TargetNamespace, td.File, n)]++
-				stack = append(stack, schemaFrame{td, t, n, out})
+				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}})
 				recordAttributes(index, stack[len(stack)-1], v)
 				recordInheritance(index, stack[len(stack)-1])
 				continue
@@ -175,14 +176,17 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 				stack = append(stack, schemaFrame{})
 				continue
 			}
-			out[id]++
+			parent.siblings[id]++
+			if parent.siblings[id] > out[id] {
+				out[id] = parent.siblings[id]
+			}
 			if strings.Contains(id, "/choice[") {
 				out[fmt.Sprintf("%s|%s|choice|%s", parent.doc.TargetNamespace, parent.doc.File, parent.typeName)]++
 			}
 			td, t, n, ok := declaredType(index, parent.doc, decl)
 			if ok {
 				out[fmt.Sprintf("%s|%s|complexType|%s", td.TargetNamespace, td.File, n)]++
-				stack = append(stack, schemaFrame{td, t, n, out})
+				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}})
 				recordAttributes(index, stack[len(stack)-1], v)
 				recordInheritance(index, stack[len(stack)-1])
 			} else {
