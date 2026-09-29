@@ -337,20 +337,28 @@ func (t coverageTargets) addChoice(doc *schemaDoc, parent string, choice *xsdCho
 	occurs := withOccurs(currentOccurrence(inherited), choice.MinOccurs, choice.MaxOccurs)
 	id := coverageID(doc, "choice", parent)
 	t.choices[id] = struct{}{}
+	// A required choice requires one alternative, not every alternative. Only a
+	// single-alternative choice can make its contained element individually
+	// required.
+	alternatives := len(choice.Elements) + len(choice.Sequences) + len(choice.Choices) + len(choice.Alls)
+	alternativeOccurs := occurs
+	if alternatives > 1 || choice.Any != nil {
+		alternativeOccurs.optional = true
+	}
 	for i, element := range choice.Elements {
-		t.addElement(doc, fmt.Sprintf("%s/choice[%d]", parent, i), element, true, occurs)
+		t.addElement(doc, fmt.Sprintf("%s/choice[%d]", parent, i), element, true, alternativeOccurs)
 	}
 	for i := range choice.Sequences {
 		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/sequence[%d]", parent, i))] = struct{}{}
-		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &choice.Sequences[i], occurs)
+		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &choice.Sequences[i], alternativeOccurs)
 	}
 	for i := range choice.Choices {
 		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/choice[%d]", parent, i))] = struct{}{}
-		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &choice.Choices[i], occurs)
+		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &choice.Choices[i], alternativeOccurs)
 	}
 	for i := range choice.Alls {
 		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/all[%d]", parent, i))] = struct{}{}
-		t.addAll(doc, fmt.Sprintf("%s/all[%d]", parent, i), &choice.Alls[i], occurs)
+		t.addAll(doc, fmt.Sprintf("%s/all[%d]", parent, i), &choice.Alls[i], alternativeOccurs)
 	}
 	if choice.Any != nil {
 		t.wildcards[coverageID(doc, "any", parent+"/choice")] = struct{}{}

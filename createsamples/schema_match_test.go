@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -134,6 +135,23 @@ func TestCompositorCardinalityIsEffectiveForContainedElements(t *testing.T) {
 	repeatedID := ns + "|test.xsd|element|Repeated/sequence[0]/Line"
 	if _, ok := targets.repeatable[repeatedID]; !ok {
 		t.Fatal("element in repeated sequence was not marked repeatable")
+	}
+}
+
+func TestChoiceAlternativesAreNotIndividuallyRequired(t *testing.T) {
+	const ns = "urn:test"
+	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Types: map[string]xsdComplexType{
+		"T": {Name: "T", Choice: &xsdChoice{Elements: []xsdElementDecl{{Name: "A"}, {Name: "B"}}}},
+	}}
+	targets := schemaCoverageTargets(schemaIndex{ByFile: map[string]*schemaDoc{"test.xsd": doc}, ByTargetNS: map[string]*schemaDoc{ns: doc}})
+	for i, name := range []string{"A", "B"} {
+		id := fmt.Sprintf("%s|test.xsd|element|T/choice[%d]/%s", ns, i, name)
+		if _, ok := targets.required[id]; ok {
+			t.Fatalf("choice alternative %s was marked required", name)
+		}
+		if _, ok := targets.optional[id]; !ok {
+			t.Fatalf("choice alternative %s was not marked optional", name)
+		}
 	}
 }
 
