@@ -35,12 +35,18 @@ type xsdElementDecl struct {
 }
 
 type xsdComplexType struct {
-	Name          string            `xml:"name,attr"`
-	Sequence      *xsdSequence      `xml:"sequence"`
-	Choice        *xsdChoice        `xml:"choice"`
-	All           *xsdAll           `xml:"all"`
-	SimpleContent *xsdSimpleContent `xml:"simpleContent"`
-	Attributes    []xsdAttribute    `xml:"attribute"`
+	ComplexContent *xsdComplexContent `xml:"complexContent"`
+	Name           string             `xml:"name,attr"`
+	Sequence       *xsdSequence       `xml:"sequence"`
+	Choice         *xsdChoice         `xml:"choice"`
+	All            *xsdAll            `xml:"all"`
+	SimpleContent  *xsdSimpleContent  `xml:"simpleContent"`
+	Attributes     []xsdAttribute     `xml:"attribute"`
+}
+
+type xsdComplexContent struct {
+	Extension   *xsdExtension   `xml:"extension"`
+	Restriction *xsdRestriction `xml:"restriction"`
 }
 
 type xsdSimpleContent struct {
@@ -51,6 +57,9 @@ type xsdSimpleContent struct {
 type xsdExtension struct {
 	Base       string         `xml:"base,attr"`
 	Attributes []xsdAttribute `xml:"attribute"`
+	Sequence   *xsdSequence   `xml:"sequence"`
+	Choice     *xsdChoice     `xml:"choice"`
+	All        *xsdAll        `xml:"all"`
 }
 
 type xsdSequence struct {
