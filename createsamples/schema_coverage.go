@@ -37,11 +37,11 @@ type fixtureObservation struct {
 }
 
 type coverageTargets struct {
-	elements, optional, repeatable, attributes, optionalAttributes, choices, choiceAlternatives, wildcards, complexTypes map[string]struct{}
+	elements, required, optional, repeatable, sequenceMembers, allMembers, attributes, optionalAttributes, choices, choiceAlternatives, wildcards, complexTypes map[string]struct{}
 }
 
 func newCoverageTargets() coverageTargets {
-	return coverageTargets{map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}, map[string]struct{}{}}
+	return coverageTargets{elements: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
 }
 
 func coverageID(doc *schemaDoc, kind, name string) string {
@@ -88,6 +88,15 @@ func (t coverageTargets) addElement(doc *schemaDoc, parent string, element xsdEl
 	}
 	id := coverageID(doc, "element", parent+"/"+name)
 	t.elements[id] = struct{}{}
+	if element.MinOccurs != "0" {
+		t.required[id] = struct{}{}
+	}
+	if strings.Contains(parent, "/sequence[") {
+		t.sequenceMembers[id] = struct{}{}
+	}
+	if strings.Contains(parent, "/all[") {
+		t.allMembers[id] = struct{}{}
+	}
 	if element.MinOccurs == "0" {
 		t.optional[id] = struct{}{}
 	}
@@ -289,7 +298,7 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 	for _, item := range []struct {
 		name   string
 		values map[string]struct{}
-	}{{"elements", targets.elements}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}} {
+	}{{"elements", targets.elements}, {"requiredElements", targets.required}, {"sequenceMembers", targets.sequenceMembers}, {"allMembers", targets.allMembers}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}} {
 		count := 0
 		for id := range item.values {
 			if _, ok := exercised[id]; ok {
