@@ -101,6 +101,9 @@ type xsdRestriction struct {
 	Base         string           `xml:"base,attr"`
 	Attributes   []xsdAttribute   `xml:"attribute"`
 	Enumerations []xsdEnumeration `xml:"enumeration"`
+	Sequence     *xsdSequence     `xml:"sequence"`
+	Choice       *xsdChoice       `xml:"choice"`
+	All          *xsdAll          `xml:"all"`
 }
 
 type xsdEnumeration struct {

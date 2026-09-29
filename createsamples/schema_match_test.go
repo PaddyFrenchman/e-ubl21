@@ -91,3 +91,27 @@ func TestSchemaCoverageInventoriesCyclicAndSubstitutionTargets(t *testing.T) {
 		t.Fatalf("substitution targets = %d, want 1", len(targets.substitutions))
 	}
 }
+
+func TestMatchFixtureResolvesSubstitutionMembersAndDeclaringTypeIDs(t *testing.T) {
+	const rootNS = "urn:test-root"
+	const headNS = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	const memberNS = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+	root := &schemaDoc{File: "root.xsd", TargetNamespace: rootNS, Elements: map[string]xsdElementDecl{"Root": {Name: "Root", Type: "RootType"}}, Types: map[string]xsdComplexType{"RootType": {Name: "RootType", Sequence: &xsdSequence{Elements: []xsdElementDecl{{Ref: "cac:Head"}}}}}}
+	head := &schemaDoc{File: "head.xsd", TargetNamespace: headNS, Elements: map[string]xsdElementDecl{"Head": {Name: "Head"}}, Types: map[string]xsdComplexType{}}
+	member := &schemaDoc{File: "member.xsd", TargetNamespace: memberNS, Elements: map[string]xsdElementDecl{"Member": {Name: "Member", Type: "MemberType", SubstitutionGroup: "cac:Head"}}, Types: map[string]xsdComplexType{"MemberType": {Name: "MemberType"}}}
+	index := schemaIndex{ByTargetNS: map[string]*schemaDoc{rootNS: root, headNS: head, memberNS: member}, GlobalElements: map[string]xsdElementDecl{qualifiedKey(rootNS, "Root"): root.Elements["Root"]}, GlobalTypes: map[string]xsdComplexType{qualifiedKey(rootNS, "RootType"): root.Types["RootType"], qualifiedKey(memberNS, "MemberType"): member.Types["MemberType"]}}
+	path := filepath.Join(t.TempDir(), "fixture.xml")
+	if err := os.WriteFile(path, []byte(`<Root xmlns="urn:test-root" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"><cbc:Member/></Root>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixture(index, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := matched[memberNS+"|member.xsd|substitution|Member->"+headNS+"#Head"]; got != 1 {
+		t.Fatalf("substitution match = %d, want 1", got)
+	}
+	if got := matched[memberNS+"|member.xsd|complexType|MemberType"]; got != 1 {
+		t.Fatalf("cross-schema type match = %d, want 1", got)
+	}
+}

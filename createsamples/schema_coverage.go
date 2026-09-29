@@ -38,11 +38,11 @@ type fixtureObservation struct {
 }
 
 type coverageTargets struct {
-	elements, roots, required, optional, repeatable, sequenceMembers, allMembers, attributes, optionalAttributes, choices, choiceAlternatives, wildcards, inheritance, substitutions, recursiveEdges, complexTypes map[string]struct{}
+	elements, roots, required, optional, repeatable, sequenceMembers, allMembers, attributes, requiredAttributes, optionalAttributes, choices, choiceAlternatives, wildcards, inheritance, substitutions, recursiveEdges, complexTypes map[string]struct{}
 }
 
 func newCoverageTargets() coverageTargets {
-	return coverageTargets{elements: map[string]struct{}{}, roots: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, inheritance: map[string]struct{}{}, substitutions: map[string]struct{}{}, recursiveEdges: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
+	return coverageTargets{elements: map[string]struct{}{}, roots: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, requiredAttributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, inheritance: map[string]struct{}{}, substitutions: map[string]struct{}{}, recursiveEdges: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
 }
 
 func coverageID(doc *schemaDoc, kind, name string) string {
@@ -177,7 +177,9 @@ func schemaCoverageTargets(index schemaIndex) coverageTargets {
 				}
 				id := coverageID(doc, "attribute", name+"/@"+attribute.Name)
 				t.attributes[id] = struct{}{}
-				if attribute.Use != "required" {
+				if attribute.Use == "required" {
+					t.requiredAttributes[id] = struct{}{}
+				} else {
 					t.optionalAttributes[id] = struct{}{}
 				}
 			}
@@ -199,14 +201,33 @@ func schemaCoverageTargets(index schemaIndex) coverageTargets {
 			}
 			t.addAll(doc, name, typ.All)
 			t.addChoice(doc, name, typ.Choice)
-			if typ.ComplexContent != nil && typ.ComplexContent.Extension != nil {
-				t.addSequence(doc, name, typ.ComplexContent.Extension.Sequence)
-				t.addAll(doc, name, typ.ComplexContent.Extension.All)
-				t.addChoice(doc, name, typ.ComplexContent.Extension.Choice)
+			for _, p := range typeParticleSets(typ) {
+				t.addSequence(doc, name, p.sequence)
+				t.addAll(doc, name, p.all)
+				t.addChoice(doc, name, p.choice)
 			}
 		}
 	}
 	return t
+}
+
+type particleSet struct {
+	sequence *xsdSequence
+	choice   *xsdChoice
+	all      *xsdAll
+}
+
+func typeParticleSets(typ xsdComplexType) []particleSet {
+	out := []particleSet{{typ.Sequence, typ.Choice, typ.All}}
+	if typ.ComplexContent != nil {
+		if x := typ.ComplexContent.Extension; x != nil {
+			out = append(out, particleSet{x.Sequence, x.Choice, x.All})
+		}
+		if x := typ.ComplexContent.Restriction; x != nil {
+			out = append(out, particleSet{x.Sequence, x.Choice, x.All})
+		}
+	}
+	return out
 }
 
 func directTypeName(doc *schemaDoc, element xsdElementDecl) (string, string) {
@@ -303,10 +324,16 @@ func (t coverageTargets) addChoice(doc *schemaDoc, parent string, choice *xsdCho
 		t.addElement(doc, fmt.Sprintf("%s/choice[%d]", parent, i), element, true)
 	}
 	for i := range choice.Sequences {
+		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/sequence[%d]", parent, i))] = struct{}{}
 		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &choice.Sequences[i])
 	}
 	for i := range choice.Choices {
+		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/choice[%d]", parent, i))] = struct{}{}
 		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &choice.Choices[i])
+	}
+	for i := range choice.Alls {
+		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/all[%d]", parent, i))] = struct{}{}
+		t.addAll(doc, fmt.Sprintf("%s/all[%d]", parent, i), &choice.Alls[i])
 	}
 	if choice.Any != nil {
 		t.wildcards[coverageID(doc, "any", parent+"/choice")] = struct{}{}
@@ -498,7 +525,7 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 	for _, item := range []struct {
 		name   string
 		values map[string]struct{}
-	}{{"roots", targets.roots}, {"elements", targets.elements}, {"requiredElements", targets.required}, {"sequenceMembers", targets.sequenceMembers}, {"allMembers", targets.allMembers}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}, {"inheritance", targets.inheritance}, {"substitutionGroups", targets.substitutions}, {"recursiveEdges", targets.recursiveEdges}} {
+	}{{"roots", targets.roots}, {"elements", targets.elements}, {"requiredElements", targets.required}, {"sequenceMembers", targets.sequenceMembers}, {"allMembers", targets.allMembers}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"requiredAttributes", targets.requiredAttributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}, {"inheritance", targets.inheritance}, {"substitutionGroups", targets.substitutions}, {"recursiveEdges", targets.recursiveEdges}} {
 		count := 0
 		for id := range item.values {
 			if _, ok := exercised[id]; ok {
