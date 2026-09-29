@@ -41,6 +41,19 @@ type Client struct {
 	cachedUploadContentStore     jetstream.ObjectStore
 	documentStore                documentstore.Store
 	claimStore                   *documentstore.ClaimStore
+	uploadMetadataStore          UploadMetadataStore
+}
+
+func (c *Client) SetUploadMetadataStore(store UploadMetadataStore) {
+	c.handlesMu.Lock()
+	c.uploadMetadataStore = store
+	c.handlesMu.Unlock()
+}
+
+func (c *Client) UploadMetadataStore() UploadMetadataStore {
+	c.handlesMu.RLock()
+	defer c.handlesMu.RUnlock()
+	return c.uploadMetadataStore
 }
 
 func (c *Client) SetClaimStore(store *documentstore.ClaimStore) {

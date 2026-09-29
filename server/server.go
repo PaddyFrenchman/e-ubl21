@@ -89,27 +89,37 @@ func NewApplication(cfg Config) (*Application, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connect to NATS: %w", err)
 	}
-	var claimDB *appdb.Client
+	var databaseClient *appdb.Client
+	if cfg.Database != nil {
+		databaseClient, err = appdb.Connect(context.Background(), *cfg.Database)
+		if err != nil {
+			q.Close()
+			return nil, fmt.Errorf("connect upload metadata database: %w", err)
+		}
+		metadata, metadataErr := queue.NewYSQLUploadMetadataStore(databaseClient, cfg.QueueNamespace)
+		if metadataErr != nil {
+			databaseClient.Close()
+			q.Close()
+			return nil, metadataErr
+		}
+		q.SetUploadMetadataStore(metadata)
+	}
 	if cfg.ObjectStore.Backend != "" {
 		store, storeErr := documentstore.New(cfg.ObjectStore)
 		if storeErr != nil {
+			if databaseClient != nil {
+				databaseClient.Close()
+			}
 			q.Close()
 			return nil, fmt.Errorf("open document store: %w", storeErr)
 		}
 		q.SetDocumentStore(store)
 		if cfg.ObjectStore.Immutability == documentstore.ImmutabilityGuardedWrite {
-			if cfg.Database == nil {
-				q.Close()
-				return nil, fmt.Errorf("guarded object-store writes require database configuration")
-			}
-			claimDB, err = appdb.Connect(context.Background(), *cfg.Database)
-			if err != nil {
-				q.Close()
-				return nil, fmt.Errorf("connect object-write claim database: %w", err)
-			}
-			claims, claimErr := documentstore.NewClaimStore(claimDB)
+			claims, claimErr := documentstore.NewClaimStore(databaseClient)
 			if claimErr != nil {
-				claimDB.Close()
+				if databaseClient != nil {
+					databaseClient.Close()
+				}
 				q.Close()
 				return nil, claimErr
 			}
@@ -117,8 +127,8 @@ func NewApplication(cfg Config) (*Application, error) {
 		}
 	}
 	if err := q.EnsureInfraWithConfig(context.Background(), queue.InfraConfig{UploadContentMaxBytes: cfg.UploadContentMaxBytes}); err != nil {
-		if claimDB != nil {
-			claimDB.Close()
+		if databaseClient != nil {
+			databaseClient.Close()
 		}
 		q.Close()
 		return nil, fmt.Errorf("ensure JetStream infrastructure: %w", err)
@@ -166,7 +176,17 @@ func NewApplication(cfg Config) (*Application, error) {
 		})
 	}))
 
-	register("/healthz", "/healthz", false, requireGET(func(w http.ResponseWriter, _ *http.Request) {
+	register("/healthz", "/healthz", true, requireGET(func(w http.ResponseWriter, r *http.Request) {
+		if q.NC.Status() != nats.CONNECTED {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "unavailable", "nats": q.NC.Status().String()})
+			return
+		}
+		if databaseClient != nil {
+			if err := databaseClient.Probe(r.Context()); err != nil {
+				writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "unavailable", "database": "unavailable"})
+				return
+			}
+		}
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	}))
 	register("/metrics", "/metrics", false, requireGET(metricsHandler()))
@@ -182,7 +202,7 @@ func NewApplication(cfg Config) (*Application, error) {
 	register("/api/v1/ubl/{id}", "/api/v1/ubl/{id}", false, uploads.handleGetUpload)
 
 	reconcileCtx, cancelReconcile := context.WithCancel(context.Background())
-	application := &Application{Handler: limiter.middleware(mux), queue: q, database: claimDB, cancel: cancelReconcile}
+	application := &Application{Handler: limiter.middleware(mux), queue: q, database: databaseClient, cancel: cancelReconcile}
 	uploadContentStorageLimitBytes.Set(float64(cfg.UploadContentMaxBytes))
 	for _, outcome := range []string{"scheduled", "unscheduled", "expired", "reclaimed", "already_missing", "error"} {
 		uploadContentExpirations.WithLabelValues(outcome)

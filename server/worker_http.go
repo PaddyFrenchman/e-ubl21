@@ -7,6 +7,7 @@ package server
 import (
 	"net/http"
 
+	appdb "github.com/PaddyFrenchman/e-ubl21/database"
 	"github.com/PaddyFrenchman/e-ubl21/queue"
 	"github.com/nats-io/nats.go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -16,7 +17,7 @@ import (
 // routes are intentionally unauthenticated (unlike the API's routes): the
 // worker has no bearer-token validator configured and this address is meant
 // to be reachable only from an internal monitoring network.
-func workerMetricsMux(q *queue.Client) http.Handler {
+func workerMetricsMux(q *queue.Client, database *appdb.Client) http.Handler {
 	mux := http.NewServeMux()
 	metrics := promhttp.Handler()
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
@@ -33,13 +34,19 @@ func workerMetricsMux(q *queue.Client) http.Handler {
 		}
 		metrics.ServeHTTP(w, r)
 	})
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if q.NC.Status() != nats.CONNECTED {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]string{
 				"status": "unavailable",
 				"nats":   q.NC.Status().String(),
 			})
 			return
+		}
+		if database != nil {
+			if err := database.Probe(r.Context()); err != nil {
+				writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "unavailable", "database": "unavailable"})
+				return
+			}
 		}
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})

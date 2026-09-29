@@ -3,7 +3,10 @@
 MIG-YB-002 / issue #120 introduces the application's relational database
 configuration and connection-pool boundary. It is intentionally a foundation:
 no serve, worker, orchestration, upload, or validation path requires a database
-yet, and JetStream remains the current system of record.
+yet, and JetStream remains the current system of record for upload metadata.
+Issue #89 selects YSQL as its future replacement; the required migration and
+operational design is documented in
+[Upload metadata persistence](UPLOAD-METADATA-PERSISTENCE.md).
 
 ## Application configuration
 

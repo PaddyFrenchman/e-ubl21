@@ -31,6 +31,21 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+        - name: init-document-store
+          image: localhost/e-ubl21:regression
+          imagePullPolicy: Never
+          command: ["/bin/sh", "-ec", "mkdir -p /var/lib/e-ubl21/documents && chown -R 10001:10001 /var/lib/e-ubl21"]
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+              add: [CHOWN]
+          volumeMounts:
+            - name: upload-content
+              mountPath: /var/lib/e-ubl21
       containers:
         - name: api
           image: localhost/e-ubl21:regression
@@ -70,6 +85,9 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          volumeMounts:
+            - name: upload-content
+              mountPath: /var/lib/e-ubl21
           startupProbe:
             tcpSocket:
               port: http
@@ -77,13 +95,15 @@ spec:
             timeoutSeconds: 2
             failureThreshold: 90
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /healthz
               port: http
             periodSeconds: 2
             timeoutSeconds: 2
             failureThreshold: 60
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /healthz
               port: http
             periodSeconds: 10
             timeoutSeconds: 2
@@ -93,3 +113,9 @@ spec:
               memory: 128Mi
             limits:
               memory: 512Mi
+
+      volumes:
+        - name: upload-content
+          hostPath:
+            path: /tmp/e-ubl21-regression-documents
+            type: DirectoryOrCreate

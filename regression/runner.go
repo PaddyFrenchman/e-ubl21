@@ -74,6 +74,13 @@ type RunMapEntry struct {
 	TerminalStatus string `json:"terminalStatus"`
 }
 
+// FixtureFailure preserves an operational error without including it in semantic equivalence.
+type FixtureFailure struct {
+	SchemaVersion int    `json:"schemaVersion"`
+	FixtureID     string `json:"fixtureId"`
+	Error         string `json:"error"`
+}
+
 type Counts struct {
 	Passed int `json:"passed"`
 	Failed int `json:"failed"`
@@ -140,13 +147,17 @@ func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
 	corpusRoot := filepath.Dir(cfg.ManifestPath)
 	results := make([]NormalizedResult, 0, len(fixtures))
 	runMap := make([]RunMapEntry, 0, len(fixtures))
+	failures := make([]FixtureFailure, 0)
 	for _, fixture := range fixtures {
-		result, correlation := runFixture(ctx, client, baseURL, cfg.Token, corpusRoot, fixture, pollInterval, fixtureTimeout)
+		result, correlation, failure := runFixture(ctx, client, baseURL, cfg.Token, corpusRoot, fixture, pollInterval, fixtureTimeout)
 		results = append(results, result)
 		runMap = append(runMap, correlation)
+		if failure != nil {
+			failures = append(failures, *failure)
+		}
 	}
 	summary := summarize(results)
-	if err := writeArtifacts(cfg.OutputDir, results, runMap, summary); err != nil {
+	if err := writeArtifacts(cfg.OutputDir, results, runMap, failures, summary); err != nil {
 		return Summary{}, err
 	}
 	if summary.Failed > 0 {
@@ -172,7 +183,7 @@ func selectFixtures(fixtures []Fixture, profile string) []Fixture {
 	return selected
 }
 
-func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, token, corpusRoot string, fixture Fixture, pollInterval, timeout time.Duration) (NormalizedResult, RunMapEntry) {
+func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, token, corpusRoot string, fixture Fixture, pollInterval, timeout time.Duration) (NormalizedResult, RunMapEntry, *FixtureFailure) {
 	result := NormalizedResult{SchemaVersion: 1, FixtureID: fixture.ID, SHA256: fixture.SHA256, Profile: fixture.Profile, ExpectedFinal: fixture.ExpectedFinal, ExpectedStages: fixture.ExpectedStages}
 	correlation := RunMapEntry{SchemaVersion: 1, FixtureID: fixture.ID, DocumentType: fixture.DocumentType, Profile: fixture.Profile, TerminalStatus: "operational-failure"}
 	content, err := os.ReadFile(filepath.Join(corpusRoot, filepath.FromSlash(fixture.File)))
@@ -183,29 +194,35 @@ func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, toke
 		}
 	}
 	if err != nil {
-		return operationalResult(result, err), correlation
+		return operationalResult(result, err), correlation, fixtureFailure(fixture.ID, err)
 	}
 	fixtureCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	id, err := uploadFixture(fixtureCtx, client, baseURL, token, fixture, content)
 	if err != nil {
-		return operationalResult(result, err), correlation
+		return operationalResult(result, err), correlation, fixtureFailure(fixture.ID, err)
 	}
 	correlation.UploadID = id
 	response, err := pollFixture(fixtureCtx, client, baseURL, token, id, pollInterval)
 	if err != nil {
-		return operationalResult(result, err), correlation
+		return operationalResult(result, err), correlation, fixtureFailure(fixture.ID, err)
 	}
 	correlation.TerminalStatus = response.Status
 	if response.Profile != fixture.Profile {
-		return operationalResult(result, fmt.Errorf("status profile %q does not match requested %q", response.Profile, fixture.Profile)), correlation
+		err := fmt.Errorf("status profile %q does not match requested %q", response.Profile, fixture.Profile)
+		return operationalResult(result, err), correlation, fixtureFailure(fixture.ID, err)
 	}
 	result.ActualFinal, result.ActualStages = normalizeAPIResult(response, fixture.ExpectedStages)
 	result.Result = compareResult(result)
 	if encoded, err := json.Marshal(result); err != nil || ValidateNormalizedResult(encoded) != nil {
-		return operationalResult(result, fmt.Errorf("normalized result violates contract")), correlation
+		err := fmt.Errorf("normalized result violates contract")
+		return operationalResult(result, err), correlation, fixtureFailure(fixture.ID, err)
 	}
-	return result, correlation
+	return result, correlation, nil
+}
+
+func fixtureFailure(fixtureID string, err error) *FixtureFailure {
+	return &FixtureFailure{SchemaVersion: 1, FixtureID: fixtureID, Error: err.Error()}
 }
 
 func uploadFixture(ctx context.Context, client *http.Client, baseURL *url.URL, token string, fixture Fixture, content []byte) (string, error) {
@@ -392,7 +409,7 @@ func summarize(results []NormalizedResult) Summary {
 	return summary
 }
 
-func writeArtifacts(outputDir string, results []NormalizedResult, runMap []RunMapEntry, summary Summary) error {
+func writeArtifacts(outputDir string, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure, summary Summary) error {
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("create regression output: %w", err)
 	}
@@ -421,6 +438,17 @@ func writeArtifacts(outputDir string, results []NormalizedResult, runMap []RunMa
 		_ = runMapWriter.WriteByte('\n')
 	}
 	_ = runMapWriter.Flush()
+	var failureLines bytes.Buffer
+	failureWriter := bufio.NewWriter(&failureLines)
+	for _, failure := range failures {
+		encoded, err := json.Marshal(failure)
+		if err != nil {
+			return err
+		}
+		_, _ = failureWriter.Write(encoded)
+		_ = failureWriter.WriteByte('\n')
+	}
+	_ = failureWriter.Flush()
 	summaryJSON, err := json.MarshalIndent(summary, "", "  ")
 	if err != nil {
 		return err
@@ -430,7 +458,7 @@ func writeArtifacts(outputDir string, results []NormalizedResult, runMap []RunMa
 	if err != nil {
 		return err
 	}
-	for name, content := range map[string][]byte{"results.jsonl": lines.Bytes(), "run-map.jsonl": runMapLines.Bytes(), "summary.json": summaryJSON, "junit.xml": junitXML} {
+	for name, content := range map[string][]byte{"results.jsonl": lines.Bytes(), "run-map.jsonl": runMapLines.Bytes(), "failures.jsonl": failureLines.Bytes(), "summary.json": summaryJSON, "junit.xml": junitXML} {
 		if err := writeFileAtomically(filepath.Join(outputDir, name), content); err != nil {
 			return err
 		}

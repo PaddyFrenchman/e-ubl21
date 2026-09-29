@@ -47,11 +47,13 @@ They remain temporarily present until the new-install and non-destructive
 upgrade paths are implemented and qualified. Existing installations must not
 have unknown PostgreSQL data deleted automatically.
 
-This decision does not move business state. In particular, issue #89 is not
-implemented by this migration. Its future metadata/status persistence design
-must be retargeted from PostgreSQL to YugabyteDB after the connection, migration,
-deployment, and test foundations are complete. JetStream KV remains the current
-metadata/status store until that separately reviewed change is delivered.
+This decision does not itself move business state. Issue #89 has now selected
+YugabyteDB/YSQL as the future system of record for upload metadata and status,
+while retaining JetStream for work/results. It remains a future implementation:
+JetStream KV is the current metadata/status store until its separately reviewed
+schema, migration, cutover, and recovery work is delivered. The target
+architecture and its operational acceptance requirements are recorded in
+[Upload metadata persistence](../UPLOAD-METADATA-PERSISTENCE.md).
 
 ## Supported deployment modes
 

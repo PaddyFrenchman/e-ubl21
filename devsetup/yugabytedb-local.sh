@@ -29,7 +29,7 @@ Commands:
   wait        Wait for authenticated YSQL readiness.
   smoke       Check the exact YugabyteDB build and execute SELECT 1.
   migrate     Apply pending embedded schema migrations.
-  test        Start the runtime and run the database package integration test.
+  test        Start the runtime and run database, guarded-write, and upload-metadata integration tests.
   stop        Stop the container while retaining its persistent volume.
   restart     Restart the container and verify readiness.
   reset       Remove the local container, network, and persistent volume.
@@ -217,6 +217,8 @@ run_integration_test() {
         go test ./database -run '^TestYugabyteDB(Integration|Migrations)$' -count=1
     EUBL21_TEST_DATABASE_URL="$(database_url)" \
         go test ./documentstore -run '^TestGuardedWriteClaims$' -count=1
+	EUBL21_TEST_DATABASE_URL="$(database_url)" \
+		go test ./queue -run '^TestYSQLUploadMetadataStore$' -count=1
 }
 
 verify_lifecycle() {

@@ -89,20 +89,21 @@ func (c *Client) EnsureInfraWithConfig(ctx context.Context, cfg InfraConfig) err
 		return fmt.Errorf("ensure %s stream: %w", resultsStreamName, err)
 	}
 
-	uploadsBucketName := c.Namespace.UploadsBucketName()
-	uploadsKV, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
-		Bucket:       uploadsBucketName,
-		Description:  "Durable metadata record (status, error, timestamps) for every UBL upload, keyed by upload id. Raw XML is stored separately in the upload-content Object Store.",
-		Storage:      jetstream.FileStorage,
-		MaxValueSize: uploadMetadataMaxValueSize,
-	})
-	if err != nil {
-		return fmt.Errorf("ensure %s KV bucket: %w", uploadsBucketName, err)
+	if c.UploadMetadataStore() == nil {
+		uploadsBucketName := c.Namespace.UploadsBucketName()
+		uploadsKV, err := c.JS.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
+			Bucket:       uploadsBucketName,
+			Description:  "Legacy upload metadata record. YSQL is authoritative when configured.",
+			Storage:      jetstream.FileStorage,
+			MaxValueSize: uploadMetadataMaxValueSize,
+		})
+		if err != nil {
+			return fmt.Errorf("ensure %s KV bucket: %w", uploadsBucketName, err)
+		}
+		c.handlesMu.Lock()
+		c.cachedUploadsKV = uploadsKV
+		c.handlesMu.Unlock()
 	}
-
-	c.handlesMu.Lock()
-	c.cachedUploadsKV = uploadsKV
-	c.handlesMu.Unlock()
 	if c.DocumentStore() != nil {
 		return nil
 	}

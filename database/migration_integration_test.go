@@ -46,7 +46,7 @@ func TestYugabyteDBMigrations(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if first.PreviousVersion != 0 || first.CurrentVersion != 2 || len(first.AppliedVersions) != 2 {
+			if first.PreviousVersion != 0 || first.CurrentVersion != int64(len(migrator.migrations)) || len(first.AppliedVersions) != len(migrator.migrations) {
 				t.Fatalf("fresh result = %+v", first)
 			}
 
@@ -62,10 +62,10 @@ func TestYugabyteDBMigrations(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if second.PreviousVersion != 2 || second.CurrentVersion != 2 || len(second.AppliedVersions) != 0 {
+			if second.PreviousVersion != int64(len(migrator.migrations)) || second.CurrentVersion != int64(len(migrator.migrations)) || len(second.AppliedVersions) != 0 {
 				t.Fatalf("repeat result = %+v", second)
 			}
-			assertMigrationHistory(t, client, 2, "applied")
+			assertMigrationHistory(t, client, len(migrator.migrations), "applied")
 		})
 	})
 
@@ -105,19 +105,19 @@ func TestYugabyteDBMigrations(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			older := &Migrator{migrations: current.migrations[:1], timeout: DefaultMigrationTimeout}
+			older := &Migrator{migrations: current.migrations[:len(current.migrations)-1], timeout: DefaultMigrationTimeout}
 			oldResult, err := older.Run(context.Background(), client)
-			if err != nil || oldResult.CurrentVersion != 1 {
+			if err != nil || oldResult.CurrentVersion != int64(len(older.migrations)) {
 				t.Fatalf("old migration result = %+v, error = %v", oldResult, err)
 			}
 			upgrade, err := current.Run(context.Background(), client)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if upgrade.PreviousVersion != 1 || upgrade.CurrentVersion != 2 || len(upgrade.AppliedVersions) != 1 || upgrade.AppliedVersions[0] != 2 {
+			if upgrade.PreviousVersion != int64(len(older.migrations)) || upgrade.CurrentVersion != int64(len(current.migrations)) || len(upgrade.AppliedVersions) != 1 || upgrade.AppliedVersions[0] != int64(len(current.migrations)) {
 				t.Fatalf("upgrade result = %+v", upgrade)
 			}
-			assertMigrationHistory(t, client, 2, "applied")
+			assertMigrationHistory(t, client, len(current.migrations), "applied")
 		})
 	})
 

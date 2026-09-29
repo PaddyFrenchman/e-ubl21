@@ -17,6 +17,10 @@ import (
 
 func testCommandConfig(t *testing.T) *Config {
 	t.Helper()
+	// Lifecycle tests that exercise TLS/start-stop behavior do not configure a
+	// database. Select the incident-only legacy mode explicitly so their
+	// assertions remain isolated from the production YSQL requirement.
+	t.Setenv("EUBL21_ALLOW_LEGACY_UPLOAD_METADATA_ROLLBACK", "true")
 	s := queuetest.StartServer(t)
 	return &Config{
 		Host:            "127.0.0.1",
@@ -58,6 +62,7 @@ func TestServeCommandRunsConfiguredFunction(t *testing.T) {
 }
 
 func TestWorkerStartsAndStopsOnContextCancellation(t *testing.T) {
+	t.Setenv("EUBL21_ALLOW_LEGACY_UPLOAD_METADATA_ROLLBACK", "true")
 	previous := runWorker
 	t.Cleanup(func() { runWorker = previous })
 	started := make(chan struct{})

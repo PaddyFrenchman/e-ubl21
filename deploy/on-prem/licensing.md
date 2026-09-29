@@ -44,7 +44,7 @@ Avoid as mandatory bundled components: AGPL-3.0
 | cert-manager | Apache-2.0 | Yes | Preserve licence and notices |
 | KEDA | Apache-2.0 | Yes | Preserve licence and notices |
 | NATS Server / JetStream | Apache-2.0 | Yes | Preserve licence and notices |
-| YugabyteDB | Apache-2.0 | Yes | Preserve licence and notices; this refers to YugabyteDB, not separately licensed YugabyteDB Anywhere |
+| YugabyteDB | Apache-2.0 | Yes | Preserve licence and notices; this refers to YugabyteDB, not separately licensed YugabyteDB Anywhere. It is the selected future upload-metadata/status system of record. |
 | Prometheus | Apache-2.0 | Yes | Preserve licence and notices |
 | OpenTelemetry Collector | Apache-2.0 | Yes | Preserve licence and notices |
 | Saxon-HE | MPL-2.0 | Yes | File-level copyleft applies to modified MPL-covered files |

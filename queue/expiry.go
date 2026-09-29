@@ -134,11 +134,7 @@ func (c *Client) expireDocumentStoreContent(ctx context.Context, retention time.
 		now = time.Now()
 	}
 	now = now.UTC()
-	keys, err := c.uploadsBucket(ctx)
-	if err != nil {
-		return report, err
-	}
-	ids, err := keys.Keys(ctx)
+	ids, err := c.UploadRecordKeys(ctx)
 	if err != nil {
 		return report, fmt.Errorf("list upload metadata for content expiry: %w", err)
 	}

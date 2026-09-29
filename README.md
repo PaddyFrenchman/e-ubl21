@@ -28,7 +28,7 @@ The high-level product roadmap is documented in [`.github/roadmap-0.md`](.github
 - UBL `Invoice` and `CreditNote` are additionally subject to mandatory **EN 16931** semantic validation.
 - EN 16931 uses pinned validation assets and a controlled Saxon runtime rather than hand-written business rules.
 - HTTP uploads are handled asynchronously: the API stores the original XML, records metadata, queues a compact work descriptor, and returns before validation finishes.
-- **NATS JetStream** provides durable work queues, metadata KV storage, immutable raw-content Object Store storage, and a permanent one-result-per-upload result stream.
+- **NATS JetStream** provides durable work queues, current upload-metadata KV storage, legacy raw-content Object Store storage, and a permanent one-result-per-upload result stream. Raw XML uses the configured document store when enabled; [#89](docs/UPLOAD-METADATA-PERSISTENCE.md) selects YugabyteDB/YSQL for its future metadata/status replacement.
 - Standards failures are kept distinct from **operational failures** such as validator crashes, timeouts, missing assets, or storage failures.
 - Worker processing includes bounded concurrency, prefetch, deadlines, progress heartbeats, retry handling, dead-letter state, replay, duplicate suppression, and crash-safe result semantics.
 - Raw XML retention is configurable and independent from long-lived validation metadata.

@@ -194,6 +194,7 @@ func NewRootCmd(v *viper.Viper, stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newOrchestratorCmd(v, cfg))
 	rootCmd.AddCommand(newProvisionCmd(v, cfg))
 	rootCmd.AddCommand(newObjectStoreCmd(cfg))
+	rootCmd.AddCommand(newUploadMetadataCmd(cfg))
 	rootCmd.AddCommand(newDatabaseCmd(cfg))
 	rootCmd.AddCommand(newMigrationCmd(cfg))
 	rootCmd.AddCommand(newDeadLetterCmd(cfg))
