@@ -105,6 +105,15 @@ func (t coverageTargets) addSequence(doc *schemaDoc, parent string, sequence *xs
 	for i, element := range sequence.Elements {
 		t.addElement(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), element, false)
 	}
+	for i := range sequence.Sequences {
+		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &sequence.Sequences[i])
+	}
+	for i := range sequence.Choices {
+		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &sequence.Choices[i])
+	}
+	for i := range sequence.Alls {
+		t.addAll(doc, fmt.Sprintf("%s/all[%d]", parent, i), &sequence.Alls[i])
+	}
 	if sequence.Any != nil {
 		t.wildcards[coverageID(doc, "any", parent+"/sequence")] = struct{}{}
 	}
@@ -116,6 +125,12 @@ func (t coverageTargets) addAll(doc *schemaDoc, parent string, all *xsdAll) {
 	for i, element := range all.Elements {
 		t.addElement(doc, fmt.Sprintf("%s/all[%d]", parent, i), element, false)
 	}
+	for i := range all.Sequences {
+		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &all.Sequences[i])
+	}
+	for i := range all.Choices {
+		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &all.Choices[i])
+	}
 }
 func (t coverageTargets) addChoice(doc *schemaDoc, parent string, choice *xsdChoice) {
 	if choice == nil {
@@ -125,6 +140,12 @@ func (t coverageTargets) addChoice(doc *schemaDoc, parent string, choice *xsdCho
 	t.choices[id] = struct{}{}
 	for i, element := range choice.Elements {
 		t.addElement(doc, fmt.Sprintf("%s/choice[%d]", parent, i), element, true)
+	}
+	for i := range choice.Sequences {
+		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &choice.Sequences[i])
+	}
+	for i := range choice.Choices {
+		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &choice.Choices[i])
 	}
 }
 
