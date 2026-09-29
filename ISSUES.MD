@@ -1088,6 +1088,26 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/129
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/130
 
+## Phase 10 — UBL 2.1 structural corpus expansion
+
+### 70. #160 — TEST COVERAGE — Expand UBL 2.1 structural corpus and measure schema coverage
+
+**Goal:** Expand the UBL 2.1 structural generator and tracked corpus so structural alternatives, cardinalities, recursion, wildcards, attributes, and large documents are deliberately exercised and measured.
+
+**Status:** Open. The parent program remains open until its complete structural-corpus generation, full-pipeline regression, diagnostics, and qualification work is complete.
+
+**Dependencies:** Begins with #161, then #162 through #167 in order.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/160
+
+### 71. #161 — TEST COVERAGE — Build UBL 2.1 schema coverage analyzer
+
+**Goal:** Build a deterministic schema-coverage analyzer for the authoritative UBL 2.1 XSD graph and the tracked structural corpus.
+
+**Status:** Complete / closed. PR #168 adds XSD-derived coverage targets and deterministic JSON and Markdown reports, fixture-to-target mappings, explicit uncovered-item lists, cardinality and recursive-depth measurements, and coverage for document roots, elements, attributes, complex types, choices, compositors, wildcards, inheritance, and substitution groups. Parent #160 remains open.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/161
+
 ---
 
 ## Dependency summary
@@ -1155,3 +1175,4 @@ The Phase 9 YugabyteDB migration is a separate platform sequence with its own de
 - Issues #87, #88, and #89 are deliberately retained as future product-platform improvements and must not silently become current requirements without an explicit architecture decision.
 - Issue #88 and #89 should be evaluated together when the future persistence architecture is revisited, while remaining separate issues because raw-content storage and metadata persistence have different migration and failure semantics.
 - Issues #119 through #130 are the tracked PostgreSQL-to-YugabyteDB migration sequence. Issues #119 through #128 are complete. Their detailed scopes remain synchronized with `ideas/active-plans/postgresql-to-yugabytedb-migration-plan.md`.
+- Issue #161 is complete: it provides the deterministic UBL 2.1 schema-coverage baseline for the still-open structural-corpus expansion program in #160.
