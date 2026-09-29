@@ -99,13 +99,16 @@ func particleElement(index schemaIndex, f schemaFrame, q xml.Name) (xsdElementDe
 	}
 	return xsdElementDecl{}, "", false
 }
-func recordAttributes(f schemaFrame, start xml.StartElement) {
+func recordAttributes(index schemaIndex, f schemaFrame, start xml.StartElement) {
 	for _, attribute := range start.Attr {
 		for _, declaration := range append(append([]xsdAttribute{}, f.typ.Attributes...), extensionAttributes(f.typ)...) {
 			if declaration.Name == attribute.Name.Local {
 				f.targets[fmt.Sprintf("%s|%s|attribute|%s/@%s", f.doc.TargetNamespace, f.doc.File, f.typeName, declaration.Name)]++
 			}
 		}
+	}
+	if base, ok := baseFrame(index, f); ok {
+		recordAttributes(index, base, start)
 	}
 }
 func matchFixture(index schemaIndex, path string) (map[string]int, error) {
@@ -142,7 +145,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 				out[id]++
 				out[fmt.Sprintf("%s|%s|complexType|%s", td.TargetNamespace, td.File, n)]++
 				stack = append(stack, schemaFrame{td, t, n, out})
-				recordAttributes(stack[len(stack)-1], v)
+				recordAttributes(index, stack[len(stack)-1], v)
 				continue
 			}
 			parent := stack[len(stack)-1]
@@ -162,7 +165,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 			if ok {
 				out[fmt.Sprintf("%s|%s|complexType|%s", td.TargetNamespace, td.File, n)]++
 				stack = append(stack, schemaFrame{td, t, n, out})
-				recordAttributes(stack[len(stack)-1], v)
+				recordAttributes(index, stack[len(stack)-1], v)
 			} else {
 				stack = append(stack, schemaFrame{})
 			}
