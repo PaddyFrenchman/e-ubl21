@@ -16,6 +16,17 @@ type schemaFrame struct {
 	siblings map[string]int
 }
 
+func complexTypeIDForElement(elementID, typeName string) string {
+	if typeName == "inline" {
+		return strings.Replace(elementID, "|element|", "|complexType|inline/", 1)
+	}
+	parts := strings.Split(elementID, "|")
+	if len(parts) != 4 {
+		return ""
+	}
+	return fmt.Sprintf("%s|%s|complexType|%s", parts[0], parts[1], typeName)
+}
+
 func elementDeclaration(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) (*schemaDoc, xsdElementDecl, string, string) {
 	if decl.Ref != "" {
 		ns, n := qualifyRef(decl.Ref, doc.TargetNamespace)
@@ -45,16 +56,7 @@ func declaredType(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) (*sche
 	return td, t, n, ok
 }
 func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
-	if f.typ.ComplexContent == nil {
-		return schemaFrame{}, false
-	}
-	var base string
-	if f.typ.ComplexContent.Extension != nil {
-		base = f.typ.ComplexContent.Extension.Base
-	}
-	if f.typ.ComplexContent.Restriction != nil {
-		base = f.typ.ComplexContent.Restriction.Base
-	}
+	base := typeBase(f.typ)
 	if base == "" {
 		return schemaFrame{}, false
 	}
@@ -69,17 +71,89 @@ func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
 	}
 	return schemaFrame{doc: doc, typ: typ, typeName: name, targets: f.targets, siblings: map[string]int{}}, true
 }
+func findInSequence(index schemaIndex, f schemaFrame, parent string, seq *xsdSequence, q xml.Name) (xsdElementDecl, string, bool) {
+	if seq == nil {
+		return xsdElementDecl{}, "", false
+	}
+	for i, x := range seq.Elements {
+		_, _, ns, n := elementDeclaration(index, f.doc, x)
+		if ns == q.Space && n == q.Local {
+			return x, fmt.Sprintf("%s|%s|element|%s/sequence[%d]/%s", f.doc.TargetNamespace, f.doc.File, parent, i, n), true
+		}
+	}
+	for i := range seq.Sequences {
+		if x, id, ok := findInSequence(index, f, parent+fmt.Sprintf("/sequence[%d]", i), &seq.Sequences[i], q); ok {
+			return x, id, true
+		}
+	}
+	for i := range seq.Choices {
+		if x, id, ok := findInChoice(index, f, parent+fmt.Sprintf("/choice[%d]", i), &seq.Choices[i], q); ok {
+			return x, id, true
+		}
+	}
+	for i := range seq.Alls {
+		if x, id, ok := findInAll(index, f, parent+fmt.Sprintf("/all[%d]", i), &seq.Alls[i], q); ok {
+			return x, id, true
+		}
+	}
+	return xsdElementDecl{}, "", false
+}
+func findInChoice(index schemaIndex, f schemaFrame, parent string, choice *xsdChoice, q xml.Name) (xsdElementDecl, string, bool) {
+	if choice == nil {
+		return xsdElementDecl{}, "", false
+	}
+	for i, x := range choice.Elements {
+		_, _, ns, n := elementDeclaration(index, f.doc, x)
+		if ns == q.Space && n == q.Local {
+			return x, fmt.Sprintf("%s|%s|element|%s/choice[%d]/%s", f.doc.TargetNamespace, f.doc.File, parent, i, n), true
+		}
+	}
+	for i := range choice.Sequences {
+		if x, id, ok := findInSequence(index, f, parent+fmt.Sprintf("/sequence[%d]", i), &choice.Sequences[i], q); ok {
+			return x, id, true
+		}
+	}
+	for i := range choice.Choices {
+		if x, id, ok := findInChoice(index, f, parent+fmt.Sprintf("/choice[%d]", i), &choice.Choices[i], q); ok {
+			return x, id, true
+		}
+	}
+	for i := range choice.Alls {
+		if x, id, ok := findInAll(index, f, parent+fmt.Sprintf("/all[%d]", i), &choice.Alls[i], q); ok {
+			return x, id, true
+		}
+	}
+	return xsdElementDecl{}, "", false
+}
+func findInAll(index schemaIndex, f schemaFrame, parent string, all *xsdAll, q xml.Name) (xsdElementDecl, string, bool) {
+	if all == nil {
+		return xsdElementDecl{}, "", false
+	}
+	for i, x := range all.Elements {
+		_, _, ns, n := elementDeclaration(index, f.doc, x)
+		if ns == q.Space && n == q.Local {
+			return x, fmt.Sprintf("%s|%s|element|%s/all[%d]/%s", f.doc.TargetNamespace, f.doc.File, parent, i, n), true
+		}
+	}
+	for i := range all.Sequences {
+		if x, id, ok := findInSequence(index, f, parent+fmt.Sprintf("/sequence[%d]", i), &all.Sequences[i], q); ok {
+			return x, id, true
+		}
+	}
+	for i := range all.Choices {
+		if x, id, ok := findInChoice(index, f, parent+fmt.Sprintf("/choice[%d]", i), &all.Choices[i], q); ok {
+			return x, id, true
+		}
+	}
+	for i := range all.Alls {
+		if x, id, ok := findInAll(index, f, parent+fmt.Sprintf("/all[%d]", i), &all.Alls[i], q); ok {
+			return x, id, true
+		}
+	}
+	return xsdElementDecl{}, "", false
+}
 func recordInheritance(index schemaIndex, f schemaFrame) {
-	if f.typ.ComplexContent == nil {
-		return
-	}
-	base := ""
-	if f.typ.ComplexContent.Extension != nil {
-		base = f.typ.ComplexContent.Extension.Base
-	}
-	if f.typ.ComplexContent.Restriction != nil {
-		base = f.typ.ComplexContent.Restriction.Base
-	}
+	base := typeBase(f.typ)
 	if base == "" {
 		return
 	}
@@ -87,6 +161,15 @@ func recordInheritance(index schemaIndex, f schemaFrame) {
 	f.targets[fmt.Sprintf("%s|%s|inheritance|%s->%s#%s", f.doc.TargetNamespace, f.doc.File, f.typeName, ns, name)]++
 }
 func particleElement(index schemaIndex, f schemaFrame, q xml.Name) (xsdElementDecl, string, bool) {
+	if x, id, ok := findInSequence(index, f, f.typeName, f.typ.Sequence, q); ok {
+		return x, id, true
+	}
+	if x, id, ok := findInChoice(index, f, f.typeName, f.typ.Choice, q); ok {
+		return x, id, true
+	}
+	if x, id, ok := findInAll(index, f, f.typeName, f.typ.All, q); ok {
+		return x, id, true
+	}
 	check := func(kind string, xs []xsdElementDecl) (xsdElementDecl, string, bool) {
 		for i, x := range xs {
 			_, resolved, ns, n := elementDeclaration(index, f.doc, x)
@@ -119,7 +202,7 @@ func particleElement(index schemaIndex, f schemaFrame, q xml.Name) (xsdElementDe
 }
 func recordAttributes(index schemaIndex, f schemaFrame, start xml.StartElement) {
 	for _, attribute := range start.Attr {
-		for _, declaration := range append(append([]xsdAttribute{}, f.typ.Attributes...), extensionAttributes(f.typ)...) {
+		for _, declaration := range typeAttributes(f.typ) {
 			if declaration.Name == attribute.Name.Local {
 				f.targets[fmt.Sprintf("%s|%s|attribute|%s/@%s", f.doc.TargetNamespace, f.doc.File, f.typeName, declaration.Name)]++
 			}
@@ -128,6 +211,32 @@ func recordAttributes(index schemaIndex, f schemaFrame, start xml.StartElement) 
 	if base, ok := baseFrame(index, f); ok {
 		recordAttributes(index, base, start)
 	}
+}
+func choiceSiteID(elementID string) string {
+	parts := strings.Split(elementID, "|")
+	if len(parts) != 4 {
+		return ""
+	}
+	at := strings.LastIndex(parts[3], "/choice[")
+	if at < 0 {
+		return ""
+	}
+	return parts[0] + "|" + parts[1] + "|choice|" + parts[3][:at]
+}
+func wildcardSite(index schemaIndex, f schemaFrame) string {
+	if f.typ.Sequence != nil && f.typ.Sequence.Any != nil {
+		return fmt.Sprintf("%s|%s|any|%s/sequence", f.doc.TargetNamespace, f.doc.File, f.typeName)
+	}
+	if f.typ.Choice != nil && f.typ.Choice.Any != nil {
+		return fmt.Sprintf("%s|%s|any|%s/choice", f.doc.TargetNamespace, f.doc.File, f.typeName)
+	}
+	if f.typ.All != nil && f.typ.All.Any != nil {
+		return fmt.Sprintf("%s|%s|any|%s/all", f.doc.TargetNamespace, f.doc.File, f.typeName)
+	}
+	if base, ok := baseFrame(index, f); ok {
+		return wildcardSite(index, base)
+	}
+	return ""
 }
 func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 	file, err := os.Open(path)
@@ -161,7 +270,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 				}
 				id := fmt.Sprintf("%s|%s|element|global/%s", d.TargetNamespace, d.File, v.Name.Local)
 				out[id]++
-				out[fmt.Sprintf("%s|%s|complexType|%s", td.TargetNamespace, td.File, n)]++
+				out[complexTypeIDForElement(id, n)]++
 				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}})
 				recordAttributes(index, stack[len(stack)-1], v)
 				recordInheritance(index, stack[len(stack)-1])
@@ -170,8 +279,8 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 			parent := stack[len(stack)-1]
 			decl, id, ok := particleElement(index, parent, v.Name)
 			if !ok {
-				if parent.typ.Sequence != nil && parent.typ.Sequence.Any != nil {
-					out[fmt.Sprintf("%s|%s|any|%s/sequence", parent.doc.TargetNamespace, parent.doc.File, parent.typeName)]++
+				if wildcard := wildcardSite(index, parent); wildcard != "" {
+					out[wildcard]++
 				}
 				stack = append(stack, schemaFrame{})
 				continue
@@ -180,12 +289,24 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 			if parent.siblings[id] > out[id] {
 				out[id] = parent.siblings[id]
 			}
-			if strings.Contains(id, "/choice[") {
-				out[fmt.Sprintf("%s|%s|choice|%s", parent.doc.TargetNamespace, parent.doc.File, parent.typeName)]++
+			if choiceID := choiceSiteID(id); choiceID != "" {
+				out[choiceID]++
 			}
 			td, t, n, ok := declaredType(index, parent.doc, decl)
 			if ok {
-				out[fmt.Sprintf("%s|%s|complexType|%s", td.TargetNamespace, td.File, n)]++
+				out[complexTypeIDForElement(id, n)]++
+				depth := 1
+				for _, ancestor := range stack {
+					if ancestor.doc != nil && ancestor.doc.TargetNamespace == td.TargetNamespace && ancestor.typeName == n {
+						depth++
+					}
+				}
+				if depth > 1 {
+					recursiveID := fmt.Sprintf("%s|%s|recursive|%s->%s", parent.doc.TargetNamespace, parent.doc.File, parent.typeName, qualifiedKey(td.TargetNamespace, n))
+					if depth > out[recursiveID] {
+						out[recursiveID] = depth
+					}
+				}
 				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}})
 				recordAttributes(index, stack[len(stack)-1], v)
 				recordInheritance(index, stack[len(stack)-1])

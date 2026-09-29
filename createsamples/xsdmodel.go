@@ -81,6 +81,7 @@ type xsdChoice struct {
 	Choices   []xsdChoice      `xml:"choice"`
 	Alls      []xsdAll         `xml:"all"`
 	Elements  []xsdElementDecl `xml:"element"`
+	Any       *xsdAny          `xml:"any"`
 }
 
 type xsdAll struct {
@@ -88,6 +89,7 @@ type xsdAll struct {
 	Choices   []xsdChoice      `xml:"choice"`
 	Alls      []xsdAll         `xml:"all"`
 	Elements  []xsdElementDecl `xml:"element"`
+	Any       *xsdAny          `xml:"any"`
 }
 
 type xsdSimpleType struct {

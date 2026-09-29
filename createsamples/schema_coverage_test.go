@@ -31,6 +31,9 @@ func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 	if first.Fixtures != 71 {
 		t.Fatalf("fixtures = %d, want 71", first.Fixtures)
 	}
+	if got := first.Categories["roots"]; got.Total != 65 || got.Exercised != 65 {
+		t.Fatalf("roots = %+v, want 65/65", got)
+	}
 	if first.Categories["optionalElements"].Total == 0 || first.Categories["repeatableElements"].Total == 0 {
 		t.Fatal("nested cardinality particles were not indexed")
 	}
@@ -42,5 +45,10 @@ func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 	}
 	if len(first.MaximumCardinality) == 0 {
 		t.Fatal("maximum cardinalities were not recorded")
+	}
+	for _, category := range []string{"roots", "requiredElements", "optionalElements", "sequenceMembers", "allMembers", "inheritance", "substitutionGroups", "recursiveEdges", "wildcards"} {
+		if _, ok := first.Categories[category]; !ok {
+			t.Fatalf("missing category %s", category)
+		}
 	}
 }
