@@ -22,16 +22,17 @@ type xsdImport struct {
 }
 
 type xsdElementDecl struct {
-	Name        string          `xml:"name,attr"`
-	Ref         string          `xml:"ref,attr"`
-	Type        string          `xml:"type,attr"`
-	MinOccurs   string          `xml:"minOccurs,attr"`
-	MaxOccurs   string          `xml:"maxOccurs,attr"`
-	ComplexType *xsdComplexType `xml:"complexType"`
-	SimpleType  *xsdSimpleType  `xml:"simpleType"`
-	Sequence    *xsdSequence    `xml:"sequence"`
-	Choice      *xsdChoice      `xml:"choice"`
-	All         *xsdAll         `xml:"all"`
+	Name              string          `xml:"name,attr"`
+	Ref               string          `xml:"ref,attr"`
+	Type              string          `xml:"type,attr"`
+	MinOccurs         string          `xml:"minOccurs,attr"`
+	MaxOccurs         string          `xml:"maxOccurs,attr"`
+	SubstitutionGroup string          `xml:"substitutionGroup,attr"`
+	ComplexType       *xsdComplexType `xml:"complexType"`
+	SimpleType        *xsdSimpleType  `xml:"simpleType"`
+	Sequence          *xsdSequence    `xml:"sequence"`
+	Choice            *xsdChoice      `xml:"choice"`
+	All               *xsdAll         `xml:"all"`
 }
 
 type xsdComplexType struct {
@@ -63,8 +64,12 @@ type xsdExtension struct {
 }
 
 type xsdSequence struct {
-	Elements []xsdElementDecl `xml:"element"`
-	Any      *xsdAny          `xml:"any"`
+	Sequences []xsdSequence    `xml:"sequence"`
+	Choices   []xsdChoice      `xml:"choice"`
+	Alls      []xsdAll         `xml:"all"`
+	Anys      []xsdAny         `xml:"any"`
+	Elements  []xsdElementDecl `xml:"element"`
+	Any       *xsdAny          `xml:"any"`
 }
 
 type xsdAny struct {
@@ -73,11 +78,19 @@ type xsdAny struct {
 }
 
 type xsdChoice struct {
-	Elements []xsdElementDecl `xml:"element"`
+	Sequences []xsdSequence    `xml:"sequence"`
+	Choices   []xsdChoice      `xml:"choice"`
+	Alls      []xsdAll         `xml:"all"`
+	Anys      []xsdAny         `xml:"any"`
+	Elements  []xsdElementDecl `xml:"element"`
 }
 
 type xsdAll struct {
-	Elements []xsdElementDecl `xml:"element"`
+	Sequences []xsdSequence    `xml:"sequence"`
+	Choices   []xsdChoice      `xml:"choice"`
+	Alls      []xsdAll         `xml:"all"`
+	Anys      []xsdAny         `xml:"any"`
+	Elements  []xsdElementDecl `xml:"element"`
 }
 
 type xsdSimpleType struct {
