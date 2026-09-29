@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -15,16 +16,24 @@ import (
 // the tracked corpus can currently exercise. IDs include the declaring
 // namespace and schema path, so same-named UBL declarations cannot collide.
 type schemaCoverage struct {
-	SchemaVersion int                         `json:"schemaVersion"`
-	Fixtures      int                         `json:"fixtures"`
-	Categories    map[string]coverageCategory `json:"categories"`
-	Uncovered     map[string][]string         `json:"uncovered"`
+	SchemaVersion       int                           `json:"schemaVersion"`
+	Fixtures            int                           `json:"fixtures"`
+	Categories          map[string]coverageCategory   `json:"categories"`
+	Uncovered           map[string][]string           `json:"uncovered"`
+	Unparseable         map[string]string             `json:"unparseable"`
+	FixtureObservations map[string]fixtureObservation `json:"fixtureObservations"`
+	FixtureTargets      map[string][]string           `json:"fixtureTargets"`
+	MaximumCardinality  map[string]int                `json:"maximumCardinality"`
 }
 
 type coverageCategory struct {
 	Total     int     `json:"total"`
 	Exercised int     `json:"exercised"`
 	Percent   float64 `json:"percent"`
+}
+type fixtureObservation struct {
+	Elements   []string `json:"elements"`
+	Attributes []string `json:"attributes"`
 }
 
 type coverageTargets struct {
@@ -126,11 +135,11 @@ func extensionAttributes(typ xsdComplexType) []xsdAttribute {
 	return nil
 }
 
-func fixtureCoverage(samples string) (map[string]struct{}, map[string]struct{}, error) {
-	elements, attributes := map[string]struct{}{}, map[string]struct{}{}
-	err := filepath.WalkDir(samples, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
+func fixtureCoverage(samples string) (map[string]struct{}, map[string]struct{}, map[string]string, map[string]fixtureObservation, error) {
+	elements, attributes, unparseable, observations := map[string]struct{}{}, map[string]struct{}{}, map[string]string{}, map[string]fixtureObservation{}
+	err := filepath.WalkDir(samples, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
 		}
 		if d.IsDir() || filepath.Ext(path) != ".xml" {
 			return nil
@@ -140,22 +149,42 @@ func fixtureCoverage(samples string) (map[string]struct{}, map[string]struct{}, 
 			return err
 		}
 		defer file.Close()
+		fixtureElements, fixtureAttributes := map[string]struct{}{}, map[string]struct{}{}
 		decoder := xml.NewDecoder(file)
 		for {
 			token, err := decoder.Token()
-			if err != nil {
+			if err == io.EOF {
 				break
 			}
+			if err != nil {
+				unparseable[filepath.ToSlash(path)] = err.Error()
+				return nil
+			}
 			if start, ok := token.(xml.StartElement); ok {
-				elements[start.Name.Local] = struct{}{}
+				fixtureElements[start.Name.Space+"\x23"+start.Name.Local] = struct{}{}
 				for _, a := range start.Attr {
-					attributes[a.Name.Local] = struct{}{}
+					fixtureAttributes[a.Name.Space+"\x23"+a.Name.Local] = struct{}{}
 				}
 			}
 		}
+		for name := range fixtureElements {
+			elements[name] = struct{}{}
+		}
+		observations[filepath.ToSlash(path)] = fixtureObservation{Elements: sortedSet(fixtureElements), Attributes: sortedSet(fixtureAttributes)}
+		for name := range fixtureAttributes {
+			attributes[name] = struct{}{}
+		}
 		return nil
 	})
-	return elements, attributes, err
+	return elements, attributes, unparseable, observations, err
+}
+func sortedSet(values map[string]struct{}) []string {
+	out := make([]string, 0, len(values))
+	for value := range values {
+		out = append(out, value)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func coverageCategoryFor(targets map[string]struct{}, observed map[string]struct{}, attribute bool) (coverageCategory, []string) {
@@ -164,8 +193,10 @@ func coverageCategoryFor(targets map[string]struct{}, observed map[string]struct
 	for id := range targets {
 		parts := strings.Split(id, "|")
 		name := parts[len(parts)-1]
+		namespace := parts[0]
 		if !attribute {
 			name = name[strings.LastIndex(name, "/")+1:]
+			name = namespace + "\x23" + name
 		}
 		if attribute {
 			name = strings.TrimPrefix(name[strings.LastIndex(name, "/@"):], "/@")
@@ -184,41 +215,77 @@ func coverageCategoryFor(targets map[string]struct{}, observed map[string]struct
 	return coverageCategory{Total: len(targets), Exercised: exercised, Percent: percent}, uncovered
 }
 
+func structuralFixtureTargets(index schemaIndex, samples string) (map[string]map[string]int, map[string]string, error) {
+	out, bad := map[string]map[string]int{}, map[string]string{}
+	err := filepath.WalkDir(samples, func(path string, d os.DirEntry, e error) error {
+		if e != nil {
+			return e
+		}
+		if d.IsDir() || filepath.Ext(path) != ".xml" {
+			return nil
+		}
+		m, e := matchFixture(index, path)
+		if e != nil {
+			bad[filepath.ToSlash(path)] = e.Error()
+			return nil
+		}
+		out[filepath.ToSlash(path)] = m
+		return nil
+	})
+	return out, bad, err
+}
 func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 	index, err := buildSchemaIndex(xsdDir)
 	if err != nil {
 		return schemaCoverage{}, err
 	}
 	targets := schemaCoverageTargets(index)
-	elements, attributes, err := fixtureCoverage(samples)
+	_, _, unparseable, observations, err := fixtureCoverage(samples)
 	if err != nil {
 		return schemaCoverage{}, err
 	}
-	result := schemaCoverage{SchemaVersion: 1, Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}}
-	fixtureCount := 0
-	_ = filepath.WalkDir(samples, func(path string, d os.DirEntry, err error) error {
-		if err == nil && !d.IsDir() && filepath.Ext(path) == ".xml" {
-			fixtureCount++
+	matches, bad, err := structuralFixtureTargets(index, samples)
+	if err != nil {
+		return schemaCoverage{}, err
+	}
+	for path, message := range bad {
+		unparseable[path] = message
+	}
+	result := schemaCoverage{SchemaVersion: 2, Fixtures: len(observations) + len(unparseable), Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}, Unparseable: unparseable, FixtureObservations: observations, FixtureTargets: map[string][]string{}, MaximumCardinality: map[string]int{}}
+	exercised := map[string]struct{}{}
+	for path, found := range matches {
+		ids := make([]string, 0, len(found))
+		for id, occurrences := range found {
+			if occurrences > result.MaximumCardinality[id] {
+				result.MaximumCardinality[id] = occurrences
+			}
+			exercised[id] = struct{}{}
+			ids = append(ids, id)
 		}
-		return err
-	})
-	result.Fixtures = fixtureCount
+		sort.Strings(ids)
+		result.FixtureTargets[path] = ids
+	}
 	for _, item := range []struct {
 		name   string
 		values map[string]struct{}
-		attrs  bool
-	}{{"elements", targets.elements, false}, {"optionalElements", targets.optional, false}, {"repeatableElements", targets.repeatable, false}, {"attributes", targets.attributes, true}, {"optionalAttributes", targets.optionalAttributes, true}, {"complexTypes", targets.complexTypes, false}, {"choiceSites", targets.choices, false}, {"choiceAlternatives", targets.choiceAlternatives, false}, {"wildcards", targets.wildcards, false}} {
-		observed := elements
-		if item.attrs {
-			observed = attributes
+	}{{"elements", targets.elements}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}} {
+		count := 0
+		for id := range item.values {
+			if _, ok := exercised[id]; ok {
+				count++
+			} else {
+				result.Uncovered[item.name] = append(result.Uncovered[item.name], id)
+			}
 		}
-		category, uncovered := coverageCategoryFor(item.values, observed, item.attrs)
-		result.Categories[item.name] = category
-		result.Uncovered[item.name] = uncovered
+		sort.Strings(result.Uncovered[item.name])
+		pct := 100.0
+		if len(item.values) > 0 {
+			pct = float64(count) * 100 / float64(len(item.values))
+		}
+		result.Categories[item.name] = coverageCategory{len(item.values), count, pct}
 	}
 	return result, nil
 }
-
 func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	var out strings.Builder
 	out.WriteString("# UBL 2.1 schema coverage\n\n")
@@ -232,6 +299,25 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	for _, key := range keys {
 		c := report.Categories[key]
 		out.WriteString(fmt.Sprintf("| %s | %d | %d | %.1f%% |\n", key, c.Exercised, c.Total, c.Percent))
+	}
+	for _, key := range keys {
+		if missing := report.Uncovered[key]; len(missing) > 0 {
+			out.WriteString("\n## Uncovered " + key + "\n\n")
+			for _, id := range missing {
+				out.WriteString("- `" + id + "`\n")
+			}
+		}
+	}
+	if len(report.Unparseable) > 0 {
+		out.WriteString("\n## Unparseable fixtures\n\n")
+		paths := make([]string, 0, len(report.Unparseable))
+		for path := range report.Unparseable {
+			paths = append(paths, path)
+		}
+		sort.Strings(paths)
+		for _, path := range paths {
+			out.WriteString("- `" + path + "`: " + report.Unparseable[path] + "\n")
+		}
 	}
 	return os.WriteFile(path, []byte(out.String()), 0o644)
 }
