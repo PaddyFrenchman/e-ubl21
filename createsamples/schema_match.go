@@ -43,6 +43,31 @@ func declaredType(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) (*sche
 	t, ok := td.Types[n]
 	return td, t, n, ok
 }
+func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
+	if f.typ.ComplexContent == nil {
+		return schemaFrame{}, false
+	}
+	var base string
+	if f.typ.ComplexContent.Extension != nil {
+		base = f.typ.ComplexContent.Extension.Base
+	}
+	if f.typ.ComplexContent.Restriction != nil {
+		base = f.typ.ComplexContent.Restriction.Base
+	}
+	if base == "" {
+		return schemaFrame{}, false
+	}
+	ns, name := qualifyRef(base, f.doc.TargetNamespace)
+	doc := index.ByTargetNS[ns]
+	if doc == nil {
+		return schemaFrame{}, false
+	}
+	typ, ok := doc.Types[name]
+	if !ok {
+		return schemaFrame{}, false
+	}
+	return schemaFrame{doc: doc, typ: typ, typeName: name, targets: f.targets}, true
+}
 func particleElement(index schemaIndex, f schemaFrame, q xml.Name) (xsdElementDecl, string, bool) {
 	check := func(kind string, xs []xsdElementDecl) (xsdElementDecl, string, bool) {
 		for i, x := range xs {
@@ -68,6 +93,9 @@ func particleElement(index schemaIndex, f schemaFrame, q xml.Name) (xsdElementDe
 		if x, id, ok := check("choice", f.typ.Choice.Elements); ok {
 			return x, id, true
 		}
+	}
+	if base, ok := baseFrame(index, f); ok {
+		return particleElement(index, base, q)
 	}
 	return xsdElementDecl{}, "", false
 }
