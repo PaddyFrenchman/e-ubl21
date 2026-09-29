@@ -46,7 +46,7 @@ func TestInheritedAttributeAndWildcardSitesUseDeclaringType(t *testing.T) {
 		t.Fatalf("inherited attribute = %d, want 1", out[attributeID])
 	}
 	wildcardID := ns + "|test.xsd|any|Base/sequence"
-	if got := wildcardSite(index, derived); got != wildcardID {
+	if got := wildcardSite(index, derived, xml.Name{Space: "urn:other", Local: "Unknown"}); got != wildcardID {
 		t.Fatalf("wildcard site = %q, want %q", got, wildcardID)
 	}
 }
@@ -113,5 +113,43 @@ func TestMatchFixtureResolvesSubstitutionMembersAndDeclaringTypeIDs(t *testing.T
 	}
 	if got := matched[memberNS+"|member.xsd|complexType|MemberType"]; got != 1 {
 		t.Fatalf("cross-schema type match = %d, want 1", got)
+	}
+}
+
+func TestCompositorCardinalityIsEffectiveForContainedElements(t *testing.T) {
+	const ns = "urn:test"
+	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Types: map[string]xsdComplexType{
+		"Optional": {Name: "Optional", Choice: &xsdChoice{MinOccurs: "0", Elements: []xsdElementDecl{{Name: "A"}}}},
+		"Repeated": {Name: "Repeated", Sequence: &xsdSequence{MaxOccurs: "unbounded", Elements: []xsdElementDecl{{Name: "Line"}}}},
+	}}
+	index := schemaIndex{ByFile: map[string]*schemaDoc{"test.xsd": doc}, ByTargetNS: map[string]*schemaDoc{ns: doc}}
+	targets := schemaCoverageTargets(index)
+	optionalID := ns + "|test.xsd|element|Optional/choice[0]/A"
+	if _, ok := targets.required[optionalID]; ok {
+		t.Fatal("element in optional choice was marked required")
+	}
+	if _, ok := targets.optional[optionalID]; !ok {
+		t.Fatal("element in optional choice was not marked optional")
+	}
+	repeatedID := ns + "|test.xsd|element|Repeated/sequence[0]/Line"
+	if _, ok := targets.repeatable[repeatedID]; !ok {
+		t.Fatal("element in repeated sequence was not marked repeatable")
+	}
+}
+
+func TestChoiceSiteIsRecordedForSequenceAlternative(t *testing.T) {
+	const ns = "urn:test"
+	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Elements: map[string]xsdElementDecl{"Root": {Name: "Root", Type: "RootType"}}, Types: map[string]xsdComplexType{"RootType": {Name: "RootType", Sequence: &xsdSequence{Choices: []xsdChoice{{Sequences: []xsdSequence{{Elements: []xsdElementDecl{{Name: "Item"}}}}}}}}}}
+	index := schemaIndex{ByTargetNS: map[string]*schemaDoc{ns: doc}, GlobalElements: map[string]xsdElementDecl{qualifiedKey(ns, "Root"): doc.Elements["Root"]}, GlobalTypes: map[string]xsdComplexType{qualifiedKey(ns, "RootType"): doc.Types["RootType"]}}
+	path := filepath.Join(t.TempDir(), "fixture.xml")
+	if err := os.WriteFile(path, []byte(`<Root xmlns="urn:test"><Item/></Root>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixture(index, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := matched[ns+"|test.xsd|choice|RootType/choice[0]"]; got != 1 {
+		t.Fatalf("choice site = %d, want 1", got)
 	}
 }

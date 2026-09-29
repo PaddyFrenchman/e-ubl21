@@ -64,6 +64,8 @@ type xsdExtension struct {
 }
 
 type xsdSequence struct {
+	MinOccurs string           `xml:"minOccurs,attr"`
+	MaxOccurs string           `xml:"maxOccurs,attr"`
 	Sequences []xsdSequence    `xml:"sequence"`
 	Choices   []xsdChoice      `xml:"choice"`
 	Alls      []xsdAll         `xml:"all"`
@@ -74,9 +76,12 @@ type xsdSequence struct {
 type xsdAny struct {
 	MinOccurs string `xml:"minOccurs,attr"`
 	MaxOccurs string `xml:"maxOccurs,attr"`
+	Namespace string `xml:"namespace,attr"`
 }
 
 type xsdChoice struct {
+	MinOccurs string           `xml:"minOccurs,attr"`
+	MaxOccurs string           `xml:"maxOccurs,attr"`
 	Sequences []xsdSequence    `xml:"sequence"`
 	Choices   []xsdChoice      `xml:"choice"`
 	Alls      []xsdAll         `xml:"all"`
@@ -85,6 +90,8 @@ type xsdChoice struct {
 }
 
 type xsdAll struct {
+	MinOccurs string           `xml:"minOccurs,attr"`
+	MaxOccurs string           `xml:"maxOccurs,attr"`
 	Sequences []xsdSequence    `xml:"sequence"`
 	Choices   []xsdChoice      `xml:"choice"`
 	Alls      []xsdAll         `xml:"all"`

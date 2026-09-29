@@ -355,7 +355,44 @@ func choiceGroupAlternativeID(elementID string) string {
 	}
 	return ""
 }
-func wildcardSite(index schemaIndex, f schemaFrame) string {
+func choiceSiteForGroupAlternative(alternativeID string) string {
+	parts := strings.Split(alternativeID, "|")
+	if len(parts) != 4 {
+		return ""
+	}
+	path := parts[3]
+	cut := strings.LastIndex(path, "/sequence[")
+	if cut < 0 {
+		cut = strings.LastIndex(path, "/all[")
+	}
+	if cut < 0 {
+		cut = strings.LastIndex(path, "/choice[")
+	}
+	if cut < 0 {
+		return ""
+	}
+	return parts[0] + "|" + parts[1] + "|choice|" + path[:cut]
+}
+func wildcardAllows(any *xsdAny, ownerNS, childNS string) bool {
+	if any == nil {
+		return false
+	}
+	switch any.Namespace {
+	case "", "##any":
+		return true
+	case "##other":
+		return childNS != ownerNS
+	case "##targetNamespace":
+		return childNS == ownerNS
+	}
+	for _, ns := range strings.Fields(any.Namespace) {
+		if ns == childNS {
+			return true
+		}
+	}
+	return false
+}
+func wildcardSite(index schemaIndex, f schemaFrame, child xml.Name) string {
 	var sequence func(string, *xsdSequence) string
 	var choice func(string, *xsdChoice) string
 	var all func(string, *xsdAll) string
@@ -363,7 +400,7 @@ func wildcardSite(index schemaIndex, f schemaFrame) string {
 		if p == nil {
 			return ""
 		}
-		if p.Any != nil {
+		if wildcardAllows(p.Any, f.doc.TargetNamespace, child.Space) {
 			return coverageID(f.doc, "any", parent+"/sequence")
 		}
 		for i := range p.Sequences {
@@ -387,7 +424,7 @@ func wildcardSite(index schemaIndex, f schemaFrame) string {
 		if p == nil {
 			return ""
 		}
-		if p.Any != nil {
+		if wildcardAllows(p.Any, f.doc.TargetNamespace, child.Space) {
 			return coverageID(f.doc, "any", parent+"/choice")
 		}
 		for i := range p.Sequences {
@@ -411,7 +448,7 @@ func wildcardSite(index schemaIndex, f schemaFrame) string {
 		if p == nil {
 			return ""
 		}
-		if p.Any != nil {
+		if wildcardAllows(p.Any, f.doc.TargetNamespace, child.Space) {
 			return coverageID(f.doc, "any", parent+"/all")
 		}
 		for i := range p.Sequences {
@@ -443,7 +480,7 @@ func wildcardSite(index schemaIndex, f schemaFrame) string {
 		}
 	}
 	if base, ok := baseFrame(index, f); ok {
-		return wildcardSite(index, base)
+		return wildcardSite(index, base, child)
 	}
 	return ""
 }
@@ -488,7 +525,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 			parent := stack[len(stack)-1]
 			decl, id, substitutionID, ok := particleElement(index, parent, v.Name)
 			if !ok {
-				if wildcard := wildcardSite(index, parent); wildcard != "" {
+				if wildcard := wildcardSite(index, parent, v.Name); wildcard != "" {
 					out[wildcard]++
 				}
 				stack = append(stack, schemaFrame{})
@@ -503,6 +540,9 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 			}
 			if alternativeID := choiceGroupAlternativeID(id); alternativeID != "" {
 				out[alternativeID]++
+				if siteID := choiceSiteForGroupAlternative(alternativeID); siteID != "" {
+					out[siteID]++
+				}
 			}
 			if substitutionID != "" {
 				out[substitutionID]++

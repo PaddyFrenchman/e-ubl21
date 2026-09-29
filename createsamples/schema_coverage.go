@@ -245,7 +245,21 @@ func (t coverageTargets) addRecursiveEdge(index schemaIndex, doc *schemaDoc, own
 		t.recursiveEdges[coverageID(doc, "recursive", owner+"->"+name)] = struct{}{}
 	}
 }
-func (t coverageTargets) addElement(doc *schemaDoc, parent string, element xsdElementDecl, choice bool) {
+
+type occurrence struct{ optional, repeatable bool }
+
+func withOccurs(parent occurrence, min, max string) occurrence {
+	return occurrence{parent.optional || min == "0", parent.repeatable || max == "unbounded" || (max != "" && max != "1")}
+}
+func currentOccurrence(values []occurrence) occurrence {
+	if len(values) > 0 {
+		return values[0]
+	}
+	return occurrence{}
+}
+
+func (t coverageTargets) addElement(doc *schemaDoc, parent string, element xsdElementDecl, choice bool, inherited ...occurrence) {
+	occurs := withOccurs(currentOccurrence(inherited), element.MinOccurs, element.MaxOccurs)
 	name := element.Name
 	if element.Ref != "" {
 		name = localPart(element.Ref)
@@ -258,7 +272,7 @@ func (t coverageTargets) addElement(doc *schemaDoc, parent string, element xsdEl
 	if element.ComplexType != nil {
 		t.complexTypes[strings.Replace(id, "|element|", "|complexType|inline/", 1)] = struct{}{}
 	}
-	if element.MinOccurs != "0" {
+	if !occurs.optional {
 		t.required[id] = struct{}{}
 	}
 	if strings.Contains(parent, "/sequence[") {
@@ -267,73 +281,76 @@ func (t coverageTargets) addElement(doc *schemaDoc, parent string, element xsdEl
 	if strings.Contains(parent, "/all[") {
 		t.allMembers[id] = struct{}{}
 	}
-	if element.MinOccurs == "0" {
+	if occurs.optional {
 		t.optional[id] = struct{}{}
 	}
-	if element.MaxOccurs == "unbounded" || (element.MaxOccurs != "" && element.MaxOccurs != "1") {
+	if occurs.repeatable {
 		t.repeatable[id] = struct{}{}
 	}
 	if choice {
 		t.choiceAlternatives[id] = struct{}{}
 	}
 }
-func (t coverageTargets) addSequence(doc *schemaDoc, parent string, sequence *xsdSequence) {
+func (t coverageTargets) addSequence(doc *schemaDoc, parent string, sequence *xsdSequence, inherited ...occurrence) {
 	if sequence == nil {
 		return
 	}
+	occurs := withOccurs(currentOccurrence(inherited), sequence.MinOccurs, sequence.MaxOccurs)
 	for i, element := range sequence.Elements {
-		t.addElement(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), element, false)
+		t.addElement(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), element, false, occurs)
 	}
 	for i := range sequence.Sequences {
-		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &sequence.Sequences[i])
+		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &sequence.Sequences[i], occurs)
 	}
 	for i := range sequence.Choices {
-		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &sequence.Choices[i])
+		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &sequence.Choices[i], occurs)
 	}
 	for i := range sequence.Alls {
-		t.addAll(doc, fmt.Sprintf("%s/all[%d]", parent, i), &sequence.Alls[i])
+		t.addAll(doc, fmt.Sprintf("%s/all[%d]", parent, i), &sequence.Alls[i], occurs)
 	}
 	if sequence.Any != nil {
 		t.wildcards[coverageID(doc, "any", parent+"/sequence")] = struct{}{}
 	}
 }
-func (t coverageTargets) addAll(doc *schemaDoc, parent string, all *xsdAll) {
+func (t coverageTargets) addAll(doc *schemaDoc, parent string, all *xsdAll, inherited ...occurrence) {
 	if all == nil {
 		return
 	}
+	occurs := withOccurs(currentOccurrence(inherited), all.MinOccurs, all.MaxOccurs)
 	for i, element := range all.Elements {
-		t.addElement(doc, fmt.Sprintf("%s/all[%d]", parent, i), element, false)
+		t.addElement(doc, fmt.Sprintf("%s/all[%d]", parent, i), element, false, occurs)
 	}
 	for i := range all.Sequences {
-		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &all.Sequences[i])
+		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &all.Sequences[i], occurs)
 	}
 	for i := range all.Choices {
-		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &all.Choices[i])
+		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &all.Choices[i], occurs)
 	}
 	if all.Any != nil {
 		t.wildcards[coverageID(doc, "any", parent+"/all")] = struct{}{}
 	}
 }
-func (t coverageTargets) addChoice(doc *schemaDoc, parent string, choice *xsdChoice) {
+func (t coverageTargets) addChoice(doc *schemaDoc, parent string, choice *xsdChoice, inherited ...occurrence) {
 	if choice == nil {
 		return
 	}
+	occurs := withOccurs(currentOccurrence(inherited), choice.MinOccurs, choice.MaxOccurs)
 	id := coverageID(doc, "choice", parent)
 	t.choices[id] = struct{}{}
 	for i, element := range choice.Elements {
-		t.addElement(doc, fmt.Sprintf("%s/choice[%d]", parent, i), element, true)
+		t.addElement(doc, fmt.Sprintf("%s/choice[%d]", parent, i), element, true, occurs)
 	}
 	for i := range choice.Sequences {
 		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/sequence[%d]", parent, i))] = struct{}{}
-		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &choice.Sequences[i])
+		t.addSequence(doc, fmt.Sprintf("%s/sequence[%d]", parent, i), &choice.Sequences[i], occurs)
 	}
 	for i := range choice.Choices {
 		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/choice[%d]", parent, i))] = struct{}{}
-		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &choice.Choices[i])
+		t.addChoice(doc, fmt.Sprintf("%s/choice[%d]", parent, i), &choice.Choices[i], occurs)
 	}
 	for i := range choice.Alls {
 		t.choiceAlternatives[coverageID(doc, "choiceAlternative", fmt.Sprintf("%s/all[%d]", parent, i))] = struct{}{}
-		t.addAll(doc, fmt.Sprintf("%s/all[%d]", parent, i), &choice.Alls[i])
+		t.addAll(doc, fmt.Sprintf("%s/all[%d]", parent, i), &choice.Alls[i], occurs)
 	}
 	if choice.Any != nil {
 		t.wildcards[coverageID(doc, "any", parent+"/choice")] = struct{}{}
