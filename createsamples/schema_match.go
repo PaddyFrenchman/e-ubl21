@@ -14,6 +14,7 @@ type schemaFrame struct {
 	typeName string
 	targets  map[string]int
 	siblings map[string]int
+	seen     map[string]bool
 }
 
 func complexTypeIDForElement(typeDoc *schemaDoc, elementID, typeName string) string {
@@ -160,7 +161,7 @@ func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
 	if !ok {
 		return schemaFrame{}, false
 	}
-	return schemaFrame{doc: doc, typ: typ, typeName: name, targets: f.targets, siblings: map[string]int{}}, true
+	return schemaFrame{doc: doc, typ: typ, typeName: name, targets: f.targets, siblings: map[string]int{}, seen: f.seen}, true
 }
 func findInSequence(index schemaIndex, f schemaFrame, parent string, seq *xsdSequence, q xml.Name) (xsdElementDecl, string, bool) {
 	if seq == nil {
@@ -392,7 +393,23 @@ func wildcardAllows(any *xsdAny, ownerNS, childNS string) bool {
 	}
 	return false
 }
+func sequencePrefixPresent(index schemaIndex, f schemaFrame, sequence *xsdSequence) bool {
+	if sequence == nil {
+		return false
+	}
+	for _, element := range sequence.Elements {
+		if element.MinOccurs == "0" {
+			continue
+		}
+		_, _, ns, name := elementDeclaration(index, f.doc, element)
+		if !f.seen[qualifiedKey(ns, name)] {
+			return false
+		}
+	}
+	return true
+}
 func wildcardSite(index schemaIndex, f schemaFrame, child xml.Name) string {
+	candidates := []string{}
 	var sequence func(string, *xsdSequence) string
 	var choice func(string, *xsdChoice) string
 	var all func(string, *xsdAll) string
@@ -400,23 +417,17 @@ func wildcardSite(index schemaIndex, f schemaFrame, child xml.Name) string {
 		if p == nil {
 			return ""
 		}
-		if wildcardAllows(p.Any, f.doc.TargetNamespace, child.Space) {
-			return coverageID(f.doc, "any", parent+"/sequence")
+		if wildcardAllows(p.Any, f.doc.TargetNamespace, child.Space) && sequencePrefixPresent(index, f, p) {
+			candidates = append(candidates, coverageID(f.doc, "any", parent+"/sequence"))
 		}
 		for i := range p.Sequences {
-			if id := sequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &p.Sequences[i]); id != "" {
-				return id
-			}
+			sequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &p.Sequences[i])
 		}
 		for i := range p.Choices {
-			if id := choice(fmt.Sprintf("%s/choice[%d]", parent, i), &p.Choices[i]); id != "" {
-				return id
-			}
+			choice(fmt.Sprintf("%s/choice[%d]", parent, i), &p.Choices[i])
 		}
 		for i := range p.Alls {
-			if id := all(fmt.Sprintf("%s/all[%d]", parent, i), &p.Alls[i]); id != "" {
-				return id
-			}
+			all(fmt.Sprintf("%s/all[%d]", parent, i), &p.Alls[i])
 		}
 		return ""
 	}
@@ -425,22 +436,16 @@ func wildcardSite(index schemaIndex, f schemaFrame, child xml.Name) string {
 			return ""
 		}
 		if wildcardAllows(p.Any, f.doc.TargetNamespace, child.Space) {
-			return coverageID(f.doc, "any", parent+"/choice")
+			candidates = append(candidates, coverageID(f.doc, "any", parent+"/choice"))
 		}
 		for i := range p.Sequences {
-			if id := sequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &p.Sequences[i]); id != "" {
-				return id
-			}
+			sequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &p.Sequences[i])
 		}
 		for i := range p.Choices {
-			if id := choice(fmt.Sprintf("%s/choice[%d]", parent, i), &p.Choices[i]); id != "" {
-				return id
-			}
+			choice(fmt.Sprintf("%s/choice[%d]", parent, i), &p.Choices[i])
 		}
 		for i := range p.Alls {
-			if id := all(fmt.Sprintf("%s/all[%d]", parent, i), &p.Alls[i]); id != "" {
-				return id
-			}
+			all(fmt.Sprintf("%s/all[%d]", parent, i), &p.Alls[i])
 		}
 		return ""
 	}
@@ -449,35 +454,26 @@ func wildcardSite(index schemaIndex, f schemaFrame, child xml.Name) string {
 			return ""
 		}
 		if wildcardAllows(p.Any, f.doc.TargetNamespace, child.Space) {
-			return coverageID(f.doc, "any", parent+"/all")
+			candidates = append(candidates, coverageID(f.doc, "any", parent+"/all"))
 		}
 		for i := range p.Sequences {
-			if id := sequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &p.Sequences[i]); id != "" {
-				return id
-			}
+			sequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &p.Sequences[i])
 		}
 		for i := range p.Choices {
-			if id := choice(fmt.Sprintf("%s/choice[%d]", parent, i), &p.Choices[i]); id != "" {
-				return id
-			}
+			choice(fmt.Sprintf("%s/choice[%d]", parent, i), &p.Choices[i])
 		}
 		for i := range p.Alls {
-			if id := all(fmt.Sprintf("%s/all[%d]", parent, i), &p.Alls[i]); id != "" {
-				return id
-			}
+			all(fmt.Sprintf("%s/all[%d]", parent, i), &p.Alls[i])
 		}
 		return ""
 	}
 	for _, p := range typeParticleSets(f.typ) {
-		if id := sequence(f.typeName, p.sequence); id != "" {
-			return id
-		}
-		if id := choice(f.typeName, p.choice); id != "" {
-			return id
-		}
-		if id := all(f.typeName, p.all); id != "" {
-			return id
-		}
+		sequence(f.typeName, p.sequence)
+		choice(f.typeName, p.choice)
+		all(f.typeName, p.all)
+	}
+	if len(candidates) == 1 {
+		return candidates[0]
 	}
 	if base, ok := baseFrame(index, f); ok {
 		return wildcardSite(index, base, child)
@@ -517,7 +513,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 				id := fmt.Sprintf("%s|%s|element|global/%s", d.TargetNamespace, d.File, v.Name.Local)
 				out[id]++
 				out[complexTypeIDForElement(td, id, n)]++
-				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}})
+				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}, seen: map[string]bool{}})
 				recordAttributes(index, stack[len(stack)-1], v)
 				recordInheritance(index, stack[len(stack)-1])
 				continue
@@ -532,6 +528,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 				continue
 			}
 			parent.siblings[id]++
+			parent.seen[qualifiedKey(v.Name.Space, v.Name.Local)] = true
 			if parent.siblings[id] > out[id] {
 				out[id] = parent.siblings[id]
 			}
@@ -566,7 +563,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 						out[recursiveID] = depth
 					}
 				}
-				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}})
+				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}, seen: map[string]bool{}})
 				recordAttributes(index, stack[len(stack)-1], v)
 				recordInheritance(index, stack[len(stack)-1])
 			} else {

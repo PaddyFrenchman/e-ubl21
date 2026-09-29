@@ -153,3 +153,23 @@ func TestChoiceSiteIsRecordedForSequenceAlternative(t *testing.T) {
 		t.Fatalf("choice site = %d, want 1", got)
 	}
 }
+
+func TestWildcardUsesConsumedSequencePrefixToSelectChoiceBranch(t *testing.T) {
+	const ns = "urn:test"
+	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Elements: map[string]xsdElementDecl{"Root": {Name: "Root", Type: "T"}}, Types: map[string]xsdComplexType{"T": {Name: "T", Choice: &xsdChoice{Sequences: []xsdSequence{{Elements: []xsdElementDecl{{Name: "KeyID"}}, Any: &xsdAny{Namespace: "##other"}}, {Elements: []xsdElementDecl{{Name: "KeyPacket"}}, Any: &xsdAny{Namespace: "##other"}}}}}}}
+	index := schemaIndex{ByTargetNS: map[string]*schemaDoc{ns: doc}, GlobalElements: map[string]xsdElementDecl{qualifiedKey(ns, "Root"): doc.Elements["Root"]}, GlobalTypes: map[string]xsdComplexType{qualifiedKey(ns, "T"): doc.Types["T"]}}
+	path := filepath.Join(t.TempDir(), "fixture.xml")
+	if err := os.WriteFile(path, []byte(`<Root xmlns="urn:test"><KeyID/><x xmlns="urn:other"/></Root>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixture(index, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := matched[ns+"|test.xsd|any|T/sequence[0]/sequence"]; got != 1 {
+		t.Fatalf("first wildcard = %d, want 1", got)
+	}
+	if got := matched[ns+"|test.xsd|any|T/sequence[1]/sequence"]; got != 0 {
+		t.Fatalf("second wildcard = %d, want 0", got)
+	}
+}
