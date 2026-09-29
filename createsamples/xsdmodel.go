@@ -22,25 +22,32 @@ type xsdImport struct {
 }
 
 type xsdElementDecl struct {
-	Name        string          `xml:"name,attr"`
-	Ref         string          `xml:"ref,attr"`
-	Type        string          `xml:"type,attr"`
-	MinOccurs   string          `xml:"minOccurs,attr"`
-	MaxOccurs   string          `xml:"maxOccurs,attr"`
-	ComplexType *xsdComplexType `xml:"complexType"`
-	SimpleType  *xsdSimpleType  `xml:"simpleType"`
-	Sequence    *xsdSequence    `xml:"sequence"`
-	Choice      *xsdChoice      `xml:"choice"`
-	All         *xsdAll         `xml:"all"`
+	Name              string          `xml:"name,attr"`
+	Ref               string          `xml:"ref,attr"`
+	Type              string          `xml:"type,attr"`
+	MinOccurs         string          `xml:"minOccurs,attr"`
+	MaxOccurs         string          `xml:"maxOccurs,attr"`
+	SubstitutionGroup string          `xml:"substitutionGroup,attr"`
+	ComplexType       *xsdComplexType `xml:"complexType"`
+	SimpleType        *xsdSimpleType  `xml:"simpleType"`
+	Sequence          *xsdSequence    `xml:"sequence"`
+	Choice            *xsdChoice      `xml:"choice"`
+	All               *xsdAll         `xml:"all"`
 }
 
 type xsdComplexType struct {
-	Name          string            `xml:"name,attr"`
-	Sequence      *xsdSequence      `xml:"sequence"`
-	Choice        *xsdChoice        `xml:"choice"`
-	All           *xsdAll           `xml:"all"`
-	SimpleContent *xsdSimpleContent `xml:"simpleContent"`
-	Attributes    []xsdAttribute    `xml:"attribute"`
+	ComplexContent *xsdComplexContent `xml:"complexContent"`
+	Name           string             `xml:"name,attr"`
+	Sequence       *xsdSequence       `xml:"sequence"`
+	Choice         *xsdChoice         `xml:"choice"`
+	All            *xsdAll            `xml:"all"`
+	SimpleContent  *xsdSimpleContent  `xml:"simpleContent"`
+	Attributes     []xsdAttribute     `xml:"attribute"`
+}
+
+type xsdComplexContent struct {
+	Extension   *xsdExtension   `xml:"extension"`
+	Restriction *xsdRestriction `xml:"restriction"`
 }
 
 type xsdSimpleContent struct {
@@ -51,24 +58,45 @@ type xsdSimpleContent struct {
 type xsdExtension struct {
 	Base       string         `xml:"base,attr"`
 	Attributes []xsdAttribute `xml:"attribute"`
+	Sequence   *xsdSequence   `xml:"sequence"`
+	Choice     *xsdChoice     `xml:"choice"`
+	All        *xsdAll        `xml:"all"`
 }
 
 type xsdSequence struct {
-	Elements []xsdElementDecl `xml:"element"`
-	Any      *xsdAny          `xml:"any"`
+	MinOccurs string           `xml:"minOccurs,attr"`
+	MaxOccurs string           `xml:"maxOccurs,attr"`
+	Sequences []xsdSequence    `xml:"sequence"`
+	Choices   []xsdChoice      `xml:"choice"`
+	Alls      []xsdAll         `xml:"all"`
+	Elements  []xsdElementDecl `xml:"element"`
+	Any       *xsdAny          `xml:"any"`
 }
 
 type xsdAny struct {
 	MinOccurs string `xml:"minOccurs,attr"`
 	MaxOccurs string `xml:"maxOccurs,attr"`
+	Namespace string `xml:"namespace,attr"`
 }
 
 type xsdChoice struct {
-	Elements []xsdElementDecl `xml:"element"`
+	MinOccurs string           `xml:"minOccurs,attr"`
+	MaxOccurs string           `xml:"maxOccurs,attr"`
+	Sequences []xsdSequence    `xml:"sequence"`
+	Choices   []xsdChoice      `xml:"choice"`
+	Alls      []xsdAll         `xml:"all"`
+	Elements  []xsdElementDecl `xml:"element"`
+	Any       *xsdAny          `xml:"any"`
 }
 
 type xsdAll struct {
-	Elements []xsdElementDecl `xml:"element"`
+	MinOccurs string           `xml:"minOccurs,attr"`
+	MaxOccurs string           `xml:"maxOccurs,attr"`
+	Sequences []xsdSequence    `xml:"sequence"`
+	Choices   []xsdChoice      `xml:"choice"`
+	Alls      []xsdAll         `xml:"all"`
+	Elements  []xsdElementDecl `xml:"element"`
+	Any       *xsdAny          `xml:"any"`
 }
 
 type xsdSimpleType struct {
@@ -80,6 +108,9 @@ type xsdRestriction struct {
 	Base         string           `xml:"base,attr"`
 	Attributes   []xsdAttribute   `xml:"attribute"`
 	Enumerations []xsdEnumeration `xml:"enumeration"`
+	Sequence     *xsdSequence     `xml:"sequence"`
+	Choice       *xsdChoice       `xml:"choice"`
+	All          *xsdAll          `xml:"all"`
 }
 
 type xsdEnumeration struct {

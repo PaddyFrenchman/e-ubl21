@@ -1,4 +1,4 @@
-.PHONY: docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify yugabytedb-compatibility-guard yugabytedb-ha-test yugabytedb-dr-drill yugabytedb-dr-local-test yugabytedb-ybc-dr-test yugabytedb-ybc-control-plane-test on-prem-database-test on-prem-database-integration on-prem-database-upgrade-test on-prem-database-upgrade-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-envelope test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-report-test regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: schema-coverage docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify yugabytedb-compatibility-guard yugabytedb-ha-test yugabytedb-dr-drill yugabytedb-dr-local-test yugabytedb-ybc-dr-test yugabytedb-ybc-control-plane-test on-prem-database-test on-prem-database-integration on-prem-database-upgrade-test on-prem-database-upgrade-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-envelope test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-report-test regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Verify the genuine Docker Engine and official Compose plugin through a
 # disposable image/container/network/volume/bind-mount/health-check lifecycle.
@@ -184,3 +184,9 @@ regression-minikube:
 regression-minikube-clean:
 	EUBL21_MINIKUBE_PROFILE="$(or $(MINIKUBE_PROFILE),e-ubl21-regression)" \
 	./devsetup/minikube-kubectl.sh delete namespace e-ubl21-regression --ignore-not-found=true
+
+SCHEMA_COVERAGE_DIR ?= regression-results/schema-coverage
+
+schema-coverage:
+	mkdir -p "$(SCHEMA_COVERAGE_DIR)"
+	go run ./createsamples coverage --xsd XSD --samples createsamples/samples --json "$(SCHEMA_COVERAGE_DIR)/report.json" --markdown "$(SCHEMA_COVERAGE_DIR)/report.md"

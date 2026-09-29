@@ -52,6 +52,10 @@ func run(args []string) error {
 		if err := runGenerate(args[1:]); err != nil {
 			return fmt.Errorf("generate error: %w", err)
 		}
+	case "coverage":
+		if err := runCoverage(args[1:]); err != nil {
+			return fmt.Errorf("coverage error: %w", err)
+		}
 	case "validate":
 		if err := runValidate(args[1:]); err != nil {
 			return fmt.Errorf("validate error: %w", err)
@@ -64,11 +68,12 @@ func run(args []string) error {
 }
 
 func printUsage() {
-	fmt.Println("Usage: createsamples <inventory|generate|validate> [flags]")
+	fmt.Println("Usage: createsamples <inventory|generate|coverage|validate> [flags]")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  go run ./createsamples inventory --xsd XSD")
 	fmt.Println("  go run ./createsamples generate --profile ubl21 --set positive --xsd XSD --output createsamples/samples")
 	fmt.Println("  go run ./createsamples generate --profile en16931 --set all --xsd XSD --output createsamples/samples-en16931")
+	fmt.Println("  go run ./createsamples coverage --xsd XSD --samples createsamples/samples --json coverage.json --markdown coverage.md")
 	fmt.Println("  go run ./createsamples validate --xsd XSD --samples createsamples/samples")
 }
