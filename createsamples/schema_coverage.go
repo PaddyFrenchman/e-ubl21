@@ -337,6 +337,8 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	var out strings.Builder
 	out.WriteString("# UBL 2.1 schema coverage\n\n")
 	out.WriteString(fmt.Sprintf("Fixtures analyzed: %d\n\n", report.Fixtures))
+
+	out.WriteString("Maximum cardinality is the greatest number of matches for one schema particle in a single fixture; nested parent-instance cardinality is reported by the exact fixture target map.\n\n")
 	out.WriteString("| Construct | Exercised | Total | Coverage |\n|---|---:|---:|---:|\n")
 	keys := make([]string, 0, len(report.Categories))
 	for key := range report.Categories {
