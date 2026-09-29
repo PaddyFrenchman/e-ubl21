@@ -67,7 +67,6 @@ type xsdSequence struct {
 	Sequences []xsdSequence    `xml:"sequence"`
 	Choices   []xsdChoice      `xml:"choice"`
 	Alls      []xsdAll         `xml:"all"`
-	Anys      []xsdAny         `xml:"any"`
 	Elements  []xsdElementDecl `xml:"element"`
 	Any       *xsdAny          `xml:"any"`
 }
@@ -81,7 +80,6 @@ type xsdChoice struct {
 	Sequences []xsdSequence    `xml:"sequence"`
 	Choices   []xsdChoice      `xml:"choice"`
 	Alls      []xsdAll         `xml:"all"`
-	Anys      []xsdAny         `xml:"any"`
 	Elements  []xsdElementDecl `xml:"element"`
 }
 
@@ -89,7 +87,6 @@ type xsdAll struct {
 	Sequences []xsdSequence    `xml:"sequence"`
 	Choices   []xsdChoice      `xml:"choice"`
 	Alls      []xsdAll         `xml:"all"`
-	Anys      []xsdAny         `xml:"any"`
 	Elements  []xsdElementDecl `xml:"element"`
 }
 

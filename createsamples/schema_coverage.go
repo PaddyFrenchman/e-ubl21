@@ -37,11 +37,11 @@ type fixtureObservation struct {
 }
 
 type coverageTargets struct {
-	elements, required, optional, repeatable, sequenceMembers, allMembers, attributes, optionalAttributes, choices, choiceAlternatives, wildcards, complexTypes map[string]struct{}
+	elements, required, optional, repeatable, sequenceMembers, allMembers, attributes, optionalAttributes, choices, choiceAlternatives, wildcards, inheritance, complexTypes map[string]struct{}
 }
 
 func newCoverageTargets() coverageTargets {
-	return coverageTargets{elements: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
+	return coverageTargets{elements: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, inheritance: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
 }
 
 func coverageID(doc *schemaDoc, kind, name string) string {
@@ -55,6 +55,19 @@ func schemaCoverageTargets(index schemaIndex) coverageTargets {
 		}
 		for name, typ := range doc.Types {
 			t.complexTypes[coverageID(doc, "complexType", name)] = struct{}{}
+			if typ.ComplexContent != nil {
+				base := ""
+				if typ.ComplexContent.Extension != nil {
+					base = typ.ComplexContent.Extension.Base
+				}
+				if typ.ComplexContent.Restriction != nil {
+					base = typ.ComplexContent.Restriction.Base
+				}
+				if base != "" {
+					ns, baseName := qualifyRef(base, doc.TargetNamespace)
+					t.inheritance[coverageID(doc, "inheritance", name+"->"+ns+"#"+baseName)] = struct{}{}
+				}
+			}
 			for _, attribute := range append(append([]xsdAttribute{}, typ.Attributes...), extensionAttributes(typ)...) {
 				if attribute.Name == "" {
 					continue
@@ -298,7 +311,7 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 	for _, item := range []struct {
 		name   string
 		values map[string]struct{}
-	}{{"elements", targets.elements}, {"requiredElements", targets.required}, {"sequenceMembers", targets.sequenceMembers}, {"allMembers", targets.allMembers}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}} {
+	}{{"elements", targets.elements}, {"requiredElements", targets.required}, {"sequenceMembers", targets.sequenceMembers}, {"allMembers", targets.allMembers}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}, {"inheritance", targets.inheritance}} {
 		count := 0
 		for id := range item.values {
 			if _, ok := exercised[id]; ok {

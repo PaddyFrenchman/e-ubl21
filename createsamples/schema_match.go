@@ -68,6 +68,23 @@ func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
 	}
 	return schemaFrame{doc: doc, typ: typ, typeName: name, targets: f.targets}, true
 }
+func recordInheritance(index schemaIndex, f schemaFrame) {
+	if f.typ.ComplexContent == nil {
+		return
+	}
+	base := ""
+	if f.typ.ComplexContent.Extension != nil {
+		base = f.typ.ComplexContent.Extension.Base
+	}
+	if f.typ.ComplexContent.Restriction != nil {
+		base = f.typ.ComplexContent.Restriction.Base
+	}
+	if base == "" {
+		return
+	}
+	ns, name := qualifyRef(base, f.doc.TargetNamespace)
+	f.targets[fmt.Sprintf("%s|%s|inheritance|%s->%s#%s", f.doc.TargetNamespace, f.doc.File, f.typeName, ns, name)]++
+}
 func particleElement(index schemaIndex, f schemaFrame, q xml.Name) (xsdElementDecl, string, bool) {
 	check := func(kind string, xs []xsdElementDecl) (xsdElementDecl, string, bool) {
 		for i, x := range xs {
@@ -146,6 +163,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 				out[fmt.Sprintf("%s|%s|complexType|%s", td.TargetNamespace, td.File, n)]++
 				stack = append(stack, schemaFrame{td, t, n, out})
 				recordAttributes(index, stack[len(stack)-1], v)
+				recordInheritance(index, stack[len(stack)-1])
 				continue
 			}
 			parent := stack[len(stack)-1]
@@ -166,6 +184,7 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 				out[fmt.Sprintf("%s|%s|complexType|%s", td.TargetNamespace, td.File, n)]++
 				stack = append(stack, schemaFrame{td, t, n, out})
 				recordAttributes(index, stack[len(stack)-1], v)
+				recordInheritance(index, stack[len(stack)-1])
 			} else {
 				stack = append(stack, schemaFrame{})
 			}
