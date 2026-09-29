@@ -922,13 +922,13 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/87
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/88
 
-### 55. #89 — FUTURE IMPROVEMENT — Move upload metadata/status from JetStream KV to YugabyteDB
+### 55. #89 — COMPLETE — Move upload metadata/status from JetStream KV to YugabyteDB
 
 **Goal:** Evaluate YugabyteDB/YSQL as the durable system of record for upload metadata/status, queryable lifecycle state, retry state, retention metadata, and future multi-tenant reporting.
 
 **Target separation:** YugabyteDB/YSQL stores metadata/status; S3-compatible storage stores raw XML; NATS/JetStream handles messaging and orchestration. The raw-content backend remains configurable, with **SeaweedFS proposed for local/on-prem deployment** and Amazon S3 for AWS.
 
-**Migration note:** This is a future architecture change only. It must build on the qualified YugabyteDB connection, migrations, deployment and test infrastructure; it does not implement a JetStream-KV migration here.
+**Completion:** Upload metadata/status now uses YSQL as the authoritative store, while raw XML remains in the configured object store and JetStream remains the messaging/orchestration boundary. Migration, rollback/recovery, correctness, and Minikube qualification are implemented. The Minikube EN 16931 regression passed 32/32 with semantic equivalence on 2026-09-28.
 
 **Revisit:** Before the first production-grade on-prem release, or earlier if persistence is generalized for multi-environment deployment.
 
