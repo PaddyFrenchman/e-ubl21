@@ -37,11 +37,11 @@ type fixtureObservation struct {
 }
 
 type coverageTargets struct {
-	elements, required, optional, repeatable, sequenceMembers, allMembers, attributes, optionalAttributes, choices, choiceAlternatives, wildcards, inheritance, complexTypes map[string]struct{}
+	elements, required, optional, repeatable, sequenceMembers, allMembers, attributes, optionalAttributes, choices, choiceAlternatives, wildcards, inheritance, substitutions, recursiveEdges, complexTypes map[string]struct{}
 }
 
 func newCoverageTargets() coverageTargets {
-	return coverageTargets{elements: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, inheritance: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
+	return coverageTargets{elements: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, inheritance: map[string]struct{}{}, substitutions: map[string]struct{}{}, recursiveEdges: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
 }
 
 func coverageID(doc *schemaDoc, kind, name string) string {
@@ -51,6 +51,10 @@ func schemaCoverageTargets(index schemaIndex) coverageTargets {
 	t := newCoverageTargets()
 	for _, doc := range index.ByFile {
 		for name, element := range doc.Elements {
+			if element.SubstitutionGroup != "" {
+				ns, head := qualifyRef(element.SubstitutionGroup, doc.TargetNamespace)
+				t.substitutions[coverageID(doc, "substitution", name+"->"+ns+"#"+head)] = struct{}{}
+			}
 			t.addElement(doc, "global/"+name, element, false)
 		}
 		for name, typ := range doc.Types {
@@ -311,7 +315,7 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 	for _, item := range []struct {
 		name   string
 		values map[string]struct{}
-	}{{"elements", targets.elements}, {"requiredElements", targets.required}, {"sequenceMembers", targets.sequenceMembers}, {"allMembers", targets.allMembers}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}, {"inheritance", targets.inheritance}} {
+	}{{"elements", targets.elements}, {"requiredElements", targets.required}, {"sequenceMembers", targets.sequenceMembers}, {"allMembers", targets.allMembers}, {"optionalElements", targets.optional}, {"repeatableElements", targets.repeatable}, {"attributes", targets.attributes}, {"optionalAttributes", targets.optionalAttributes}, {"complexTypes", targets.complexTypes}, {"choiceSites", targets.choices}, {"choiceAlternatives", targets.choiceAlternatives}, {"wildcards", targets.wildcards}, {"inheritance", targets.inheritance}, {"substitutionGroups", targets.substitutions}, {"recursiveEdges", targets.recursiveEdges}} {
 		count := 0
 		for id := range item.values {
 			if _, ok := exercised[id]; ok {
