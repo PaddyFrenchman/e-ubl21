@@ -186,7 +186,8 @@ regression-minikube-clean:
 	./devsetup/minikube-kubectl.sh delete namespace e-ubl21-regression --ignore-not-found=true
 
 SCHEMA_COVERAGE_DIR ?= regression-results/schema-coverage
+SCHEMA_COVERAGE_SAMPLES ?= createsamples/samples-structural
 
 schema-coverage:
 	mkdir -p "$(SCHEMA_COVERAGE_DIR)"
-	go run ./createsamples coverage --xsd XSD --samples createsamples/samples --json "$(SCHEMA_COVERAGE_DIR)/report.json" --markdown "$(SCHEMA_COVERAGE_DIR)/report.md"
+	go run ./createsamples coverage --xsd XSD --samples "$(SCHEMA_COVERAGE_SAMPLES)" --json "$(SCHEMA_COVERAGE_DIR)/report.json" --markdown "$(SCHEMA_COVERAGE_DIR)/report.md"

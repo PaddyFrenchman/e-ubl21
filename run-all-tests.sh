@@ -38,6 +38,9 @@ go run ./createsamples generate \
   --xsd XSD \
   --output createsamples/samples-structural
 
+section "Measure structural schema and cardinality coverage"
+make schema-coverage
+
 section "Validation chaos, crash, and replay gate"
 make test-validation-chaos
 

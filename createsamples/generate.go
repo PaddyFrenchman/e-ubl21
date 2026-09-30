@@ -151,8 +151,12 @@ func generateCardinalityStructuralSample(index schemaIndex, rootName, xsdDir, sc
 }
 
 func generateLargeCollectionStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile, element string, count int) (string, error) {
+	return generateLargeCollectionsStructuralSample(index, rootName, xsdDir, schemaFile, map[string]int{element: count})
+}
+
+func generateLargeCollectionsStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, elements map[string]int) (string, error) {
 	state := newTargetedStructuralGenState(nil, 1)
-	state.repeatOverrides = map[string]int{element: count}
+	state.repeatOverrides = elements
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 

@@ -91,6 +91,77 @@ func TestLargeInvoiceLineFixtureIsDeterministicAndValid(t *testing.T) {
 	}
 }
 
+func TestMultiCollectionInvoiceFixtureIsValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	content, err := generateLargeCollectionsStructuralSample(index, "Invoice", xsdDir, "UBL-Invoice-2.1.xsd", map[string]int{
+		"InvoiceLine":     100,
+		"AllowanceCharge": 50,
+		"TaxTotal":        50,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for element, want := range map[string]int{"InvoiceLine": 100, "AllowanceCharge": 50, "TaxTotal": 50} {
+		got, err := directChildCount(content, element)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != want {
+			t.Fatalf("direct %s count = %d, want %d", element, got, want)
+		}
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLargeAttachmentReferenceAndShipmentFixturesAreValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fixture := range []struct {
+		root, schema, element string
+	}{
+		{"Invoice", "UBL-Invoice-2.1.xsd", "AdditionalDocumentReference"},
+		{"FreightInvoice", "UBL-FreightInvoice-2.1.xsd", "Shipment"},
+	} {
+		content, err := generateLargeCollectionStructuralSample(index, fixture.root, xsdDir, fixture.schema, fixture.element, 50)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, err := directChildCount(content, fixture.element); err != nil || got != 50 {
+			t.Fatalf("%s direct %s count = %d, err = %v, want 50", fixture.root, fixture.element, got, err)
+		}
+		if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", fixture.schema)); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestLargeItemBearingCatalogueFixtureIsValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	content, err := generateLargeCollectionStructuralSample(index, "Catalogue", xsdDir, "UBL-Catalogue-2.1.xsd", "CatalogueLine", 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := directChildCount(content, "CatalogueLine"); err != nil || got != 100 {
+		t.Fatalf("direct CatalogueLine count = %d, err = %v, want 100", got, err)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", "UBL-Catalogue-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func directChildCount(content, local string) (int, error) {
 	decoder := xml.NewDecoder(strings.NewReader(content))
 	depth, count := 0, 0

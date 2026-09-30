@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -9,6 +10,10 @@ import (
 func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 	xsd := filepath.Join("..", "XSD")
 	samples := "samples"
+	index, err := buildSchemaIndex(xsd)
+	if err != nil {
+		t.Fatal(err)
+	}
 	first, err := buildSchemaCoverage(xsd, samples)
 	if err != nil {
 		t.Fatal(err)
@@ -46,9 +51,25 @@ func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 	if len(first.MaximumCardinality) == 0 {
 		t.Fatal("maximum cardinalities were not recorded")
 	}
+	for id := range schemaCoverageTargets(index).repeatable {
+		if _, ok := first.MaximumCardinality[id]; !ok {
+			t.Fatalf("repeatable target %s has no recorded maximum cardinality", id)
+		}
+	}
 	for _, category := range []string{"roots", "requiredElements", "optionalElements", "sequenceMembers", "allMembers", "inheritance", "substitutionGroups", "recursiveEdges", "wildcards"} {
 		if _, ok := first.Categories[category]; !ok {
 			t.Fatalf("missing category %s", category)
 		}
+	}
+	markdown := filepath.Join(t.TempDir(), "coverage.md")
+	if err := writeCoverageMarkdown(markdown, first); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(markdown)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(data, []byte("Repeatable particles with zero exercised occurrences")) {
+		t.Fatal("coverage Markdown omits zero-cardinality repeatable particles")
 	}
 }

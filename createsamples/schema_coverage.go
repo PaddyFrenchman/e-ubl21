@@ -530,6 +530,12 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 		fixturePaths[path] = struct{}{}
 	}
 	result := schemaCoverage{SchemaVersion: 3, Fixtures: len(fixturePaths), Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}, Unparseable: unparseable, FixtureObservations: observations, FixtureTargets: map[string][]string{}, MaximumCardinality: map[string]int{}, MaximumDepth: map[string]int{}}
+	// Record every repeatable schema particle even when no fixture reaches it.
+	// A zero is meaningful: it identifies an unexercised collection instead of
+	// silently omitting it from the cardinality report.
+	for id := range targets.repeatable {
+		result.MaximumCardinality[id] = 0
+	}
 	exercised := map[string]struct{}{}
 	for path, found := range matches {
 		ids := make([]string, 0, len(found))
@@ -593,6 +599,19 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 			}
 		}
 	}
+	var unexercisedRepeatable []string
+	for id, maximum := range report.MaximumCardinality {
+		if maximum == 0 && strings.Contains(id, "|element|") {
+			unexercisedRepeatable = append(unexercisedRepeatable, id)
+		}
+	}
+	sort.Strings(unexercisedRepeatable)
+	if len(unexercisedRepeatable) > 0 {
+		out.WriteString("\n## Repeatable particles with zero exercised occurrences\n\n")
+		for _, id := range unexercisedRepeatable {
+			out.WriteString("- `" + id + "`\n")
+		}
+	}
 	if len(report.Unparseable) > 0 {
 		out.WriteString("\n## Unparseable fixtures\n\n")
 		paths := make([]string, 0, len(report.Unparseable))
@@ -610,7 +629,7 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 func runCoverage(args []string) error {
 	flags := flag.NewFlagSet("coverage", flag.ContinueOnError)
 	xsdDir := flags.String("xsd", "XSD", "path to the UBL XSD tree")
-	samples := flags.String("samples", filepath.Join("createsamples", "samples"), "tracked structural corpus directory")
+	samples := flags.String("samples", filepath.Join("createsamples", "samples-structural"), "structural corpus directory")
 	jsonPath := flags.String("json", "", "required JSON report path")
 	markdownPath := flags.String("markdown", "", "required Markdown report path")
 	if err := flags.Parse(args); err != nil {
