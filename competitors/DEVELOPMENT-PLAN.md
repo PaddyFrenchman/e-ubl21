@@ -192,19 +192,341 @@ Exit gate: unauthorized initiation fails; retries cannot create duplicate transf
 | Recovery | Backup/restore and replay preserve evidence without repeated external actions |
 | Commercial readiness | Measured targets, usage accuracy, support procedures and scoped pilot outcome |
 
-## Backlog decomposition
+## Issue-ready development steps
 
-Create or reuse one milestone/epic per M0–M8 and small linked implementation issues for its work packages. This document does not create issues.
+These are proposed issue specifications stored only in this file. **No GitHub issues are created.** D01–D36 are local planning identifiers, not GitHub issue numbers. Reuse an existing issue when M0 establishes that it already covers the work. Dependencies refer to these local identifiers.
 
-Each issue should contain:
-- requirement IDs and affected operation/schema;
-- implementation boundary and dependencies;
-- migration/backward compatibility impact;
-- positive, negative and crash/retry acceptance criteria;
-- exact qualification command/evidence expected;
-- documentation and operational handover requirements.
+Each step is a separately reviewable development outcome. M0–M8 remain the milestone grouping; optional M8 is outside the initial managed-service release.
 
-First actionable sequence: implementation/issue mapping, customer isolation proof, accurate authentication contract, client upload idempotency, document listing, then signed result notifications. Connector selection can proceed alongside these foundations.
+### D01 — Verify implementation and existing backlog
+
+- **Milestone:** M0
+- **Depends on:** None
+- **Scope:** Map requirements to code, schemas and existing issues; identify reuse and remaining work.
+- **Acceptance criteria:** Capability matrix cites source paths and existing issue numbers; tenant, retry and Peppol behaviour are verified; unresolved items are explicit.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D02 — Qualify the baseline OpenAPI contract
+
+- **Milestone:** M0
+- **Depends on:** D01
+- **Scope:** Validate declared OpenAPI versions, references, examples and runtime conformance.
+- **Acceptance criteria:** Record reproducible validation commands and results; representative client generation succeeds or failures are documented; auth/runtime mismatches have proposed fixes.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D03 — Define initial service and provider scope
+
+- **Milestone:** M0
+- **Depends on:** D01
+- **Scope:** Select initial customer, profiles, document types and delivery provider shortlist.
+- **Acceptance criteria:** Record coverage, exclusions, sandbox access, onboarding and commercial assumptions; estimate dependent work only after evidence.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D04 — Define organization, tenant and legal-entity ownership
+
+- **Milestone:** M1
+- **Depends on:** D01
+- **Scope:** Specify identifiers, ownership, service principals and migration.
+- **Acceptance criteria:** Permission matrix covers every resource and job; existing records have a documented ownership migration; ambiguous ownership is rejected.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D05 — Enforce tenant isolation throughout processing
+
+- **Milestone:** M1
+- **Depends on:** D04
+- **Scope:** Implement or prove API, persistence, queue and event authorization.
+- **Acceptance criteria:** Cross-tenant direct-ID, list, export, job and event access fails; background processing retains tenant ownership; existing validation regression remains intact.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D06 — Implement credential lifecycle and permissions
+
+- **Milestone:** M1
+- **Depends on:** D04,D05
+- **Scope:** Issue, rotate and revoke credentials with scoped access.
+- **Acceptance criteria:** Revocation and insufficient scopes fail; rotation has a defined overlap policy; secrets are never logged; authorization tests cover administrative and end-client roles.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D07 — Align authentication and deployment OpenAPI
+
+- **Milestone:** M1
+- **Depends on:** D02,D06
+- **Scope:** Publish actual auth flows, scopes and deployment configuration.
+- **Acceptance criteria:** Remove misleading placeholder contracts; sandbox requests and generated clients authenticate correctly; migration guidance describes client impact.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D08 — Standardize errors, correlation and quotas
+
+- **Milestone:** M1
+- **Depends on:** D05,D07
+- **Scope:** Add stable error codes, correlation, version policy and customer quotas.
+- **Acceptance criteria:** Errors are schema-valid; customer quotas remain distinct from IP limits; 429 includes documented retry guidance; duplicate retries have defined metering.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D09 — Publish isolated integration sandbox
+
+- **Milestone:** M1
+- **Depends on:** D07,D08
+- **Scope:** Provide bounded sandbox tenants, credentials and sample requests.
+- **Acceptance criteria:** Two sandbox tenants are isolated; walkthrough covers upload, poll and typed errors; no production credentials or data are needed.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D10 — Define document and execution lifecycle
+
+- **Milestone:** M2
+- **Depends on:** D04,D05
+- **Scope:** Separate immutable document versions from validation executions and recovery states.
+- **Acceptance criteria:** State transitions and ownership are documented; new executions preserve lineage; migration preserves existing upload/status compatibility.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D11 — Implement durable client upload idempotency
+
+- **Milestone:** M2
+- **Depends on:** D08,D10
+- **Scope:** Persist tenant-scoped key, request fingerprint and acceptance outcome.
+- **Acceptance criteria:** Identical retries produce one accepted operation; conflicting payloads fail; crashes and concurrent retries preserve one binding; expiry and metering are specified.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D12 — Add document list and search
+
+- **Milestone:** M2
+- **Depends on:** D05,D10
+- **Scope:** Expose tenant-scoped filters and stable cursor pagination.
+- **Acceptance criteria:** Status, type, date and caller-reference filters work; page traversal under concurrent writes has defined semantics; invalid cursors and cross-tenant access fail.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D13 — Publish supported capabilities and ruleset provenance
+
+- **Milestone:** M2
+- **Depends on:** D02,D10
+- **Scope:** Expose supported types, profiles, releases and validation limitations.
+- **Acceptance criteria:** Capabilities match configured runtime; validation results identify applied releases; unsupported profiles fail predictably; examples validate.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D14 — Implement retention, export and deletion policy
+
+- **Milestone:** M2
+- **Depends on:** D05,D10
+- **Scope:** Preserve originals, authorize access and define expiry/deletion/audit.
+- **Acceptance criteria:** Expired content returns documented status; deletion follows policy without silently destroying required evidence; unauthorized export fails; migration and recovery are documented.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D15 — Expose revalidation and controlled recovery
+
+- **Milestone:** M2
+- **Depends on:** D10,D11,D13
+- **Scope:** Create new authorized executions with lineage and safe recovery semantics.
+- **Acceptance criteria:** Original outcomes remain immutable; retries do not create unintended duplicate executions; unsupported recovery transitions fail; resulting events carry execution identity.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D16 — Complete validation and polling contract
+
+- **Milestone:** M2
+- **Depends on:** D02,D10,D13
+- **Scope:** Add warning/truncation signals, reusable schemas, acceptance Location and backoff guidance.
+- **Acceptance criteria:** Positive, invalid, warning and operational-failure examples conform; ambiguous upload responses can be recovered through idempotency; existing clients remain supported.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D17 — Implement webhook subscriptions and safe destinations
+
+- **Milestone:** M3
+- **Depends on:** D05,D08,D10
+- **Scope:** Add subscription CRUD, event selection, destination validation and secret lifecycle.
+- **Acceptance criteria:** Ownership checks hold; private/internal destinations and redirect/DNS bypass attempts are rejected at delivery; secrets appear only under documented access rules.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D18 — Implement signed durable event delivery
+
+- **Milestone:** M3
+- **Depends on:** D11,D17
+- **Scope:** Add versioned envelopes, signing, outbox/inbox-equivalent durability and retry records.
+- **Acceptance criteria:** Crash after state commit does not lose event; signatures and rotated secrets verify; duplicate/out-of-order events are identifiable; bounded retries, dead letters and authorized redelivery work.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D19 — Add batch ingestion with per-item outcomes
+
+- **Milestone:** M3
+- **Depends on:** D11,D16,D18
+- **Scope:** Implement bounded batch acceptance and item correlation.
+- **Acceptance criteria:** Every item has stable identity and independent result; partial failure names the item and cause; restart/retry does not duplicate accepted items; size and concurrency limits are enforced.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D20 — Implement auditable usage metering
+
+- **Milestone:** M3
+- **Depends on:** D08,D11,D18,D19
+- **Scope:** Record billable usage and support customer queries.
+- **Acceptance criteria:** Delivery retries do not double-charge; batch partial acceptance has defined billing; ledger reconciles against accepted operations; tenant-safe usage queries and correction audit work.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D21 — Define structured invoice and exact monetary model
+
+- **Milestone:** M4
+- **Depends on:** D03,D10
+- **Scope:** Specify supported invoice/credit-note fields, currency, taxes, rounding and attachments.
+- **Acceptance criteria:** Representative monetary and correction cases have exact expected values; unsupported fields and conversion fidelity are explicit; API schemas and migration implications are reviewed.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D22 — Implement drafts and immutable issuance
+
+- **Milestone:** M4
+- **Depends on:** D11,D21
+- **Scope:** Add structured create/update drafts and controlled issue transitions.
+- **Acceptance criteria:** Concurrent edits follow a documented policy; issued versions cannot mutate; generated XML passes selected profiles before issuance; invalid documents cannot be issued.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D23 — Implement supported conversion and format retrieval
+
+- **Milestone:** M4
+- **Depends on:** D13,D14,D22
+- **Scope:** Provide qualified conversions while preserving original input.
+- **Acceptance criteria:** Supported round trips have evidence; unsupported or lossy conversions are disclosed or rejected; content access respects ownership and retention; corrections retain lineage.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D24 — Qualify delivery provider and connector interface
+
+- **Milestone:** M5
+- **Depends on:** D03,D10
+- **Scope:** Choose one provider and define discovery, submission, status, evidence and cancellation capabilities.
+- **Acceptance criteria:** Sandbox and onboarding requirements are documented; connector failures and provider limits are mapped; unsupported capabilities are explicit; provider choice has recorded rationale.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D25 — Implement identity discovery and route policies
+
+- **Milestone:** M5
+- **Depends on:** D05,D13,D24
+- **Scope:** Resolve sender/recipient capabilities and select authorized routes.
+- **Acceptance criteria:** Unsupported recipient/profile routes fail clearly; tenant route configuration is isolated; fallbacks require explicit policy; discovery caching and expiry are specified.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D26 — Implement retry-safe delivery submission
+
+- **Milestone:** M5
+- **Depends on:** D11,D18,D25; D22 if generated invoices are sent
+- **Scope:** Send immutable validated versions using durable intent and provider correlation.
+- **Acceptance criteria:** Provider acceptance followed by timeout triggers reconciliation before resend; crash/retry tests prevent blind duplicates; invalid versions cannot send; worker concurrency respects partner quotas.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D27 — Expose delivery status, evidence and acknowledgements
+
+- **Milestone:** M5
+- **Depends on:** D26
+- **Scope:** Persist callbacks, polling results, receipts and business acknowledgements.
+- **Acceptance criteria:** Duplicate callbacks are safe; delivery and business acceptance remain separate; evidence identifies exact version/route; outages and delayed statuses reconcile; tenant access is enforced.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D28 — Version payment instructions and beneficiary changes
+
+- **Milestone:** M6
+- **Depends on:** D10,D21
+- **Scope:** Define instructions and controlled beneficiary-change history.
+- **Acceptance criteria:** Exact payment terms and beneficiary versions are retained; unauthorized changes fail; invoice/payment links reference the applicable version; no payment execution is implied.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D29 — Implement payment records, allocations and balances
+
+- **Milestone:** M6
+- **Depends on:** D05,D10,D21,D28
+- **Scope:** Add immutable records, allocations, compensating reversals and queries.
+- **Acceptance criteria:** Partial/overpayments, credit offsets and reversals yield exact balances; currencies and fees have explicit policy; history cannot be silently overwritten; cross-tenant allocation fails.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D30 — Implement transaction import and reconciliation
+
+- **Milestone:** M6
+- **Depends on:** D18,D29
+- **Scope:** Add manual entry and one selected provider/bank import with evidence and exceptions.
+- **Acceptance criteria:** Repeated imports do not change totals; ambiguous matches enter exception workflow; manual and provider-confirmed settlement remain distinct; settlement/reversal events are durable.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D31 — Qualify failures, security and restore
+
+- **Milestone:** M7
+- **Depends on:** D09,D16,D18,D20,D27; D23,D30 if included
+- **Scope:** Run scoped integration, security, crash/recovery and backup/restore qualification.
+- **Acceptance criteria:** Evidence includes exact commands/configuration; restores and replays do not repeat external sends; tenant boundaries and provider outage recovery hold; unavailable environments are explicit blockers.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D32 — Measure capacity and establish operating procedures
+
+- **Milestone:** M7
+- **Depends on:** D20,D27,D31
+- **Scope:** Measure service/provider limits and define alerts, support, retention and pricing.
+- **Acceptance criteria:** Targets cite measurements; runbooks have owners; secrets/document bodies are excluded from logs; alerts cover lag, dead letters, ambiguity and reconciliation; usage supports offered pricing.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D33 — Deliver and assess a scoped paid pilot
+
+- **Milestone:** M7
+- **Depends on:** D31,D32
+- **Scope:** Provide onboarding, client examples and a bounded design-partner integration.
+- **Acceptance criteria:** Customer completes integration with documented support; diagnostic, delivery and optional reconciliation outcomes meet agreed measures; exclusions and unresolved risks are recorded before release.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D34 — Define optional payment execution provider model
+
+- **Milestone:** M8
+- **Depends on:** D30
+- **Scope:** Select provider/rails, payer authorization, operating obligations and initiation permissions.
+- **Acceptance criteria:** Explicit product decision and qualified legal/contractual assessment exist; supported flows and exclusions are recorded; initiation and tracking permissions are separate.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D35 — Implement authorized retry-safe payment initiation
+
+- **Milestone:** M8
+- **Depends on:** D34
+- **Scope:** Add payment intents/attempts, provider-hosted authorization, approvals and safeguards.
+- **Acceptance criteria:** Unauthorized or unapproved attempts fail; retries do not create duplicate transfers; beneficiary changes trigger defined safeguards; ambiguous outcomes remain pending reconciliation.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### D36 — Reconcile execution settlement and supported reversals
+
+- **Milestone:** M8
+- **Depends on:** D30,D35
+- **Scope:** Verify callbacks and reconcile payment execution; support cancellation/refund only where available.
+- **Acceptance criteria:** Authoritative settlement drives allocation; duplicate/out-of-order callbacks are safe; unknown outcomes are not treated as failure/success; supported reversals adjust balances through compensating records.
+- **Delivery evidence:** Link affected source, schema and documentation; record reproducible qualification commands and results relevant to this step. For design-only steps, provide a reviewed decision record and examples. State environment blockers explicitly.
+- **Compatibility and migration:** Record impact on existing clients, stored data and operational configuration; include migration/rollback guidance where applicable.
+
+### Sequencing and issue preparation
+
+Start with D01–D03, then D04–D09. Build D10–D16 before D17–D20. D21–D23, connector qualification D24, and payment design can progress once their stated prerequisites are satisfied. Complete D25–D27 for routing/delivery and D28–D30 for payment visibility. D31–D33 qualify the chosen pilot scope. D34–D36 require a separate decision to execute payments.
+
+Before promoting a draft into GitHub, attach the exact requirement IDs from [SERVICE-EXPANSION-REQUIREMENTS.md](SERVICE-EXPANSION-REQUIREMENTS.md), affected operations and schema names, existing-issue links, owner and evidence-based estimate. Split a step further if implementation mapping shows it cannot be reviewed as a coherent change. Do not duplicate existing work or imply that a proposed endpoint already exists.
 
 ## Definition of completion
 
