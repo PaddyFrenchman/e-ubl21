@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,6 +45,72 @@ func TestShippedSchemaInventoryIndexAndGeneration(t *testing.T) {
 	}
 	if _, err := generateCompleteSample(index, "Missing", xsdDir, invoice.File); err == nil {
 		t.Fatal("expected missing root error")
+	}
+}
+
+func TestCardinalityStructuralGenerationHonoursSchemaBounds(t *testing.T) {
+	state := newStructuralGenState(0, 1, true)
+	state.repeatCount = 5
+	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "2"}, state, 1); got != 2 {
+		t.Fatalf("finite cardinality = %d, want 2", got)
+	}
+	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "unbounded"}, state, 1); got != 5 {
+		t.Fatalf("unbounded cardinality = %d, want 5", got)
+	}
+	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "unbounded"}, state, 2); got != 1 {
+		t.Fatalf("nested broad cardinality = %d, want 1", got)
+	}
+	state.repeatOverrides = map[string]int{"Line": 100}
+	if got := occurrenceCount(xsdElementDecl{Name: "Line", MaxOccurs: "unbounded"}, state, 1); got != 100 {
+		t.Fatalf("targeted cardinality = %d, want 100", got)
+	}
+}
+
+func TestLargeInvoiceLineFixtureIsDeterministicAndValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := generateLargeCollectionStructuralSample(index, "Invoice", xsdDir, "UBL-Invoice-2.1.xsd", "InvoiceLine", 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := generateLargeCollectionStructuralSample(index, "Invoice", xsdDir, "UBL-Invoice-2.1.xsd", "InvoiceLine", 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first != second {
+		t.Fatal("large Invoice fixture is not deterministic")
+	}
+	if got, err := directChildCount(first, "InvoiceLine"); err != nil || got != 100 {
+		t.Fatalf("direct InvoiceLine count = %d, err = %v, want 100", got, err)
+	}
+	if err := validateStructuralCandidate([]byte(first), filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func directChildCount(content, local string) (int, error) {
+	decoder := xml.NewDecoder(strings.NewReader(content))
+	depth, count := 0, 0
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			if err == io.EOF {
+				return count, nil
+			}
+			return 0, err
+		}
+		switch token := token.(type) {
+		case xml.StartElement:
+			if depth == 1 && token.Name.Local == local {
+				count++
+			}
+			depth++
+		case xml.EndElement:
+			depth--
+		}
 	}
 }
 
@@ -596,7 +664,7 @@ func TestQNameValuesAndGenerationHelpers(t *testing.T) {
 			t.Errorf("parseOccursInt(%q) = %d", input, got)
 		}
 	}
-	if occurrenceCount(xsdElementDecl{MinOccurs: "99"}) != maxOccursSample || occurrenceCount(xsdElementDecl{MinOccurs: "0"}) != 1 {
+	if occurrenceCount(xsdElementDecl{MinOccurs: "99"}, newGenState(), 1) != maxOccursSample || occurrenceCount(xsdElementDecl{MinOccurs: "0"}, newGenState(), 1) != 1 {
 		t.Error("occurrence cap/default incorrect")
 	}
 	if sequenceRequiresAny(nil) || sequenceRequiresAny(&xsdSequence{}) || !sequenceRequiresAny(&xsdSequence{Any: &xsdAny{}}) {

@@ -204,10 +204,14 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 		if err != nil {
 			return generatedCorpus{}, fmt.Errorf("count %s choice sites: %w", root, err)
 		}
-		add := func(family string, choices map[int]int, recursiveDepth, facetBoundary int, tags ...string) error {
+		add := func(family string, choices map[int]int, recursiveDepth, facetBoundary, repeatCount int, repeatElement string, tags ...string) error {
 			var content string
 			var err error
-			if facetBoundary > 0 {
+			if repeatElement != "" {
+				content, err = generateLargeCollectionStructuralSample(index, root, xsdDir, schema.File, repeatElement, repeatCount)
+			} else if repeatCount > 0 {
+				content, err = generateCardinalityStructuralSample(index, root, xsdDir, schema.File, repeatCount)
+			} else if facetBoundary > 0 {
 				content, err = generateFacetBoundaryStructuralSample(index, root, xsdDir, schema.File, facetBoundary)
 			} else {
 				content, err = generateTargetedStructuralSample(index, root, xsdDir, schema.File, choices, recursiveDepth)
@@ -258,21 +262,52 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			Tags:              []string{"positive", "ubl21", "structural", "minimal", "optional-absent"},
 			StructuralTargets: minimalTargets,
 		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
-		if err := add("optional-rich", nil, 1, 0, "optional-elements", "optional-attributes"); err != nil {
+		if err := add("optional-rich", nil, 1, 0, 0, "", "optional-elements", "optional-attributes"); err != nil {
 			return generatedCorpus{}, err
 		}
 		for planIndex, choices := range choicePlans[1:] {
-			if err := add(fmt.Sprintf("choice-path-%03d", planIndex+1), choices, 1, 0, "choice-alternative", "targeted"); err != nil {
+			if err := add(fmt.Sprintf("choice-path-%03d", planIndex+1), choices, 1, 0, 0, "", "choice-alternative", "targeted"); err != nil {
 				return generatedCorpus{}, err
 			}
 		}
 		for boundary, family := range []string{"facet-boundary-low", "facet-boundary-high"} {
-			if err := add(family, nil, 1, boundary+1, "facet-boundary"); err != nil {
+			if err := add(family, nil, 1, boundary+1, 0, "", "facet-boundary"); err != nil {
 				return generatedCorpus{}, err
 			}
 		}
 		for _, recursiveDepth := range []int{2, 3} {
-			if err := add(fmt.Sprintf("recursive-depth-%d", recursiveDepth), nil, recursiveDepth, 0, "recursive"); err != nil {
+			if err := add(fmt.Sprintf("recursive-depth-%d", recursiveDepth), nil, recursiveDepth, 0, 0, "", "recursive"); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+		for _, count := range []int{2, 5} {
+			if err := add(fmt.Sprintf("cardinality-%d", count), nil, 1, 0, count, "", "cardinality", fmt.Sprintf("occurrences-%d", count)); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+		// These fixtures exercise the progressive high-volume collection tiers
+		// seen by the real service without making every repeatable branch of a
+		// document enormous.  The smaller tiers make it possible to locate
+		// cardinality regressions before the several-hundred-line fixtures.
+		for _, large := range []struct {
+			document string
+			element  string
+			count    int
+			kind     string
+		}{
+			{"Invoice", "InvoiceLine", 10, "line-collection"}, {"Invoice", "InvoiceLine", 50, "line-collection"}, {"Invoice", "InvoiceLine", 100, "line-collection"}, {"Invoice", "InvoiceLine", 500, "line-collection"},
+			{"CreditNote", "CreditNoteLine", 10, "line-collection"}, {"CreditNote", "CreditNoteLine", 50, "line-collection"}, {"CreditNote", "CreditNoteLine", 100, "line-collection"}, {"CreditNote", "CreditNoteLine", 250, "line-collection"},
+			{"Order", "OrderLine", 10, "line-collection"}, {"Order", "OrderLine", 50, "line-collection"}, {"Order", "OrderLine", 100, "line-collection"}, {"Order", "OrderLine", 250, "line-collection"},
+			// Non-line collections exercise the aggregate-heavy paths that have
+			// historically been easy to overlook in document-size testing.
+			{"Invoice", "AllowanceCharge", 50, "aggregate-collection"}, {"Invoice", "TaxTotal", 50, "aggregate-collection"}, {"Invoice", "BillingReference", 50, "aggregate-collection"},
+			{"CreditNote", "AllowanceCharge", 50, "aggregate-collection"}, {"CreditNote", "TaxTotal", 50, "aggregate-collection"}, {"CreditNote", "BillingReference", 50, "aggregate-collection"},
+			{"Order", "AllowanceCharge", 50, "aggregate-collection"}, {"Order", "TaxTotal", 50, "aggregate-collection"}, {"Order", "ProjectReference", 50, "aggregate-collection"},
+		} {
+			if root != large.document {
+				continue
+			}
+			if err := add(fmt.Sprintf("%s-%03d", strings.ToLower(large.element), large.count), nil, 1, 0, large.count, large.element, "cardinality", "large-document", large.kind); err != nil {
 				return generatedCorpus{}, err
 			}
 		}
