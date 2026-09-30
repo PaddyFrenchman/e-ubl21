@@ -19,6 +19,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -176,7 +177,83 @@ func sampleScalarForType(index schemaIndex, name, typeName, ns string, idx int) 
 	if values := enumerationValuesForType(index, typeName, ns); len(values) > 0 {
 		return values[0]
 	}
-	return sampleValueForType(name, typeName, idx)
+	if boundaries := facetBoundaryValuesForType(index, typeName, ns); len(boundaries) > 0 && idx > 0 {
+		return boundaries[(idx-1)%len(boundaries)]
+	}
+	// Boundary mode must leave unrestricted values unchanged: passing idx
+	// through would alter ordinary text/rate samples without exercising a
+	// schema facet.
+	return sampleValueForType(name, typeName, 0)
+}
+
+// facetBoundaryValuesForType returns legal representative endpoints for the
+// common numeric and length facets used by schema-derived simple types.
+func facetBoundaryValuesForType(index schemaIndex, typeName, ns string) []string {
+	tNS, tName := qualifyRef(typeName, ns)
+	typ, ok := index.GlobalSimpleTypes[qualifiedKey(tNS, tName)]
+	if !ok || typ.Restriction == nil {
+		return nil
+	}
+	r := typ.Restriction
+	var out []string
+	for _, f := range []*xsdFacet{r.MinInclusive, r.MaxInclusive} {
+		if f != nil && f.Value != "" {
+			out = append(out, f.Value)
+		}
+	}
+	for _, f := range []*xsdFacet{r.MinExclusive, r.MaxExclusive} {
+		if f == nil || f.Value == "" {
+			continue
+		}
+		if n, err := strconv.ParseInt(f.Value, 10, 64); err == nil {
+			if f == r.MinExclusive {
+				out = append(out, strconv.FormatInt(n+1, 10))
+			} else {
+				out = append(out, strconv.FormatInt(n-1, 10))
+			}
+		}
+	}
+	if r.Length != nil {
+		out = append(out, strings.Repeat("X", mustPositiveInt(r.Length.Value, 1)))
+	}
+	if r.MinLength != nil {
+		out = append(out, strings.Repeat("X", mustPositiveInt(r.MinLength.Value, 1)))
+	}
+	if r.MaxLength != nil {
+		out = append(out, strings.Repeat("X", mustPositiveInt(r.MaxLength.Value, 1)))
+	}
+	// totalDigits/fractionDigits constrain the lexical decimal representation.
+	// Use all nines so the value is at the permitted precision boundary without
+	// assuming a numeric range that may be imposed by another facet.
+	if r.TotalDigits != nil {
+		digits := mustPositiveInt(r.TotalDigits.Value, 1)
+		fraction := 0
+		if r.FractionDigits != nil {
+			fraction = mustPositiveInt(r.FractionDigits.Value, 1)
+			if fraction > digits {
+				fraction = digits
+			}
+		}
+		whole := digits - fraction
+		if whole < 1 {
+			whole = 1
+			fraction = digits - 1
+		}
+		value := strings.Repeat("9", whole)
+		if fraction > 0 {
+			value += "." + strings.Repeat("9", fraction)
+		}
+		out = append(out, value)
+	}
+	return out
+}
+
+func mustPositiveInt(value string, fallback int) int {
+	n, err := strconv.Atoi(value)
+	if err != nil || n < 1 {
+		return fallback
+	}
+	return n
 }
 
 func isPrimitiveType(t string) bool {

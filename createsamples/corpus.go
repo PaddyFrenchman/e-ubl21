@@ -52,6 +52,9 @@ type fixtureManifestEntry struct {
 	ExpectedFinal  string                 `json:"expectedFinal"`
 	ExpectedStages []fixtureExpectedStage `json:"expectedStages"`
 	Tags           []string               `json:"tags"`
+	// StructuralTargets identifies the #161 schema targets this fixture is
+	// intended to exercise. It is present only in the structural UBL corpus.
+	StructuralTargets []string `json:"structuralTargets,omitempty"`
 }
 
 type fixtureStandards struct {
@@ -180,6 +183,239 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 		}
 	}
 	return buildGeneratedCorpus(fixtures)
+}
+
+// generateUBLStructuralCorpus produces purpose-specific fixtures instead of
+// trying to force every legal structural variation into one document. The
+// variants share the ordinary manifest/provenance contract and remain wholly
+// generated from the pinned schema graph.
+func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string) (generatedCorpus, error) {
+	choiceVariants := maxChoiceAlternatives(index)
+	if choiceVariants < 1 {
+		choiceVariants = 1
+	}
+	fixtures := make([]generatedFixture, 0, len(report.MainFiles)*(choiceVariants+3))
+	for _, schema := range report.MainFiles {
+		root := schema.RootElement
+		if root == "" {
+			root = strings.TrimSuffix(filepath.Base(schema.File), filepath.Ext(schema.File))
+		}
+		choicePlans, err := structuralChoicePlans(index, root, xsdDir, schema.File)
+		if err != nil {
+			return generatedCorpus{}, fmt.Errorf("count %s choice sites: %w", root, err)
+		}
+		add := func(family string, choices map[int]int, recursiveDepth, facetBoundary int, tags ...string) error {
+			var content string
+			var err error
+			if facetBoundary > 0 {
+				content, err = generateFacetBoundaryStructuralSample(index, root, xsdDir, schema.File, facetBoundary)
+			} else {
+				content, err = generateTargetedStructuralSample(index, root, xsdDir, schema.File, choices, recursiveDepth)
+			}
+			if err != nil {
+				return fmt.Errorf("generate %s %s: %w", root, family, err)
+			}
+			if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
+				return fmt.Errorf("validate %s %s: %w", root, family, err)
+			}
+			targets, err := structuralTargetIDs(index, []byte(content))
+			if err != nil {
+				return fmt.Errorf("match %s %s structural targets: %w", root, family, err)
+			}
+			fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+				ID:                fmt.Sprintf("ubl21.%s.%s", strings.ToLower(root), family),
+				DocumentType:      root,
+				Profile:           "ubl21",
+				File:              filepath.ToSlash(filepath.Join(root, fmt.Sprintf("%s-%s.xml", root, family))),
+				SHA256:            fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+				Standards:         fixtureStandards{UBL: "2.1"},
+				Provenance:        fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+				ExpectedFinal:     "valid",
+				ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+				Tags:              append([]string{"positive", "ubl21", "structural", family}, tags...),
+				StructuralTargets: targets,
+			}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
+			return nil
+		}
+		minimal, err := generateMinimalSample(index, root, xsdDir, schema.File)
+		if err != nil {
+			return generatedCorpus{}, fmt.Errorf("generate %s minimal: %w", root, err)
+		}
+		minimalTargets, err := structuralTargetIDs(index, []byte(minimal))
+		if err != nil {
+			return generatedCorpus{}, fmt.Errorf("match %s minimal structural targets: %w", root, err)
+		}
+		fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+			ID:                fmt.Sprintf("ubl21.%s.minimal", strings.ToLower(root)),
+			DocumentType:      root,
+			Profile:           "ubl21",
+			File:              filepath.ToSlash(filepath.Join(root, fmt.Sprintf("%s-minimal.xml", root))),
+			SHA256:            fmt.Sprintf("%x", sha256.Sum256([]byte(minimal))),
+			Standards:         fixtureStandards{UBL: "2.1"},
+			Provenance:        fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+			ExpectedFinal:     "valid",
+			ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+			Tags:              []string{"positive", "ubl21", "structural", "minimal", "optional-absent"},
+			StructuralTargets: minimalTargets,
+		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
+		if err := add("optional-rich", nil, 1, 0, "optional-elements", "optional-attributes"); err != nil {
+			return generatedCorpus{}, err
+		}
+		for planIndex, choices := range choicePlans[1:] {
+			if err := add(fmt.Sprintf("choice-path-%03d", planIndex+1), choices, 1, 0, "choice-alternative", "targeted"); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+		for boundary, family := range []string{"facet-boundary-low", "facet-boundary-high"} {
+			if err := add(family, nil, 1, boundary+1, "facet-boundary"); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+		for _, recursiveDepth := range []int{2, 3} {
+			if err := add(fmt.Sprintf("recursive-depth-%d", recursiveDepth), nil, recursiveDepth, 0, "recursive"); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+	}
+	return buildGeneratedCorpus(fixtures)
+}
+
+func validateStructuralCandidate(content []byte, schemaPath string) error {
+	xmllint, err := exec.LookPath("xmllint")
+	if err != nil {
+		return fmt.Errorf("xmllint is required for structural candidate validation: %w", err)
+	}
+	cmd := exec.Command(xmllint, "--nonet", "--noout", "--schema", schemaPath, "-")
+	cmd.Stdin = bytes.NewReader(content)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("XSD validation failed: %w: %s", err, strings.TrimSpace(string(output)))
+	}
+	return nil
+}
+
+func structuralTargetIDs(index schemaIndex, content []byte) ([]string, error) {
+	matches, err := matchFixtureBytes(index, content)
+	if err != nil {
+		return nil, err
+	}
+	targets := make([]string, 0, len(matches))
+	for target := range matches {
+		targets = append(targets, target)
+	}
+	sort.Strings(targets)
+	return targets, nil
+}
+
+func countChoiceSites(index schemaIndex) int {
+	count := 0
+	var sequence func(*xsdSequence)
+	var choice func(*xsdChoice)
+	var all func(*xsdAll)
+	sequence = func(p *xsdSequence) {
+		if p != nil {
+			for i := range p.Sequences {
+				sequence(&p.Sequences[i])
+			}
+			for i := range p.Choices {
+				choice(&p.Choices[i])
+			}
+			for i := range p.Alls {
+				all(&p.Alls[i])
+			}
+		}
+	}
+	choice = func(p *xsdChoice) {
+		if p != nil {
+			count++
+			for i := range p.Sequences {
+				sequence(&p.Sequences[i])
+			}
+			for i := range p.Choices {
+				choice(&p.Choices[i])
+			}
+			for i := range p.Alls {
+				all(&p.Alls[i])
+			}
+		}
+	}
+	all = func(p *xsdAll) {
+		if p != nil {
+			for i := range p.Sequences {
+				sequence(&p.Sequences[i])
+			}
+			for i := range p.Choices {
+				choice(&p.Choices[i])
+			}
+			for i := range p.Alls {
+				all(&p.Alls[i])
+			}
+		}
+	}
+	for _, typ := range index.GlobalTypes {
+		sequence(typ.Sequence)
+		choice(typ.Choice)
+		all(typ.All)
+	}
+	return count
+}
+
+func maxChoiceAlternatives(index schemaIndex) int {
+	max := 0
+	var visitSequence func(*xsdSequence)
+	var visitAll func(*xsdAll)
+	var visitChoice func(*xsdChoice)
+	visitSequence = func(sequence *xsdSequence) {
+		if sequence == nil {
+			return
+		}
+		for i := range sequence.Sequences {
+			visitSequence(&sequence.Sequences[i])
+		}
+		for i := range sequence.Choices {
+			visitChoice(&sequence.Choices[i])
+		}
+		for i := range sequence.Alls {
+			visitAll(&sequence.Alls[i])
+		}
+	}
+	visitAll = func(all *xsdAll) {
+		if all == nil {
+			return
+		}
+		for i := range all.Sequences {
+			visitSequence(&all.Sequences[i])
+		}
+		for i := range all.Choices {
+			visitChoice(&all.Choices[i])
+		}
+		for i := range all.Alls {
+			visitAll(&all.Alls[i])
+		}
+	}
+	visitChoice = func(choice *xsdChoice) {
+		if choice == nil {
+			return
+		}
+		alternatives := len(choice.Elements) + len(choice.Sequences) + len(choice.Choices) + len(choice.Alls)
+		if alternatives > max {
+			max = alternatives
+		}
+		for i := range choice.Sequences {
+			visitSequence(&choice.Sequences[i])
+		}
+		for i := range choice.Choices {
+			visitChoice(&choice.Choices[i])
+		}
+		for i := range choice.Alls {
+			visitAll(&choice.Alls[i])
+		}
+	}
+	for _, typ := range index.GlobalTypes {
+		visitSequence(typ.Sequence)
+		visitChoice(typ.Choice)
+		visitAll(typ.All)
+	}
+	return max
 }
 
 func buildGeneratedCorpus(fixtures []generatedFixture) (generatedCorpus, error) {

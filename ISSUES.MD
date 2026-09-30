@@ -1108,6 +1108,16 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/160
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/161
 
+### 72. #162 — TEST COVERAGE — Expand createsamples structural generation
+
+**Goal:** Make `createsamples` the authoritative engine for broad structural UBL 2.1 fixture generation, covering structural alternatives, optional members and attributes, recursion, wildcards, and datatype/facet boundaries through purpose-specific deterministic fixtures.
+
+**Status:** Complete / closed. The structural generator now emits tracked fixture families and records provenance and coverage-target metadata; the parent program #160 remains open for its remaining qualification work.
+
+**Dependencies:** #161.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/162
+
 ---
 
 ## Dependency summary

@@ -289,6 +289,22 @@ go run ./createsamples generate \
   --output createsamples/samples
 ```
 
+Generate the schema-derived structural fixture families (minimal and
+optional-rich documents, deterministic choice alternatives, and bounded
+recursive-depth variants) with:
+
+```bash
+go run ./createsamples generate \
+  --profile ubl21-structural \
+  --set positive \
+  --xsd XSD \
+  --output createsamples/samples-structural
+```
+
+This profile is deliberately separate from the baseline corpus while the
+expanded corpus lifecycle is completed. Every fixture has a stable family ID,
+generator provenance, target document type, and structural-purpose tags.
+
 Generate the independent EN 16931 corpus (seven positive Invoice VAT-family
 variants, one positive CreditNote, two pinned official examples, and 22
 targeted-negative Invoices) with:

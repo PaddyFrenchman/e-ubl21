@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -486,8 +487,19 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 		return nil, err
 	}
 	defer file.Close()
+	return matchFixtureReader(index, file)
+}
+
+// matchFixtureBytes lets corpus generation record the targets of a fixture
+// before it is written. The same matcher powers the independent coverage
+// analyzer, keeping fixture metadata and observed coverage in one namespace.
+func matchFixtureBytes(index schemaIndex, data []byte) (map[string]int, error) {
+	return matchFixtureReader(index, bytes.NewReader(data))
+}
+
+func matchFixtureReader(index schemaIndex, reader io.Reader) (map[string]int, error) {
 	out := map[string]int{}
-	dec := xml.NewDecoder(file)
+	dec := xml.NewDecoder(reader)
 	var stack []schemaFrame
 	for {
 		tok, err := dec.Token()

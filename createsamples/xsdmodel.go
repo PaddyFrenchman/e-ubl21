@@ -74,9 +74,10 @@ type xsdSequence struct {
 }
 
 type xsdAny struct {
-	MinOccurs string `xml:"minOccurs,attr"`
-	MaxOccurs string `xml:"maxOccurs,attr"`
-	Namespace string `xml:"namespace,attr"`
+	MinOccurs       string `xml:"minOccurs,attr"`
+	MaxOccurs       string `xml:"maxOccurs,attr"`
+	Namespace       string `xml:"namespace,attr"`
+	ProcessContents string `xml:"processContents,attr"`
 }
 
 type xsdChoice struct {
@@ -105,12 +106,30 @@ type xsdSimpleType struct {
 }
 
 type xsdRestriction struct {
-	Base         string           `xml:"base,attr"`
-	Attributes   []xsdAttribute   `xml:"attribute"`
-	Enumerations []xsdEnumeration `xml:"enumeration"`
-	Sequence     *xsdSequence     `xml:"sequence"`
-	Choice       *xsdChoice       `xml:"choice"`
-	All          *xsdAll          `xml:"all"`
+	Base           string           `xml:"base,attr"`
+	Attributes     []xsdAttribute   `xml:"attribute"`
+	Enumerations   []xsdEnumeration `xml:"enumeration"`
+	MinInclusive   *xsdFacet        `xml:"minInclusive"`
+	MaxInclusive   *xsdFacet        `xml:"maxInclusive"`
+	MinExclusive   *xsdFacet        `xml:"minExclusive"`
+	MaxExclusive   *xsdFacet        `xml:"maxExclusive"`
+	Length         *xsdFacet        `xml:"length"`
+	MinLength      *xsdFacet        `xml:"minLength"`
+	MaxLength      *xsdFacet        `xml:"maxLength"`
+	TotalDigits    *xsdFacet        `xml:"totalDigits"`
+	FractionDigits *xsdFacet        `xml:"fractionDigits"`
+	Patterns       []xsdPattern     `xml:"pattern"`
+	Sequence       *xsdSequence     `xml:"sequence"`
+	Choice         *xsdChoice       `xml:"choice"`
+	All            *xsdAll          `xml:"all"`
+}
+
+type xsdFacet struct {
+	Value string `xml:"value,attr"`
+}
+
+type xsdPattern struct {
+	Value string `xml:"value,attr"`
 }
 
 type xsdEnumeration struct {

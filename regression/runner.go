@@ -31,13 +31,14 @@ type ExpectedStage struct {
 }
 
 type Fixture struct {
-	ID             string          `json:"id"`
-	DocumentType   string          `json:"documentType"`
-	Profile        string          `json:"profile"`
-	File           string          `json:"file"`
-	SHA256         string          `json:"sha256"`
-	ExpectedFinal  string          `json:"expectedFinal"`
-	ExpectedStages []ExpectedStage `json:"expectedStages"`
+	ID                string          `json:"id"`
+	DocumentType      string          `json:"documentType"`
+	Profile           string          `json:"profile"`
+	File              string          `json:"file"`
+	SHA256            string          `json:"sha256"`
+	ExpectedFinal     string          `json:"expectedFinal"`
+	ExpectedStages    []ExpectedStage `json:"expectedStages"`
+	StructuralTargets []string        `json:"structuralTargets,omitempty"`
 }
 
 type Manifest struct {

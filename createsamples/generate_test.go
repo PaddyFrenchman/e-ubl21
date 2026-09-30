@@ -339,6 +339,101 @@ func TestSyntheticContentModelBranches(t *testing.T) {
 	}
 }
 
+func TestTargetedChoiceSelectionIsPerSite(t *testing.T) {
+	state := newTargetedStructuralGenState(map[int]int{0: 1, 1: 0}, 1)
+	choice := xsdChoice{Elements: []xsdElementDecl{{Name: "First", Type: "xsd:string"}, {Name: "Second", Type: "xsd:string"}}}
+	if nodes, ok := flattenChoice(choice, schemaIndex{}, "urn:test", state, 0); !ok || nodes[0].Name != "Second" {
+		t.Fatalf("outer choice = %#v, %v", nodes, ok)
+	}
+	if nodes, ok := flattenChoice(choice, schemaIndex{}, "urn:test", state, 0); !ok || nodes[0].Name != "First" {
+		t.Fatalf("next choice = %#v, %v", nodes, ok)
+	}
+}
+
+func TestStructuralChoiceSiteCountIsRootLocal(t *testing.T) {
+	ns := "urn:test"
+	index := schemaIndex{
+		GlobalElements: map[string]xsdElementDecl{qualifiedKey(ns, "Root"): {Name: "Root", Type: "RootType"}},
+		GlobalTypes:    map[string]xsdComplexType{qualifiedKey(ns, "RootType"): {Sequence: &xsdSequence{Choices: []xsdChoice{{Elements: []xsdElementDecl{{Name: "A", Type: "xsd:string"}, {Name: "B", Type: "xsd:string"}}}}}}},
+		ByTargetNS: map[string]*schemaDoc{ns: {TargetNamespace: ns, Types: map[string]xsdComplexType{
+			"RootType":      {Sequence: &xsdSequence{Choices: []xsdChoice{{Elements: []xsdElementDecl{{Name: "A", Type: "xsd:string"}, {Name: "B", Type: "xsd:string"}}}}}},
+			"UnrelatedType": {Choice: &xsdChoice{Elements: []xsdElementDecl{{Name: "C", Type: "xsd:string"}, {Name: "D", Type: "xsd:string"}}}},
+		}}},
+	}
+	xsdDir := t.TempDir()
+	path := filepath.Join(xsdDir, "maindoc", "root.xsd")
+	if err := os.Mkdir(filepath.Dir(path), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(`<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:test"/>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	count, err := structuralChoiceSiteCount(index, "Root", xsdDir, filepath.Base(path))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 {
+		t.Fatalf("choice sites = %d, want 1", count)
+	}
+}
+
+func TestStructuralChoicePlansDiscoverNestedAlternativeSites(t *testing.T) {
+	ns := "urn:test"
+	inner := xsdChoice{Elements: []xsdElementDecl{{Name: "One", Type: "xsd:string"}, {Name: "Two", Type: "xsd:string"}}}
+	rootType := xsdComplexType{Choice: &xsdChoice{Sequences: []xsdSequence{
+		{Choices: []xsdChoice{inner}},
+		{Choices: []xsdChoice{inner}},
+	}}}
+	index := schemaIndex{
+		GlobalElements: map[string]xsdElementDecl{qualifiedKey(ns, "Root"): {Name: "Root", Type: "RootType"}},
+		GlobalTypes:    map[string]xsdComplexType{qualifiedKey(ns, "RootType"): rootType},
+		ByTargetNS:     map[string]*schemaDoc{ns: {TargetNamespace: ns, Types: map[string]xsdComplexType{"RootType": rootType}}},
+	}
+	xsdDir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(xsdDir, "maindoc"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(xsdDir, "maindoc", "root.xsd"), []byte(`<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:test"/>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	plans, err := structuralChoicePlans(index, "Root", xsdDir, "root.xsd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	foundNested := false
+	for _, plan := range plans {
+		if plan[0] == 1 && plan[1] == 1 {
+			foundNested = true
+		}
+	}
+	if !foundNested {
+		t.Fatalf("plans did not include nested alternate after parent alternate: %#v", plans)
+	}
+}
+
+func TestStructuralWildcardHonorsPolicy(t *testing.T) {
+	if _, ok := structuralWildcardNode(xsdAny{Namespace: "##other", ProcessContents: "strict"}); ok {
+		t.Fatal("strict wildcard must not invent an undeclared node")
+	}
+	if n, ok := structuralWildcardNode(xsdAny{Namespace: "##local", ProcessContents: "skip"}); !ok || n.Attributes["xmlns"] != "" {
+		t.Fatalf("local wildcard = %#v, %v", n, ok)
+	}
+}
+
+func TestFacetBoundaryValues(t *testing.T) {
+	ns := "urn:test"
+	index := schemaIndex{GlobalSimpleTypes: map[string]xsdSimpleType{
+		qualifiedKey(ns, "Range"):  {Restriction: &xsdRestriction{MinInclusive: &xsdFacet{Value: "2"}, MaxExclusive: &xsdFacet{Value: "5"}}},
+		qualifiedKey(ns, "Digits"): {Restriction: &xsdRestriction{TotalDigits: &xsdFacet{Value: "5"}, FractionDigits: &xsdFacet{Value: "2"}}},
+	}}
+	if got := facetBoundaryValuesForType(index, "Range", ns); len(got) != 2 || got[0] != "2" || got[1] != "4" {
+		t.Fatalf("range boundaries = %#v", got)
+	}
+	if got := facetBoundaryValuesForType(index, "Digits", ns); len(got) != 1 || got[0] != "999.99" {
+		t.Fatalf("digit boundary = %#v", got)
+	}
+}
+
 func TestExpandElementResolutionBranches(t *testing.T) {
 	ns := "urn:test"
 	index := schemaIndex{
@@ -376,6 +471,34 @@ func TestExpandElementResolutionBranches(t *testing.T) {
 	}
 	if _, ok := expandElement(index, xsdElementDecl{Name: "RequiredAny", Sequence: &xsdSequence{Any: &xsdAny{}}}, "RequiredAny", "", ns, state, 0); ok {
 		t.Fatal("required wildcard should be unsupported")
+	}
+}
+
+func TestStructuralExpansionPreservesRequiredChildrenAndExternalNamespaces(t *testing.T) {
+	const extensionNS = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+	index := schemaIndex{
+		GlobalElements: map[string]xsdElementDecl{
+			qualifiedKey(extensionNS, "UBLExtension"): {Name: "UBLExtension", Type: "xsd:string"},
+		},
+		GlobalTypes: map[string]xsdComplexType{
+			qualifiedKey("urn:test", "Container"): {
+				Name:     "Container",
+				Sequence: &xsdSequence{Elements: []xsdElementDecl{{Name: "ID", Type: "xsd:string"}}},
+			},
+		},
+		GlobalSimpleTypes: map[string]xsdSimpleType{},
+	}
+
+	extension, ok := expandElement(index, xsdElementDecl{Ref: "UBLExtension"}, "UBLExtension", "", extensionNS, newStructuralGenState(0, 1, true), 0)
+	if !ok || extension.Prefix != "ext" {
+		t.Fatalf("unprefixed external ref = %#v, supported=%v", extension, ok)
+	}
+
+	state := newStructuralGenState(0, 1, true)
+	state.typeDepth[qualifiedKey("urn:test", "Container")] = 1
+	container, ok := expandElement(index, xsdElementDecl{Name: "Container", Type: "Container"}, "Container", "", "urn:test", state, 0)
+	if !ok || len(container.Children) != 1 || container.Children[0].Name != "ID" {
+		t.Fatalf("recursive cutoff removed required children: %#v, supported=%v", container, ok)
 	}
 }
 

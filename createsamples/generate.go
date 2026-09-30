@@ -51,10 +51,44 @@ type genState struct {
 	full        bool
 	ancestors   map[string]bool
 	visitedFull map[string]bool
+	// choiceAlternative selects a deterministic branch at every choice site.
+	// Zero preserves the historic first-supported-branch behaviour; structural
+	// corpus variants use the later values to exercise the other branches.
+	choiceAlternative    int
+	choiceSelections     map[int]int
+	nextChoice           *int
+	choiceAlternatives   *map[int]int
+	includeOptionalAttrs bool
+	structural           bool
+	recursiveDepthLimit  int
+	facetBoundary        int
+	typeDepth            map[string]int
 }
 
 func newGenState() genState {
-	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}}
+	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, recursiveDepthLimit: 1, typeDepth: map[string]int{}}
+}
+
+// newStructuralGenState keeps the ordinary shared-type expansion bound. UBL's
+// aggregate types form a dense graph, so expanding every optional member on
+// every reuse grows exponentially. Structural families cover reused types by
+// varying their entry paths, while this per-fixture bound keeps each fixture
+// small and independently useful. recursiveDepthLimit still permits the
+// deliberately selected recursive variants to descend safely.
+func newStructuralGenState(choiceAlternative, recursiveDepthLimit int, includeOptionalAttrs bool) genState {
+	if recursiveDepthLimit < 1 {
+		recursiveDepthLimit = 1
+	}
+	nextChoice := 0
+	observed := map[int]int{}
+	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, choiceAlternative: choiceAlternative, choiceSelections: map[int]int{}, nextChoice: &nextChoice, choiceAlternatives: &observed, includeOptionalAttrs: includeOptionalAttrs, structural: true, recursiveDepthLimit: recursiveDepthLimit, typeDepth: map[string]int{}}
+}
+
+// newTargetedStructuralGenState selects alternatives independently by traversal-site ordinal.
+func newTargetedStructuralGenState(choiceSelections map[int]int, recursiveDepthLimit int) genState {
+	s := newStructuralGenState(0, recursiveDepthLimit, true)
+	s.choiceSelections = choiceSelections
+	return s
 }
 
 func (s genState) withAncestor(key string) genState {
@@ -72,7 +106,90 @@ func (s genState) demoted() genState {
 	return s
 }
 
+func (s genState) withTypeDepth(key string) genState {
+	s.typeDepth = cloneTypeDepth(s.typeDepth)
+	s.typeDepth[key]++
+	return s
+}
+
+func cloneTypeDepth(depths map[string]int) map[string]int {
+	out := make(map[string]int, len(depths))
+	for key, depth := range depths {
+		out[key] = depth
+	}
+	return out
+}
+
 func generateCompleteSample(index schemaIndex, rootName, xsdDir, schemaFile string) (string, error) {
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, newGenState())
+}
+
+func generateStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, choiceAlternative, recursiveDepth int) (string, error) {
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, newStructuralGenState(choiceAlternative, recursiveDepth, true))
+}
+
+func generateTargetedStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, choices map[int]int, recursiveDepth int) (string, error) {
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, newTargetedStructuralGenState(choices, recursiveDepth))
+}
+
+func generateFacetBoundaryStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, boundary int) (string, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	state.facetBoundary = boundary
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+// structuralChoiceSiteCount counts choice sites reached while expanding this
+// root. Choice-site ordinals are traversal-local: counting every choice in
+// the global schema graph would create variants for unrelated document types.
+func structuralChoiceSiteCount(index schemaIndex, rootName, xsdDir, schemaFile string) (int, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	if _, err := generateSampleWithState(index, rootName, xsdDir, schemaFile, state); err != nil {
+		return 0, err
+	}
+	return *state.nextChoice, nil
+}
+
+// structuralChoicePlans exhaustively explores supported choice paths. Each
+// generated path reports the choice sites it actually reaches; alternatives
+// discovered beneath a non-default parent alternative are then queued too.
+func structuralChoicePlans(index schemaIndex, rootName, xsdDir, schemaFile string) ([]map[int]int, error) {
+	queue := []map[int]int{{}}
+	seen := map[string]bool{}
+	plans := []map[int]int{}
+	for len(queue) > 0 {
+		selection := queue[0]
+		queue = queue[1:]
+		key := fmt.Sprint(selection)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		state := newTargetedStructuralGenState(selection, 1)
+		if _, err := generateSampleWithState(index, rootName, xsdDir, schemaFile, state); err != nil {
+			return nil, err
+		}
+		plans = append(plans, selection)
+		for site, alternatives := range *state.choiceAlternatives {
+			for alternative := 1; alternative < alternatives; alternative++ {
+				next := make(map[int]int, len(selection)+1)
+				for k, v := range selection {
+					next[k] = v
+				}
+				next[site] = alternative
+				queue = append(queue, next)
+			}
+		}
+	}
+	return plans, nil
+}
+
+func generateMinimalSample(index schemaIndex, rootName, xsdDir, schemaFile string) (string, error) {
+	state := newGenState()
+	state.full = false
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile string, state genState) (string, error) {
 	rootNS, err := rootNamespaceForSchema(xsdDir, schemaFile)
 	if err != nil {
 		return "", err
@@ -81,7 +198,7 @@ func generateCompleteSample(index schemaIndex, rootName, xsdDir, schemaFile stri
 	if !ok {
 		return "", fmt.Errorf("root element %q not found in schema index", rootName)
 	}
-	rootNode, supported := expandElement(index, rootDecl, rootName, "", rootNS, newGenState(), 0)
+	rootNode, supported := expandElement(index, rootDecl, rootName, "", rootNS, state, 0)
 	if !supported {
 		return "", fmt.Errorf("root element %q requires an unsupported XSD construct (e.g. xsd:any) that cannot be generated", rootName)
 	}
@@ -92,6 +209,9 @@ func generateCompleteSample(index schemaIndex, rootName, xsdDir, schemaFile stri
 	rootNode.Attributes["xmlns:cbc"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
 	rootNode.Attributes["xmlns:cac"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
 	rootNode.Attributes["xmlns:ext"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+	if state.structural {
+		rootNode.Attributes["xmlns:struct"] = "urn:e-ubl21:structural-fixture"
+	}
 	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(rootNode, 0) + "\n", nil
 }
 
@@ -133,6 +253,14 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 		element.SimpleType == nil && element.Sequence == nil && element.Choice == nil && element.All == nil {
 		refNS, refName := qualifyRef(element.Ref, ns)
 		if target, ok := index.GlobalElements[qualifiedKey(refNS, refName)]; ok {
+			// A reference within a common-component schema is often
+			// unprefixed (for example UBLExtension inside the extension
+			// schema). It still belongs to that common-component namespace,
+			// not the main-document default namespace used by the rendered
+			// root, so give it the conventional UBL prefix.
+			if state.structural && prefix == "" {
+				prefix = ublNamespacePrefix(refNS)
+			}
 			return expandElement(index, target, elementName, prefix, refNS, state, depth)
 		}
 	}
@@ -156,19 +284,30 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 			ct = &typeCopy
 			typeNS = tNS
 		} else if _, ok := index.GlobalSimpleTypes[qualifiedKey(tNS, tName)]; ok {
-			node.Value = sampleScalarForType(index, elementName, typeName, tNS, 0)
+			node.Value = sampleScalarForType(index, elementName, typeName, tNS, state.facetBoundary)
 			return node, true
 		}
 	}
 
 	if ct != nil {
 		if ct.SimpleContent != nil {
-			node.Attributes = requiredAttributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0)
-			node.Value = sampleScalarForType(index, elementName, typeName, typeNS, 0)
+			node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs)
+			node.Value = sampleScalarForType(index, elementName, typeName, typeNS, state.facetBoundary)
 			return node, true
 		}
 		if ct.Name != "" {
 			cycleKey := qualifiedKey(typeNS, ct.Name)
+			if state.structural {
+				if state.typeDepth[cycleKey] >= state.recursiveDepthLimit {
+					// Do not leave an element-only type empty merely because a
+					// recursive budget was reached: it may still have mandatory
+					// children. Required-only expansion below preserves schema
+					// validity while stopping optional graph growth.
+					state = state.demoted()
+				} else {
+					state = state.withTypeDepth(cycleKey)
+				}
+			}
 			if state.full {
 				if state.visitedFull[cycleKey] {
 					// This exact type already received a full (all-elements)
@@ -193,7 +332,7 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 				state = state.withAncestor(cycleKey)
 			}
 		}
-		node.Attributes = requiredAttributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0)
+		node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs)
 		// Any complex type reaching this point has no simple content: it is
 		// either element-only or attribute-only. Neither permits text, so no
 		// Value fallback is applied here.
@@ -225,7 +364,7 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 func flattenContentModel(seq *xsdSequence, choice *xsdChoice, all *xsdAll, index schemaIndex, ns string, state genState, depth int) ([]xmlNode, bool) {
 	switch {
 	case seq != nil:
-		if sequenceRequiresAny(seq) {
+		if sequenceRequiresAny(seq) && !state.structural {
 			// A required xsd:any wildcard has no concrete model to render;
 			// this content model cannot be legally satisfied by this
 			// generator (see .github/create-samples.md section 9: unsupported
@@ -234,6 +373,9 @@ func flattenContentModel(seq *xsdSequence, choice *xsdChoice, all *xsdAll, index
 		}
 		return flattenSequence(*seq, index, ns, state, depth)
 	case choice != nil:
+		if !state.full && choice.MinOccurs == "0" {
+			return nil, true
+		}
 		return flattenChoice(*choice, index, ns, state, depth)
 	case all != nil:
 		return flattenAll(*all, index, ns, state, depth)
@@ -283,7 +425,55 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 			out = append(out, node)
 		}
 	}
+	for i := range seq.Sequences {
+		children, supported := flattenSequence(seq.Sequences[i], index, ns, state, depth)
+		if !supported {
+			return nil, false
+		}
+		out = append(out, children...)
+	}
+	for i := range seq.Choices {
+		if !state.full && seq.Choices[i].MinOccurs == "0" {
+			continue
+		}
+		children, supported := flattenChoice(seq.Choices[i], index, ns, state, depth)
+		if !supported {
+			return nil, false
+		}
+		out = append(out, children...)
+	}
+	for i := range seq.Alls {
+		children, supported := flattenAll(seq.Alls[i], index, ns, state, depth)
+		if !supported {
+			return nil, false
+		}
+		out = append(out, children...)
+	}
+	if seq.Any != nil && state.structural {
+		if node, ok := structuralWildcardNode(*seq.Any); ok {
+			out = append(out, node)
+		}
+	}
 	return out, true
+}
+
+// structuralWildcardNode is deliberately foreign to every UBL namespace.
+// UBL extension points declare xsd:any with lax processing, so this proves
+// namespace-qualified pass-through without presenting private data as UBL
+// business content.
+func structuralWildcardNode(any xsdAny) (xmlNode, bool) {
+	// Strict processing needs a declared permitted element; do not invent one.
+	if any.ProcessContents == "strict" {
+		return xmlNode{}, false
+	}
+	switch any.Namespace {
+	case "##local":
+		return xmlNode{Name: "Wildcard", Attributes: map[string]string{"xmlns": "", "purpose": "schema-coverage"}, Value: "sample"}, true
+	case "##targetNamespace":
+		return xmlNode{}, false
+	default: // ##any, ##other, and explicit foreign namespace lists
+		return xmlNode{Prefix: "struct", Name: "Extension", Attributes: map[string]string{"purpose": "schema-coverage", "namespacePolicy": any.Namespace, "processContents": any.ProcessContents}, Children: []xmlNode{{Prefix: "struct", Name: "Value", Value: "sample"}}}, true
+	}
 }
 
 // flattenChoice deterministically selects the first alternative whose
@@ -291,26 +481,59 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 // cardinality while keeping generation stable. If every alternative is
 // unsupported, the choice itself is unsupported.
 func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genState, depth int) ([]xmlNode, bool) {
-	for _, alt := range choice.Elements {
-		name, prefix := elementNameAndPrefix(alt)
-		if name == "" {
-			continue
+	type alternative func() ([]xmlNode, bool)
+	alternatives := make([]alternative, 0, len(choice.Elements)+len(choice.Sequences)+len(choice.Choices)+len(choice.Alls))
+	for _, element := range choice.Elements {
+		alt := element
+		alternatives = append(alternatives, func() ([]xmlNode, bool) {
+			name, prefix := elementNameAndPrefix(alt)
+			if name == "" {
+				return nil, false
+			}
+			node, supported := expandElement(index, alt, name, prefix, ns, state, depth)
+			if !supported {
+				return nil, false
+			}
+			occurs := occurrenceCount(alt)
+			if occurs == 0 {
+				occurs = 1
+			}
+			out := make([]xmlNode, 0, occurs)
+			for i := 0; i < occurs; i++ {
+				out = append(out, node)
+			}
+			return out, true
+		})
+	}
+	for i := range choice.Sequences {
+		alt := choice.Sequences[i]
+		alternatives = append(alternatives, func() ([]xmlNode, bool) { return flattenSequence(alt, index, ns, state, depth) })
+	}
+	for i := range choice.Choices {
+		alt := choice.Choices[i]
+		alternatives = append(alternatives, func() ([]xmlNode, bool) { return flattenChoice(alt, index, ns, state, depth) })
+	}
+	for i := range choice.Alls {
+		alt := choice.Alls[i]
+		alternatives = append(alternatives, func() ([]xmlNode, bool) { return flattenAll(alt, index, ns, state, depth) })
+	}
+	selection := state.choiceAlternative
+	site := -1
+	if state.nextChoice != nil {
+		site = *state.nextChoice
+		(*state.nextChoice)++
+		if selected, ok := state.choiceSelections[site]; ok {
+			selection = selected
 		}
-		node, supported := expandElement(index, alt, name, prefix, ns, state, depth)
-		if !supported {
-			continue
+	}
+	if state.choiceAlternatives != nil && site >= 0 {
+		(*state.choiceAlternatives)[site] = len(alternatives)
+	}
+	for offset := range alternatives {
+		out, supported := alternatives[(selection+offset)%len(alternatives)]()
+		if supported {
+			return out, true
 		}
-		occurs := occurrenceCount(alt)
-		if occurs == 0 {
-			// The choice itself must select a branch even if that branch's
-			// own minOccurs is 0.
-			occurs = 1
-		}
-		out := make([]xmlNode, 0, occurs)
-		for i := 0; i < occurs; i++ {
-			out = append(out, node)
-		}
-		return out, true
 	}
 	return nil, false
 }
@@ -338,6 +561,35 @@ func flattenAll(all xsdAll, index schemaIndex, ns string, state genState, depth 
 		}
 		out = append(out, node)
 	}
+	for i := range all.Sequences {
+		children, supported := flattenSequence(all.Sequences[i], index, ns, state, depth)
+		if !supported {
+			return nil, false
+		}
+		out = append(out, children...)
+	}
+	for i := range all.Choices {
+		if !state.full && all.Choices[i].MinOccurs == "0" {
+			continue
+		}
+		children, supported := flattenChoice(all.Choices[i], index, ns, state, depth)
+		if !supported {
+			return nil, false
+		}
+		out = append(out, children...)
+	}
+	for i := range all.Alls {
+		children, supported := flattenAll(all.Alls[i], index, ns, state, depth)
+		if !supported {
+			return nil, false
+		}
+		out = append(out, children...)
+	}
+	if all.Any != nil && state.structural {
+		if node, ok := structuralWildcardNode(*all.Any); ok {
+			out = append(out, node)
+		}
+	}
 	return out, true
 }
 
@@ -346,6 +598,18 @@ func elementNameAndPrefix(element xsdElementDecl) (string, string) {
 		return localPart(element.Ref), prefixPart(element.Ref)
 	}
 	return element.Name, ""
+}
+
+func ublNamespacePrefix(namespace string) string {
+	switch namespace {
+	case "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2":
+		return "cbc"
+	case "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2":
+		return "cac"
+	case "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2":
+		return "ext"
+	}
+	return ""
 }
 
 func isOptionalElement(element xsdElementDecl) bool {
@@ -399,13 +663,20 @@ func withAncestor(ancestors map[string]bool, name string) map[string]bool {
 // the many UBL types that merely extend those base types with no attributes
 // of their own.
 func requiredAttributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, visited map[string]bool, depth int) map[string]string {
+	return attributesForComplexType(index, ct, ns, visited, depth, false)
+}
+
+// attributesForComplexType follows the same inheritance chain as the
+// baseline generator but can include optional attributes for structural
+// fixtures. Attribute-only and simple-content types use this path too.
+func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, visited map[string]bool, depth int, includeOptional bool) map[string]string {
 	if depth > 10 {
 		return nil
 	}
 	attrs := map[string]string{}
 	collect := func(list []xsdAttribute) {
 		for _, attr := range list {
-			if attr.Name == "" || attr.Use != "required" {
+			if attr.Name == "" || attr.Use == "prohibited" || (attr.Use != "required" && !includeOptional) {
 				continue
 			}
 			attrs[attr.Name] = sampleValueForType(attr.Name, attr.Type, 0)
@@ -415,11 +686,11 @@ func requiredAttributesForComplexType(index schemaIndex, ct xsdComplexType, ns s
 	if ct.SimpleContent != nil {
 		if r := ct.SimpleContent.Restriction; r != nil {
 			collect(r.Attributes)
-			mergeBaseTypeAttributes(index, r.Base, ns, visited, depth, attrs)
+			mergeBaseTypeAttributes(index, r.Base, ns, visited, depth, attrs, includeOptional)
 		}
 		if e := ct.SimpleContent.Extension; e != nil {
 			collect(e.Attributes)
-			mergeBaseTypeAttributes(index, e.Base, ns, visited, depth, attrs)
+			mergeBaseTypeAttributes(index, e.Base, ns, visited, depth, attrs, includeOptional)
 		}
 	}
 	if len(attrs) == 0 {
@@ -428,7 +699,7 @@ func requiredAttributesForComplexType(index schemaIndex, ct xsdComplexType, ns s
 	return attrs
 }
 
-func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[string]bool, depth int, attrs map[string]string) {
+func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[string]bool, depth int, attrs map[string]string, includeOptional bool) {
 	baseNS, name := qualifyRef(base, ns)
 	key := qualifiedKey(baseNS, name)
 	if name == "" || visited[key] {
@@ -439,7 +710,7 @@ func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[str
 		return
 	}
 	visited = withAncestor(visited, key)
-	for k, v := range requiredAttributesForComplexType(index, baseType, baseNS, visited, depth+1) {
+	for k, v := range attributesForComplexType(index, baseType, baseNS, visited, depth+1, includeOptional) {
 		if _, exists := attrs[k]; !exists {
 			attrs[k] = v
 		}

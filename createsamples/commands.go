@@ -48,7 +48,7 @@ func runGenerate(args []string) error {
 	flags := flag.NewFlagSet("generate", flag.ContinueOnError)
 	xsdDir := flags.String("xsd", filepath.Join("XSD"), "path to the UBL XSD tree")
 	output := flags.String("output", "", "output directory for generated samples (default depends on profile)")
-	profile := flags.String("profile", "ubl21", "validation profile to generate (ubl21, en16931, or peppol-bis-billing)")
+	profile := flags.String("profile", "ubl21", "validation profile to generate (ubl21, ubl21-structural, en16931, or peppol-bis-billing)")
 	set := flags.String("set", "positive", "fixture set to generate (positive, negative, or all)")
 	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: latest generator implementation commit)")
 	count := flags.Int("count", 1, "number of positive sample files to generate per main document schema")
@@ -58,13 +58,15 @@ func runGenerate(args []string) error {
 	if *count <= 0 {
 		return errors.New("count must be greater than zero")
 	}
-	if *profile != "ubl21" && *profile != "en16931" && *profile != "peppol-bis-billing" {
-		return fmt.Errorf("unsupported generation profile %q; supported profiles are ubl21, en16931, and peppol-bis-billing", *profile)
+	if *profile != "ubl21" && *profile != "ubl21-structural" && *profile != "en16931" && *profile != "peppol-bis-billing" {
+		return fmt.Errorf("unsupported generation profile %q; supported profiles are ubl21, ubl21-structural, en16931, and peppol-bis-billing", *profile)
 	}
 	if *output == "" {
 		switch *profile {
 		case "ubl21":
 			*output = filepath.Join("createsamples", "samples")
+		case "ubl21-structural":
+			*output = filepath.Join("createsamples", "samples-structural")
 		case "en16931":
 			*output = filepath.Join("createsamples", "samples-en16931")
 		case "peppol-bis-billing":
@@ -135,6 +137,12 @@ func runGenerate(args []string) error {
 		index, err := buildSchemaIndex(*xsdDir)
 		if err != nil {
 			return generatedCorpus{}, err
+		}
+		if *profile == "ubl21-structural" {
+			if *count != 1 || *set != "positive" {
+				return generatedCorpus{}, errors.New("ubl21-structural supports only --set positive and --count 1")
+			}
+			return generateUBLStructuralCorpus(report, index, *xsdDir, version)
 		}
 		switch *set {
 		case "positive":
