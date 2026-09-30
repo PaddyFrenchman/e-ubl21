@@ -593,7 +593,7 @@ func TestNewHandlerRejectsBadSignature(t *testing.T) {
 
 	handler := newTestHandler(t, nil)
 	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", "wrong-secret", time.Hour)
-	res := doRequest(handler, http.MethodGet, "/healthz", token, "", "")
+	res := doRequest(handler, http.MethodGet, "/metrics", token, "", "")
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusUnauthorized)
 	}
@@ -604,7 +604,7 @@ func TestNewHandlerRejectsExpiredToken(t *testing.T) {
 
 	handler := newTestHandler(t, nil)
 	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", testSecret, -time.Hour)
-	res := doRequest(handler, http.MethodGet, "/healthz", token, "", "")
+	res := doRequest(handler, http.MethodGet, "/metrics", token, "", "")
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusUnauthorized)
 	}
@@ -615,7 +615,7 @@ func TestNewHandlerFailsClosedWithoutHMACSecret(t *testing.T) {
 
 	handler := newTestHandler(t, func(cfg *Config) { cfg.OAuthHMACSecret = "" })
 	token := signedJWT(t, "https://issuer.example.com", "e-ubl21", testSecret, time.Hour)
-	res := doRequest(handler, http.MethodGet, "/healthz", token, "", "")
+	res := doRequest(handler, http.MethodGet, "/metrics", token, "", "")
 	if res.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusInternalServerError)
 	}
