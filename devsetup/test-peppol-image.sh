@@ -36,6 +36,7 @@ trap 'rm -f "$OUTPUT_FILE"' EXIT
 status=0
 timeout 60s docker run --rm --network none "$IMAGE_NAME" worker-peppol \
     --nats-url nats://127.0.0.1:4222 \
+    --database-url 'postgresql://eubl21:smoke@127.0.0.1:5433/eubl21?sslmode=disable' \
     --worker-peppol-metrics-addr "" >"$OUTPUT_FILE" 2>&1 || status=$?
 
 if [[ "$status" -eq 0 || "$status" -eq 124 ]]; then

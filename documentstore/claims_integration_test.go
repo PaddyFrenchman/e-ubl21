@@ -106,7 +106,11 @@ func TestGuardedWriteClaims(t *testing.T) {
 			if err := scenario.setup(k, d); err != nil {
 				t.Fatal(err)
 			}
-			report, err := claims.Recover(context.Background(), store, time.Nanosecond, 10)
+			claim, _, err := claims.Claim(context.Background(), k, d)
+			if err != nil {
+				t.Fatal(err)
+			}
+			report, err := claims.recoverClaims(context.Background(), store, []WriteClaim{claim})
 			if !errors.Is(err, scenario.want) {
 				t.Fatalf("recover report=%+v err=%v want=%v", report, err, scenario.want)
 			}

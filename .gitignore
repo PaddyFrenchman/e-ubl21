@@ -59,3 +59,5 @@ e-ubl21
 # Checksum-verified OpenPeppol documentation and validation inputs. The source
 # terms do not establish redistribution rights for committing these files.
 /standard/peppol/downloaded/
+# generated samples.
+createsamples/samples-structural/

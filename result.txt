@@ -40,570 +40,542 @@ OpenJDK 64-Bit Server VM (build 21.0.12.1+1-1-24.04.4-Ubuntu, mixed mode, sharin
 ============================================================
  Go unit and package tests
 ============================================================
-ok  	github.com/PaddyFrenchman/e-ubl21	0.018s
+ok  	github.com/PaddyFrenchman/e-ubl21	0.046s
 ?   	github.com/PaddyFrenchman/e-ubl21/XSD	[no test files]
-ok  	github.com/PaddyFrenchman/e-ubl21/cmd	0.451s
--ok  	github.com/PaddyFrenchman/e-ubl21/createsamples	128.653s
-ok  	github.com/PaddyFrenchman/e-ubl21/createsamples/en16931	0.020s
-ok  	github.com/PaddyFrenchman/e-ubl21/createsamples/peppol	0.021s
-ok  	github.com/PaddyFrenchman/e-ubl21/createsamples/xmlnode	0.005s
-ok  	github.com/PaddyFrenchman/e-ubl21/database	0.009s
-ok  	github.com/PaddyFrenchman/e-ubl21/deploy/kubernetes	0.025s
-ok  	github.com/PaddyFrenchman/e-ubl21/deploy/minikube	0.008s
+ok  	github.com/PaddyFrenchman/e-ubl21/cmd	0.468s
+ok  	github.com/PaddyFrenchman/e-ubl21/createsamples	90.342s
+ok  	github.com/PaddyFrenchman/e-ubl21/createsamples/en16931	0.024s
+ok  	github.com/PaddyFrenchman/e-ubl21/createsamples/peppol	0.022s
+ok  	github.com/PaddyFrenchman/e-ubl21/createsamples/xmlnode	0.004s
+ok  	github.com/PaddyFrenchman/e-ubl21/database	0.008s
+ok  	github.com/PaddyFrenchman/e-ubl21/deploy/kubernetes	0.036s
+ok  	github.com/PaddyFrenchman/e-ubl21/deploy/minikube	0.016s
 ?   	github.com/PaddyFrenchman/e-ubl21/devsetup	[no test files]
-ok  	github.com/PaddyFrenchman/e-ubl21/docs	0.005s
-ok  	github.com/PaddyFrenchman/e-ubl21/documentstore	0.011s
+ok  	github.com/PaddyFrenchman/e-ubl21/docs	0.018s
+ok  	github.com/PaddyFrenchman/e-ubl21/documentstore	0.010s
 ok  	github.com/PaddyFrenchman/e-ubl21/observability	0.007s
-ok  	github.com/PaddyFrenchman/e-ubl21/orchestrator	6.016s
-ok  	github.com/PaddyFrenchman/e-ubl21/peppol	0.016s
-ok  	github.com/PaddyFrenchman/e-ubl21/queue	1.943s
-ok  	github.com/PaddyFrenchman/e-ubl21/queue/queuetest	0.015s
-ok  	github.com/PaddyFrenchman/e-ubl21/regression	0.160s
-2026/09/30 02:30:36 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=2 remote_addr=192.0.2.1
-2026/09/30 02:30:39 INFO http request method=GET path=/api/v1/ubl/2ec0ae1d133f5036e285a924c6ae89b1 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:39 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:30:41 INFO http request method=GET path=/api/v1/ubl/e369449010f5713d8d119f7339b7f472 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:41 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:44 INFO http request method=GET path=/api/v1/ubl/de87dd75a4053458e079d651c0ace0f2 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:44 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:47 INFO http request method=GET path=/api/v1/ubl/46a1987c7061d0c9e9b751a835db1034 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:47 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:48 INFO http request method=GET path=/api/v1/ubl/b515a42598538a8e6308571bf894036b status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:48 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=2 remote_addr=192.0.2.1
-2026/09/30 02:30:48 INFO http request method=GET path=/api/v1/ubl/838635c1f28652153c2f57c8d81289dc status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:51 INFO http request method=GET path=/api/v1/ubl/838635c1f28652153c2f57c8d81289dc status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:30:51 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:30:54 INFO http request method=GET path=/api/v1/ubl/379dc209802ca662158a9f463753261b status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:32:07 INFO http request method=GET path=/ status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:32:07 INFO http request method=GET path=/missing status=404 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:34:46 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=1 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:46 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=1 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:47 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=1 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=1 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=1 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:48 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:49 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:49 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:49 INFO http request method=GET path=/api/v1/ubl/d4fb55b00f042d95bfd033d152ce2510 status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:49 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=1 remote_addr=127.0.0.1
-2026/09/30 02:34:49 INFO http request method=GET path=/api/v1/ubl/57dc8c0e9dbdf1839ad86e5ab98d639a status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:49 INFO http request method=GET path=/api/v1/ubl/57dc8c0e9dbdf1839ad86e5ab98d639a status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:49 INFO http request method=GET path=/api/v1/ubl/57dc8c0e9dbdf1839ad86e5ab98d639a status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:49 INFO http request method=GET path=/api/v1/ubl/57dc8c0e9dbdf1839ad86e5ab98d639a status=200 duration_ms=0 remote_addr=127.0.0.1
-2026/09/30 02:34:51 INFO upload acceptance reconciliation completed scanned=1 requeued=1 deferred=0 failed=0 errors=0
-2026/09/30 02:34:51 INFO upload content expiry scan completed scanned=1 scheduled=0 unscheduled=0 expired=1 reclaimed=1 alreadyMissing=0 expiredBytes=724 errors=0
-2026/09/30 02:34:51 INFO http request method=GET path=/metrics status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:34:51 INFO http request method=POST path=/api/v1/ubl/upload status=503 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:34:51 INFO http request method=POST path=/api/v1/ubl/upload status=503 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:34:51 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:03 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:03 ERROR invalid document work descriptor; terminating message error="decode document work item: unexpected end of JSON input" subject=ubl.documents.Invoice
-2026/09/30 02:35:03 ERROR inconsistent document work descriptor; terminating message id=17e61ec51e023b81398d007b54a1f2a3 documentType=Order headerID=17e61ec51e023b81398d007b54a1f2a3 subjectDocumentType=Invoice headerDocumentType=""
-2026/09/30 02:35:03 ERROR no schema found for queued document type; terminating message id=17e61ec51e023b81398d007b54a1f2a3 documentType=Unknown
-2026/09/30 02:35:03 ERROR document processing failed before canonical metadata was available; will retry id=17e61ec51e023b81398d007b54a1f2a3 documentType=Invoice error="load upload status: upload record not found"
-2026/09/30 02:35:03 ERROR document processing failed before canonical metadata was available; will retry id=57a67dc53e69dc9d7e5cb7ee1a6a58f0 documentType=Invoice error="load upload status: upload record not found"
-2026/09/30 02:35:03 INFO worker shutting down
-2026/09/30 02:35:03 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:03 ERROR validation stage failed upload_id=ea4355f3a6666f01adcad068002ca1a5 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=error issue_count=0 duration_ms=0 error="validation content stream failed: open upload content: upload record not found"
-2026/09/30 02:35:03 ERROR document exhausted processing attempts; moved to dead-letter stream id=ea4355f3a6666f01adcad068002ca1a5 documentType=Invoice attempt=1 error="UBL 2.1 XSD stage: validation content stream failed: open upload content: upload record not found"
-2026/09/30 02:35:03 INFO replay handoff is not complete; deferring descriptor id=ea4355f3a6666f01adcad068002ca1a5 documentType=Invoice
-2026/09/30 02:35:03 INFO validation stage completed upload_id=ea4355f3a6666f01adcad068002ca1a5 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=65
-2026/09/30 02:35:03 INFO validation stage completed upload_id=ea4355f3a6666f01adcad068002ca1a5 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
-2026/09/30 02:35:03 INFO processed document id=ea4355f3a6666f01adcad068002ca1a5 documentType=Invoice status=valid duration_ms=66
-2026/09/30 02:35:03 INFO worker shutting down
-2026/09/30 02:35:03 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:03 INFO validation stage completed upload_id=1e99f5b75eb5e148cb4e3853d12d8700 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=58
-2026/09/30 02:35:03 INFO worker shutdown interrupted document processing; leaving message for redelivery id=1e99f5b75eb5e148cb4e3853d12d8700 documentType=Invoice
-2026/09/30 02:35:03 INFO worker shutting down
-2026/09/30 02:35:03 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:04 INFO validation stage completed upload_id=1e99f5b75eb5e148cb4e3853d12d8700 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=51
-2026/09/30 02:35:04 INFO validation stage completed upload_id=1e99f5b75eb5e148cb4e3853d12d8700 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
-2026/09/30 02:35:04 INFO processed document id=1e99f5b75eb5e148cb4e3853d12d8700 documentType=Invoice status=valid duration_ms=52
-2026/09/30 02:35:04 INFO worker shutting down
-2026/09/30 02:35:04 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:04 ERROR document exhausted processing attempts; moved to dead-letter stream id=04fa617acfda9c0b9a69ccf005c784f2 documentType=Invoice attempt=1 error="load upload status: upload record not found"
-2026/09/30 02:35:04 INFO worker shutting down
-2026/09/30 02:35:04 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:04 ERROR validation stage failed upload_id=f043ab4569836aeaf311f3d936ea99a4 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=error issue_count=0 duration_ms=0 error="validation content stream failed: open upload content: upload record not found"
-2026/09/30 02:35:04 ERROR failed to finish pending dead letter; will retry id=f043ab4569836aeaf311f3d936ea99a4 documentType=Invoice attempt=1 error="publish dead letter f043ab4569836aeaf311f3d936ea99a4: nats: no response from stream"
-2026/09/30 02:35:04 ERROR document exhausted processing attempts; moved to dead-letter stream id=f043ab4569836aeaf311f3d936ea99a4 documentType=Invoice attempt=1 error="UBL 2.1 XSD stage: validation content stream failed: open upload content: upload record not found"
-2026/09/30 02:35:04 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=d5b78355d1a11388b300cc6b0f28fa1b documentType=Invoice attempt=1 error="storage failed"
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 INFO worker completion reconciliation finished scanned=2 deadLettersFinalized=1 resultsPublished=1 validationUpgradesQueued=0 errors=0
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 INFO worker completion reconciliation finished scanned=1 deadLettersFinalized=0 resultsPublished=0 validationUpgradesQueued=1 errors=0
-2026/09/30 02:35:05 INFO claimed incomplete legacy terminal result for mandatory EN 16931 revalidation id=d83be0f06909a57af77a0de7da97c4d2 documentType=Invoice
-2026/09/30 02:35:05 INFO validation stage completed upload_id=d83be0f06909a57af77a0de7da97c4d2 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=51
-2026/09/30 02:35:05 INFO validation stage completed upload_id=d83be0f06909a57af77a0de7da97c4d2 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
-2026/09/30 02:35:05 INFO processed document id=d83be0f06909a57af77a0de7da97c4d2 documentType=Invoice status=valid duration_ms=53
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 INFO worker completion reconciliation finished scanned=1 deadLettersFinalized=0 resultsPublished=1 validationUpgradesQueued=0 errors=0
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 INFO validation stage completed upload_id=b150ff19890081c7270bc0520031f654 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=48
-2026/09/30 02:35:05 INFO validation stage completed upload_id=b150ff19890081c7270bc0520031f654 document_type=Invoice stage=en16931 profile_version=test result=invalid issue_count=1 duration_ms=0
-2026/09/30 02:35:05 INFO processed document id=b150ff19890081c7270bc0520031f654 documentType=Invoice status=invalid duration_ms=50
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 INFO validation stage completed upload_id=796abae88c7972d9df5378465a3c5ab3 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=50
-2026/09/30 02:35:05 ERROR validation stage failed upload_id=796abae88c7972d9df5378465a3c5ab3 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="Saxon unavailable"
-2026/09/30 02:35:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=796abae88c7972d9df5378465a3c5ab3 documentType=Invoice attempt=1 error="EN 16931 stage: Saxon unavailable"
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 INFO validation stage completed upload_id=663b9b26f5259f29a4f7e21f4f1619e2 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=58
-2026/09/30 02:35:05 ERROR validation stage failed upload_id=663b9b26f5259f29a4f7e21f4f1619e2 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=timeout error="context deadline exceeded"
-2026/09/30 02:35:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=663b9b26f5259f29a4f7e21f4f1619e2 documentType=Invoice attempt=1 error="EN 16931 stage: context deadline exceeded"
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 INFO validation stage completed upload_id=1517d1ed6337b34c2c45027d8a0e3600 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=50
-2026/09/30 02:35:05 ERROR validation stage failed upload_id=1517d1ed6337b34c2c45027d8a0e3600 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="Saxon transform failed: signal: killed"
-2026/09/30 02:35:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=1517d1ed6337b34c2c45027d8a0e3600 documentType=Invoice attempt=1 error="EN 16931 stage: Saxon transform failed: signal: killed"
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:05 INFO validation stage completed upload_id=4118cf4b91fb84f71af8e6b26985ae73 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=52
-2026/09/30 02:35:05 ERROR validation stage failed upload_id=4118cf4b91fb84f71af8e6b26985ae73 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="Saxon transform failed: stylesheet compilation failed"
-2026/09/30 02:35:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=4118cf4b91fb84f71af8e6b26985ae73 documentType=Invoice attempt=1 error="EN 16931 stage: Saxon transform failed: stylesheet compilation failed"
-2026/09/30 02:35:05 INFO worker shutting down
-2026/09/30 02:35:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:06 INFO validation stage completed upload_id=54a8c4a66125eb592cc29eb31a78bd46 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=49
-2026/09/30 02:35:06 ERROR validation stage failed upload_id=54a8c4a66125eb592cc29eb31a78bd46 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="parse Saxon SVRL: malformed SVRL"
-2026/09/30 02:35:06 ERROR document exhausted processing attempts; moved to dead-letter stream id=54a8c4a66125eb592cc29eb31a78bd46 documentType=Invoice attempt=1 error="EN 16931 stage: parse Saxon SVRL: malformed SVRL"
-2026/09/30 02:35:06 INFO worker shutting down
-2026/09/30 02:35:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:06 INFO validation stage completed upload_id=308141f66b931dd0604bb7d513101193 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=52
-2026/09/30 02:35:06 ERROR validation stage failed upload_id=308141f66b931dd0604bb7d513101193 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=1 runtime_failure_reason=other error="read Saxon-HE JAR: file not found"
-2026/09/30 02:35:06 ERROR document exhausted processing attempts; moved to dead-letter stream id=308141f66b931dd0604bb7d513101193 documentType=Invoice attempt=1 error="EN 16931 stage: read Saxon-HE JAR: file not found"
-2026/09/30 02:35:06 INFO worker shutting down
-2026/09/30 02:35:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:06 INFO validation stage completed upload_id=741722ae23fbe83c03856d28ba2d1474 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=59
-2026/09/30 02:35:06 ERROR validation stage failed upload_id=741722ae23fbe83c03856d28ba2d1474 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=svrl error="Saxon SVRL output limit exceeded"
-2026/09/30 02:35:06 ERROR document exhausted processing attempts; moved to dead-letter stream id=741722ae23fbe83c03856d28ba2d1474 documentType=Invoice attempt=1 error="EN 16931 stage: Saxon SVRL output limit exceeded"
-2026/09/30 02:35:06 INFO worker shutting down
-2026/09/30 02:35:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:06 INFO validation stage completed upload_id=e12d68d1b3d94c3c728c3bce8671e29f document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=52
-2026/09/30 02:35:06 INFO validation stage completed upload_id=e12d68d1b3d94c3c728c3bce8671e29f document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
-2026/09/30 02:35:06 INFO processed document id=e12d68d1b3d94c3c728c3bce8671e29f documentType=Invoice status=valid duration_ms=53
-2026/09/30 02:35:06 INFO worker shutting down
-2026/09/30 02:35:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=2 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=3
-2026/09/30 02:35:06 INFO replay descriptor claim raced another worker; will retry id=50408ba7c252f7c8d559e39e050275ca documentType=Invoice error="update upload record 50408ba7c252f7c8d559e39e050275ca at revision 3: nats: nats: API error: code=400 err_code=10071 description=wrong last sequence: 4: nats: key revision mismatch"
-2026/09/30 02:35:06 INFO validation stage completed upload_id=50408ba7c252f7c8d559e39e050275ca document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=50
-2026/09/30 02:35:06 INFO validation stage completed upload_id=50408ba7c252f7c8d559e39e050275ca document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
-2026/09/30 02:35:06 INFO processed document id=50408ba7c252f7c8d559e39e050275ca documentType=Invoice status=valid duration_ms=51
-2026/09/30 02:35:06 INFO worker shutting down
-2026/09/30 02:35:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:07 INFO validation stage completed upload_id=9789b30adcb6d932fe18e07264be1606 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=49
-2026/09/30 02:35:07 INFO validation stage completed upload_id=9789b30adcb6d932fe18e07264be1606 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
-2026/09/30 02:35:07 ERROR validation result is pending publication; will retry id=9789b30adcb6d932fe18e07264be1606 documentType=Invoice attempt=1 error="publish validation result: publish validation result for 9789b30adcb6d932fe18e07264be1606: nats: no response from stream"
-2026/09/30 02:35:07 INFO worker shutting down
-2026/09/30 02:35:07 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:07 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO validation runtime verified ublSchemaVersion=2.1 en16931ArtifactVersion=1.3.16 en16931SourceRelease=validation-1.3.16 en16931XSLTSHA256=39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd saxonVersion=12.7 saxonJARSHA256=c607e8b395d4ee237495ad163183971ca3453d491534c847ebb55e0462772086 xmlResolverVersion=6.0.17 xmlResolverJARSHA256=b52e89a81fe86161bf2422997c041856791b3a78dd13824d958170b443b88c56
-2026/09/30 02:35:08 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO validation stage completed upload_id=a35174a264a00a23f93957396f19d071 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=59
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:08 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:09 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO validation stage completed upload_id=a35174a264a00a23f93957396f19d071 document_type=Invoice stage=en16931 profile_version=1.3.16 result=valid issue_count=0 duration_ms=1385
-2026/09/30 02:35:10 INFO processed document id=a35174a264a00a23f93957396f19d071 documentType=Invoice status=valid duration_ms=1445
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/a35174a264a00a23f93957396f19d071 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO validation stage completed upload_id=117179ba53bfdcd4c584a6e968ce82c0 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=53
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:10 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO validation stage completed upload_id=117179ba53bfdcd4c584a6e968ce82c0 document_type=Invoice stage=en16931 profile_version=1.3.16 result=invalid issue_count=22 duration_ms=1313
-2026/09/30 02:35:11 INFO processed document id=117179ba53bfdcd4c584a6e968ce82c0 documentType=Invoice status=invalid duration_ms=1367
-2026/09/30 02:35:11 INFO http request method=GET path=/api/v1/ubl/117179ba53bfdcd4c584a6e968ce82c0 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:11 INFO worker shutting down
-2026/09/30 02:35:11 INFO worker-xsd started queueNamespace=(default) stage=ubl21-xsd rulesetVersion=2.1 concurrency=1 prefetch=1 validationTimeout=1m0s
-2026/09/30 02:35:11 INFO worker-xsd shutting down
-2026/09/30 02:35:13 INFO http request method=PUT path=/api/v1/ubl/upload status=405 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/some-id status=405 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/ status=405 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/00000000000000000000000000000000 status=404 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/healthz status=405 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/metrics status=405 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/spec status=405 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:13 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:13 INFO http request method=GET path=/spec status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO worker started consumer=invoice-only-test-worker queueNamespace=(default) subjectFilter=ubl.documents.Invoice concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
-2026/09/30 02:35:13 INFO http request method=GET path=/healthz status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/healthz status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=401 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/healthz status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=2 remote_addr=192.0.2.1
---- FAIL: TestNewHandlerRejectsExpiredToken (0.02s)
-    server_test.go:609: status = 200, want 401
---- FAIL: TestNewHandlerRejectsBadSignature (0.02s)
-    server_test.go:598: status = 200, want 401
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=2 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=3 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=2 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7800f274c6413479300816f9e84bf942 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7f6c392d6957dc237f0557807c4def2d status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/6671ccc106dd0f0dba3ed4c49a17a80a status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/6671ccc106dd0f0dba3ed4c49a17a80a status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/00000000000000000000000000000000 status=400 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/healthz status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/healthz status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/docs/index.html status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/metrics status=200 duration_ms=3 remote_addr=192.0.2.1
---- FAIL: TestNewHandlerFailsClosedWithoutHMACSecret (0.02s)
-    server_test.go:620: status = 200, want 500
-2026/09/30 02:35:13 INFO http request method=POST path=/api/v1/ubl/upload status=413 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7f6c392d6957dc237f0557807c4def2d status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7800f274c6413479300816f9e84bf942 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7f6c392d6957dc237f0557807c4def2d status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7800f274c6413479300816f9e84bf942 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7800f274c6413479300816f9e84bf942 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7f6c392d6957dc237f0557807c4def2d status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO validation stage completed upload_id=7800f274c6413479300816f9e84bf942 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=68
-2026/09/30 02:35:13 INFO validation stage completed upload_id=7f6c392d6957dc237f0557807c4def2d document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=invalid issue_count=1 duration_ms=66
-2026/09/30 02:35:13 INFO processed document id=7f6c392d6957dc237f0557807c4def2d documentType=Invoice status=invalid duration_ms=67
-2026/09/30 02:35:13 INFO validation stage completed upload_id=7800f274c6413479300816f9e84bf942 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
-2026/09/30 02:35:13 INFO processed document id=7800f274c6413479300816f9e84bf942 documentType=Invoice status=valid duration_ms=70
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7800f274c6413479300816f9e84bf942 status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/7f6c392d6957dc237f0557807c4def2d status=200 duration_ms=0 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO worker shutting down
-2026/09/30 02:35:13 INFO worker shutting down
-2026/09/30 02:35:13 INFO http request method=GET path=/api/v1/ubl/76e5ba430a45062235f4bf3bbcbe92e7 status=200 duration_ms=1 remote_addr=192.0.2.1
-2026/09/30 02:35:13 INFO worker shutting down
+ok  	github.com/PaddyFrenchman/e-ubl21/orchestrator	5.970s
+ok  	github.com/PaddyFrenchman/e-ubl21/peppol	0.013s
+ok  	github.com/PaddyFrenchman/e-ubl21/queue	1.919s
+ok  	github.com/PaddyFrenchman/e-ubl21/queue/queuetest	0.017s
+ok  	github.com/PaddyFrenchman/e-ubl21/regression	0.165s
+2026/09/30 02:58:57 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=4 remote_addr=192.0.2.1
+2026/09/30 02:59:00 INFO http request method=GET path=/api/v1/ubl/c2899e71c113cb1570e8def5fbe96d13 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 02:59:00 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 02:59:01 INFO http request method=GET path=/api/v1/ubl/d4f14d004b902393f4328cdadad4b0c1 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 02:59:01 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=2 remote_addr=192.0.2.1
+2026/09/30 02:59:04 INFO http request method=GET path=/api/v1/ubl/961d8815e8282282ee043f10e1b62fba status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 02:59:04 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 02:59:07 INFO http request method=GET path=/api/v1/ubl/6ce46fc45ada7f448ab28fb5fd18240e status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 02:59:07 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 02:59:08 INFO http request method=GET path=/api/v1/ubl/a2ce3a38944362caffbdcf8454098e3c status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 02:59:08 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=6 remote_addr=192.0.2.1
+2026/09/30 02:59:09 INFO http request method=GET path=/api/v1/ubl/371c543f9d2d21aa533c0ee313545257 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 02:59:11 INFO http request method=GET path=/api/v1/ubl/371c543f9d2d21aa533c0ee313545257 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 02:59:11 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=192.0.2.1
+--- FAIL: TestEN16931CrashRestartEndToEnd (60.09s)
+    en16931_compliance_gate_test.go:248: upload 05447479f4b4966f983e70112d281d98 did not reach durable "valid" completion: record={ID:05447479f4b4966f983e70112d281d98 DocumentType:Invoice RequestedProfile:auto ResolvedProfile:ubl21-en16931 Profile:ubl21-en16931 Status:pending Error: ReceivedAt:2026-09-30T01:59:11Z ValidatedAt: ValidationStages:[] ContentExpiresAt: ContentExpiredAt: ContentSHA256:8cf298f82ccc0b1e0a3fd57d07dd39f4c174ee6739e147020f22c8aebb364ca5 ResultPending:false LastError: ProcessingAttempts:0 ProcessingFailedAt: ReplayGeneration:0 ReplayMessageID: ReplayReady:false ReplayClaimedSeq:0 EnqueueTrace:<nil>} err=<nil>
+2026/09/30 03:01:06 INFO http request method=GET path=/ status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:01:06 INFO http request method=GET path=/missing status=404 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:03:36 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:36 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=1 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:37 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=1 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=1 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/2d0991a6200e79edd5b93b4d2129943f status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=1 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/228ff005fefd49e7a82d8717f53f7a67 status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/228ff005fefd49e7a82d8717f53f7a67 status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/228ff005fefd49e7a82d8717f53f7a67 status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:38 INFO http request method=GET path=/api/v1/ubl/228ff005fefd49e7a82d8717f53f7a67 status=200 duration_ms=0 remote_addr=127.0.0.1
+2026/09/30 03:03:40 INFO upload acceptance reconciliation completed scanned=1 requeued=1 deferred=0 failed=0 errors=0
+2026/09/30 03:03:40 INFO upload content expiry scan completed scanned=1 scheduled=0 unscheduled=0 expired=1 reclaimed=1 alreadyMissing=0 expiredBytes=724 errors=0
+2026/09/30 03:03:40 INFO http request method=GET path=/metrics status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:03:40 INFO http request method=POST path=/api/v1/ubl/upload status=503 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:03:40 INFO http request method=POST path=/api/v1/ubl/upload status=503 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:03:40 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=3 remote_addr=192.0.2.1
+2026/09/30 03:03:53 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:03:53 ERROR invalid document work descriptor; terminating message error="decode document work item: unexpected end of JSON input" subject=ubl.documents.Invoice
+2026/09/30 03:03:53 ERROR inconsistent document work descriptor; terminating message id=b8d7f4e74483fde73ce1a7ce9d170faf documentType=Order headerID=b8d7f4e74483fde73ce1a7ce9d170faf subjectDocumentType=Invoice headerDocumentType=""
+2026/09/30 03:03:53 ERROR no schema found for queued document type; terminating message id=b8d7f4e74483fde73ce1a7ce9d170faf documentType=Unknown
+2026/09/30 03:03:53 ERROR document processing failed before canonical metadata was available; will retry id=b8d7f4e74483fde73ce1a7ce9d170faf documentType=Invoice error="load upload status: upload record not found"
+2026/09/30 03:03:53 ERROR document processing failed before canonical metadata was available; will retry id=1b1b2d00b736f2002e4e5123a6f215a9 documentType=Invoice error="load upload status: upload record not found"
+2026/09/30 03:03:53 INFO worker shutting down
+2026/09/30 03:03:53 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:03:53 ERROR validation stage failed upload_id=0e7df038c03829f6e3b19848d91237ec document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=error issue_count=0 duration_ms=0 error="validation content stream failed: open upload content: upload record not found"
+2026/09/30 03:03:53 INFO worker completion reconciliation finished scanned=1 deadLettersFinalized=1 resultsPublished=0 validationUpgradesQueued=0 errors=0
+2026/09/30 03:03:53 INFO replay handoff is not complete; deferring descriptor id=0e7df038c03829f6e3b19848d91237ec documentType=Invoice
+2026/09/30 03:03:53 INFO validation stage completed upload_id=0e7df038c03829f6e3b19848d91237ec document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=60
+2026/09/30 03:03:53 INFO validation stage completed upload_id=0e7df038c03829f6e3b19848d91237ec document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
+2026/09/30 03:03:53 INFO processed document id=0e7df038c03829f6e3b19848d91237ec documentType=Invoice status=valid duration_ms=61
+2026/09/30 03:03:53 INFO worker shutting down
+2026/09/30 03:03:53 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:03:53 INFO validation stage completed upload_id=efe2a1388ad2fe2f55ce060fd61eee33 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=53
+2026/09/30 03:03:53 INFO worker shutdown interrupted document processing; leaving message for redelivery id=efe2a1388ad2fe2f55ce060fd61eee33 documentType=Invoice
+2026/09/30 03:03:53 INFO worker shutting down
+2026/09/30 03:03:53 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:03 INFO worker shutting down
+--- FAIL: TestWorkerShutdownCancelsActiveValidationWithoutConsumingAttempt (10.12s)
+    worker_test.go:284: replacement worker did not receive canceled work: record={ID:efe2a1388ad2fe2f55ce060fd61eee33 DocumentType:Invoice RequestedProfile: ResolvedProfile: Profile: Status:pending Error: ReceivedAt:2026-09-30T02:03:53Z ValidatedAt: ValidationStages:[] ContentExpiresAt: ContentExpiredAt: ContentSHA256: ResultPending:false LastError: ProcessingAttempts:0 ProcessingFailedAt: ReplayGeneration:0 ReplayMessageID: ReplayReady:false ReplayClaimedSeq:0 EnqueueTrace:<nil>} err=<nil>
+2026/09/30 03:04:03 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:03 ERROR document exhausted processing attempts; moved to dead-letter stream id=6aa908271424ad441c6f88837a259218 documentType=Invoice attempt=1 error="load upload status: upload record not found"
+2026/09/30 03:04:03 INFO worker shutting down
+2026/09/30 03:04:03 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:03 ERROR validation stage failed upload_id=5576dcd064c3ce24529c6a4cc143585b document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=error issue_count=0 duration_ms=0 error="validation content stream failed: open upload content: upload record not found"
+2026/09/30 03:04:04 ERROR failed to finish pending dead letter; will retry id=5576dcd064c3ce24529c6a4cc143585b documentType=Invoice attempt=1 error="publish dead letter 5576dcd064c3ce24529c6a4cc143585b: nats: no response from stream"
+2026/09/30 03:04:04 ERROR document exhausted processing attempts; moved to dead-letter stream id=5576dcd064c3ce24529c6a4cc143585b documentType=Invoice attempt=1 error="UBL 2.1 XSD stage: validation content stream failed: open upload content: upload record not found"
+2026/09/30 03:04:04 INFO worker shutting down
+2026/09/30 03:04:04 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:04 ERROR document exhausted processing attempts; moved to dead-letter stream id=b601f07cdbda8c71b63085c766c4a371 documentType=Invoice attempt=1 error="storage failed"
+2026/09/30 03:04:04 INFO worker shutting down
+2026/09/30 03:04:04 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:04 INFO worker completion reconciliation finished scanned=2 deadLettersFinalized=1 resultsPublished=1 validationUpgradesQueued=0 errors=0
+2026/09/30 03:04:04 INFO worker shutting down
+2026/09/30 03:04:04 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:04 INFO worker completion reconciliation finished scanned=1 deadLettersFinalized=0 resultsPublished=0 validationUpgradesQueued=1 errors=0
+2026/09/30 03:04:04 INFO claimed incomplete legacy terminal result for mandatory EN 16931 revalidation id=9e994273b673b7252e99f6a3e00b3a79 documentType=Invoice
+2026/09/30 03:04:04 INFO validation stage completed upload_id=9e994273b673b7252e99f6a3e00b3a79 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=56
+2026/09/30 03:04:04 INFO validation stage completed upload_id=9e994273b673b7252e99f6a3e00b3a79 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=1
+2026/09/30 03:04:04 INFO processed document id=9e994273b673b7252e99f6a3e00b3a79 documentType=Invoice status=valid duration_ms=58
+2026/09/30 03:04:04 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO worker completion reconciliation finished scanned=1 deadLettersFinalized=0 resultsPublished=1 validationUpgradesQueued=0 errors=0
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO validation stage completed upload_id=1091d58141ccc0870fc243db04853d97 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=54
+2026/09/30 03:04:05 INFO validation stage completed upload_id=1091d58141ccc0870fc243db04853d97 document_type=Invoice stage=en16931 profile_version=test result=invalid issue_count=1 duration_ms=0
+2026/09/30 03:04:05 INFO processed document id=1091d58141ccc0870fc243db04853d97 documentType=Invoice status=invalid duration_ms=55
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO validation stage completed upload_id=04a70bf39864327c767638ba1438d0f5 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=50
+2026/09/30 03:04:05 ERROR validation stage failed upload_id=04a70bf39864327c767638ba1438d0f5 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="Saxon unavailable"
+2026/09/30 03:04:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=04a70bf39864327c767638ba1438d0f5 documentType=Invoice attempt=1 error="EN 16931 stage: Saxon unavailable"
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO validation stage completed upload_id=b122a280a3901ee232f60a87f49ccc23 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=53
+2026/09/30 03:04:05 ERROR validation stage failed upload_id=b122a280a3901ee232f60a87f49ccc23 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=timeout error="context deadline exceeded"
+2026/09/30 03:04:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=b122a280a3901ee232f60a87f49ccc23 documentType=Invoice attempt=1 error="EN 16931 stage: context deadline exceeded"
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO validation stage completed upload_id=6dcfbdcc8ded93b794b5ca81d1201e21 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=53
+2026/09/30 03:04:05 ERROR validation stage failed upload_id=6dcfbdcc8ded93b794b5ca81d1201e21 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="Saxon transform failed: signal: killed"
+2026/09/30 03:04:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=6dcfbdcc8ded93b794b5ca81d1201e21 documentType=Invoice attempt=1 error="EN 16931 stage: Saxon transform failed: signal: killed"
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO validation stage completed upload_id=a762d08cd794da94f2d5e8b45d641578 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=54
+2026/09/30 03:04:05 ERROR validation stage failed upload_id=a762d08cd794da94f2d5e8b45d641578 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="Saxon transform failed: stylesheet compilation failed"
+2026/09/30 03:04:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=a762d08cd794da94f2d5e8b45d641578 documentType=Invoice attempt=1 error="EN 16931 stage: Saxon transform failed: stylesheet compilation failed"
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO validation stage completed upload_id=a749d9b695392d3481b834c2795b8d75 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=48
+2026/09/30 03:04:05 ERROR validation stage failed upload_id=a749d9b695392d3481b834c2795b8d75 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="parse Saxon SVRL: malformed SVRL"
+2026/09/30 03:04:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=a749d9b695392d3481b834c2795b8d75 documentType=Invoice attempt=1 error="EN 16931 stage: parse Saxon SVRL: malformed SVRL"
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO validation stage completed upload_id=ecf8bad354a79e3a4236359b3ed08999 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=50
+2026/09/30 03:04:05 ERROR validation stage failed upload_id=ecf8bad354a79e3a4236359b3ed08999 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=other error="read Saxon-HE JAR: file not found"
+2026/09/30 03:04:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=ecf8bad354a79e3a4236359b3ed08999 documentType=Invoice attempt=1 error="EN 16931 stage: read Saxon-HE JAR: file not found"
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:05 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:05 INFO validation stage completed upload_id=3a058633040c7dcb2d19ebb1cb453c97 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=51
+2026/09/30 03:04:05 ERROR validation stage failed upload_id=3a058633040c7dcb2d19ebb1cb453c97 document_type=Invoice stage=en16931 profile_version=1.3.16 result=error issue_count=0 duration_ms=0 runtime_failure_reason=svrl error="Saxon SVRL output limit exceeded"
+2026/09/30 03:04:05 ERROR document exhausted processing attempts; moved to dead-letter stream id=3a058633040c7dcb2d19ebb1cb453c97 documentType=Invoice attempt=1 error="EN 16931 stage: Saxon SVRL output limit exceeded"
+2026/09/30 03:04:05 INFO worker shutting down
+2026/09/30 03:04:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:06 INFO validation stage completed upload_id=70fd2671e2116b0c75041517a6b39734 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=51
+2026/09/30 03:04:06 INFO validation stage completed upload_id=70fd2671e2116b0c75041517a6b39734 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
+2026/09/30 03:04:06 INFO processed document id=70fd2671e2116b0c75041517a6b39734 documentType=Invoice status=valid duration_ms=52
+2026/09/30 03:04:06 INFO worker shutting down
+2026/09/30 03:04:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=2 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=3
+2026/09/30 03:04:06 INFO replay descriptor claim raced another worker; will retry id=1bc340efae9fc5c672474fee760ab36b documentType=Invoice error="update upload record 1bc340efae9fc5c672474fee760ab36b at revision 3: nats: nats: API error: code=400 err_code=10071 description=wrong last sequence: 4: nats: key revision mismatch"
+2026/09/30 03:04:06 INFO validation stage completed upload_id=1bc340efae9fc5c672474fee760ab36b document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=52
+2026/09/30 03:04:06 INFO validation stage completed upload_id=1bc340efae9fc5c672474fee760ab36b document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
+2026/09/30 03:04:06 INFO processed document id=1bc340efae9fc5c672474fee760ab36b documentType=Invoice status=valid duration_ms=53
+2026/09/30 03:04:06 INFO worker shutting down
+2026/09/30 03:04:06 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=1 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:06 INFO validation stage completed upload_id=ef37ef401738b0c3050795e689b84a60 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=50
+2026/09/30 03:04:06 INFO validation stage completed upload_id=ef37ef401738b0c3050795e689b84a60 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
+2026/09/30 03:04:07 ERROR validation result is pending publication; will retry id=ef37ef401738b0c3050795e689b84a60 documentType=Invoice attempt=1 error="publish validation result: publish validation result for ef37ef401738b0c3050795e689b84a60: nats: no response from stream"
+2026/09/30 03:04:07 INFO worker shutting down
+2026/09/30 03:04:07 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:07 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO validation runtime verified ublSchemaVersion=2.1 en16931ArtifactVersion=1.3.16 en16931SourceRelease=validation-1.3.16 en16931XSLTSHA256=39f9d282867f1a49e7708d9e29a53da89643e1ee56f10cec1ebcf1277595fcbd saxonVersion=12.7 saxonJARSHA256=c607e8b395d4ee237495ad163183971ca3453d491534c847ebb55e0462772086 xmlResolverVersion=6.0.17 xmlResolverJARSHA256=b52e89a81fe86161bf2422997c041856791b3a78dd13824d958170b443b88c56
+2026/09/30 03:04:08 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO validation stage completed upload_id=fbd21242e44bebc730d81ae53bcda7a5 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=49
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:08 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO validation stage completed upload_id=fbd21242e44bebc730d81ae53bcda7a5 document_type=Invoice stage=en16931 profile_version=1.3.16 result=valid issue_count=0 duration_ms=1270
+2026/09/30 03:04:09 INFO processed document id=fbd21242e44bebc730d81ae53bcda7a5 documentType=Invoice status=valid duration_ms=1321
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/fbd21242e44bebc730d81ae53bcda7a5 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO validation stage completed upload_id=4173d923d7e60e969eaf327e676ad654 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=49
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:09 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=1 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:10 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:11 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:11 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:11 INFO validation stage completed upload_id=4173d923d7e60e969eaf327e676ad654 document_type=Invoice stage=en16931 profile_version=1.3.16 result=invalid issue_count=22 duration_ms=1224
+2026/09/30 03:04:11 INFO processed document id=4173d923d7e60e969eaf327e676ad654 documentType=Invoice status=invalid duration_ms=1274
+2026/09/30 03:04:11 INFO http request method=GET path=/api/v1/ubl/4173d923d7e60e969eaf327e676ad654 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:11 INFO worker shutting down
+2026/09/30 03:04:11 INFO worker-xsd started queueNamespace=(default) stage=ubl21-xsd rulesetVersion=2.1 concurrency=1 prefetch=1 validationTimeout=1m0s
+2026/09/30 03:04:11 INFO worker-xsd shutting down
+2026/09/30 03:04:12 INFO http request method=GET path=/healthz status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=401 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=PUT path=/api/v1/ubl/upload status=405 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/some-id status=405 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/ status=405 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/healthz status=405 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/metrics status=405 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/spec status=405 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/spec status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/metrics status=401 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/metrics status=500 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO worker started consumer=invoice-only-test-worker queueNamespace=(default) subjectFilter=ubl.documents.Invoice concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:12 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=6 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/992493ca39fa785dbbba5cda68ef6d26 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=5 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/992493ca39fa785dbbba5cda68ef6d26 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO worker started consumer=ubl-validator queueNamespace=(default) subjectFilter=ubl.documents.> concurrency=1 prefetch=1 ackWait=1m0s validationTimeout=30s xsdValidationTimeout=30s en16931ValidationTimeout=30s applicationMaxAttempts=5 brokerMaxDeliver=unlimited maxAckPending=2
+2026/09/30 03:04:12 INFO http request method=GET path=/docs/index.html status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=7 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/9424db1db42082ba5a79e14be61e0417 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/healthz status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=202 duration_ms=2 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/3658f6670854586de495114ed8cf71a1 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/metrics status=401 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/00000000000000000000000000000000 status=404 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=400 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/metrics status=200 duration_ms=2 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/00000000000000000000000000000000 status=400 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=POST path=/api/v1/ubl/upload status=413 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/3658f6670854586de495114ed8cf71a1 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/9424db1db42082ba5a79e14be61e0417 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/9424db1db42082ba5a79e14be61e0417 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/3658f6670854586de495114ed8cf71a1 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/9424db1db42082ba5a79e14be61e0417 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/3658f6670854586de495114ed8cf71a1 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO validation stage completed upload_id=3658f6670854586de495114ed8cf71a1 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=valid issue_count=0 duration_ms=65
+2026/09/30 03:04:12 INFO validation stage completed upload_id=9424db1db42082ba5a79e14be61e0417 document_type=Invoice stage=ubl21_xsd profile_version=2.1 result=invalid issue_count=1 duration_ms=65
+2026/09/30 03:04:12 INFO processed document id=9424db1db42082ba5a79e14be61e0417 documentType=Invoice status=invalid duration_ms=66
+2026/09/30 03:04:12 INFO validation stage completed upload_id=3658f6670854586de495114ed8cf71a1 document_type=Invoice stage=en16931 profile_version=test result=valid issue_count=0 duration_ms=0
+2026/09/30 03:04:12 INFO processed document id=3658f6670854586de495114ed8cf71a1 documentType=Invoice status=valid duration_ms=66
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/9424db1db42082ba5a79e14be61e0417 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO http request method=GET path=/api/v1/ubl/3658f6670854586de495114ed8cf71a1 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:12 INFO worker shutting down
+2026/09/30 03:04:12 INFO worker shutting down
+2026/09/30 03:04:13 INFO http request method=GET path=/api/v1/ubl/a5bba9fd59a3fd07d2147fde14127382 status=200 duration_ms=0 remote_addr=192.0.2.1
+2026/09/30 03:04:13 INFO worker shutting down
 FAIL
-FAIL	github.com/PaddyFrenchman/e-ubl21/server	277.712s
-ok  	github.com/PaddyFrenchman/e-ubl21/standard	0.004s
-ok  	github.com/PaddyFrenchman/e-ubl21/svrl	0.010s
+FAIL	github.com/PaddyFrenchman/e-ubl21/server	316.061s
+ok  	github.com/PaddyFrenchman/e-ubl21/standard	0.005s
+ok  	github.com/PaddyFrenchman/e-ubl21/svrl	0.017s
 ?   	github.com/PaddyFrenchman/e-ubl21/tools/check-peppol-reference	[no test files]
 ?   	github.com/PaddyFrenchman/e-ubl21/tools/compile-peppol-schematron	[no test files]
-ok  	github.com/PaddyFrenchman/e-ubl21/tools/performance-evidence	0.004s
+ok  	github.com/PaddyFrenchman/e-ubl21/tools/performance-evidence	0.005s
 ok  	github.com/PaddyFrenchman/e-ubl21/tools/regression-token	0.006s
-ok  	github.com/PaddyFrenchman/e-ubl21/tools/regression-token-secret	0.003s
-ok  	github.com/PaddyFrenchman/e-ubl21/tools/verify-validation-assets	0.053s
-ok  	github.com/PaddyFrenchman/e-ubl21/validation-assets	0.158s
+ok  	github.com/PaddyFrenchman/e-ubl21/tools/regression-token-secret	0.007s
+ok  	github.com/PaddyFrenchman/e-ubl21/tools/verify-validation-assets	0.049s
+ok  	github.com/PaddyFrenchman/e-ubl21/validation-assets	0.160s
 FAIL
-a@ota:~/e-ubl21$ code .
-a@ota:~/e-ubl21$ 
-

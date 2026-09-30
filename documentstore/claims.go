@@ -186,6 +186,13 @@ func (s *ClaimStore) Recover(ctx context.Context, store Store, minAge time.Durat
 	if err != nil {
 		return RecoveryReport{}, err
 	}
+	return s.recoverClaims(ctx, store, claims)
+}
+
+// recoverClaims verifies a supplied stale-claim batch. Keeping the batch
+// processing separate from its database query lets callers test recovery
+// semantics without depending on unrelated claims in a shared database.
+func (s *ClaimStore) recoverClaims(ctx context.Context, store Store, claims []WriteClaim) (RecoveryReport, error) {
 	report := RecoveryReport{Scanned: len(claims)}
 	for _, claim := range claims {
 		reader, getErr := store.Get(ctx, claim.ObjectKey)
