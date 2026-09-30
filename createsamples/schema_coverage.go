@@ -24,6 +24,7 @@ type schemaCoverage struct {
 	FixtureObservations map[string]fixtureObservation `json:"fixtureObservations"`
 	FixtureTargets      map[string][]string           `json:"fixtureTargets"`
 	MaximumCardinality  map[string]int                `json:"maximumCardinality"`
+	CardinalityGaps     []string                      `json:"cardinalityGaps"`
 	MaximumDepth        map[string]int                `json:"maximumDepth"`
 }
 
@@ -529,7 +530,7 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 	for path := range unparseable {
 		fixturePaths[path] = struct{}{}
 	}
-	result := schemaCoverage{SchemaVersion: 3, Fixtures: len(fixturePaths), Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}, Unparseable: unparseable, FixtureObservations: observations, FixtureTargets: map[string][]string{}, MaximumCardinality: map[string]int{}, MaximumDepth: map[string]int{}}
+	result := schemaCoverage{SchemaVersion: 4, Fixtures: len(fixturePaths), Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}, Unparseable: unparseable, FixtureObservations: observations, FixtureTargets: map[string][]string{}, MaximumCardinality: map[string]int{}, MaximumDepth: map[string]int{}}
 	// Record every repeatable schema particle even when no fixture reaches it.
 	// A zero is meaningful: it identifies an unexercised collection instead of
 	// silently omitting it from the cardinality report.
@@ -572,6 +573,12 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 		}
 		result.Categories[item.name] = coverageCategory{len(item.values), count, pct}
 	}
+	for id := range targets.repeatable {
+		if result.MaximumCardinality[id] < 2 {
+			result.CardinalityGaps = append(result.CardinalityGaps, id)
+		}
+	}
+	sort.Strings(result.CardinalityGaps)
 	return result, nil
 }
 func writeCoverageMarkdown(path string, report schemaCoverage) error {
@@ -612,6 +619,12 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 			out.WriteString("- `" + id + "`\n")
 		}
 	}
+	if len(report.CardinalityGaps) > 0 {
+		out.WriteString("\n## Repeatable particles below the two-occurrence acceptance floor\n\n")
+		for _, id := range report.CardinalityGaps {
+			out.WriteString("- `" + id + "`\n")
+		}
+	}
 	if len(report.Unparseable) > 0 {
 		out.WriteString("\n## Unparseable fixtures\n\n")
 		paths := make([]string, 0, len(report.Unparseable))
@@ -632,6 +645,7 @@ func runCoverage(args []string) error {
 	samples := flags.String("samples", filepath.Join("createsamples", "samples-structural"), "structural corpus directory")
 	jsonPath := flags.String("json", "", "required JSON report path")
 	markdownPath := flags.String("markdown", "", "required Markdown report path")
+	requireCardinality := flags.Bool("require-cardinality", true, "fail when a repeatable particle is not exercised at least twice")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -655,7 +669,13 @@ func runCoverage(args []string) error {
 	if err := os.WriteFile(*jsonPath, data, 0o644); err != nil {
 		return err
 	}
-	return writeCoverageMarkdown(*markdownPath, report)
+	if err := writeCoverageMarkdown(*markdownPath, report); err != nil {
+		return err
+	}
+	if *requireCardinality && len(report.CardinalityGaps) > 0 {
+		return fmt.Errorf("cardinality acceptance failed: %d repeatable particles have fewer than two exercised occurrences (see %s)", len(report.CardinalityGaps), *markdownPath)
+	}
+	return nil
 }
 
 func marshalCoverage(report schemaCoverage) ([]byte, error) {

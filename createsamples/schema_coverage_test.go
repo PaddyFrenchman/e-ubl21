@@ -72,4 +72,10 @@ func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 	if !bytes.Contains(data, []byte("Repeatable particles with zero exercised occurrences")) {
 		t.Fatal("coverage Markdown omits zero-cardinality repeatable particles")
 	}
+	if len(first.CardinalityGaps) == 0 {
+		t.Fatal("coverage did not identify repeatable particles below the two-occurrence floor")
+	}
+	if !bytes.Contains(data, []byte("Repeatable particles below the two-occurrence acceptance floor")) {
+		t.Fatal("coverage Markdown omits cardinality acceptance gaps")
+	}
 }

@@ -114,4 +114,10 @@ make regression-minikube \
   PROFILE=all \
   ARTIFACT_DIR=regression-results/minikube/en16931
 
+section "Minikube regression: generated structural large documents"
+make regression-minikube \
+  MANIFEST=createsamples/samples-structural/manifest.json \
+  PROFILE=all \
+  ARTIFACT_DIR=regression-results/minikube/ubl21-structural
+
 section "All local CI-equivalent tests passed"
