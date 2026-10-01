@@ -311,6 +311,19 @@ fixtures (500, 250, and 250 at the largest tier respectively) for real-path
 stress validation. Targeted aggregate families also cover allowance/charge,
 tax, reference/attachment, shipment, and item-bearing collections.
 
+Both UBL corpora, their manifests, and the structural coverage reports are
+tracked. Regenerate them into staging and print a reviewable diff with:
+
+```bash
+make corpus-regenerate
+```
+
+This command never changes a tracked fixture. After reviewing its output, use
+`make corpus-replace` to explicitly promote the staged-equivalent output. The
+workflow discovers the pinned `XSD/` inventory, generates twice for
+determinism, validates every fixture with `xmllint`, records SHA-256 hashes and
+provenance, and reports structural cardinality coverage for review.
+
 Generate the independent EN 16931 corpus (seven positive Invoice VAT-family
 variants, one positive CreditNote, two pinned official examples, and 22
 targeted-negative Invoices) with:

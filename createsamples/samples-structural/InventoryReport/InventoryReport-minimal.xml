@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<InventoryReport xmlns="urn:oasis:names:specification:ubl:schema:xsd:InventoryReport-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <cbc:ID>ID-001</cbc:ID>
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cac:RetailerCustomerParty></cac:RetailerCustomerParty>
+    <cac:InventoryReportingParty></cac:InventoryReportingParty>
+    <cac:InventoryReportLine>
+        <cbc:ID>ID-001</cbc:ID>
+        <cbc:Quantity>1</cbc:Quantity>
+        <cac:Item></cac:Item>
+    </cac:InventoryReportLine>
+</InventoryReport>
+

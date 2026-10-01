@@ -166,6 +166,17 @@ Replacement is staged in a temporary sibling directory and is permitted only
 when an existing output directory contains the valid marker; an arbitrary
 directory is never recursively cleared.
 
+## Reviewed UBL corpus lifecycle
+
+The tracked UBL baseline (`createsamples/samples`) and expanded structural
+corpus (`createsamples/samples-structural`) are regression inputs; ordinary
+tests consume them directly and never regenerate them. Run `make
+corpus-regenerate` to generate both into temporary staging, produce manifests,
+hashes, provenance and structural coverage reports, independently validate all
+fixtures, and show the diff against the checked-in corpus. It also rejects
+structural cardinality gaps. Only `make corpus-replace` is allowed to replace
+the two ownership-marked tracked directories after that review.
+
 ## Deterministic UBL 2.1 targeted-negative corpus
 
 The canonical checked-in UBL corpus contains both sets and is regenerated with:

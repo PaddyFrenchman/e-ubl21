@@ -21,8 +21,12 @@ type schemaCoverage struct {
 	Categories             map[string]coverageCategory   `json:"categories"`
 	Uncovered              map[string][]string           `json:"uncovered"`
 	Unparseable            map[string]string             `json:"unparseable"`
-	FixtureObservations    map[string]fixtureObservation `json:"fixtureObservations"`
-	FixtureTargets         map[string][]string           `json:"fixtureTargets"`
+	// These detailed indexes remain available to the analyzer and its tests,
+	// but are intentionally not serialized. Repeating every observed target
+	// for every large fixture turns an otherwise reviewable coverage report
+	// into a larger artifact than the corpus itself.
+	FixtureObservations    map[string]fixtureObservation `json:"-"`
+	FixtureTargets         map[string][]string           `json:"-"`
 	MaximumCardinality     map[string]int                `json:"maximumCardinality"`
 	ExercisedCardinalities map[string][]int              `json:"exercisedCardinalities"`
 	RequiredCardinalities  map[string][]int              `json:"requiredCardinalities"`

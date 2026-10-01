@@ -42,11 +42,6 @@ regression-results/
 performance-results/
 /events.json
 
-# Generated UBL 2.1 structural corpus.
-# Kept out of version control for now because generated fixtures can exceed
-# normal GitHub file-size limits; createsamples remains the authoritative source.
-createsamples/samples-structural/
-
 # Editor/IDE
 # .idea/
 # .vscode/
@@ -59,6 +54,4 @@ e-ubl21
 # Checksum-verified OpenPeppol documentation and validation inputs. The source
 # terms do not establish redistribution rights for committing these files.
 /standard/peppol/downloaded/
-# generated samples.
-createsamples/samples-structural/
 result.txt

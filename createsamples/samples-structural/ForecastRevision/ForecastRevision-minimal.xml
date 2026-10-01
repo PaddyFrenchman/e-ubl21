@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ForecastRevision xmlns="urn:oasis:names:specification:ubl:schema:xsd:ForecastRevision-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <cbc:ID>ID-001</cbc:ID>
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cbc:SequenceNumberID>ID-001</cbc:SequenceNumberID>
+    <cac:ForecastPeriod></cac:ForecastPeriod>
+    <cac:SenderParty></cac:SenderParty>
+    <cac:ReceiverParty></cac:ReceiverParty>
+    <cac:ForecastRevisionLine>
+        <cbc:ID>ID-001</cbc:ID>
+        <cbc:RevisedForecastLineID>ID-001</cbc:RevisedForecastLineID>
+        <cbc:SourceForecastIssueDate>2026-01-01</cbc:SourceForecastIssueDate>
+        <cbc:SourceForecastIssueTime>12:00:00</cbc:SourceForecastIssueTime>
+    </cac:ForecastRevisionLine>
+</ForecastRevision>
+

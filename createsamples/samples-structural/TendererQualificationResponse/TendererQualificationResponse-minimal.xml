@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TendererQualificationResponse xmlns="urn:oasis:names:specification:ubl:schema:xsd:TendererQualificationResponse-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <cbc:ContractFolderID>ID-001</cbc:ContractFolderID>
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cac:SenderParty></cac:SenderParty>
+    <cac:ReceiverParty></cac:ReceiverParty>
+    <cac:QualificationResolution>
+        <cbc:AdmissionCode>CODE-001</cbc:AdmissionCode>
+        <cbc:ResolutionDate>2026-01-01</cbc:ResolutionDate>
+    </cac:QualificationResolution>
+</TendererQualificationResponse>
+

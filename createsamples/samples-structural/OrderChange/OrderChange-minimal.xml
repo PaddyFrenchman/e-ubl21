@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OrderChange xmlns="urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cbc:SequenceNumberID>ID-001</cbc:SequenceNumberID>
+    <cac:OrderReference>
+        <cbc:ID>ID-001</cbc:ID>
+    </cac:OrderReference>
+    <cac:BuyerCustomerParty></cac:BuyerCustomerParty>
+    <cac:SellerSupplierParty></cac:SellerSupplierParty>
+    <cac:OrderLine>
+        <cac:LineItem>
+            <cbc:ID>ID-001</cbc:ID>
+            <cac:Item></cac:Item>
+        </cac:LineItem>
+    </cac:OrderLine>
+</OrderChange>
+

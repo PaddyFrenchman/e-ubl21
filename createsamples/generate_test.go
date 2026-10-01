@@ -302,6 +302,16 @@ func TestInventoryGenerateAndValidateCommands(t *testing.T) {
 	}
 }
 
+func TestTrackedStructuralCorpusManifestIsValid(t *testing.T) {
+	manifest, err := os.ReadFile(filepath.Join("samples-structural", "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifest); err != nil {
+		t.Fatalf("tracked structural manifest rejected: %v", err)
+	}
+}
+
 func TestGenerateEN16931UsesProfileDefaultOutput(t *testing.T) {
 	xsdDir, err := filepath.Abs(filepath.Join("..", "XSD"))
 	if err != nil {

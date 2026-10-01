@@ -224,32 +224,28 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
 				return fmt.Errorf("validate %s %s: %w", root, family, err)
 			}
-			targets, err := structuralTargetIDs(index, []byte(content))
-			if err != nil {
-				return fmt.Errorf("match %s %s structural targets: %w", root, family, err)
-			}
 			fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
-				ID:                fmt.Sprintf("ubl21.%s.%s", strings.ToLower(root), family),
-				DocumentType:      root,
-				Profile:           "ubl21",
-				File:              filepath.ToSlash(filepath.Join(root, fmt.Sprintf("%s-%s.xml", root, family))),
-				SHA256:            fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
-				Standards:         fixtureStandards{UBL: "2.1"},
-				Provenance:        fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
-				ExpectedFinal:     "valid",
-				ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
-				Tags:              append([]string{"positive", "ubl21", "structural", family}, tags...),
-				StructuralTargets: targets,
+				ID:             fmt.Sprintf("ubl21.%s.%s", strings.ToLower(root), family),
+				DocumentType:   root,
+				Profile:        "ubl21",
+				File:           filepath.ToSlash(filepath.Join(root, fmt.Sprintf("%s-%s.xml", root, family))),
+				SHA256:         fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+				Standards:      fixtureStandards{UBL: "2.1"},
+				Provenance:     fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+				ExpectedFinal:  "valid",
+				ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+				Tags:           append([]string{"positive", "ubl21", "structural", family}, tags...),
+				// The manifest records the stable intended schema-root/family
+				// targets.  The complete fixture-to-schema-target mapping belongs
+				// in coverage.json; duplicating it in every manifest entry makes a
+				// versioned corpus needlessly enormous.
+				StructuralTargets: []string{"schema-root:" + root, "family:" + family},
 			}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
 			return nil
 		}
 		minimal, err := generateMinimalSample(index, root, xsdDir, schema.File)
 		if err != nil {
 			return generatedCorpus{}, fmt.Errorf("generate %s minimal: %w", root, err)
-		}
-		minimalTargets, err := structuralTargetIDs(index, []byte(minimal))
-		if err != nil {
-			return generatedCorpus{}, fmt.Errorf("match %s minimal structural targets: %w", root, err)
 		}
 		fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
 			ID:                fmt.Sprintf("ubl21.%s.minimal", strings.ToLower(root)),
@@ -262,7 +258,7 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			ExpectedFinal:     "valid",
 			ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
 			Tags:              []string{"positive", "ubl21", "structural", "minimal", "optional-absent", "cardinality", "occurrences-0"},
-			StructuralTargets: minimalTargets,
+			StructuralTargets: []string{"schema-root:" + root, "family:minimal"},
 		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
 		if err := add("optional-rich", nil, 1, 0, 0, "", nil, "optional-elements", "optional-attributes", "cardinality", "occurrences-1"); err != nil {
 			return generatedCorpus{}, err

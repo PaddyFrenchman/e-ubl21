@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FreightInvoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <cbc:ID>ID-001</cbc:ID>
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cac:Shipment>
+        <cbc:ID>ID-001</cbc:ID>
+    </cac:Shipment>
+    <cac:AccountingSupplierParty></cac:AccountingSupplierParty>
+    <cac:AccountingCustomerParty></cac:AccountingCustomerParty>
+    <cac:LegalMonetaryTotal>
+        <cbc:PayableAmount currencyID="USD">100.00</cbc:PayableAmount>
+    </cac:LegalMonetaryTotal>
+    <cac:InvoiceLine>
+        <cbc:ID>ID-001</cbc:ID>
+        <cbc:LineExtensionAmount currencyID="USD">100.00</cbc:LineExtensionAmount>
+        <cac:Item></cac:Item>
+    </cac:InvoiceLine>
+</FreightInvoice>
+

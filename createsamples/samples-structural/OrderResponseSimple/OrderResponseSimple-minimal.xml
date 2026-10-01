@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OrderResponseSimple xmlns="urn:oasis:names:specification:ubl:schema:xsd:OrderResponseSimple-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <cbc:ID>ID-001</cbc:ID>
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cbc:AcceptedIndicator>true</cbc:AcceptedIndicator>
+    <cac:OrderReference>
+        <cbc:ID>ID-001</cbc:ID>
+    </cac:OrderReference>
+    <cac:SellerSupplierParty></cac:SellerSupplierParty>
+    <cac:BuyerCustomerParty></cac:BuyerCustomerParty>
+</OrderResponseSimple>
+

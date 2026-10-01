@@ -528,6 +528,34 @@ func TestTrackedUBLCorpusMatchesFreshGeneration(t *testing.T) {
 	}
 }
 
+func TestTrackedStructuralCorpusHasValidHashes(t *testing.T) {
+	root := "samples-structural"
+	manifestBytes, err := os.ReadFile(filepath.Join(root, "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifestBytes); err != nil {
+		t.Fatalf("tracked structural manifest rejected: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) < 300 {
+		t.Fatalf("tracked structural corpus fixtures = %d, want at least 300", len(manifest.Fixtures))
+	}
+	for _, fixture := range manifest.Fixtures {
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(fixture.File)))
+		if err != nil {
+			t.Errorf("read fixture %s: %v", fixture.ID, err)
+			continue
+		}
+		if actual := fmt.Sprintf("%x", sha256.Sum256(content)); actual != fixture.SHA256 {
+			t.Errorf("tracked structural fixture %s SHA-256 = %s, manifest has %s", fixture.ID, actual, fixture.SHA256)
+		}
+	}
+}
+
 func TestTrackedEN16931CorpusMatchesFreshGeneration(t *testing.T) {
 	root := "samples-en16931"
 	manifestBytes, err := os.ReadFile(filepath.Join(root, "manifest.json"))
