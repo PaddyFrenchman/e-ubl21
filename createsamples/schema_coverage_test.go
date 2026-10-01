@@ -81,13 +81,16 @@ func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 }
 
 func TestCardinalityRequirementsUseSchemaBounds(t *testing.T) {
-	if got := requiredCardinalities(occurrenceBounds{min: 0, max: 5}); !containsAllInts(got, []int{0, 1, 5}) {
-		t.Fatalf("finite bounds requirements = %v, want 0, 1, and 5", got)
+	if got := requiredCardinalities(occurrenceBounds{min: 0, max: 5}); !containsAllInts(got, []int{0, 1, 2, 5}) {
+		t.Fatalf("finite bounds requirements = %v, want 0, 1, 2, and 5", got)
 	}
 	if containsAllInts([]int{0, 1, 2}, requiredCardinalities(occurrenceBounds{min: 0, max: 5})) {
 		t.Fatal("two occurrences satisfied a particle whose schema permits five")
 	}
-	if !containsAllInts([]int{0, 1, 5}, requiredCardinalities(occurrenceBounds{min: 0, max: -1})) {
+	if containsAllInts([]int{0, 1, 5}, requiredCardinalities(occurrenceBounds{min: 0, max: 5})) {
+		t.Fatal("maximum cardinality did not require a distinct multiple case")
+	}
+	if !containsAllInts([]int{0, 1, 2, 5}, requiredCardinalities(occurrenceBounds{min: 0, max: -1})) {
 		t.Fatal("unbounded particle did not require the capped multiple case")
 	}
 }

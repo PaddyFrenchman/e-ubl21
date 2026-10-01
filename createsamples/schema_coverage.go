@@ -512,8 +512,8 @@ func coverageCategoryFor(targets map[string]struct{}, observed map[string]struct
 	return coverageCategory{Total: len(targets), Exercised: exercised, Percent: percent}, uncovered
 }
 
-func structuralFixtureTargets(index schemaIndex, samples string) (map[string]map[string]int, map[string]string, error) {
-	out, bad := map[string]map[string]int{}, map[string]string{}
+func structuralFixtureTargets(index schemaIndex, samples string) (map[string]fixtureMatch, map[string]string, error) {
+	out, bad := map[string]fixtureMatch{}, map[string]string{}
 	err := filepath.WalkDir(samples, func(path string, d os.DirEntry, e error) error {
 		if e != nil {
 			return e
@@ -521,7 +521,7 @@ func structuralFixtureTargets(index schemaIndex, samples string) (map[string]map
 		if d.IsDir() || filepath.Ext(path) != ".xml" {
 			return nil
 		}
-		m, e := matchFixture(index, path)
+		m, e := matchFixtureDetailed(index, path)
 		if e != nil {
 			bad[filepath.ToSlash(path)] = e.Error()
 			return nil
@@ -565,7 +565,8 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 		result.RequiredCardinalities[id] = requiredCardinalities(targets.repeatableBounds[id])
 	}
 	exercised := map[string]struct{}{}
-	for path, found := range matches {
+	for path, match := range matches {
+		found := match.targets
 		ids := make([]string, 0, len(found))
 		for id, value := range found {
 			if strings.Contains(id, "|recursive|") {
@@ -580,22 +581,8 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 		}
 		sort.Strings(ids)
 		result.FixtureTargets[path] = ids
-		// An absent particle is a zero-cardinality observation only when this
-		// fixture instantiated that particle's owning complex type. Fixtures for
-		// unrelated document types must not manufacture zero coverage.
-		for id := range targets.repeatable {
-			if _, present := found[id]; !present && fixtureInstantiatesParticleParent(found, id) {
-				found[id] = 0
-			}
-		}
 	}
-	for _, found := range matches {
-		for id, value := range found {
-			if _, repeatable := targets.repeatable[id]; repeatable {
-				result.ExercisedCardinalities[id] = appendUniqueInt(result.ExercisedCardinalities[id], value)
-			}
-		}
-	}
+	recordCardinalityObservations(&result, targets, matches)
 	for id := range result.ExercisedCardinalities {
 		sort.Ints(result.ExercisedCardinalities[id])
 	}
@@ -640,6 +627,10 @@ func requiredCardinalities(bounds occurrenceBounds) []int {
 		required = append(required, 1)
 	}
 	if maximum >= 2 {
+		// Keep the ordinary multiple case distinct from the boundary case.
+		required = append(required, 2)
+	}
+	if maximum >= 2 && maximum != 2 {
 		required = append(required, maximum)
 	}
 	return required
@@ -670,24 +661,41 @@ func containsAllInts(values, required []int) bool {
 	return true
 }
 
-func fixtureInstantiatesParticleParent(found map[string]int, particleID string) bool {
+func particleParentComplexTypeID(particleID string) string {
 	parts := strings.Split(particleID, "|")
 	if len(parts) != 4 {
-		return false
+		return ""
 	}
 	parent := parts[3]
 	if slash := strings.Index(parent, "/"); slash >= 0 {
 		parent = parent[:slash]
 	}
-	complexTypeID := parts[0] + "|" + parts[1] + "|complexType|" + parent
-	return found[complexTypeID] > 0
+	return parts[0] + "|" + parts[1] + "|complexType|" + parent
+}
+
+// recordCardinalityObservations retains every count seen beneath each parent
+// instance. It adds an explicit zero for each instantiated parent that did not
+// contain the particle, rather than inferring one zero from a whole fixture.
+func recordCardinalityObservations(result *schemaCoverage, targets coverageTargets, matches map[string]fixtureMatch) {
+	for _, match := range matches {
+		for id := range targets.repeatable {
+			for _, count := range match.cardinalities[id] {
+				result.ExercisedCardinalities[id] = appendUniqueInt(result.ExercisedCardinalities[id], count)
+			}
+			parentInstances := match.parentInstances[particleParentComplexTypeID(id)]
+			missing := parentInstances - len(match.cardinalities[id])
+			for i := 0; i < missing; i++ {
+				result.ExercisedCardinalities[id] = appendUniqueInt(result.ExercisedCardinalities[id], 0)
+			}
+		}
+	}
 }
 func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	var out strings.Builder
 	out.WriteString("# UBL 2.1 schema coverage\n\n")
 	out.WriteString(fmt.Sprintf("Fixtures analyzed: %d\n\n", report.Fixtures))
 
-	out.WriteString("Maximum cardinality is the greatest number of sibling matches for one schema particle under a single parent instance in a fixture. The acceptance gate requires schema-permitted zero (when optional), one, and the schema maximum (capped at five for unbounded particles).\n\n")
+	out.WriteString("Maximum cardinality is the greatest number of sibling matches for one schema particle under a single parent instance in a fixture. The acceptance gate records every parent-instance count and requires schema-permitted zero (when optional), one, a multiple case (two or more), and the schema maximum (capped at five for unbounded particles).\n\n")
 	out.WriteString("Maximum recursive depth is the greatest number of occurrences of the repeated target type along a fixture path.\n\n")
 	out.WriteString("| Construct | Exercised | Total | Coverage |\n|---|---:|---:|---:|\n")
 	keys := make([]string, 0, len(report.Categories))
