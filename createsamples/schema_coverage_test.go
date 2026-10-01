@@ -2,10 +2,39 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+func TestMarshalCoverageIncludesCompactFixtureTargetMappings(t *testing.T) {
+	report := schemaCoverage{
+		FixtureObservations: map[string]fixtureObservation{"sample.xml": {}},
+		FixtureTargets:      map[string][]string{"sample.xml": {"z-target", "a-target"}},
+	}
+	data, err := marshalCoverage(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var encoded struct {
+		FixtureObservations  map[string]fixtureObservation `json:"fixtureObservations"`
+		TargetCatalog        []string                      `json:"targetCatalog"`
+		FixtureTargetIndexes map[string][]int              `json:"fixtureTargetIndexes"`
+	}
+	if err := json.Unmarshal(data, &encoded); err != nil {
+		t.Fatal(err)
+	}
+	if len(encoded.FixtureObservations) != 1 {
+		t.Fatalf("fixture observations = %#v, want sample.xml", encoded.FixtureObservations)
+	}
+	if got := encoded.TargetCatalog; len(got) != 2 || got[0] != "a-target" || got[1] != "z-target" {
+		t.Fatalf("target catalog = %#v, want sorted targets", got)
+	}
+	if got := encoded.FixtureTargetIndexes["sample.xml"]; len(got) != 2 || got[0] != 1 || got[1] != 0 {
+		t.Fatalf("fixture target indexes = %#v, want [1 0]", got)
+	}
+}
 
 func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 	xsd := filepath.Join("..", "XSD")

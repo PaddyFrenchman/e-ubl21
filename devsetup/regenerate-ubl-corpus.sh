@@ -19,12 +19,19 @@ done
 
 # The XSD tree is the pinned, authoritative input. Refuse a regeneration from
 # an uncommitted schema change unless the user deliberately commits/reviews it.
-if ! git diff --quiet -- XSD; then
-  echo "ERROR: XSD has uncommitted changes; commit or revert the schema update before regenerating" >&2
-  exit 2
-fi
-if ! git diff --quiet -- createsamples regression/manifest.go regression/schemas/fixture-manifest.schema.json; then
-  echo "ERROR: generator or manifest-contract inputs have uncommitted changes; commit them before regenerating" >&2
+provenance_inputs=(
+  ':(glob)createsamples/**/*.go'
+  ':(exclude,glob)createsamples/**/*_test.go'
+  'validation-assets/peppol.go'
+  'regression/manifest.go'
+  'regression/schemas/fixture-manifest.schema.json'
+  ':(glob)XSD/**/*.xsd'
+)
+# Compare against HEAD, rather than the index, so staged modifications are
+# rejected too. git status includes untracked provenance inputs.
+if ! git diff --quiet HEAD -- "${provenance_inputs[@]}" || \
+   [ -n "$(git status --porcelain --untracked-files=all -- "${provenance_inputs[@]}")" ]; then
+  echo "ERROR: generator, manifest-contract, or XSD inputs have staged, unstaged, or untracked changes; commit them before regenerating" >&2
   exit 2
 fi
 

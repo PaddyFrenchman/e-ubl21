@@ -21,12 +21,8 @@ type schemaCoverage struct {
 	Categories             map[string]coverageCategory   `json:"categories"`
 	Uncovered              map[string][]string           `json:"uncovered"`
 	Unparseable            map[string]string             `json:"unparseable"`
-	// These detailed indexes remain available to the analyzer and its tests,
-	// but are intentionally not serialized. Repeating every observed target
-	// for every large fixture turns an otherwise reviewable coverage report
-	// into a larger artifact than the corpus itself.
-	FixtureObservations    map[string]fixtureObservation `json:"-"`
-	FixtureTargets         map[string][]string           `json:"-"`
+	FixtureObservations    map[string]fixtureObservation `json:"fixtureObservations"`
+	FixtureTargets         map[string][]string           `json:"fixtureTargets"`
 	MaximumCardinality     map[string]int                `json:"maximumCardinality"`
 	ExercisedCardinalities map[string][]int              `json:"exercisedCardinalities"`
 	RequiredCardinalities  map[string][]int              `json:"requiredCardinalities"`
@@ -792,6 +788,53 @@ func runCoverage(args []string) error {
 }
 
 func marshalCoverage(report schemaCoverage) ([]byte, error) {
-	data, err := json.MarshalIndent(report, "", "  ")
+	// Store the complete fixture-to-target relation without repeating long
+	// namespace/path target IDs for every fixture. The catalog is a stable,
+	// sorted dictionary and each fixture's values are indexes into it.
+	targetSet := map[string]struct{}{}
+	for _, targets := range report.FixtureTargets {
+		for _, target := range targets {
+			targetSet[target] = struct{}{}
+		}
+	}
+	catalog := make([]string, 0, len(targetSet))
+	for target := range targetSet {
+		catalog = append(catalog, target)
+	}
+	sort.Strings(catalog)
+	positions := make(map[string]int, len(catalog))
+	for position, target := range catalog {
+		positions[target] = position
+	}
+	fixtureTargets := make(map[string][]int, len(report.FixtureTargets))
+	for fixture, targets := range report.FixtureTargets {
+		indexes := make([]int, len(targets))
+		for i, target := range targets {
+			indexes[i] = positions[target]
+		}
+		fixtureTargets[fixture] = indexes
+	}
+	encoded := struct {
+		SchemaVersion          int                           `json:"schemaVersion"`
+		Fixtures               int                           `json:"fixtures"`
+		Categories             map[string]coverageCategory   `json:"categories"`
+		Uncovered              map[string][]string           `json:"uncovered"`
+		Unparseable            map[string]string             `json:"unparseable"`
+		FixtureObservations    map[string]fixtureObservation `json:"fixtureObservations"`
+		TargetCatalog          []string                      `json:"targetCatalog"`
+		FixtureTargetIndexes   map[string][]int              `json:"fixtureTargetIndexes"`
+		MaximumCardinality     map[string]int                `json:"maximumCardinality"`
+		ExercisedCardinalities map[string][]int              `json:"exercisedCardinalities"`
+		RequiredCardinalities  map[string][]int              `json:"requiredCardinalities"`
+		CardinalityGaps        []string                      `json:"cardinalityGaps"`
+		MaximumDepth           map[string]int                `json:"maximumDepth"`
+	}{
+		SchemaVersion: report.SchemaVersion, Fixtures: report.Fixtures,
+		Categories: report.Categories, Uncovered: report.Uncovered, Unparseable: report.Unparseable,
+		FixtureObservations: report.FixtureObservations, TargetCatalog: catalog, FixtureTargetIndexes: fixtureTargets,
+		MaximumCardinality: report.MaximumCardinality, ExercisedCardinalities: report.ExercisedCardinalities,
+		RequiredCardinalities: report.RequiredCardinalities, CardinalityGaps: report.CardinalityGaps, MaximumDepth: report.MaximumDepth,
+	}
+	data, err := json.MarshalIndent(encoded, "", "  ")
 	return append(data, '\n'), err
 }
