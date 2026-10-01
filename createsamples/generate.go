@@ -649,7 +649,12 @@ func occurrenceCount(element xsdElementDecl, state genState, depth int) int {
 	}
 	if desired, ok := state.repeatOverrides[elementNameForOccurrence(element)]; ok && isRepeatableElement(element) {
 		n = desired
-	} else if state.repeatCount > 0 && isRepeatableElement(element) {
+	// Generic cardinality fixtures deliberately exercise only the
+	// main-document particle level. Repeating every reachable nested particle
+	// multiplies UBL's shared aggregate graph exponentially, producing a corpus
+	// too large to generate or review. Targeted large-collection fixtures use
+	// repeatOverrides and remain valid at any depth.
+	} else if state.repeatCount > 0 && depth <= 1 && isRepeatableElement(element) {
 		n = state.repeatCount
 	}
 	max := parseMaxOccurs(element.MaxOccurs)

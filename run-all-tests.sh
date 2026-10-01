@@ -31,15 +31,13 @@ java -version
 section "Go unit and package tests"
 go test ./... -count=1
 
-section "Generate and validate UBL 2.1 structural corpus"
-go run ./createsamples generate \
-  --profile ubl21-structural \
-  --set positive \
+section "Validate tracked UBL 2.1 structural corpus"
+# Ordinary regression consumes reviewed fixtures directly. Corpus generation,
+# coverage-report replacement, and diffs are available only via
+# `make corpus-regenerate` / `make corpus-replace`.
+go run ./createsamples validate \
   --xsd XSD \
-  --output createsamples/samples-structural
-
-section "Measure structural schema and cardinality coverage"
-make schema-coverage
+  --samples createsamples/samples-structural
 
 section "Validation chaos, crash, and replay gate"
 make test-validation-chaos

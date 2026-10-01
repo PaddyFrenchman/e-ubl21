@@ -1,0 +1,5504 @@
+# UBL 2.1 schema coverage
+
+Fixtures analyzed: 390
+
+Maximum cardinality is the greatest number of sibling matches for one schema particle under a single parent instance in a fixture. The acceptance gate records every parent-instance count and requires schema-permitted zero (when optional), one, a multiple case (two or more), and the schema maximum (capped at five for unbounded particles).
+
+Maximum recursive depth is the greatest number of occurrences of the repeated target type along a fixture path.
+
+| Construct | Exercised | Total | Coverage |
+|---|---:|---:|---:|
+| allMembers | 0 | 0 | 100.0% |
+| attributes | 36 | 92 | 39.1% |
+| choiceAlternatives | 0 | 46 | 0.0% |
+| choiceSites | 0 | 15 | 0.0% |
+| complexTypes | 1164 | 1286 | 90.5% |
+| elements | 3878 | 5740 | 67.6% |
+| inheritance | 872 | 916 | 95.2% |
+| optionalAttributes | 33 | 76 | 43.4% |
+| optionalElements | 3358 | 3480 | 96.5% |
+| recursiveEdges | 62 | 84 | 73.8% |
+| repeatableElements | 1004 | 1068 | 94.0% |
+| requiredAttributes | 3 | 16 | 18.8% |
+| requiredElements | 520 | 2260 | 23.0% |
+| roots | 65 | 65 | 100.0% |
+| sequenceMembers | 3878 | 4011 | 96.7% |
+| substitutionGroups | 0 | 0 | 100.0% |
+| wildcards | 0 | 15 | 0.0% |
+
+## Uncovered attributes
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CRLIdentifierType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CertIDType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CertificateValuesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CompleteCertificateRefsType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CompleteRevocationRefsType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|DataObjectFormatType/@ObjectReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|EncapsulatedPKIDataType/@Encoding`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|EncapsulatedPKIDataType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|GenericTimeStampType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IdentifierType/@Qualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@referencedData`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OCSPIdentifierType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OtherTimeStampType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Target`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|ReferenceInfoType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|ReferenceInfoType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|RevocationValuesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedDataObjectPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedSignaturePropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedDataObjectPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedSignaturePropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|XAdESTimeStampType/@Id`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@Id`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@UR`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|CanonicalizationMethodType/@Algorithm`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|DigestMethodType/@Algorithm`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|KeyInfoType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ManifestType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Encoding`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@MimeType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Type`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@URI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@Type`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@URI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureMethodType/@Algorithm`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertiesType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Target`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureValueType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignedInfoType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|TransformType/@Algorithm`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|GraphicType/@mimeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|PictureType/@mimeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|SoundType/@mimeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|VideoType/@mimeCode`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|attribute|DateTimeType/@format`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|attribute|IndicatorType/@format`
+
+## Uncovered choiceAlternatives
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[1]/AllSignedDataObjects`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[0]/ByName`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[0]/SignaturePolicyId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[1]/SignaturePolicyImplied`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[0]`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[1]`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[1]/RSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
+
+## Uncovered choiceSites
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|CertificateValuesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|CommitmentTypeIndicationType/choice[0]`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|GenericTimeStampType/choice[0]`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|GenericTimeStampType/choice[1]`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|OtherTimeStampType/choice[0]`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|ResponderIDType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|SignaturePolicyIdentifierType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|UnsignedSignaturePropertiesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|XAdESTimeStampType/choice[0]`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|KeyInfoType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|KeyValueType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|PGPDataType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|SignaturePropertyType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|TransformType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|X509DataType/choice[0]`
+
+## Uncovered complexTypes
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|AnyType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CRLIdentifierType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CRLRefType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CRLRefsType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CRLValuesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CertIDListType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CertIDType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CertificateValuesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CertifiedRolesListType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|ClaimedRolesListType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CommitmentTypeIndicationType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CommitmentTypeQualifiersListType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CompleteCertificateRefsType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CompleteRevocationRefsType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CounterSignatureType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|DataObjectFormatType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|DigestAlgAndValueType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|DocumentationReferencesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|EncapsulatedPKIDataType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|GenericTimeStampType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|IdentifierType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|IncludeType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|IntegerListType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|NoticeReferenceType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OCSPIdentifierType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OCSPRefType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OCSPRefsType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OCSPValuesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|ObjectIdentifierType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OtherCertStatusRefsType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OtherCertStatusValuesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OtherTimeStampType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|QualifierType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|QualifyingPropertiesReferenceType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|QualifyingPropertiesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|ReferenceInfoType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|ResponderIDType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|RevocationValuesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SPUserNoticeType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SigPolicyQualifiersListType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignaturePolicyIdType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignaturePolicyIdentifierType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignatureProductionPlaceType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignedDataObjectPropertiesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignedPropertiesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignedSignaturePropertiesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignerRoleType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|UnsignedDataObjectPropertiesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|UnsignedPropertiesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|UnsignedSignaturePropertiesType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|XAdESTimeStampType`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|complexType|ValidationDataType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|CanonicalizationMethodType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|CryptoBinary`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|DSAKeyValueType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|DigestMethodType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|DigestValueType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|HMACOutputLengthType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|KeyInfoType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|KeyValueType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|ManifestType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|ObjectType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|PGPDataType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|RSAKeyValueType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|ReferenceType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|RetrievalMethodType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SPKIDataType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignatureMethodType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignaturePropertiesType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignaturePropertyType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignatureType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignatureValueType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignedInfoType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|TransformType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|TransformsType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|X509DataType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|X509IssuerSerialType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|complexType|PerformanceDataLineType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|complexType|PerformanceValueQuantityType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionAgencyIDType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionAgencyNameType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionAgencyURIType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionReasonCodeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionReasonType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionURIType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionVersionIDType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|UBLExtensionType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|UBLExtensionsType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-ExtensionContentDataType-2.1.xsd|complexType|ExtensionContentType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|complexType|UBLDocumentSignaturesType`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|complexType|SignatureInformationType`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|complexType|ReferencedSignatureIDType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|AmountType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|BinaryObjectType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|CodeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|DateTimeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|DateType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|GraphicType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|IdentifierType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|IndicatorType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|MeasureType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|NameType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|NumericType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|PercentType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|PictureType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|QuantityType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|RateType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|SoundType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|TextType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|TimeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|ValueType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|VideoType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|AmountType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|BinaryObjectType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|CodeType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|DateTimeType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|IdentifierType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|IndicatorType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|MeasureType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|NumericType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|QuantityType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|TextType`
+
+## Uncovered elements
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[0]/Issuer`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[1]/IssueTime`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[2]/Number`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[0]/DigestAlgAndValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[1]/CRLIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[0]/CertDigest`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[1]/IssuerSerial`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[1]/AllSignedDataObjects`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[0]/CommitmentTypeId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[1]/CommitmentTypeQualifiers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteCertificateRefsType/sequence[0]/CertRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[0]/CRLRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[1]/OCSPRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[2]/OtherRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CounterSignatureType/sequence[0]/Signature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[0]/Description`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[1]/ObjectIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[2]/MimeType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[3]/Encoding`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[0]/DigestMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[1]/DigestValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/sequence[0]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|IntegerListType/sequence[0]/int`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|NoticeReferenceType/sequence[0]/Organization`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|NoticeReferenceType/sequence[1]/NoticeNumbers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPIdentifierType/sequence[0]/ResponderID`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPIdentifierType/sequence[1]/ProducedAt`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[0]/OCSPIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[1]/DigestAlgAndValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[0]/Identifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[1]/Description`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[2]/DocumentationReferences`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[1]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[0]/SignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[1]/UnsignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[0]/DigestMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[1]/DigestValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[0]/ByName`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[0]/CRLValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[1]/OCSPValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[2]/OtherValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[0]/NoticeRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[1]/ExplicitText`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[0]/SigPolicyId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[1]/Transforms`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[2]/SigPolicyHash`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[3]/SigPolicyQualifiers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[0]/SignaturePolicyId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[1]/SignaturePolicyImplied`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[0]/City`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[1]/StateOrProvince`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[2]/PostalCode`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[3]/CountryName`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[0]/SignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[1]/SignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[0]/SigningTime`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[1]/SigningCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[2]/SignaturePolicyIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[3]/SignatureProductionPlace`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[4]/SignerRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[0]/ClaimedRoles`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[1]/CertifiedRoles`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[0]/UnsignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[1]/UnsignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[1]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AllDataObjectsTimeStamp/AllDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/Any/Any`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/ArchiveTimeStamp/ArchiveTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AttrAuthoritiesCertValues/AttrAuthoritiesCertValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AttributeCertificateRefs/AttributeCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AttributeRevocationRefs/AttributeRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AttributeRevocationValues/AttributeRevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CertificateValues/CertificateValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CommitmentTypeIndication/CommitmentTypeIndication`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CompleteCertificateRefs/CompleteCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CompleteRevocationRefs/CompleteRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CounterSignature/CounterSignature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/DataObjectFormat/DataObjectFormat`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/EncapsulatedPKIData/EncapsulatedPKIData`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/Include/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/IndividualDataObjectsTimeStamp/IndividualDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/ObjectIdentifier/ObjectIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/OtherTimeStamp/OtherTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/QualifyingProperties/QualifyingProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/QualifyingPropertiesReference/QualifyingPropertiesReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/ReferenceInfo/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/RefsOnlyTimeStamp/RefsOnlyTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/RevocationValues/RevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SPURI/SPURI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SPUserNotice/SPUserNotice`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SigAndRefsTimeStamp/SigAndRefsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignaturePolicyIdentifier/SignaturePolicyIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignatureProductionPlace/SignatureProductionPlace`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignatureTimeStamp/SignatureTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignedDataObjectProperties/SignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignedProperties/SignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignedSignatureProperties/SignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignerRole/SignerRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SigningCertificate/SigningCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SigningTime/SigningTime`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/UnsignedDataObjectProperties/UnsignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/UnsignedProperties/UnsignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/UnsignedSignatureProperties/UnsignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/XAdESTimeStamp/XAdESTimeStamp`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[0]/CertificateValues`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[1]/RevocationValues`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/ArchiveTimeStampV2/ArchiveTimeStampV2`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/TimeStampValidationData/TimeStampValidationData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/G`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[0]/P`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[1]/Q`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/Y`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[0]/Seed`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[1]/PgenCounter`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[2]/J`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[1]/RSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[0]/Modulus`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[1]/Exponent`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[0]/Transforms`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[1]/DigestMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[2]/DigestValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[0]/SignedInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[1]/SignatureValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[2]/KeyInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[0]/CanonicalizationMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[1]/SignatureMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[1]/X509SerialNumber`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/CanonicalizationMethod/CanonicalizationMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DSAKeyValue/DSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DigestMethod/DigestMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DigestValue/DigestValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/KeyInfo/KeyInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/KeyName/KeyName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/KeyValue/KeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Manifest/Manifest`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/MgmtData/MgmtData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Object/Object`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/PGPData/PGPData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/RSAKeyValue/RSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Reference/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/RetrievalMethod/RetrievalMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SPKIData/SPKIData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Signature/Signature`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignatureMethod/SignatureMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignatureProperties/SignatureProperties`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignatureProperty/SignatureProperty`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignatureValue/SignatureValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignedInfo/SignedInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Transform/Transform`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Transforms/Transforms`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/X509Data/X509Data`
+- `urn:oasis:names:specification:ubl:schema:xsd:ApplicationResponse-2|UBL-ApplicationResponse-2.1.xsd|element|global/ApplicationResponse/ApplicationResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:AttachedDocument-2|UBL-AttachedDocument-2.1.xsd|element|global/AttachedDocument/AttachedDocument`
+- `urn:oasis:names:specification:ubl:schema:xsd:AwardedNotification-2|UBL-AwardedNotification-2.1.xsd|element|global/AwardedNotification/AwardedNotification`
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|global/BillOfLading/BillOfLading`
+- `urn:oasis:names:specification:ubl:schema:xsd:CallForTenders-2|UBL-CallForTenders-2.1.xsd|element|global/CallForTenders/CallForTenders`
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|global/Catalogue/Catalogue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueDeletion-2|UBL-CatalogueDeletion-2.1.xsd|element|global/CatalogueDeletion/CatalogueDeletion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueItemSpecificationUpdate-2|UBL-CatalogueItemSpecificationUpdate-2.1.xsd|element|global/CatalogueItemSpecificationUpdate/CatalogueItemSpecificationUpdate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CataloguePricingUpdate-2|UBL-CataloguePricingUpdate-2.1.xsd|element|global/CataloguePricingUpdate/CataloguePricingUpdate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|global/CatalogueRequest/CatalogueRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:CertificateOfOrigin-2|UBL-CertificateOfOrigin-2.1.xsd|element|global/CertificateOfOrigin/CertificateOfOrigin`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[2]/PerformanceValueQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[3]/PerformanceMetricTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[4]/Period`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[5]/Item`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AcceptanceTransportEvent/AcceptanceTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AccessoryRelatedItem/AccessoryRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AccountingContact/AccountingContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AccountingCustomerParty/AccountingCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AccountingSupplierParty/AccountingSupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityDataLine/ActivityDataLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityFinalLocation/ActivityFinalLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityOriginLocation/ActivityOriginLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityPeriod/ActivityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityProperty/ActivityProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualArrivalTransportEvent/ActualArrivalTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualDepartureTransportEvent/ActualDepartureTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualPackage/ActualPackage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualPickupTransportEvent/ActualPickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualWaypointTransportEvent/ActualWaypointTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalCommodityClassification/AdditionalCommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalDocumentReference/AdditionalDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalDocumentResponse/AdditionalDocumentResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalInformationParty/AdditionalInformationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalItemIdentification/AdditionalItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalItemProperty/AdditionalItemProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalQualifyingParty/AdditionalQualifyingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalTemperature/AdditionalTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalTransportationService/AdditionalTransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Address/Address`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AddressLine/AddressLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AgentParty/AgentParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AirTransport/AirTransport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AllowanceCharge/AllowanceCharge`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AllowedSubcontractTerms/AllowedSubcontractTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AlternativeConditionPrice/AlternativeConditionPrice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AlternativeDeliveryLocation/AlternativeDeliveryLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AlternativeLineItem/AlternativeLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AnticipatedMonetaryTotal/AnticipatedMonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AppealInformationParty/AppealInformationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AppealReceiverParty/AppealReceiverParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AppealTerms/AppealTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableAddress/ApplicableAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicablePeriod/ApplicablePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableRegulation/ApplicableRegulation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableTaxCategory/ApplicableTaxCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableTerritoryAddress/ApplicableTerritoryAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableTransportMeans/ApplicableTransportMeans`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AtLocation/AtLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AttachedTransportEquipment/AttachedTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Attachment/Attachment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AuctionTerms/AuctionTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AvailabilityTransportEvent/AvailabilityTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AwardedTenderedProject/AwardedTenderedProject`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AwardingCriterion/AwardingCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AwardingCriterionResponse/AwardingCriterionResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AwardingTerms/AwardingTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BeneficiaryParty/BeneficiaryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BillOfLadingHolderParty/BillOfLadingHolderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BillToParty/BillToParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BillingReference/BillingReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BillingReferenceLine/BillingReferenceLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BonusPaymentTerms/BonusPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Branch/Branch`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BudgetAccount/BudgetAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BudgetAccountLine/BudgetAccountLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BusinessClassificationScheme/BusinessClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BuyerContact/BuyerContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BuyerCustomerParty/BuyerCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BuyerProposedSubstituteLineItem/BuyerProposedSubstituteLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BuyersItemIdentification/BuyersItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CallDuty/CallDuty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CallForTendersDocumentReference/CallForTendersDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CallForTendersLineReference/CallForTendersLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Capability/Capability`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CardAccount/CardAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CarrierParty/CarrierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueDocumentReference/CatalogueDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueItemIdentification/CatalogueItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueItemSpecificationUpdateLine/CatalogueItemSpecificationUpdateLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueLine/CatalogueLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueLineReference/CatalogueLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CataloguePricingUpdateLine/CataloguePricingUpdateLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueReference/CatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueRequestLine/CatalogueRequestLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CategorizesClassificationCategory/CategorizesClassificationCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Certificate/Certificate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CertificateOfOriginApplication/CertificateOfOriginApplication`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ChildConsignment/ChildConsignment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ClassificationCategory/ClassificationCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ClassificationScheme/ClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ClassifiedTaxCategory/ClassifiedTaxCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Clause/Clause`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CollectPaymentTerms/CollectPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CollectedPayment/CollectedPayment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CommissionPaymentTerms/CommissionPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CommodityClassification/CommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Communication/Communication`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ComplementaryRelatedItem/ComplementaryRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CompletedTask/CompletedTask`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ComponentRelatedItem/ComponentRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Condition/Condition`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsigneeParty/ConsigneeParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Consignment/Consignment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsignorParty/ConsignorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsolidatedShipment/ConsolidatedShipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConstitutionPeriod/ConstitutionPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Consumption/Consumption`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionAverage/ConsumptionAverage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionCorrection/ConsumptionCorrection`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionHistory/ConsumptionHistory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionLine/ConsumptionLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionPoint/ConsumptionPoint`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionReport/ConsumptionReport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionReportReference/ConsumptionReportReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Contact/Contact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContactParty/ContactParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainedGoodsItem/ContainedGoodsItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainedInTransportEquipment/ContainedInTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainedPackage/ContainedPackage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainingPackage/ContainingPackage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainingTransportEquipment/ContainingTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Contract/Contract`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractAcceptancePeriod/ContractAcceptancePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractDocumentReference/ContractDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractExecutionRequirement/ContractExecutionRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractExtension/ContractExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractFormalizationPeriod/ContractFormalizationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractResponsibleParty/ContractResponsibleParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractingActivity/ContractingActivity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractingParty/ContractingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractingPartyType/ContractingPartyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractorCustomerParty/ContractorCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractualDelivery/ContractualDelivery`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractualDocumentReference/ContractualDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CorporateRegistrationScheme/CorporateRegistrationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Country/Country`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CreditAccount/CreditAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CreditNoteDocumentReference/CreditNoteDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CreditNoteLine/CreditNoteLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CrewMemberPerson/CrewMemberPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CurrentStatus/CurrentStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CustomerParty/CustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CustomsAgentParty/CustomsAgentParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CustomsDeclaration/CustomsDeclaration`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DebitNoteDocumentReference/DebitNoteDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DebitNoteLine/DebitNoteLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Declaration/Declaration`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DefaultLanguage/DefaultLanguage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeletedCatalogueReference/DeletedCatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Delivery/Delivery`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryAddress/DeliveryAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryContact/DeliveryContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryCustomerParty/DeliveryCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryLocation/DeliveryLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryParty/DeliveryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryPeriod/DeliveryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryTerms/DeliveryTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryTransportEvent/DeliveryTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryUnit/DeliveryUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DependentLineReference/DependentLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DependentPriceReference/DependentPriceReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Despatch/Despatch`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchAddress/DespatchAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchContact/DespatchContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchDocumentReference/DespatchDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchLine/DespatchLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchLineReference/DespatchLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchLocation/DespatchLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchParty/DespatchParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchSupplierParty/DespatchSupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DestinationCountry/DestinationCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DetentionTransportEvent/DetentionTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DigitalSignatureAttachment/DigitalSignatureAttachment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Dimension/Dimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DisbursementPaymentTerms/DisbursementPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DischargeTransportEvent/DischargeTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DiscrepancyResponse/DiscrepancyResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentAvailabilityPeriod/DocumentAvailabilityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentDistribution/DocumentDistribution`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentProviderParty/DocumentProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentReference/DocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentResponse/DocumentResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentTenderRequirement/DocumentTenderRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DriverPerson/DriverPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DropoffTransportEvent/DropoffTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DurationPeriod/DurationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Duty/Duty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EconomicOperatorRole/EconomicOperatorRole`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EconomicOperatorShortList/EconomicOperatorShortList`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EffectivePeriod/EffectivePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EmbassyEndorsement/EmbassyEndorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EmergencyTemperature/EmergencyTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EmissionCalculationMethod/EmissionCalculationMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EmploymentLegislationDocumentReference/EmploymentLegislationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Endorsement/Endorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EndorserParty/EndorserParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnergyTaxReport/EnergyTaxReport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnergyWaterConsumptionCorrection/EnergyWaterConsumptionCorrection`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnergyWaterSupply/EnergyWaterSupply`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnvironmentalEmission/EnvironmentalEmission`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnvironmentalLegislationDocumentReference/EnvironmentalLegislationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedArrivalTransportEvent/EstimatedArrivalTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedDeliveryPeriod/EstimatedDeliveryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedDepartureTransportEvent/EstimatedDepartureTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedDespatchPeriod/EstimatedDespatchPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedDurationPeriod/EstimatedDurationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedTransitPeriod/EstimatedTransitPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EvaluationCriterion/EvaluationCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Event/Event`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EventComment/EventComment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EventLineItem/EventLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EventTactic/EventTactic`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EventTacticEnumeration/EventTacticEnumeration`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Evidence/Evidence`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EvidenceDocumentReference/EvidenceDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EvidenceIssuingParty/EvidenceIssuingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EvidenceSupplied/EvidenceSupplied`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExaminationTransportEvent/ExaminationTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExceptionCriteriaLine/ExceptionCriteriaLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExceptionNotificationLine/ExceptionNotificationLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExceptionObservationPeriod/ExceptionObservationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExchangeRate/ExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExportCountry/ExportCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExportationTransportEvent/ExportationTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExporterParty/ExporterParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExternalReference/ExternalReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExtraAllowanceCharge/ExtraAllowanceCharge`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinalDeliveryParty/FinalDeliveryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinalDeliveryTransportationService/FinalDeliveryTransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinalDestinationCountry/FinalDestinationCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinalFinancialGuarantee/FinalFinancialGuarantee`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialAccount/FinancialAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialCapability/FinancialCapability`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialEvaluationCriterion/FinancialEvaluationCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialGuarantee/FinancialGuarantee`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialInstitution/FinancialInstitution`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialInstitutionBranch/FinancialInstitutionBranch`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancingFinancialAccount/FinancingFinancialAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancingParty/FinancingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FirstArrivalPortLocation/FirstArrivalPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FiscalLegislationDocumentReference/FiscalLegislationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FlashpointTemperature/FlashpointTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FloorSpaceMeasurementDimension/FloorSpaceMeasurementDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastException/ForecastException`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastExceptionCriterionLine/ForecastExceptionCriterionLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastLine/ForecastLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastPeriod/ForecastPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastRevisionLine/ForecastRevisionLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForeignExchangeContract/ForeignExchangeContract`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FrameworkAgreement/FrameworkAgreement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FreightAllowanceCharge/FreightAllowanceCharge`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FreightChargeLocation/FreightChargeLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FreightForwarderParty/FreightForwarderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FrequencyPeriod/FrequencyPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FromLocation/FromLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GoodsItem/GoodsItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GoodsItemContainer/GoodsItemContainer`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GuaranteeDocumentReference/GuaranteeDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GuarantorParty/GuarantorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GuidanceDocumentReference/GuidanceDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HandlingTransportEvent/HandlingTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HandlingUnitDespatchLine/HandlingUnitDespatchLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HaulageTradingTerms/HaulageTradingTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HazardousGoodsTransit/HazardousGoodsTransit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HazardousItem/HazardousItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HazardousItemNotificationParty/HazardousItemNotificationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HeadOfficeParty/HeadOfficeParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/IdentityDocumentReference/IdentityDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ImmobilizedSecurity/ImmobilizedSecurity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ImporterParty/ImporterParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InformationContentProviderParty/InformationContentProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InstructionForReturnsLine/InstructionForReturnsLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InsuranceEndorsement/InsuranceEndorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InsuranceParty/InsuranceParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InterestedParty/InterestedParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InterestedProcurementProjectLot/InterestedProcurementProjectLot`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InventoryLocation/InventoryLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InventoryPeriod/InventoryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InventoryReportLine/InventoryReportLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InventoryReportingParty/InventoryReportingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InvitationSubmissionPeriod/InvitationSubmissionPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InvoiceDocumentReference/InvoiceDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InvoiceLine/InvoiceLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InvoicePeriod/InvoicePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/IssuerEndorsement/IssuerEndorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/IssuerParty/IssuerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/IssuingCountry/IssuingCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Item/Item`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemComparison/ItemComparison`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemIdentification/ItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemInformationRequestLine/ItemInformationRequestLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemInstance/ItemInstance`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemLocationQuantity/ItemLocationQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemManagementProfile/ItemManagementProfile`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemPriceExtension/ItemPriceExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemProperty/ItemProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemPropertyGroup/ItemPropertyGroup`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemPropertyRange/ItemPropertyRange`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemSpecificationDocumentReference/ItemSpecificationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/JurisdictionRegionAddress/JurisdictionRegionAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/KeywordItemProperty/KeywordItemProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Language/Language`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LastExitPortLocation/LastExitPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LegalDocumentReference/LegalDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LegalMonetaryTotal/LegalMonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LineItem/LineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LineReference/LineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LineResponse/LineResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LineValidityPeriod/LineValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LoadingLocation/LoadingLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LoadingPortLocation/LoadingPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LoadingProofParty/LoadingProofParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LoadingTransportEvent/LoadingTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Location/Location`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LocationAddress/LocationAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LocationCoordinate/LocationCoordinate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LogisticsOperatorParty/LogisticsOperatorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LotIdentification/LotIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainCarriageShipmentStage/MainCarriageShipmentStage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainCommodityClassification/MainCommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainOnAccountPayment/MainOnAccountPayment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainPeriod/MainPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainQualifyingParty/MainQualifyingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainTransportationService/MainTransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MandateDocumentReference/MandateDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ManufacturerParty/ManufacturerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ManufacturersItemIdentification/ManufacturersItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MaritimeTransport/MaritimeTransport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MasterPerson/MasterPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MaximumDeliveryUnit/MaximumDeliveryUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MaximumTemperature/MaximumTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeasurementDimension/MeasurementDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeasurementFromLocation/MeasurementFromLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeasurementToLocation/MeasurementToLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MediationParty/MediationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Meter/Meter`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeterProperty/MeterProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeterReading/MeterReading`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MinimumDeliveryUnit/MinimumDeliveryUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MinimumTemperature/MinimumTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MinutesDocumentReference/MinutesDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MiscellaneousEvent/MiscellaneousEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MonetaryTotal/MonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MortgageHolderParty/MortgageHolderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NominationPeriod/NominationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotaryParty/NotaryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NoticeDocumentReference/NoticeDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotificationLocation/NotificationLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotificationPeriod/NotificationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotificationRequirement/NotificationRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotifyParty/NotifyParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OccurenceLocation/OccurenceLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OfferedItemLocationQuantity/OfferedItemLocationQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OnAccountPayment/OnAccountPayment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OnCarriageShipmentStage/OnCarriageShipmentStage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OpenTenderEvent/OpenTenderEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OperatingParty/OperatingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OptionValidityPeriod/OptionValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OptionalTakeoverTransportEvent/OptionalTakeoverTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderDocumentReference/OrderDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderLine/OrderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderLineReference/OrderLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderReference/OrderReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderedShipment/OrderedShipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginAddress/OriginAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginCountry/OriginCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalDepartureCountry/OriginalDepartureCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalDespatchParty/OriginalDespatchParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalDespatchTransportationService/OriginalDespatchTransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalDocumentReference/OriginalDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalItemLocationQuantity/OriginalItemLocationQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginatorCustomerParty/OriginatorCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginatorDocumentReference/OriginatorDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginatorParty/OriginatorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OtherCommunication/OtherCommunication`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OwnerParty/OwnerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Package/Package`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PackagedTransportHandlingUnit/PackagedTransportHandlingUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PalletSpaceMeasurementDimension/PalletSpaceMeasurementDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ParentDocumentLineReference/ParentDocumentLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ParentDocumentReference/ParentDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ParticipatingLocationsLocation/ParticipatingLocationsLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ParticipationRequestReceptionPeriod/ParticipationRequestReceptionPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Party/Party`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PartyIdentification/PartyIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PartyLegalEntity/PartyLegalEntity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PartyName/PartyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PartyTaxScheme/PartyTaxScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PassengerPerson/PassengerPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PayeeFinancialAccount/PayeeFinancialAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PayeeParty/PayeeParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PayerFinancialAccount/PayerFinancialAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PayerParty/PayerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Payment/Payment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentAlternativeExchangeRate/PaymentAlternativeExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentExchangeRate/PaymentExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentMandate/PaymentMandate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentMeans/PaymentMeans`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentReversalPeriod/PaymentReversalPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentTerms/PaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PenaltyClause/PenaltyClause`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PenaltyPaymentTerms/PenaltyPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PenaltyPeriod/PenaltyPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PerformanceDataLine/PerformanceDataLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PerformingCarrierParty/PerformingCarrierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Period/Period`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Person/Person`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PhysicalAttribute/PhysicalAttribute`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PhysicalLocation/PhysicalLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Pickup/Pickup`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PickupLocation/PickupLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PickupParty/PickupParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PickupTransportEvent/PickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedArrivalTransportEvent/PlannedArrivalTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedDeliveryTransportEvent/PlannedDeliveryTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedDepartureTransportEvent/PlannedDepartureTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedPeriod/PlannedPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedPickupTransportEvent/PlannedPickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedWaypointTransportEvent/PlannedWaypointTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PositioningTransportEvent/PositioningTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PostalAddress/PostalAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PowerOfAttorney/PowerOfAttorney`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreCarriageShipmentStage/PreCarriageShipmentStage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreSelectedParty/PreSelectedParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PrepaidPayment/PrepaidPayment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PrepaidPaymentTerms/PrepaidPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreparationParty/PreparationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PresentationPeriod/PresentationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreviousDocumentReference/PreviousDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreviousPriceList/PreviousPriceList`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Price/Price`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PriceExtension/PriceExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PriceList/PriceList`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PricingExchangeRate/PricingExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PricingReference/PricingReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProcessJustification/ProcessJustification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProcurementLegislationDocumentReference/ProcurementLegislationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProcurementProject/ProcurementProject`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProcurementProjectLot/ProcurementProjectLot`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProjectReference/ProjectReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PromisedDeliveryPeriod/PromisedDeliveryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PromotionalEvent/PromotionalEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PromotionalEventLineItem/PromotionalEventLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PromotionalSpecification/PromotionalSpecification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProviderParty/ProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QualificationResolution/QualificationResolution`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QualifyingParty/QualifyingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuarantineTransportEvent/QuarantineTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuotationDocumentReference/QuotationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuotationLine/QuotationLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuotationLineReference/QuotationLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuotedMonetaryTotal/QuotedMonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RailTransport/RailTransport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RangeDimension/RangeDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RealizedLocation/RealizedLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiptDocumentReference/ReceiptDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiptLine/ReceiptLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiptLineReference/ReceiptLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiptTransportEvent/ReceiptTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceivedHandlingUnitReceiptLine/ReceivedHandlingUnitReceiptLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiverParty/ReceiverParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RecipientCustomerParty/RecipientCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RecipientParty/RecipientParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedConsignment/ReferencedConsignment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedContract/ReferencedContract`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedGoodsItem/ReferencedGoodsItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedPackage/ReferencedPackage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedShipment/ReferencedShipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedTransportEquipment/ReferencedTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RegistrationAddress/RegistrationAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RegistryCertificateDocumentReference/RegistryCertificateDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RegistryPortLocation/RegistryPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Regulation/Regulation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RelatedCatalogueReference/RelatedCatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RelatedItem/RelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReminderDocumentReference/ReminderDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReminderLine/ReminderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReminderPeriod/ReminderPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RemittanceAdviceLine/RemittanceAdviceLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Renewal/Renewal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReplacedNoticeDocumentReference/ReplacedNoticeDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReplacedRelatedItem/ReplacedRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReplacementRelatedItem/ReplacementRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReportedShipment/ReportedShipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReportingPerson/ReportingPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestForQuotationDocumentReference/RequestForQuotationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestForQuotationLine/RequestForQuotationLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestForTenderLine/RequestForTenderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestLineReference/RequestLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedArrivalTransportEvent/RequestedArrivalTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedCatalogueReference/RequestedCatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedClassificationScheme/RequestedClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDeliveryPeriod/RequestedDeliveryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDeliveryTransportEvent/RequestedDeliveryTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDepartureTransportEvent/RequestedDepartureTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDespatchPeriod/RequestedDespatchPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDocumentReference/RequestedDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedLanguage/RequestedLanguage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedMonetaryTotal/RequestedMonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedPickupTransportEvent/RequestedPickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedStatusLocation/RequestedStatusLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedStatusPeriod/RequestedStatusPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedTenderTotal/RequestedTenderTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedValidityPeriod/RequestedValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedWaypointTransportEvent/RequestedWaypointTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredBusinessClassificationScheme/RequiredBusinessClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredClassificationScheme/RequiredClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredFinancialGuarantee/RequiredFinancialGuarantee`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredItemLocationQuantity/RequiredItemLocationQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredRelatedItem/RequiredRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ResidenceAddress/ResidenceAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ResolutionDocumentReference/ResolutionDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Response/Response`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ResponsibleTransportServiceProviderParty/ResponsibleTransportServiceProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ResultOfVerification/ResultOfVerification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RetailPlannedImpact/RetailPlannedImpact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RetailerCustomerParty/RetailerCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReturnAddress/ReturnAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RoadTransport/RoadTransport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SalesItem/SalesItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ScheduledServiceFrequency/ScheduledServiceFrequency`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SecondaryHazard/SecondaryHazard`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SecurityOfficerPerson/SecurityOfficerPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SelfBilledCreditNoteDocumentReference/SelfBilledCreditNoteDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SelfBilledInvoiceDocumentReference/SelfBilledInvoiceDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellerContact/SellerContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellerProposedSubstituteLineItem/SellerProposedSubstituteLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellerSubstitutedLineItem/SellerSubstitutedLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellerSupplierParty/SellerSupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellersItemIdentification/SellersItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SenderParty/SenderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceAllowanceCharge/ServiceAllowanceCharge`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceChargePaymentTerms/ServiceChargePaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceEndTimePeriod/ServiceEndTimePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceFrequency/ServiceFrequency`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceProviderParty/ServiceProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceStartTimePeriod/ServiceStartTimePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SettlementPeriod/SettlementPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ShareholderParty/ShareholderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Shipment/Shipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ShipmentDocumentReference/ShipmentDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ShipmentStage/ShipmentStage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ShipsSurgeonPerson/ShipsSurgeonPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SignatoryContact/SignatoryContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SignatoryParty/SignatoryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Signature/Signature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SourceCatalogueReference/SourceCatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SourceIssuerParty/SourceIssuerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SpecificTendererRequirement/SpecificTendererRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StandardItemIdentification/StandardItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatementDocumentReference/StatementDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatementLine/StatementLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatementPeriod/StatementPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Status/Status`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatusLocation/StatusLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatusPeriod/StatusPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StockAvailabilityReportLine/StockAvailabilityReportLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StorageLocation/StorageLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StorageTransportEvent/StorageTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Stowage/Stowage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubCreditNoteLine/SubCreditNoteLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubDebitNoteLine/SubDebitNoteLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubInvoiceLine/SubInvoiceLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubLineItem/SubLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubRequestForTenderLine/SubRequestForTenderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubTenderLine/SubTenderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubcontractTerms/SubcontractTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubcontractorParty/SubcontractorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubordinateAwardingCriterion/SubordinateAwardingCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubordinateAwardingCriterionResponse/SubordinateAwardingCriterionResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubscriberConsumption/SubscriberConsumption`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubscriberParty/SubscriberParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubsequentProcessTenderRequirement/SubsequentProcessTenderRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubsidiaryLocation/SubsidiaryLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubstituteCarrierParty/SubstituteCarrierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SuggestedEvidence/SuggestedEvidence`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupplierConsumption/SupplierConsumption`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupplierParty/SupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupplyChainActivityDataLine/SupplyChainActivityDataLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupplyItem/SupplyItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupportedCommodityClassification/SupportedCommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupportedTransportEquipment/SupportedTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupportingDocumentReference/SupportingDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TakeoverTransportEvent/TakeoverTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxCategory/TaxCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxExchangeRate/TaxExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxExclusivePrice/TaxExclusivePrice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxInclusivePrice/TaxInclusivePrice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxRepresentativeParty/TaxRepresentativeParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxScheme/TaxScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxSubtotal/TaxSubtotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxTotal/TaxTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TechnicalCapability/TechnicalCapability`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TechnicalCommitteePerson/TechnicalCommitteePerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TechnicalDocumentReference/TechnicalDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TechnicalEvaluationCriterion/TechnicalEvaluationCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TelecommunicationsService/TelecommunicationsService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TelecommunicationsSupply/TelecommunicationsSupply`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TelecommunicationsSupplyLine/TelecommunicationsSupplyLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Temperature/Temperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TemplateDocumentReference/TemplateDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderDocumentReference/TenderDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderEvaluationParty/TenderEvaluationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderLine/TenderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderPreparation/TenderPreparation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderRecipientParty/TenderRecipientParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderRequirement/TenderRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderResult/TenderResult`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderSubmissionDeadlinePeriod/TenderSubmissionDeadlinePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderValidityPeriod/TenderValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderedProject/TenderedProject`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererParty/TendererParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererPartyQualification/TendererPartyQualification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererQualificationDocumentReference/TendererQualificationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererQualificationRequest/TendererQualificationRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererRequirement/TendererRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderingProcess/TenderingProcess`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderingTerms/TenderingTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TerminalOperatorParty/TerminalOperatorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TimeDuty/TimeDuty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ToLocation/ToLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TotalCapacityDimension/TotalCapacityDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TradeFinancing/TradeFinancing`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TradingTerms/TradingTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransactionConditions/TransactionConditions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransitCountry/TransitCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransitPeriod/TransitPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportAdvisorParty/TransportAdvisorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportContract/TransportContract`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportEquipment/TransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportEquipmentSeal/TransportEquipmentSeal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportEvent/TransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportExecutionPlanDocumentReference/TransportExecutionPlanDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportExecutionPlanRequestDocumentReference/TransportExecutionPlanRequestDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportExecutionTerms/TransportExecutionTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportHandlingUnit/TransportHandlingUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportMeans/TransportMeans`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportProgressStatusRequestDocumentReference/TransportProgressStatusRequestDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportSchedule/TransportSchedule`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceDescriptionDocumentReference/TransportServiceDescriptionDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceDescriptionRequestDocumentReference/TransportServiceDescriptionRequestDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceProviderParty/TransportServiceProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceProviderResponseDeadlinePeriod/TransportServiceProviderResponseDeadlinePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceProviderResponseRequiredPeriod/TransportServiceProviderResponseRequiredPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportUserParty/TransportUserParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportUserResponseRequiredPeriod/TransportUserResponseRequiredPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportationSegment/TransportationSegment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportationService/TransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportationStatusRequestDocumentReference/TransportationStatusRequestDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransshipPortLocation/TransshipPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnloadingLocation/UnloadingLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnloadingPortLocation/UnloadingPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnstructuredPrice/UnstructuredPrice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnsupportedCommodityClassification/UnsupportedCommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnsupportedTransportEquipment/UnsupportedTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UpdatedDeliveryTransportEvent/UpdatedDeliveryTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UpdatedPickupTransportEvent/UpdatedPickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UsabilityPeriod/UsabilityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilityConsumptionPoint/UtilityConsumptionPoint`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilityCustomerParty/UtilityCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilityItem/UtilityItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilityMeter/UtilityMeter`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilitySupplierParty/UtilitySupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ValidityPeriod/ValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WarehousingTransportEvent/WarehousingTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WarrantyParty/WarrantyParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WarrantyValidityPeriod/WarrantyValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WebSiteAccess/WebSiteAccess`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WinningParty/WinningParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WithholdingTaxTotal/WithholdingTaxTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WitnessParty/WitnessParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WorkOrderDocumentReference/WorkOrderDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WorkPhaseReference/WorkPhaseReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AcceptedIndicator/AcceptedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AcceptedVariantsDescription/AcceptedVariantsDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountFormatCode/AccountFormatCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountID/AccountID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountTypeCode/AccountTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountingCost/AccountingCost`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountingCostCode/AccountingCostCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActionCode/ActionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActivityType/ActivityType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActivityTypeCode/ActivityTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualDeliveryDate/ActualDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualDeliveryTime/ActualDeliveryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualDespatchDate/ActualDespatchDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualDespatchTime/ActualDespatchTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualPickupDate/ActualPickupDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualPickupTime/ActualPickupTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualTemperatureReductionQuantity/ActualTemperatureReductionQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdValoremIndicator/AdValoremIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdditionalAccountID/AdditionalAccountID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdditionalConditions/AdditionalConditions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdditionalInformation/AdditionalInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdditionalStreetName/AdditionalStreetName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AddressFormatCode/AddressFormatCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AddressTypeCode/AddressTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdjustmentReasonCode/AdjustmentReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdmissionCode/AdmissionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdvertisementAmount/AdvertisementAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AgencyID/AgencyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AgencyName/AgencyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AirFlowPercent/AirFlowPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AircraftID/AircraftID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AliasName/AliasName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AllowanceChargeReason/AllowanceChargeReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AllowanceChargeReasonCode/AllowanceChargeReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AllowanceTotalAmount/AllowanceTotalAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AltitudeMeasure/AltitudeMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Amount/Amount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AmountRate/AmountRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AnimalFoodApprovedIndicator/AnimalFoodApprovedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AnimalFoodIndicator/AnimalFoodIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AnnualAverageAmount/AnnualAverageAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ApplicationStatusCode/ApplicationStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ApprovalDate/ApprovalDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ApprovalStatus/ApprovalStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AttributeID/AttributeID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AuctionConstraintIndicator/AuctionConstraintIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AuctionURI/AuctionURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AvailabilityDate/AvailabilityDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AvailabilityStatusCode/AvailabilityStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AverageAmount/AverageAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AverageSubsequentContractAmount/AverageSubsequentContractAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardDate/AwardDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardTime/AwardTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardingCriterionDescription/AwardingCriterionDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardingCriterionID/AwardingCriterionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardingCriterionTypeCode/AwardingCriterionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardingMethodTypeCode/AwardingMethodTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BackOrderAllowedIndicator/BackOrderAllowedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BackorderQuantity/BackorderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BackorderReason/BackorderReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BalanceAmount/BalanceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BalanceBroughtForwardIndicator/BalanceBroughtForwardIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BarcodeSymbologyID/BarcodeSymbologyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BaseAmount/BaseAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BaseQuantity/BaseQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BaseUnitMeasure/BaseUnitMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BasedOnConsensusIndicator/BasedOnConsensusIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BasicConsumedQuantity/BasicConsumedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BatchQuantity/BatchQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BestBeforeDate/BestBeforeDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BindingOnBuyerIndicator/BindingOnBuyerIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BirthDate/BirthDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BirthplaceName/BirthplaceName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BlockName/BlockName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BrandName/BrandName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BrokerAssignedID/BrokerAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BudgetYearNumeric/BudgetYearNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuildingName/BuildingName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuildingNumber/BuildingNumber`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BulkCargoIndicator/BulkCargoIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BusinessClassificationEvidenceID/BusinessClassificationEvidenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BusinessIdentityEvidenceID/BusinessIdentityEvidenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuyerEventID/BuyerEventID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuyerProfileURI/BuyerProfileURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuyerReference/BuyerReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CV2ID/CV2ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationExpression/CalculationExpression`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationExpressionCode/CalculationExpressionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationMethodCode/CalculationMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationRate/CalculationRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationSequenceNumeric/CalculationSequenceNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CallBaseAmount/CallBaseAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CallDate/CallDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CallExtensionAmount/CallExtensionAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CallTime/CallTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CancellationNote/CancellationNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CandidateReductionConstraintIndicator/CandidateReductionConstraintIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CandidateStatement/CandidateStatement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CanonicalizationMethod/CanonicalizationMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CapabilityTypeCode/CapabilityTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CardChipCode/CardChipCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CardTypeCode/CardTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CargoTypeCode/CargoTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CarrierAssignedID/CarrierAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CarrierServiceInstructions/CarrierServiceInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CatalogueIndicator/CatalogueIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CategoryName/CategoryName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CertificateType/CertificateType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CertificateTypeCode/CertificateTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChangeConditions/ChangeConditions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Channel/Channel`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChannelCode/ChannelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CharacterSetCode/CharacterSetCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Characteristics/Characteristics`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChargeIndicator/ChargeIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChargeTotalAmount/ChargeTotalAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChargeableQuantity/ChargeableQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChargeableWeightMeasure/ChargeableWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChildConsignmentQuantity/ChildConsignmentQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChipApplicationID/ChipApplicationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CityName/CityName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CitySubdivisionName/CitySubdivisionName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CodeValue/CodeValue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CollaborationPriorityCode/CollaborationPriorityCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Comment/Comment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CommodityCode/CommodityCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompanyID/CompanyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompanyLegalForm/CompanyLegalForm`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompanyLegalFormCode/CompanyLegalFormCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompanyLiquidationStatusCode/CompanyLiquidationStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparedValueMeasure/ComparedValueMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparisonDataCode/ComparisonDataCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparisonDataSourceCode/ComparisonDataSourceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparisonForecastIssueDate/ComparisonForecastIssueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparisonForecastIssueTime/ComparisonForecastIssueTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompletionIndicator/CompletionIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Condition/Condition`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConditionCode/ConditionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Conditions/Conditions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConditionsDescription/ConditionsDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsigneeAssignedID/ConsigneeAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsignmentQuantity/ConsignmentQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsignorAssignedID/ConsignorAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsolidatableIndicator/ConsolidatableIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConstitutionCode/ConstitutionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumerIncentiveTacticTypeCode/ConsumerIncentiveTacticTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumerUnitQuantity/ConsumerUnitQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumersEnergyLevel/ConsumersEnergyLevel`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumersEnergyLevelCode/ConsumersEnergyLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionEnergyQuantity/ConsumptionEnergyQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionID/ConsumptionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionLevel/ConsumptionLevel`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionLevelCode/ConsumptionLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionReportID/ConsumptionReportID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionType/ConsumptionType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionTypeCode/ConsumptionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionWaterQuantity/ConsumptionWaterQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContainerizedIndicator/ContainerizedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Content/Content`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContentUnitQuantity/ContentUnitQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractFolderID/ContractFolderID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractName/ContractName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractSubdivision/ContractSubdivision`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractType/ContractType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractTypeCode/ContractTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractedCarrierAssignedID/ContractedCarrierAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractingSystemCode/ContractingSystemCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CoordinateSystemCode/CoordinateSystemCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CopyIndicator/CopyIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorporateRegistrationTypeCode/CorporateRegistrationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorporateStockAmount/CorporateStockAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorrectionAmount/CorrectionAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorrectionType/CorrectionType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorrectionTypeCode/CorrectionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorrectionUnitAmount/CorrectionUnitAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CountrySubentity/CountrySubentity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CountrySubentityCode/CountrySubentityCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CreditLineAmount/CreditLineAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CreditNoteTypeCode/CreditNoteTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CreditedQuantity/CreditedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CrewQuantity/CrewQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CurrencyCode/CurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CurrentChargeType/CurrentChargeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CurrentChargeTypeCode/CurrentChargeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomerAssignedAccountID/CustomerAssignedAccountID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomerReference/CustomerReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomizationID/CustomizationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomsClearanceServiceInstructions/CustomsClearanceServiceInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomsImportClassifiedIndicator/CustomsImportClassifiedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomsStatusCode/CustomsStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomsTariffQuantity/CustomsTariffQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DamageRemarks/DamageRemarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DangerousGoodsApprovedIndicator/DangerousGoodsApprovedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DataSendingCapability/DataSendingCapability`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DataSourceCode/DataSourceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Date/Date`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DebitLineAmount/DebitLineAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DebitedQuantity/DebitedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclarationTypeCode/DeclarationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclaredCarriageValueAmount/DeclaredCarriageValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclaredCustomsValueAmount/DeclaredCustomsValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclaredForCarriageValueAmount/DeclaredForCarriageValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclaredStatisticsValueAmount/DeclaredStatisticsValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeliveredQuantity/DeliveredQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeliveryInstructions/DeliveryInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DemurrageInstructions/DemurrageInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Department/Department`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Description/Description`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DescriptionCode/DescriptionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DespatchAdviceTypeCode/DespatchAdviceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DifferenceTemperatureReductionQuantity/DifferenceTemperatureReductionQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DirectionCode/DirectionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DisplayTacticTypeCode/DisplayTacticTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DispositionCode/DispositionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/District/District`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentCurrencyCode/DocumentCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentDescription/DocumentDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentHash/DocumentHash`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentID/DocumentID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentStatusCode/DocumentStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentStatusReasonCode/DocumentStatusReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentStatusReasonDescription/DocumentStatusReasonDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentType/DocumentType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentTypeCode/DocumentTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentationFeeAmount/DocumentationFeeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DueDate/DueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DurationMeasure/DurationMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Duty/Duty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DutyCode/DutyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EarliestPickupDate/EarliestPickupDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EarliestPickupTime/EarliestPickupTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EconomicOperatorRegistryURI/EconomicOperatorRegistryURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EffectiveDate/EffectiveDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EffectiveTime/EffectiveTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ElectronicDeviceDescription/ElectronicDeviceDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ElectronicMail/ElectronicMail`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EmbeddedDocumentBinaryObject/EmbeddedDocumentBinaryObject`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EmergencyProceduresCode/EmergencyProceduresCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EmployeeQuantity/EmployeeQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EncodingCode/EncodingCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EndDate/EndDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EndTime/EndTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EndpointID/EndpointID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EnvironmentalEmissionTypeCode/EnvironmentalEmissionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedAmount/EstimatedAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedConsumedQuantity/EstimatedConsumedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedDeliveryDate/EstimatedDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedDeliveryTime/EstimatedDeliveryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedDespatchDate/EstimatedDespatchDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedDespatchTime/EstimatedDespatchTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedOverallContractAmount/EstimatedOverallContractAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedOverallContractQuantity/EstimatedOverallContractQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EvaluationCriterionTypeCode/EvaluationCriterionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EvidenceTypeCode/EvidenceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExceptionResolutionCode/ExceptionResolutionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExceptionStatusCode/ExceptionStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExchangeMarketID/ExchangeMarketID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExclusionReason/ExclusionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExecutionRequirementCode/ExecutionRequirementCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExemptionReason/ExemptionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExemptionReasonCode/ExemptionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpectedOperatorQuantity/ExpectedOperatorQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpectedQuantity/ExpectedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpenseCode/ExpenseCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpiryDate/ExpiryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpiryTime/ExpiryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Expression/Expression`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpressionCode/ExpressionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExtendedID/ExtendedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Extension/Extension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FaceValueAmount/FaceValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FamilyName/FamilyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FeatureTacticTypeCode/FeatureTacticTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FeeAmount/FeeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FeeDescription/FeeDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FileName/FileName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FinancingInstrumentCode/FinancingInstrumentCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FirstName/FirstName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FirstShipmentAvailibilityDate/FirstShipmentAvailibilityDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Floor/Floor`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FollowupContractIndicator/FollowupContractIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ForecastPurposeCode/ForecastPurposeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ForecastTypeCode/ForecastTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FormatCode/FormatCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ForwarderServiceInstructions/ForwarderServiceInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FreeOfChargeIndicator/FreeOfChargeIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FreeOnBoardValueAmount/FreeOnBoardValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FreightForwarderAssignedID/FreightForwarderAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FreightRateClassCode/FreightRateClassCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Frequency/Frequency`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FrozenDocumentIndicator/FrozenDocumentIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FrozenPeriodDaysNumeric/FrozenPeriodDaysNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FullnessIndicationCode/FullnessIndicationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FullyPaidSharesIndicator/FullyPaidSharesIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FundingProgram/FundingProgram`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FundingProgramCode/FundingProgramCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GasPressureQuantity/GasPressureQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GenderCode/GenderCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GeneralCargoIndicator/GeneralCargoIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GovernmentAgreementConstraintIndicator/GovernmentAgreementConstraintIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GrossTonnageMeasure/GrossTonnageMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GrossVolumeMeasure/GrossVolumeMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GrossWeightMeasure/GrossWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GuaranteeTypeCode/GuaranteeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GuaranteedDespatchDate/GuaranteedDespatchDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GuaranteedDespatchTime/GuaranteedDespatchTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HandlingCode/HandlingCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HandlingInstructions/HandlingInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HashAlgorithmMethod/HashAlgorithmMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HaulageInstructions/HaulageInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HazardClassID/HazardClassID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HazardousCategoryCode/HazardousCategoryCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HazardousRegulationCode/HazardousRegulationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HazardousRiskIndicator/HazardousRiskIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HeatingType/HeatingType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HeatingTypeCode/HeatingTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HigherTenderAmount/HigherTenderAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HolderName/HolderName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HumanFoodApprovedIndicator/HumanFoodApprovedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HumanFoodIndicator/HumanFoodIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HumidityPercent/HumidityPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ID/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IdentificationCode/IdentificationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IdentificationID/IdentificationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ImmobilizationCertificateID/ImmobilizationCertificateID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ImportanceCode/ImportanceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IndicationIndicator/IndicationIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IndustryClassificationCode/IndustryClassificationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Information/Information`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InformationURI/InformationURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InhalationToxicityZoneCode/InhalationToxicityZoneCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InhouseMail/InhouseMail`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InspectionMethodCode/InspectionMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InstallmentDueDate/InstallmentDueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InstructionID/InstructionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InstructionNote/InstructionNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Instructions/Instructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InsurancePremiumAmount/InsurancePremiumAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InsuranceValueAmount/InsuranceValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InventoryValueAmount/InventoryValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InvoiceTypeCode/InvoiceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InvoicedQuantity/InvoicedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InvoicingPartyReference/InvoicingPartyReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IssueDate/IssueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IssueNumberID/IssueNumberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IssueTime/IssueTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IssuerID/IssuerID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ItemClassificationCode/ItemClassificationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ItemUpdateRequestIndicator/ItemUpdateRequestIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/JobTitle/JobTitle`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/JourneyID/JourneyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Justification/Justification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/JustificationDescription/JustificationDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Keyword/Keyword`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LanguageID/LanguageID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LastRevisionDate/LastRevisionDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LastRevisionTime/LastRevisionTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestDeliveryDate/LatestDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestDeliveryTime/LatestDeliveryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestMeterQuantity/LatestMeterQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestMeterReadingDate/LatestMeterReadingDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestMeterReadingMethod/LatestMeterReadingMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestMeterReadingMethodCode/LatestMeterReadingMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestPickupDate/LatestPickupDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestPickupTime/LatestPickupTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestProposalAcceptanceDate/LatestProposalAcceptanceDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestSecurityClearanceDate/LatestSecurityClearanceDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatitudeDegreesMeasure/LatitudeDegreesMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatitudeDirectionCode/LatitudeDirectionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatitudeMinutesMeasure/LatitudeMinutesMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LeadTimeMeasure/LeadTimeMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LegalReference/LegalReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LegalStatusIndicator/LegalStatusIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LiabilityAmount/LiabilityAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LicensePlateID/LicensePlateID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LifeCycleStatusCode/LifeCycleStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LimitationDescription/LimitationDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Line/Line`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineCountNumeric/LineCountNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineExtensionAmount/LineExtensionAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineID/LineID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineNumberNumeric/LineNumberNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineStatusCode/LineStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ListValue/ListValue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LivestockIndicator/LivestockIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LoadingLengthMeasure/LoadingLengthMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LoadingSequenceID/LoadingSequenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LocaleCode/LocaleCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Location/Location`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LocationID/LocationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LocationTypeCode/LocationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Login/Login`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LogoReferenceID/LogoReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LongitudeDegreesMeasure/LongitudeDegreesMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LongitudeDirectionCode/LongitudeDirectionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LongitudeMinutesMeasure/LongitudeMinutesMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LossRisk/LossRisk`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LossRiskResponsibilityCode/LossRiskResponsibilityCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LotNumberID/LotNumberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LowTendersDescription/LowTendersDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LowerOrangeHazardPlacardID/LowerOrangeHazardPlacardID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LowerTenderAmount/LowerTenderAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MandateTypeCode/MandateTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ManufactureDate/ManufactureDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ManufactureTime/ManufactureTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkAttention/MarkAttention`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkAttentionIndicator/MarkAttentionIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkCare/MarkCare`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkCareIndicator/MarkCareIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarketValueAmount/MarketValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkingID/MarkingID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MathematicOperatorCode/MathematicOperatorCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumAdvertisementAmount/MaximumAdvertisementAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumAmount/MaximumAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumBackorderQuantity/MaximumBackorderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumCopiesNumeric/MaximumCopiesNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumMeasure/MaximumMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumNumberNumeric/MaximumNumberNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumOperatorQuantity/MaximumOperatorQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumOrderQuantity/MaximumOrderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumPaidAmount/MaximumPaidAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumPaymentInstructionsNumeric/MaximumPaymentInstructionsNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumPercent/MaximumPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumQuantity/MaximumQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumValue/MaximumValue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumVariantQuantity/MaximumVariantQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Measure/Measure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MedicalFirstAidGuideCode/MedicalFirstAidGuideCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterConstant/MeterConstant`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterConstantCode/MeterConstantCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterName/MeterName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterNumber/MeterNumber`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterReadingComments/MeterReadingComments`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterReadingType/MeterReadingType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterReadingTypeCode/MeterReadingTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MiddleName/MiddleName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MimeCode/MimeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumAmount/MinimumAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumBackorderQuantity/MinimumBackorderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumImprovementBid/MinimumImprovementBid`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumInventoryQuantity/MinimumInventoryQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumMeasure/MinimumMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumNumberNumeric/MinimumNumberNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumOrderQuantity/MinimumOrderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumPercent/MinimumPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumQuantity/MinimumQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumValue/MinimumValue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MiscellaneousEventTypeCode/MiscellaneousEventTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ModelName/ModelName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MonetaryScope/MonetaryScope`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MovieTitle/MovieTitle`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MultipleOrderQuantity/MultipleOrderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MultiplierFactorNumeric/MultiplierFactorNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Name/Name`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NameCode/NameCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NameSuffix/NameSuffix`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NationalityID/NationalityID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NatureCode/NatureCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NegotiationDescription/NegotiationDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetNetWeightMeasure/NetNetWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetTonnageMeasure/NetTonnageMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetVolumeMeasure/NetVolumeMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetWeightMeasure/NetWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetworkID/NetworkID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NominationDate/NominationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NominationTime/NominationTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NormalTemperatureReductionQuantity/NormalTemperatureReductionQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Note/Note`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NotificationTypeCode/NotificationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OccurrenceDate/OccurrenceDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OccurrenceTime/OccurrenceTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OnCarriageIndicator/OnCarriageIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OneTimeChargeType/OneTimeChargeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OneTimeChargeTypeCode/OneTimeChargeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OntologyURI/OntologyURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OpenTenderID/OpenTenderID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OperatingYearsQuantity/OperatingYearsQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OptionalLineItemIndicator/OptionalLineItemIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OptionsDescription/OptionsDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderIntervalDaysNumeric/OrderIntervalDaysNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderQuantityIncrementNumeric/OrderQuantityIncrementNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderResponseCode/OrderResponseCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderTypeCode/OrderTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderableIndicator/OrderableIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderableUnit/OrderableUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderableUnitFactorRate/OrderableUnitFactorRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrganizationDepartment/OrganizationDepartment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OriginalContractingSystemID/OriginalContractingSystemID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OriginalJobID/OriginalJobID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OtherConditionsIndicator/OtherConditionsIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OtherInstruction/OtherInstruction`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OtherName/OtherName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OutstandingQuantity/OutstandingQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OutstandingReason/OutstandingReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OversupplyQuantity/OversupplyQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OwnerTypeCode/OwnerTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackLevelCode/PackLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackQuantity/PackQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackSizeNumeric/PackSizeNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackageLevelCode/PackageLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackagingTypeCode/PackagingTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackingCriteriaCode/PackingCriteriaCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackingMaterial/PackingMaterial`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaidAmount/PaidAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaidDate/PaidDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaidTime/PaidTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParentDocumentID/ParentDocumentID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParentDocumentLineReferenceID/ParentDocumentLineReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParentDocumentTypeCode/ParentDocumentTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParentDocumentVersionID/ParentDocumentVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartPresentationCode/PartPresentationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartecipationPercent/PartecipationPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartialDeliveryIndicator/PartialDeliveryIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParticipationPercent/ParticipationPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartyCapacityAmount/PartyCapacityAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartyType/PartyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartyTypeCode/PartyTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PassengerQuantity/PassengerQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Password/Password`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayPerView/PayPerView`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayableAlternativeAmount/PayableAlternativeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayableAmount/PayableAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayableRoundingAmount/PayableRoundingAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayerReference/PayerReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentAlternativeCurrencyCode/PaymentAlternativeCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentChannelCode/PaymentChannelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentCurrencyCode/PaymentCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentDescription/PaymentDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentDueDate/PaymentDueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentFrequencyCode/PaymentFrequencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentID/PaymentID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentMeansCode/PaymentMeansCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentMeansID/PaymentMeansID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentNote/PaymentNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentOrderReference/PaymentOrderReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentPercent/PaymentPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentPurposeCode/PaymentPurposeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentTermsDetailsURI/PaymentTermsDetailsURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PenaltyAmount/PenaltyAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PenaltySurchargePercent/PenaltySurchargePercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PerUnitAmount/PerUnitAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Percent/Percent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PerformanceMetricTypeCode/PerformanceMetricTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PerformanceValueQuantity/PerformanceValueQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PerformingCarrierAssignedID/PerformingCarrierAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PersonalSituation/PersonalSituation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PhoneNumber/PhoneNumber`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PlacardEndorsement/PlacardEndorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PlacardNotation/PlacardNotation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PlannedDate/PlannedDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PlotIdentification/PlotIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PositionCode/PositionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PostEventNotificationDurationMeasure/PostEventNotificationDurationMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PostalZone/PostalZone`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Postbox/Postbox`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PowerIndicator/PowerIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreCarriageIndicator/PreCarriageIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreEventNotificationDurationMeasure/PreEventNotificationDurationMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreferenceCriterionCode/PreferenceCriterionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrepaidAmount/PrepaidAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrepaidIndicator/PrepaidIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrepaidPaymentReferenceID/PrepaidPaymentReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousCancellationReasonCode/PreviousCancellationReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousJobID/PreviousJobID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousMeterQuantity/PreviousMeterQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousMeterReadingDate/PreviousMeterReadingDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousMeterReadingMethod/PreviousMeterReadingMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousMeterReadingMethodCode/PreviousMeterReadingMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousVersionID/PreviousVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceAmount/PriceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceChangeReason/PriceChangeReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceEvaluationCode/PriceEvaluationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceRevisionFormulaDescription/PriceRevisionFormulaDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceType/PriceType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceTypeCode/PriceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PricingCurrencyCode/PricingCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PricingUpdateRequestIndicator/PricingUpdateRequestIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrimaryAccountNumberID/PrimaryAccountNumberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrintQualifier/PrintQualifier`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Priority/Priority`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrivacyCode/PrivacyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrizeDescription/PrizeDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrizeIndicator/PrizeIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcedureCode/ProcedureCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcessDescription/ProcessDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcessReason/ProcessReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcessReasonCode/ProcessReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcurementSubTypeCode/ProcurementSubTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcurementTypeCode/ProcurementTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProductTraceID/ProductTraceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProfileExecutionID/ProfileExecutionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProfileID/ProfileID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProfileStatusCode/ProfileStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProgressPercent/ProgressPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PromotionalEventTypeCode/PromotionalEventTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProviderTypeCode/ProviderTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PublishAwardIndicator/PublishAwardIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Purpose/Purpose`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PurposeCode/PurposeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/QualityControlCode/QualityControlCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Quantity/Quantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/QuantityDiscrepancyCode/QuantityDiscrepancyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RadioCallSignID/RadioCallSignID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RailCarID/RailCarID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Rank/Rank`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Rate/Rate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceiptAdviceTypeCode/ReceiptAdviceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedDate/ReceivedDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedElectronicTenderQuantity/ReceivedElectronicTenderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedForeignTenderQuantity/ReceivedForeignTenderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedQuantity/ReceivedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedTenderQuantity/ReceivedTenderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Reference/Reference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferenceDate/ReferenceDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferenceEventCode/ReferenceEventCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferenceID/ReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferenceTime/ReferenceTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferencedConsignmentID/ReferencedConsignmentID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RefrigeratedIndicator/RefrigeratedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RefrigerationOnIndicator/RefrigerationOnIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Region/Region`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegisteredDate/RegisteredDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegisteredTime/RegisteredTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationDate/RegistrationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationExpirationDate/RegistrationExpirationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationID/RegistrationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationName/RegistrationName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationNationality/RegistrationNationality`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationNationalityID/RegistrationNationalityID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegulatoryDomain/RegulatoryDomain`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectActionCode/RejectActionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectReason/RejectReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectReasonCode/RejectReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectedQuantity/RejectedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectionNote/RejectionNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReleaseID/ReleaseID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReliabilityPercent/ReliabilityPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Remarks/Remarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReminderSequenceNumeric/ReminderSequenceNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReminderTypeCode/ReminderTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReplenishmentOwnerDescription/ReplenishmentOwnerDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestForQuotationLineID/RequestForQuotationLineID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedDeliveryDate/RequestedDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedDespatchDate/RequestedDespatchDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedDespatchTime/RequestedDespatchTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedInvoiceCurrencyCode/RequestedInvoiceCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedPublicationDate/RequestedPublicationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredCurriculaIndicator/RequiredCurriculaIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredCustomsID/RequiredCustomsID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredDeliveryDate/RequiredDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredDeliveryTime/RequiredDeliveryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredFeeAmount/RequiredFeeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResidenceType/ResidenceType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResidenceTypeCode/ResidenceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResidentOccupantsNumeric/ResidentOccupantsNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Resolution/Resolution`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResolutionCode/ResolutionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResolutionDate/ResolutionDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResolutionTime/ResolutionTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResponseCode/ResponseCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResponseDate/ResponseDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResponseTime/ResponseTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RetailEventName/RetailEventName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RetailEventStatusCode/RetailEventStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReturnabilityIndicator/ReturnabilityIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReturnableMaterialIndicator/ReturnableMaterialIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReturnableQuantity/ReturnableQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RevisedForecastLineID/RevisedForecastLineID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RevisionDate/RevisionDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RevisionStatusCode/RevisionStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RevisionTime/RevisionTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RoamingPartnerName/RoamingPartnerName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RoleCode/RoleCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RoleDescription/RoleDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Room/Room`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RoundingAmount/RoundingAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SalesOrderID/SalesOrderID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SalesOrderLineID/SalesOrderLineID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SchemeURI/SchemeURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SealIssuerTypeCode/SealIssuerTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SealStatusCode/SealStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SealingPartyType/SealingPartyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SecurityClassificationCode/SecurityClassificationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SecurityID/SecurityID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SellerEventID/SellerEventID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SequenceID/SequenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SequenceNumberID/SequenceNumberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SequenceNumeric/SequenceNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SerialID/SerialID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceInformationPreferenceCode/ServiceInformationPreferenceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceName/ServiceName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceNumberCalled/ServiceNumberCalled`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceType/ServiceType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceTypeCode/ServiceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SettlementDiscountAmount/SettlementDiscountAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SettlementDiscountPercent/SettlementDiscountPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SharesNumberQuantity/SharesNumberQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShippingMarks/ShippingMarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShippingOrderID/ShippingOrderID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShippingPriorityLevelCode/ShippingPriorityLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShipsRequirements/ShipsRequirements`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShortQuantity/ShortQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShortageActionCode/ShortageActionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SignatureID/SignatureID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SignatureMethod/SignatureMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SizeTypeCode/SizeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SoleProprietorshipIndicator/SoleProprietorshipIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceCurrencyBaseRate/SourceCurrencyBaseRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceCurrencyCode/SourceCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceForecastIssueDate/SourceForecastIssueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceForecastIssueTime/SourceForecastIssueTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceValueMeasure/SourceValueMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialInstructions/SpecialInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialSecurityIndicator/SpecialSecurityIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialServiceInstructions/SpecialServiceInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialTerms/SpecialTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialTransportRequirements/SpecialTransportRequirements`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecificationID/SpecificationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecificationTypeCode/SpecificationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SplitConsignmentIndicator/SplitConsignmentIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StartDate/StartDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StartTime/StartTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatementTypeCode/StatementTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatusAvailableIndicator/StatusAvailableIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatusCode/StatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatusReason/StatusReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatusReasonCode/StatusReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StreetName/StreetName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubcontractingConditionsCode/SubcontractingConditionsCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubmissionDate/SubmissionDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubmissionDueDate/SubmissionDueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubmissionMethodCode/SubmissionMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubscriberID/SubscriberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubscriberType/SubscriberType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubscriberTypeCode/SubscriberTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubstitutionStatusCode/SubstitutionStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SuccessiveSequenceID/SuccessiveSequenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SummaryDescription/SummaryDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SupplierAssignedAccountID/SupplierAssignedAccountID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SupplyChainActivityTypeCode/SupplyChainActivityTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TareWeightMeasure/TareWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TargetCurrencyBaseRate/TargetCurrencyBaseRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TargetCurrencyCode/TargetCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TargetInventoryQuantity/TargetInventoryQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TargetServicePercent/TargetServicePercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TariffClassCode/TariffClassCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TariffCode/TariffCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TariffDescription/TariffDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxAmount/TaxAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxCurrencyCode/TaxCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxEnergyAmount/TaxEnergyAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxEnergyBalanceAmount/TaxEnergyBalanceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxEnergyOnAccountAmount/TaxEnergyOnAccountAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxEvidenceIndicator/TaxEvidenceIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxExclusiveAmount/TaxExclusiveAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxExemptionReason/TaxExemptionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxExemptionReasonCode/TaxExemptionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxIncludedIndicator/TaxIncludedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxInclusiveAmount/TaxInclusiveAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxLevelCode/TaxLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxPointDate/TaxPointDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxTypeCode/TaxTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxableAmount/TaxableAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TechnicalCommitteeDescription/TechnicalCommitteeDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TechnicalName/TechnicalName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsServiceCall/TelecommunicationsServiceCall`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsServiceCallCode/TelecommunicationsServiceCallCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsServiceCategory/TelecommunicationsServiceCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsServiceCategoryCode/TelecommunicationsServiceCategoryCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsSupplyType/TelecommunicationsSupplyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsSupplyTypeCode/TelecommunicationsSupplyTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Telefax/Telefax`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Telephone/Telephone`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TenderEnvelopeID/TenderEnvelopeID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TenderEnvelopeTypeCode/TenderEnvelopeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TenderResultCode/TenderResultCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TenderTypeCode/TenderTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TendererRequirementTypeCode/TendererRequirementTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TendererRoleCode/TendererRoleCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TestMethod/TestMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Text/Text`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ThirdPartyPayerIndicator/ThirdPartyPayerIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ThresholdAmount/ThresholdAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ThresholdQuantity/ThresholdQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ThresholdValueComparisonCode/ThresholdValueComparisonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TierRange/TierRange`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TierRatePercent/TierRatePercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimeAmount/TimeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimeDeltaDaysQuantity/TimeDeltaDaysQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimeFrequencyCode/TimeFrequencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimezoneOffset/TimezoneOffset`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimingComplaint/TimingComplaint`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimingComplaintCode/TimingComplaintCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Title/Title`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ToOrderIndicator/ToOrderIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalAmount/TotalAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalBalanceAmount/TotalBalanceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalConsumedQuantity/TotalConsumedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalCreditAmount/TotalCreditAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalDebitAmount/TotalDebitAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalDeliveredQuantity/TotalDeliveredQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalGoodsItemQuantity/TotalGoodsItemQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalInvoiceAmount/TotalInvoiceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalMeteredQuantity/TotalMeteredQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalPackageQuantity/TotalPackageQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalPackagesQuantity/TotalPackagesQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalPaymentAmount/TotalPaymentAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalTaskAmount/TotalTaskAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalTaxAmount/TotalTaxAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalTransportHandlingUnitQuantity/TotalTransportHandlingUnitQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TraceID/TraceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TrackingDeviceCode/TrackingDeviceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TrackingID/TrackingID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TradeItemPackingLabelingTypeCode/TradeItemPackingLabelingTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TradeServiceCode/TradeServiceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TradingRestrictions/TradingRestrictions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TrainID/TrainID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransactionCurrencyTaxAmount/TransactionCurrencyTaxAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransitDirectionCode/TransitDirectionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportAuthorizationCode/TransportAuthorizationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportEmergencyCardCode/TransportEmergencyCardCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportEquipmentTypeCode/TransportEquipmentTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportEventTypeCode/TransportEventTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportExecutionPlanReferenceID/TransportExecutionPlanReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportExecutionStatusCode/TransportExecutionStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportHandlingUnitTypeCode/TransportHandlingUnitTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportMeansTypeCode/TransportMeansTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportModeCode/TransportModeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportServiceCode/TransportServiceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportServiceProviderRemarks/TransportServiceProviderRemarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportServiceProviderSpecialTerms/TransportServiceProviderSpecialTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportUserRemarks/TransportUserRemarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportUserSpecialTerms/TransportUserSpecialTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportationServiceDescription/TransportationServiceDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportationServiceDetailsURI/TransportationServiceDetailsURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportationStatusTypeCode/TransportationStatusTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TypeCode/TypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UBLVersionID/UBLVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UNDGCode/UNDGCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/URI/URI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UUID/UUID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UnknownPriceIndicator/UnknownPriceIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UpperOrangeHazardPlacardID/UpperOrangeHazardPlacardID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UrgencyCode/UrgencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UtilityStatementTypeCode/UtilityStatementTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidateProcess/ValidateProcess`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidateTool/ValidateTool`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidateToolVersion/ValidateToolVersion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidationDate/ValidationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidationResultCode/ValidationResultCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidationTime/ValidationTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidatorID/ValidatorID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidityStartDate/ValidityStartDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Value/Value`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValueAmount/ValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValueMeasure/ValueMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValueQualifier/ValueQualifier`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValueQuantity/ValueQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VarianceQuantity/VarianceQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VariantConstraintIndicator/VariantConstraintIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VariantID/VariantID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VersionID/VersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VesselID/VesselID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VesselName/VesselName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WarrantyInformation/WarrantyInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WebsiteURI/WebsiteURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WeekDayCode/WeekDayCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Weight/Weight`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WeightNumeric/WeightNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WeightingAlgorithmCode/WeightingAlgorithmCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WorkPhase/WorkPhase`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WorkPhaseCode/WorkPhaseCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/XPath/XPath`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[1]/Name`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[2]/ExtensionAgencyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[3]/ExtensionAgencyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[4]/ExtensionVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[5]/ExtensionAgencyURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[6]/ExtensionURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[7]/ExtensionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[8]/ExtensionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[9]/ExtensionContent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyID/ExtensionAgencyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyName/ExtensionAgencyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyURI/ExtensionAgencyURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionContent/ExtensionContent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionReason/ExtensionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionReasonCode/ExtensionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionURI/ExtensionURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionVersionID/ExtensionVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/UBLExtension/UBLExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/UBLExtensions/UBLExtensions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|global/UBLDocumentSignatures/UBLDocumentSignatures`
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|global/ContractAwardNotice/ContractAwardNotice`
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|global/ContractNotice/ContractNotice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|global/CreditNote/CreditNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|global/DebitNote/DebitNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2|UBL-DespatchAdvice-2.1.xsd|element|global/DespatchAdvice/DespatchAdvice`
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatus-2|UBL-DocumentStatus-2.1.xsd|element|global/DocumentStatus/DocumentStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatusRequest-2|UBL-DocumentStatusRequest-2.1.xsd|element|global/DocumentStatusRequest/DocumentStatusRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionCriteria-2|UBL-ExceptionCriteria-2.1.xsd|element|global/ExceptionCriteria/ExceptionCriteria`
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionNotification-2|UBL-ExceptionNotification-2.1.xsd|element|global/ExceptionNotification/ExceptionNotification`
+- `urn:oasis:names:specification:ubl:schema:xsd:Forecast-2|UBL-Forecast-2.1.xsd|element|global/Forecast/Forecast`
+- `urn:oasis:names:specification:ubl:schema:xsd:ForecastRevision-2|UBL-ForecastRevision-2.1.xsd|element|global/ForecastRevision/ForecastRevision`
+- `urn:oasis:names:specification:ubl:schema:xsd:ForwardingInstructions-2|UBL-ForwardingInstructions-2.1.xsd|element|global/ForwardingInstructions/ForwardingInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|global/FreightInvoice/FreightInvoice`
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|global/FulfilmentCancellation/FulfilmentCancellation`
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|global/GoodsItemItinerary/GoodsItemItinerary`
+- `urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2|UBL-GuaranteeCertificate-2.1.xsd|element|global/GuaranteeCertificate/GuaranteeCertificate`
+- `urn:oasis:names:specification:ubl:schema:xsd:InstructionForReturns-2|UBL-InstructionForReturns-2.1.xsd|element|global/InstructionForReturns/InstructionForReturns`
+- `urn:oasis:names:specification:ubl:schema:xsd:InventoryReport-2|UBL-InventoryReport-2.1.xsd|element|global/InventoryReport/InventoryReport`
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|global/Invoice/Invoice`
+- `urn:oasis:names:specification:ubl:schema:xsd:ItemInformationRequest-2|UBL-ItemInformationRequest-2.1.xsd|element|global/ItemInformationRequest/ItemInformationRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|global/Order/Order`
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderCancellation-2|UBL-OrderCancellation-2.1.xsd|element|global/OrderCancellation/OrderCancellation`
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|global/OrderChange/OrderChange`
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|global/OrderResponse/OrderResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponseSimple-2|UBL-OrderResponseSimple-2.1.xsd|element|global/OrderResponseSimple/OrderResponseSimple`
+- `urn:oasis:names:specification:ubl:schema:xsd:PackingList-2|UBL-PackingList-2.1.xsd|element|global/PackingList/PackingList`
+- `urn:oasis:names:specification:ubl:schema:xsd:PriorInformationNotice-2|UBL-PriorInformationNotice-2.1.xsd|element|global/PriorInformationNotice/PriorInformationNotice`
+- `urn:oasis:names:specification:ubl:schema:xsd:ProductActivity-2|UBL-ProductActivity-2.1.xsd|element|global/ProductActivity/ProductActivity`
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|global/Quotation/Quotation`
+- `urn:oasis:names:specification:ubl:schema:xsd:ReceiptAdvice-2|UBL-ReceiptAdvice-2.1.xsd|element|global/ReceiptAdvice/ReceiptAdvice`
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|global/Reminder/Reminder`
+- `urn:oasis:names:specification:ubl:schema:xsd:RemittanceAdvice-2|UBL-RemittanceAdvice-2.1.xsd|element|global/RemittanceAdvice/RemittanceAdvice`
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|global/RequestForQuotation/RequestForQuotation`
+- `urn:oasis:names:specification:ubl:schema:xsd:RetailEvent-2|UBL-RetailEvent-2.1.xsd|element|global/RetailEvent/RetailEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|global/SelfBilledCreditNote/SelfBilledCreditNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|global/SelfBilledInvoice/SelfBilledInvoice`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[1]/ReferencedSignatureID`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[2]/Signature`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|global/SignatureInformation/SignatureInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|element|global/ReferencedSignatureID/ReferencedSignatureID`
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|global/Statement/Statement`
+- `urn:oasis:names:specification:ubl:schema:xsd:StockAvailabilityReport-2|UBL-StockAvailabilityReport-2.1.xsd|element|global/StockAvailabilityReport/StockAvailabilityReport`
+- `urn:oasis:names:specification:ubl:schema:xsd:Tender-2|UBL-Tender-2.1.xsd|element|global/Tender/Tender`
+- `urn:oasis:names:specification:ubl:schema:xsd:TenderReceipt-2|UBL-TenderReceipt-2.1.xsd|element|global/TenderReceipt/TenderReceipt`
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualification-2|UBL-TendererQualification-2.1.xsd|element|global/TendererQualification/TendererQualification`
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualificationResponse-2|UBL-TendererQualificationResponse-2.1.xsd|element|global/TendererQualificationResponse/TendererQualificationResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:TradeItemLocationProfile-2|UBL-TradeItemLocationProfile-2.1.xsd|element|global/TradeItemLocationProfile/TradeItemLocationProfile`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|global/TransportExecutionPlan/TransportExecutionPlan`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|global/TransportExecutionPlanRequest/TransportExecutionPlanRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatus-2|UBL-TransportProgressStatus-2.1.xsd|element|global/TransportProgressStatus/TransportProgressStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatusRequest-2|UBL-TransportProgressStatusRequest-2.1.xsd|element|global/TransportProgressStatusRequest/TransportProgressStatusRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescription-2|UBL-TransportServiceDescription-2.1.xsd|element|global/TransportServiceDescription/TransportServiceDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescriptionRequest-2|UBL-TransportServiceDescriptionRequest-2.1.xsd|element|global/TransportServiceDescriptionRequest/TransportServiceDescriptionRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|global/TransportationStatus/TransportationStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|global/TransportationStatusRequest/TransportationStatusRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnawardedNotification-2|UBL-UnawardedNotification-2.1.xsd|element|global/UnawardedNotification/UnawardedNotification`
+- `urn:oasis:names:specification:ubl:schema:xsd:UtilityStatement-2|UBL-UtilityStatement-2.1.xsd|element|global/UtilityStatement/UtilityStatement`
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|global/Waybill/Waybill`
+
+## Uncovered inheritance
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|EncapsulatedPKIDataType->#base64Binary`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|IdentifierType->#anyURI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|OtherTimeStampType->http://uri.etsi.org/01903/v1.3.2##GenericTimeStampType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|XAdESTimeStampType->http://uri.etsi.org/01903/v1.3.2##GenericTimeStampType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|inheritance|SignatureValueType->http://www.w3.org/2000/09/xmldsig##base64Binary`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|inheritance|PerformanceValueQuantityType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#QuantityType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionAgencyIDType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionAgencyNameType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#TextType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionAgencyURIType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionReasonCodeType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#CodeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionReasonType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#TextType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionURIType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionVersionIDType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|inheritance|ReferencedSignatureIDType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|AmountType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#AmountType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|BinaryObjectType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|CodeType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#CodeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|DateTimeType->#dateTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|DateType->#date`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|GraphicType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|IdentifierType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#IdentifierType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|IndicatorType->#boolean`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|MeasureType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#MeasureType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|NameType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#TextType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|NumericType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#NumericType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|PercentType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#NumericType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|PictureType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|QuantityType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#QuantityType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|RateType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#NumericType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|SoundType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|TextType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#TextType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|TimeType->#time`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|ValueType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#NumericType`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|VideoType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|AmountType->#decimal`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|BinaryObjectType->#base64Binary`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|CodeType->#normalizedString`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|DateTimeType->#string`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|IdentifierType->#normalizedString`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|IndicatorType->#string`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|MeasureType->#decimal`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|NumericType->#decimal`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|QuantityType->#decimal`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|TextType->#string`
+
+## Uncovered optionalAttributes
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CRLIdentifierType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CertIDType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CertificateValuesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CompleteCertificateRefsType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CompleteRevocationRefsType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|EncapsulatedPKIDataType/@Encoding`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|EncapsulatedPKIDataType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|GenericTimeStampType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IdentifierType/@Qualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@referencedData`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OCSPIdentifierType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OtherTimeStampType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|ReferenceInfoType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|ReferenceInfoType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|RevocationValuesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedDataObjectPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedSignaturePropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedDataObjectPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedPropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedSignaturePropertiesType/@Id`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|XAdESTimeStampType/@Id`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@Id`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@UR`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|KeyInfoType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ManifestType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Encoding`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@MimeType`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Type`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@URI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@Type`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@URI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertiesType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureValueType/@Id`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignedInfoType/@Id`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|attribute|DateTimeType/@format`
+- `urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|attribute|IndicatorType/@format`
+
+## Uncovered optionalElements
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[2]/Number`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[1]/CRLIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[1]/AllSignedDataObjects`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[1]/CommitmentTypeQualifiers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[0]/CRLRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[1]/OCSPRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[2]/OtherRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[0]/Description`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[1]/ObjectIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[2]/MimeType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[3]/Encoding`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/sequence[0]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|IntegerListType/sequence[0]/int`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[1]/DigestAlgAndValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[1]/Description`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[2]/DocumentationReferences`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[1]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[0]/SignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[1]/UnsignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[0]/ByName`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[0]/CRLValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[1]/OCSPValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[2]/OtherValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[0]/NoticeRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[1]/ExplicitText`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[1]/Transforms`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[3]/SigPolicyQualifiers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[0]/SignaturePolicyId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[1]/SignaturePolicyImplied`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[0]/City`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[1]/StateOrProvince`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[2]/PostalCode`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[3]/CountryName`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[0]/SignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[1]/SignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[0]/SigningTime`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[1]/SigningCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[2]/SignaturePolicyIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[3]/SignatureProductionPlace`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[4]/SignerRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[0]/ClaimedRoles`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[1]/CertifiedRoles`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[0]/UnsignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[1]/UnsignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[1]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[0]/CertificateValues`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[1]/RevocationValues`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/G`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[0]/P`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[1]/Q`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[0]/Seed`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[1]/PgenCounter`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[2]/J`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[1]/RSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[0]/Transforms`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[2]/KeyInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[4]/Period`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[5]/Item`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[1]/Name`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[2]/ExtensionAgencyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[3]/ExtensionAgencyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[4]/ExtensionVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[5]/ExtensionAgencyURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[6]/ExtensionURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[7]/ExtensionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[8]/ExtensionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[1]/ReferencedSignatureID`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[2]/Signature`
+
+## Uncovered recursiveEdges
+
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|ConsignmentType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ShipmentStageType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|ConsignmentType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#TransportHandlingUnitType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|DocumentReferenceType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ResultOfVerificationType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|GoodsItemType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#GoodsItemContainerType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|GoodsItemType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#InvoiceLineType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|InvoiceLineType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#PricingReferenceType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|PartyLegalEntityType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ShareholderPartyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|PartyType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#PartyLegalEntityType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|PartyType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#PersonType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|PartyType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#PowerOfAttorneyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|PartyType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ServiceProviderPartyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|ShipmentType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#GoodsItemType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|ShipmentType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ShipmentStageType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|ShipmentType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#TransportHandlingUnitType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|TenderingTermsType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#TenderPreparationType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|TransportEquipmentType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#PackageType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|TransportEquipmentType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#TransportHandlingUnitType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|TransportHandlingUnitType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#DespatchLineType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|TransportHandlingUnitType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#PackageType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|TransportHandlingUnitType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ReceiptLineType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|TransportationServiceType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ShipmentStageType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|TransportationServiceType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#TransportEquipmentType`
+
+## Uncovered repeatableElements
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|IntegerListType/sequence[0]/int`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
+
+## Uncovered requiredAttributes
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|DataObjectFormatType/@ObjectReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@URI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Target`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|CanonicalizationMethodType/@Algorithm`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|DigestMethodType/@Algorithm`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureMethodType/@Algorithm`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Target`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|TransformType/@Algorithm`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|GraphicType/@mimeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|PictureType/@mimeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|SoundType/@mimeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|VideoType/@mimeCode`
+
+## Uncovered requiredElements
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[0]/Issuer`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[1]/IssueTime`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[0]/DigestAlgAndValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[0]/CertDigest`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[1]/IssuerSerial`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[0]/CommitmentTypeId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteCertificateRefsType/sequence[0]/CertRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CounterSignatureType/sequence[0]/Signature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[0]/DigestMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[1]/DigestValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|NoticeReferenceType/sequence[0]/Organization`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|NoticeReferenceType/sequence[1]/NoticeNumbers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPIdentifierType/sequence[0]/ResponderID`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPIdentifierType/sequence[1]/ProducedAt`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[0]/OCSPIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[0]/Identifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[0]/DigestMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[1]/DigestValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[0]/SigPolicyId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[2]/SigPolicyHash`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AllDataObjectsTimeStamp/AllDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/Any/Any`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/ArchiveTimeStamp/ArchiveTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AttrAuthoritiesCertValues/AttrAuthoritiesCertValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AttributeCertificateRefs/AttributeCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AttributeRevocationRefs/AttributeRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AttributeRevocationValues/AttributeRevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CertificateValues/CertificateValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CommitmentTypeIndication/CommitmentTypeIndication`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CompleteCertificateRefs/CompleteCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CompleteRevocationRefs/CompleteRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/CounterSignature/CounterSignature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/DataObjectFormat/DataObjectFormat`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/EncapsulatedPKIData/EncapsulatedPKIData`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/Include/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/IndividualDataObjectsTimeStamp/IndividualDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/ObjectIdentifier/ObjectIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/OtherTimeStamp/OtherTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/QualifyingProperties/QualifyingProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/QualifyingPropertiesReference/QualifyingPropertiesReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/ReferenceInfo/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/RefsOnlyTimeStamp/RefsOnlyTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/RevocationValues/RevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SPURI/SPURI`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SPUserNotice/SPUserNotice`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SigAndRefsTimeStamp/SigAndRefsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignaturePolicyIdentifier/SignaturePolicyIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignatureProductionPlace/SignatureProductionPlace`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignatureTimeStamp/SignatureTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignedDataObjectProperties/SignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignedProperties/SignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignedSignatureProperties/SignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SignerRole/SignerRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SigningCertificate/SigningCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SigningTime/SigningTime`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/UnsignedDataObjectProperties/UnsignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/UnsignedProperties/UnsignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/UnsignedSignatureProperties/UnsignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/XAdESTimeStamp/XAdESTimeStamp`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/ArchiveTimeStampV2/ArchiveTimeStampV2`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/TimeStampValidationData/TimeStampValidationData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/Y`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[0]/Modulus`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[1]/Exponent`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[1]/DigestMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[2]/DigestValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[0]/SignedInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[1]/SignatureValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[0]/CanonicalizationMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[1]/SignatureMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[1]/X509SerialNumber`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/CanonicalizationMethod/CanonicalizationMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DSAKeyValue/DSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DigestMethod/DigestMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DigestValue/DigestValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/KeyInfo/KeyInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/KeyName/KeyName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/KeyValue/KeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Manifest/Manifest`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/MgmtData/MgmtData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Object/Object`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/PGPData/PGPData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/RSAKeyValue/RSAKeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Reference/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/RetrievalMethod/RetrievalMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SPKIData/SPKIData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Signature/Signature`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignatureMethod/SignatureMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignatureProperties/SignatureProperties`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignatureProperty/SignatureProperty`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignatureValue/SignatureValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/SignedInfo/SignedInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Transform/Transform`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/Transforms/Transforms`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/X509Data/X509Data`
+- `urn:oasis:names:specification:ubl:schema:xsd:ApplicationResponse-2|UBL-ApplicationResponse-2.1.xsd|element|global/ApplicationResponse/ApplicationResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:AttachedDocument-2|UBL-AttachedDocument-2.1.xsd|element|global/AttachedDocument/AttachedDocument`
+- `urn:oasis:names:specification:ubl:schema:xsd:AwardedNotification-2|UBL-AwardedNotification-2.1.xsd|element|global/AwardedNotification/AwardedNotification`
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|global/BillOfLading/BillOfLading`
+- `urn:oasis:names:specification:ubl:schema:xsd:CallForTenders-2|UBL-CallForTenders-2.1.xsd|element|global/CallForTenders/CallForTenders`
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|global/Catalogue/Catalogue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueDeletion-2|UBL-CatalogueDeletion-2.1.xsd|element|global/CatalogueDeletion/CatalogueDeletion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueItemSpecificationUpdate-2|UBL-CatalogueItemSpecificationUpdate-2.1.xsd|element|global/CatalogueItemSpecificationUpdate/CatalogueItemSpecificationUpdate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CataloguePricingUpdate-2|UBL-CataloguePricingUpdate-2.1.xsd|element|global/CataloguePricingUpdate/CataloguePricingUpdate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|global/CatalogueRequest/CatalogueRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:CertificateOfOrigin-2|UBL-CertificateOfOrigin-2.1.xsd|element|global/CertificateOfOrigin/CertificateOfOrigin`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[2]/PerformanceValueQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[3]/PerformanceMetricTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AcceptanceTransportEvent/AcceptanceTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AccessoryRelatedItem/AccessoryRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AccountingContact/AccountingContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AccountingCustomerParty/AccountingCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AccountingSupplierParty/AccountingSupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityDataLine/ActivityDataLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityFinalLocation/ActivityFinalLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityOriginLocation/ActivityOriginLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityPeriod/ActivityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActivityProperty/ActivityProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualArrivalTransportEvent/ActualArrivalTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualDepartureTransportEvent/ActualDepartureTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualPackage/ActualPackage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualPickupTransportEvent/ActualPickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ActualWaypointTransportEvent/ActualWaypointTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalCommodityClassification/AdditionalCommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalDocumentReference/AdditionalDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalDocumentResponse/AdditionalDocumentResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalInformationParty/AdditionalInformationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalItemIdentification/AdditionalItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalItemProperty/AdditionalItemProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalQualifyingParty/AdditionalQualifyingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalTemperature/AdditionalTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AdditionalTransportationService/AdditionalTransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Address/Address`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AddressLine/AddressLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AgentParty/AgentParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AirTransport/AirTransport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AllowanceCharge/AllowanceCharge`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AllowedSubcontractTerms/AllowedSubcontractTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AlternativeConditionPrice/AlternativeConditionPrice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AlternativeDeliveryLocation/AlternativeDeliveryLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AlternativeLineItem/AlternativeLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AnticipatedMonetaryTotal/AnticipatedMonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AppealInformationParty/AppealInformationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AppealReceiverParty/AppealReceiverParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AppealTerms/AppealTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableAddress/ApplicableAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicablePeriod/ApplicablePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableRegulation/ApplicableRegulation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableTaxCategory/ApplicableTaxCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableTerritoryAddress/ApplicableTerritoryAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ApplicableTransportMeans/ApplicableTransportMeans`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AtLocation/AtLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AttachedTransportEquipment/AttachedTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Attachment/Attachment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AuctionTerms/AuctionTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AvailabilityTransportEvent/AvailabilityTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AwardedTenderedProject/AwardedTenderedProject`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AwardingCriterion/AwardingCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AwardingCriterionResponse/AwardingCriterionResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/AwardingTerms/AwardingTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BeneficiaryParty/BeneficiaryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BillOfLadingHolderParty/BillOfLadingHolderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BillToParty/BillToParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BillingReference/BillingReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BillingReferenceLine/BillingReferenceLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BonusPaymentTerms/BonusPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Branch/Branch`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BudgetAccount/BudgetAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BudgetAccountLine/BudgetAccountLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BusinessClassificationScheme/BusinessClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BuyerContact/BuyerContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BuyerCustomerParty/BuyerCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BuyerProposedSubstituteLineItem/BuyerProposedSubstituteLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/BuyersItemIdentification/BuyersItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CallDuty/CallDuty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CallForTendersDocumentReference/CallForTendersDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CallForTendersLineReference/CallForTendersLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Capability/Capability`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CardAccount/CardAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CarrierParty/CarrierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueDocumentReference/CatalogueDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueItemIdentification/CatalogueItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueItemSpecificationUpdateLine/CatalogueItemSpecificationUpdateLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueLine/CatalogueLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueLineReference/CatalogueLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CataloguePricingUpdateLine/CataloguePricingUpdateLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueReference/CatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CatalogueRequestLine/CatalogueRequestLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CategorizesClassificationCategory/CategorizesClassificationCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Certificate/Certificate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CertificateOfOriginApplication/CertificateOfOriginApplication`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ChildConsignment/ChildConsignment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ClassificationCategory/ClassificationCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ClassificationScheme/ClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ClassifiedTaxCategory/ClassifiedTaxCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Clause/Clause`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CollectPaymentTerms/CollectPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CollectedPayment/CollectedPayment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CommissionPaymentTerms/CommissionPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CommodityClassification/CommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Communication/Communication`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ComplementaryRelatedItem/ComplementaryRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CompletedTask/CompletedTask`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ComponentRelatedItem/ComponentRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Condition/Condition`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsigneeParty/ConsigneeParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Consignment/Consignment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsignorParty/ConsignorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsolidatedShipment/ConsolidatedShipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConstitutionPeriod/ConstitutionPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Consumption/Consumption`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionAverage/ConsumptionAverage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionCorrection/ConsumptionCorrection`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionHistory/ConsumptionHistory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionLine/ConsumptionLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionPoint/ConsumptionPoint`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionReport/ConsumptionReport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ConsumptionReportReference/ConsumptionReportReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Contact/Contact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContactParty/ContactParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainedGoodsItem/ContainedGoodsItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainedInTransportEquipment/ContainedInTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainedPackage/ContainedPackage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainingPackage/ContainingPackage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContainingTransportEquipment/ContainingTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Contract/Contract`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractAcceptancePeriod/ContractAcceptancePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractDocumentReference/ContractDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractExecutionRequirement/ContractExecutionRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractExtension/ContractExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractFormalizationPeriod/ContractFormalizationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractResponsibleParty/ContractResponsibleParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractingActivity/ContractingActivity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractingParty/ContractingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractingPartyType/ContractingPartyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractorCustomerParty/ContractorCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractualDelivery/ContractualDelivery`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ContractualDocumentReference/ContractualDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CorporateRegistrationScheme/CorporateRegistrationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Country/Country`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CreditAccount/CreditAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CreditNoteDocumentReference/CreditNoteDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CreditNoteLine/CreditNoteLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CrewMemberPerson/CrewMemberPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CurrentStatus/CurrentStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CustomerParty/CustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CustomsAgentParty/CustomsAgentParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/CustomsDeclaration/CustomsDeclaration`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DebitNoteDocumentReference/DebitNoteDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DebitNoteLine/DebitNoteLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Declaration/Declaration`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DefaultLanguage/DefaultLanguage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeletedCatalogueReference/DeletedCatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Delivery/Delivery`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryAddress/DeliveryAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryContact/DeliveryContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryCustomerParty/DeliveryCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryLocation/DeliveryLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryParty/DeliveryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryPeriod/DeliveryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryTerms/DeliveryTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryTransportEvent/DeliveryTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DeliveryUnit/DeliveryUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DependentLineReference/DependentLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DependentPriceReference/DependentPriceReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Despatch/Despatch`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchAddress/DespatchAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchContact/DespatchContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchDocumentReference/DespatchDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchLine/DespatchLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchLineReference/DespatchLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchLocation/DespatchLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchParty/DespatchParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DespatchSupplierParty/DespatchSupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DestinationCountry/DestinationCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DetentionTransportEvent/DetentionTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DigitalSignatureAttachment/DigitalSignatureAttachment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Dimension/Dimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DisbursementPaymentTerms/DisbursementPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DischargeTransportEvent/DischargeTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DiscrepancyResponse/DiscrepancyResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentAvailabilityPeriod/DocumentAvailabilityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentDistribution/DocumentDistribution`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentProviderParty/DocumentProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentReference/DocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentResponse/DocumentResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DocumentTenderRequirement/DocumentTenderRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DriverPerson/DriverPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DropoffTransportEvent/DropoffTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/DurationPeriod/DurationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Duty/Duty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EconomicOperatorRole/EconomicOperatorRole`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EconomicOperatorShortList/EconomicOperatorShortList`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EffectivePeriod/EffectivePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EmbassyEndorsement/EmbassyEndorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EmergencyTemperature/EmergencyTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EmissionCalculationMethod/EmissionCalculationMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EmploymentLegislationDocumentReference/EmploymentLegislationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Endorsement/Endorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EndorserParty/EndorserParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnergyTaxReport/EnergyTaxReport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnergyWaterConsumptionCorrection/EnergyWaterConsumptionCorrection`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnergyWaterSupply/EnergyWaterSupply`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnvironmentalEmission/EnvironmentalEmission`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EnvironmentalLegislationDocumentReference/EnvironmentalLegislationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedArrivalTransportEvent/EstimatedArrivalTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedDeliveryPeriod/EstimatedDeliveryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedDepartureTransportEvent/EstimatedDepartureTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedDespatchPeriod/EstimatedDespatchPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedDurationPeriod/EstimatedDurationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EstimatedTransitPeriod/EstimatedTransitPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EvaluationCriterion/EvaluationCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Event/Event`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EventComment/EventComment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EventLineItem/EventLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EventTactic/EventTactic`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EventTacticEnumeration/EventTacticEnumeration`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Evidence/Evidence`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EvidenceDocumentReference/EvidenceDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EvidenceIssuingParty/EvidenceIssuingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/EvidenceSupplied/EvidenceSupplied`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExaminationTransportEvent/ExaminationTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExceptionCriteriaLine/ExceptionCriteriaLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExceptionNotificationLine/ExceptionNotificationLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExceptionObservationPeriod/ExceptionObservationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExchangeRate/ExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExportCountry/ExportCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExportationTransportEvent/ExportationTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExporterParty/ExporterParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExternalReference/ExternalReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ExtraAllowanceCharge/ExtraAllowanceCharge`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinalDeliveryParty/FinalDeliveryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinalDeliveryTransportationService/FinalDeliveryTransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinalDestinationCountry/FinalDestinationCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinalFinancialGuarantee/FinalFinancialGuarantee`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialAccount/FinancialAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialCapability/FinancialCapability`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialEvaluationCriterion/FinancialEvaluationCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialGuarantee/FinancialGuarantee`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialInstitution/FinancialInstitution`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancialInstitutionBranch/FinancialInstitutionBranch`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancingFinancialAccount/FinancingFinancialAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FinancingParty/FinancingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FirstArrivalPortLocation/FirstArrivalPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FiscalLegislationDocumentReference/FiscalLegislationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FlashpointTemperature/FlashpointTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FloorSpaceMeasurementDimension/FloorSpaceMeasurementDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastException/ForecastException`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastExceptionCriterionLine/ForecastExceptionCriterionLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastLine/ForecastLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastPeriod/ForecastPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForecastRevisionLine/ForecastRevisionLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ForeignExchangeContract/ForeignExchangeContract`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FrameworkAgreement/FrameworkAgreement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FreightAllowanceCharge/FreightAllowanceCharge`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FreightChargeLocation/FreightChargeLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FreightForwarderParty/FreightForwarderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FrequencyPeriod/FrequencyPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/FromLocation/FromLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GoodsItem/GoodsItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GoodsItemContainer/GoodsItemContainer`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GuaranteeDocumentReference/GuaranteeDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GuarantorParty/GuarantorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/GuidanceDocumentReference/GuidanceDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HandlingTransportEvent/HandlingTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HandlingUnitDespatchLine/HandlingUnitDespatchLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HaulageTradingTerms/HaulageTradingTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HazardousGoodsTransit/HazardousGoodsTransit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HazardousItem/HazardousItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HazardousItemNotificationParty/HazardousItemNotificationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/HeadOfficeParty/HeadOfficeParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/IdentityDocumentReference/IdentityDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ImmobilizedSecurity/ImmobilizedSecurity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ImporterParty/ImporterParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InformationContentProviderParty/InformationContentProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InstructionForReturnsLine/InstructionForReturnsLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InsuranceEndorsement/InsuranceEndorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InsuranceParty/InsuranceParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InterestedParty/InterestedParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InterestedProcurementProjectLot/InterestedProcurementProjectLot`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InventoryLocation/InventoryLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InventoryPeriod/InventoryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InventoryReportLine/InventoryReportLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InventoryReportingParty/InventoryReportingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InvitationSubmissionPeriod/InvitationSubmissionPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InvoiceDocumentReference/InvoiceDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InvoiceLine/InvoiceLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/InvoicePeriod/InvoicePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/IssuerEndorsement/IssuerEndorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/IssuerParty/IssuerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/IssuingCountry/IssuingCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Item/Item`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemComparison/ItemComparison`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemIdentification/ItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemInformationRequestLine/ItemInformationRequestLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemInstance/ItemInstance`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemLocationQuantity/ItemLocationQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemManagementProfile/ItemManagementProfile`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemPriceExtension/ItemPriceExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemProperty/ItemProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemPropertyGroup/ItemPropertyGroup`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemPropertyRange/ItemPropertyRange`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ItemSpecificationDocumentReference/ItemSpecificationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/JurisdictionRegionAddress/JurisdictionRegionAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/KeywordItemProperty/KeywordItemProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Language/Language`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LastExitPortLocation/LastExitPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LegalDocumentReference/LegalDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LegalMonetaryTotal/LegalMonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LineItem/LineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LineReference/LineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LineResponse/LineResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LineValidityPeriod/LineValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LoadingLocation/LoadingLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LoadingPortLocation/LoadingPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LoadingProofParty/LoadingProofParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LoadingTransportEvent/LoadingTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Location/Location`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LocationAddress/LocationAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LocationCoordinate/LocationCoordinate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LogisticsOperatorParty/LogisticsOperatorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/LotIdentification/LotIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainCarriageShipmentStage/MainCarriageShipmentStage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainCommodityClassification/MainCommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainOnAccountPayment/MainOnAccountPayment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainPeriod/MainPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainQualifyingParty/MainQualifyingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MainTransportationService/MainTransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MandateDocumentReference/MandateDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ManufacturerParty/ManufacturerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ManufacturersItemIdentification/ManufacturersItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MaritimeTransport/MaritimeTransport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MasterPerson/MasterPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MaximumDeliveryUnit/MaximumDeliveryUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MaximumTemperature/MaximumTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeasurementDimension/MeasurementDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeasurementFromLocation/MeasurementFromLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeasurementToLocation/MeasurementToLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MediationParty/MediationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Meter/Meter`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeterProperty/MeterProperty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MeterReading/MeterReading`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MinimumDeliveryUnit/MinimumDeliveryUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MinimumTemperature/MinimumTemperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MinutesDocumentReference/MinutesDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MiscellaneousEvent/MiscellaneousEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MonetaryTotal/MonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MortgageHolderParty/MortgageHolderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NominationPeriod/NominationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotaryParty/NotaryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NoticeDocumentReference/NoticeDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotificationLocation/NotificationLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotificationPeriod/NotificationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotificationRequirement/NotificationRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/NotifyParty/NotifyParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OccurenceLocation/OccurenceLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OfferedItemLocationQuantity/OfferedItemLocationQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OnAccountPayment/OnAccountPayment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OnCarriageShipmentStage/OnCarriageShipmentStage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OpenTenderEvent/OpenTenderEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OperatingParty/OperatingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OptionValidityPeriod/OptionValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OptionalTakeoverTransportEvent/OptionalTakeoverTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderDocumentReference/OrderDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderLine/OrderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderLineReference/OrderLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderReference/OrderReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OrderedShipment/OrderedShipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginAddress/OriginAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginCountry/OriginCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalDepartureCountry/OriginalDepartureCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalDespatchParty/OriginalDespatchParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalDespatchTransportationService/OriginalDespatchTransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalDocumentReference/OriginalDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginalItemLocationQuantity/OriginalItemLocationQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginatorCustomerParty/OriginatorCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginatorDocumentReference/OriginatorDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OriginatorParty/OriginatorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OtherCommunication/OtherCommunication`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/OwnerParty/OwnerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Package/Package`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PackagedTransportHandlingUnit/PackagedTransportHandlingUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PalletSpaceMeasurementDimension/PalletSpaceMeasurementDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ParentDocumentLineReference/ParentDocumentLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ParentDocumentReference/ParentDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ParticipatingLocationsLocation/ParticipatingLocationsLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ParticipationRequestReceptionPeriod/ParticipationRequestReceptionPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Party/Party`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PartyIdentification/PartyIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PartyLegalEntity/PartyLegalEntity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PartyName/PartyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PartyTaxScheme/PartyTaxScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PassengerPerson/PassengerPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PayeeFinancialAccount/PayeeFinancialAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PayeeParty/PayeeParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PayerFinancialAccount/PayerFinancialAccount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PayerParty/PayerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Payment/Payment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentAlternativeExchangeRate/PaymentAlternativeExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentExchangeRate/PaymentExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentMandate/PaymentMandate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentMeans/PaymentMeans`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentReversalPeriod/PaymentReversalPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PaymentTerms/PaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PenaltyClause/PenaltyClause`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PenaltyPaymentTerms/PenaltyPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PenaltyPeriod/PenaltyPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PerformanceDataLine/PerformanceDataLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PerformingCarrierParty/PerformingCarrierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Period/Period`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Person/Person`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PhysicalAttribute/PhysicalAttribute`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PhysicalLocation/PhysicalLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Pickup/Pickup`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PickupLocation/PickupLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PickupParty/PickupParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PickupTransportEvent/PickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedArrivalTransportEvent/PlannedArrivalTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedDeliveryTransportEvent/PlannedDeliveryTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedDepartureTransportEvent/PlannedDepartureTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedPeriod/PlannedPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedPickupTransportEvent/PlannedPickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PlannedWaypointTransportEvent/PlannedWaypointTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PositioningTransportEvent/PositioningTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PostalAddress/PostalAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PowerOfAttorney/PowerOfAttorney`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreCarriageShipmentStage/PreCarriageShipmentStage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreSelectedParty/PreSelectedParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PrepaidPayment/PrepaidPayment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PrepaidPaymentTerms/PrepaidPaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreparationParty/PreparationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PresentationPeriod/PresentationPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreviousDocumentReference/PreviousDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PreviousPriceList/PreviousPriceList`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Price/Price`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PriceExtension/PriceExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PriceList/PriceList`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PricingExchangeRate/PricingExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PricingReference/PricingReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProcessJustification/ProcessJustification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProcurementLegislationDocumentReference/ProcurementLegislationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProcurementProject/ProcurementProject`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProcurementProjectLot/ProcurementProjectLot`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProjectReference/ProjectReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PromisedDeliveryPeriod/PromisedDeliveryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PromotionalEvent/PromotionalEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PromotionalEventLineItem/PromotionalEventLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/PromotionalSpecification/PromotionalSpecification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ProviderParty/ProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QualificationResolution/QualificationResolution`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QualifyingParty/QualifyingParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuarantineTransportEvent/QuarantineTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuotationDocumentReference/QuotationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuotationLine/QuotationLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuotationLineReference/QuotationLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/QuotedMonetaryTotal/QuotedMonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RailTransport/RailTransport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RangeDimension/RangeDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RealizedLocation/RealizedLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiptDocumentReference/ReceiptDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiptLine/ReceiptLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiptLineReference/ReceiptLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiptTransportEvent/ReceiptTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceivedHandlingUnitReceiptLine/ReceivedHandlingUnitReceiptLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReceiverParty/ReceiverParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RecipientCustomerParty/RecipientCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RecipientParty/RecipientParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedConsignment/ReferencedConsignment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedContract/ReferencedContract`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedGoodsItem/ReferencedGoodsItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedPackage/ReferencedPackage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedShipment/ReferencedShipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReferencedTransportEquipment/ReferencedTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RegistrationAddress/RegistrationAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RegistryCertificateDocumentReference/RegistryCertificateDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RegistryPortLocation/RegistryPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Regulation/Regulation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RelatedCatalogueReference/RelatedCatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RelatedItem/RelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReminderDocumentReference/ReminderDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReminderLine/ReminderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReminderPeriod/ReminderPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RemittanceAdviceLine/RemittanceAdviceLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Renewal/Renewal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReplacedNoticeDocumentReference/ReplacedNoticeDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReplacedRelatedItem/ReplacedRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReplacementRelatedItem/ReplacementRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReportedShipment/ReportedShipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReportingPerson/ReportingPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestForQuotationDocumentReference/RequestForQuotationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestForQuotationLine/RequestForQuotationLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestForTenderLine/RequestForTenderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestLineReference/RequestLineReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedArrivalTransportEvent/RequestedArrivalTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedCatalogueReference/RequestedCatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedClassificationScheme/RequestedClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDeliveryPeriod/RequestedDeliveryPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDeliveryTransportEvent/RequestedDeliveryTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDepartureTransportEvent/RequestedDepartureTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDespatchPeriod/RequestedDespatchPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedDocumentReference/RequestedDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedLanguage/RequestedLanguage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedMonetaryTotal/RequestedMonetaryTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedPickupTransportEvent/RequestedPickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedStatusLocation/RequestedStatusLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedStatusPeriod/RequestedStatusPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedTenderTotal/RequestedTenderTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedValidityPeriod/RequestedValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequestedWaypointTransportEvent/RequestedWaypointTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredBusinessClassificationScheme/RequiredBusinessClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredClassificationScheme/RequiredClassificationScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredFinancialGuarantee/RequiredFinancialGuarantee`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredItemLocationQuantity/RequiredItemLocationQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RequiredRelatedItem/RequiredRelatedItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ResidenceAddress/ResidenceAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ResolutionDocumentReference/ResolutionDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Response/Response`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ResponsibleTransportServiceProviderParty/ResponsibleTransportServiceProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ResultOfVerification/ResultOfVerification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RetailPlannedImpact/RetailPlannedImpact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RetailerCustomerParty/RetailerCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ReturnAddress/ReturnAddress`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/RoadTransport/RoadTransport`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SalesItem/SalesItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ScheduledServiceFrequency/ScheduledServiceFrequency`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SecondaryHazard/SecondaryHazard`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SecurityOfficerPerson/SecurityOfficerPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SelfBilledCreditNoteDocumentReference/SelfBilledCreditNoteDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SelfBilledInvoiceDocumentReference/SelfBilledInvoiceDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellerContact/SellerContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellerProposedSubstituteLineItem/SellerProposedSubstituteLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellerSubstitutedLineItem/SellerSubstitutedLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellerSupplierParty/SellerSupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SellersItemIdentification/SellersItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SenderParty/SenderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceAllowanceCharge/ServiceAllowanceCharge`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceChargePaymentTerms/ServiceChargePaymentTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceEndTimePeriod/ServiceEndTimePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceFrequency/ServiceFrequency`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceProviderParty/ServiceProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceStartTimePeriod/ServiceStartTimePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SettlementPeriod/SettlementPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ShareholderParty/ShareholderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Shipment/Shipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ShipmentDocumentReference/ShipmentDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ShipmentStage/ShipmentStage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ShipsSurgeonPerson/ShipsSurgeonPerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SignatoryContact/SignatoryContact`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SignatoryParty/SignatoryParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Signature/Signature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SourceCatalogueReference/SourceCatalogueReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SourceIssuerParty/SourceIssuerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SpecificTendererRequirement/SpecificTendererRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StandardItemIdentification/StandardItemIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatementDocumentReference/StatementDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatementLine/StatementLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatementPeriod/StatementPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Status/Status`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatusLocation/StatusLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StatusPeriod/StatusPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StockAvailabilityReportLine/StockAvailabilityReportLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StorageLocation/StorageLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/StorageTransportEvent/StorageTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Stowage/Stowage`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubCreditNoteLine/SubCreditNoteLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubDebitNoteLine/SubDebitNoteLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubInvoiceLine/SubInvoiceLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubLineItem/SubLineItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubRequestForTenderLine/SubRequestForTenderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubTenderLine/SubTenderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubcontractTerms/SubcontractTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubcontractorParty/SubcontractorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubordinateAwardingCriterion/SubordinateAwardingCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubordinateAwardingCriterionResponse/SubordinateAwardingCriterionResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubscriberConsumption/SubscriberConsumption`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubscriberParty/SubscriberParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubsequentProcessTenderRequirement/SubsequentProcessTenderRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubsidiaryLocation/SubsidiaryLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SubstituteCarrierParty/SubstituteCarrierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SuggestedEvidence/SuggestedEvidence`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupplierConsumption/SupplierConsumption`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupplierParty/SupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupplyChainActivityDataLine/SupplyChainActivityDataLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupplyItem/SupplyItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupportedCommodityClassification/SupportedCommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupportedTransportEquipment/SupportedTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/SupportingDocumentReference/SupportingDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TakeoverTransportEvent/TakeoverTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxCategory/TaxCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxExchangeRate/TaxExchangeRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxExclusivePrice/TaxExclusivePrice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxInclusivePrice/TaxInclusivePrice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxRepresentativeParty/TaxRepresentativeParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxScheme/TaxScheme`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxSubtotal/TaxSubtotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TaxTotal/TaxTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TechnicalCapability/TechnicalCapability`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TechnicalCommitteePerson/TechnicalCommitteePerson`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TechnicalDocumentReference/TechnicalDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TechnicalEvaluationCriterion/TechnicalEvaluationCriterion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TelecommunicationsService/TelecommunicationsService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TelecommunicationsSupply/TelecommunicationsSupply`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TelecommunicationsSupplyLine/TelecommunicationsSupplyLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Temperature/Temperature`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TemplateDocumentReference/TemplateDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderDocumentReference/TenderDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderEvaluationParty/TenderEvaluationParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderLine/TenderLine`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderPreparation/TenderPreparation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderRecipientParty/TenderRecipientParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderRequirement/TenderRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderResult/TenderResult`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderSubmissionDeadlinePeriod/TenderSubmissionDeadlinePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderValidityPeriod/TenderValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderedProject/TenderedProject`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererParty/TendererParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererPartyQualification/TendererPartyQualification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererQualificationDocumentReference/TendererQualificationDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererQualificationRequest/TendererQualificationRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TendererRequirement/TendererRequirement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderingProcess/TenderingProcess`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TenderingTerms/TenderingTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TerminalOperatorParty/TerminalOperatorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TimeDuty/TimeDuty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ToLocation/ToLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TotalCapacityDimension/TotalCapacityDimension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TradeFinancing/TradeFinancing`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TradingTerms/TradingTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransactionConditions/TransactionConditions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransitCountry/TransitCountry`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransitPeriod/TransitPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportAdvisorParty/TransportAdvisorParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportContract/TransportContract`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportEquipment/TransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportEquipmentSeal/TransportEquipmentSeal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportEvent/TransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportExecutionPlanDocumentReference/TransportExecutionPlanDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportExecutionPlanRequestDocumentReference/TransportExecutionPlanRequestDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportExecutionTerms/TransportExecutionTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportHandlingUnit/TransportHandlingUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportMeans/TransportMeans`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportProgressStatusRequestDocumentReference/TransportProgressStatusRequestDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportSchedule/TransportSchedule`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceDescriptionDocumentReference/TransportServiceDescriptionDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceDescriptionRequestDocumentReference/TransportServiceDescriptionRequestDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceProviderParty/TransportServiceProviderParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceProviderResponseDeadlinePeriod/TransportServiceProviderResponseDeadlinePeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportServiceProviderResponseRequiredPeriod/TransportServiceProviderResponseRequiredPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportUserParty/TransportUserParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportUserResponseRequiredPeriod/TransportUserResponseRequiredPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportationSegment/TransportationSegment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportationService/TransportationService`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransportationStatusRequestDocumentReference/TransportationStatusRequestDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/TransshipPortLocation/TransshipPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnloadingLocation/UnloadingLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnloadingPortLocation/UnloadingPortLocation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnstructuredPrice/UnstructuredPrice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnsupportedCommodityClassification/UnsupportedCommodityClassification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UnsupportedTransportEquipment/UnsupportedTransportEquipment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UpdatedDeliveryTransportEvent/UpdatedDeliveryTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UpdatedPickupTransportEvent/UpdatedPickupTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UsabilityPeriod/UsabilityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilityConsumptionPoint/UtilityConsumptionPoint`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilityCustomerParty/UtilityCustomerParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilityItem/UtilityItem`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilityMeter/UtilityMeter`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/UtilitySupplierParty/UtilitySupplierParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ValidityPeriod/ValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WarehousingTransportEvent/WarehousingTransportEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WarrantyParty/WarrantyParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WarrantyValidityPeriod/WarrantyValidityPeriod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WebSiteAccess/WebSiteAccess`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WinningParty/WinningParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WithholdingTaxTotal/WithholdingTaxTotal`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WitnessParty/WitnessParty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WorkOrderDocumentReference/WorkOrderDocumentReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/WorkPhaseReference/WorkPhaseReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AcceptedIndicator/AcceptedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AcceptedVariantsDescription/AcceptedVariantsDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountFormatCode/AccountFormatCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountID/AccountID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountTypeCode/AccountTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountingCost/AccountingCost`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AccountingCostCode/AccountingCostCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActionCode/ActionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActivityType/ActivityType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActivityTypeCode/ActivityTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualDeliveryDate/ActualDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualDeliveryTime/ActualDeliveryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualDespatchDate/ActualDespatchDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualDespatchTime/ActualDespatchTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualPickupDate/ActualPickupDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualPickupTime/ActualPickupTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ActualTemperatureReductionQuantity/ActualTemperatureReductionQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdValoremIndicator/AdValoremIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdditionalAccountID/AdditionalAccountID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdditionalConditions/AdditionalConditions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdditionalInformation/AdditionalInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdditionalStreetName/AdditionalStreetName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AddressFormatCode/AddressFormatCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AddressTypeCode/AddressTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdjustmentReasonCode/AdjustmentReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdmissionCode/AdmissionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AdvertisementAmount/AdvertisementAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AgencyID/AgencyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AgencyName/AgencyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AirFlowPercent/AirFlowPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AircraftID/AircraftID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AliasName/AliasName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AllowanceChargeReason/AllowanceChargeReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AllowanceChargeReasonCode/AllowanceChargeReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AllowanceTotalAmount/AllowanceTotalAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AltitudeMeasure/AltitudeMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Amount/Amount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AmountRate/AmountRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AnimalFoodApprovedIndicator/AnimalFoodApprovedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AnimalFoodIndicator/AnimalFoodIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AnnualAverageAmount/AnnualAverageAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ApplicationStatusCode/ApplicationStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ApprovalDate/ApprovalDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ApprovalStatus/ApprovalStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AttributeID/AttributeID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AuctionConstraintIndicator/AuctionConstraintIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AuctionURI/AuctionURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AvailabilityDate/AvailabilityDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AvailabilityStatusCode/AvailabilityStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AverageAmount/AverageAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AverageSubsequentContractAmount/AverageSubsequentContractAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardDate/AwardDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardTime/AwardTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardingCriterionDescription/AwardingCriterionDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardingCriterionID/AwardingCriterionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardingCriterionTypeCode/AwardingCriterionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/AwardingMethodTypeCode/AwardingMethodTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BackOrderAllowedIndicator/BackOrderAllowedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BackorderQuantity/BackorderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BackorderReason/BackorderReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BalanceAmount/BalanceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BalanceBroughtForwardIndicator/BalanceBroughtForwardIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BarcodeSymbologyID/BarcodeSymbologyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BaseAmount/BaseAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BaseQuantity/BaseQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BaseUnitMeasure/BaseUnitMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BasedOnConsensusIndicator/BasedOnConsensusIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BasicConsumedQuantity/BasicConsumedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BatchQuantity/BatchQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BestBeforeDate/BestBeforeDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BindingOnBuyerIndicator/BindingOnBuyerIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BirthDate/BirthDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BirthplaceName/BirthplaceName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BlockName/BlockName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BrandName/BrandName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BrokerAssignedID/BrokerAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BudgetYearNumeric/BudgetYearNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuildingName/BuildingName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuildingNumber/BuildingNumber`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BulkCargoIndicator/BulkCargoIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BusinessClassificationEvidenceID/BusinessClassificationEvidenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BusinessIdentityEvidenceID/BusinessIdentityEvidenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuyerEventID/BuyerEventID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuyerProfileURI/BuyerProfileURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BuyerReference/BuyerReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CV2ID/CV2ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationExpression/CalculationExpression`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationExpressionCode/CalculationExpressionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationMethodCode/CalculationMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationRate/CalculationRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CalculationSequenceNumeric/CalculationSequenceNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CallBaseAmount/CallBaseAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CallDate/CallDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CallExtensionAmount/CallExtensionAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CallTime/CallTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CancellationNote/CancellationNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CandidateReductionConstraintIndicator/CandidateReductionConstraintIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CandidateStatement/CandidateStatement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CanonicalizationMethod/CanonicalizationMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CapabilityTypeCode/CapabilityTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CardChipCode/CardChipCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CardTypeCode/CardTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CargoTypeCode/CargoTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CarrierAssignedID/CarrierAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CarrierServiceInstructions/CarrierServiceInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CatalogueIndicator/CatalogueIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CategoryName/CategoryName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CertificateType/CertificateType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CertificateTypeCode/CertificateTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChangeConditions/ChangeConditions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Channel/Channel`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChannelCode/ChannelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CharacterSetCode/CharacterSetCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Characteristics/Characteristics`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChargeIndicator/ChargeIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChargeTotalAmount/ChargeTotalAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChargeableQuantity/ChargeableQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChargeableWeightMeasure/ChargeableWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChildConsignmentQuantity/ChildConsignmentQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ChipApplicationID/ChipApplicationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CityName/CityName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CitySubdivisionName/CitySubdivisionName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CodeValue/CodeValue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CollaborationPriorityCode/CollaborationPriorityCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Comment/Comment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CommodityCode/CommodityCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompanyID/CompanyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompanyLegalForm/CompanyLegalForm`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompanyLegalFormCode/CompanyLegalFormCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompanyLiquidationStatusCode/CompanyLiquidationStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparedValueMeasure/ComparedValueMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparisonDataCode/ComparisonDataCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparisonDataSourceCode/ComparisonDataSourceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparisonForecastIssueDate/ComparisonForecastIssueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ComparisonForecastIssueTime/ComparisonForecastIssueTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CompletionIndicator/CompletionIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Condition/Condition`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConditionCode/ConditionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Conditions/Conditions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConditionsDescription/ConditionsDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsigneeAssignedID/ConsigneeAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsignmentQuantity/ConsignmentQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsignorAssignedID/ConsignorAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsolidatableIndicator/ConsolidatableIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConstitutionCode/ConstitutionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumerIncentiveTacticTypeCode/ConsumerIncentiveTacticTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumerUnitQuantity/ConsumerUnitQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumersEnergyLevel/ConsumersEnergyLevel`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumersEnergyLevelCode/ConsumersEnergyLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionEnergyQuantity/ConsumptionEnergyQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionID/ConsumptionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionLevel/ConsumptionLevel`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionLevelCode/ConsumptionLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionReportID/ConsumptionReportID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionType/ConsumptionType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionTypeCode/ConsumptionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ConsumptionWaterQuantity/ConsumptionWaterQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContainerizedIndicator/ContainerizedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Content/Content`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContentUnitQuantity/ContentUnitQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractFolderID/ContractFolderID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractName/ContractName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractSubdivision/ContractSubdivision`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractType/ContractType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractTypeCode/ContractTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractedCarrierAssignedID/ContractedCarrierAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ContractingSystemCode/ContractingSystemCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CoordinateSystemCode/CoordinateSystemCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CopyIndicator/CopyIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorporateRegistrationTypeCode/CorporateRegistrationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorporateStockAmount/CorporateStockAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorrectionAmount/CorrectionAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorrectionType/CorrectionType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorrectionTypeCode/CorrectionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CorrectionUnitAmount/CorrectionUnitAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CountrySubentity/CountrySubentity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CountrySubentityCode/CountrySubentityCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CreditLineAmount/CreditLineAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CreditNoteTypeCode/CreditNoteTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CreditedQuantity/CreditedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CrewQuantity/CrewQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CurrencyCode/CurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CurrentChargeType/CurrentChargeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CurrentChargeTypeCode/CurrentChargeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomerAssignedAccountID/CustomerAssignedAccountID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomerReference/CustomerReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomizationID/CustomizationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomsClearanceServiceInstructions/CustomsClearanceServiceInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomsImportClassifiedIndicator/CustomsImportClassifiedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomsStatusCode/CustomsStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/CustomsTariffQuantity/CustomsTariffQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DamageRemarks/DamageRemarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DangerousGoodsApprovedIndicator/DangerousGoodsApprovedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DataSendingCapability/DataSendingCapability`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DataSourceCode/DataSourceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Date/Date`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DebitLineAmount/DebitLineAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DebitedQuantity/DebitedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclarationTypeCode/DeclarationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclaredCarriageValueAmount/DeclaredCarriageValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclaredCustomsValueAmount/DeclaredCustomsValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclaredForCarriageValueAmount/DeclaredForCarriageValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeclaredStatisticsValueAmount/DeclaredStatisticsValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeliveredQuantity/DeliveredQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DeliveryInstructions/DeliveryInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DemurrageInstructions/DemurrageInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Department/Department`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Description/Description`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DescriptionCode/DescriptionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DespatchAdviceTypeCode/DespatchAdviceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DifferenceTemperatureReductionQuantity/DifferenceTemperatureReductionQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DirectionCode/DirectionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DisplayTacticTypeCode/DisplayTacticTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DispositionCode/DispositionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/District/District`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentCurrencyCode/DocumentCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentDescription/DocumentDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentHash/DocumentHash`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentID/DocumentID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentStatusCode/DocumentStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentStatusReasonCode/DocumentStatusReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentStatusReasonDescription/DocumentStatusReasonDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentType/DocumentType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentTypeCode/DocumentTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DocumentationFeeAmount/DocumentationFeeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DueDate/DueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DurationMeasure/DurationMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Duty/Duty`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/DutyCode/DutyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EarliestPickupDate/EarliestPickupDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EarliestPickupTime/EarliestPickupTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EconomicOperatorRegistryURI/EconomicOperatorRegistryURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EffectiveDate/EffectiveDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EffectiveTime/EffectiveTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ElectronicDeviceDescription/ElectronicDeviceDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ElectronicMail/ElectronicMail`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EmbeddedDocumentBinaryObject/EmbeddedDocumentBinaryObject`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EmergencyProceduresCode/EmergencyProceduresCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EmployeeQuantity/EmployeeQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EncodingCode/EncodingCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EndDate/EndDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EndTime/EndTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EndpointID/EndpointID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EnvironmentalEmissionTypeCode/EnvironmentalEmissionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedAmount/EstimatedAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedConsumedQuantity/EstimatedConsumedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedDeliveryDate/EstimatedDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedDeliveryTime/EstimatedDeliveryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedDespatchDate/EstimatedDespatchDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedDespatchTime/EstimatedDespatchTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedOverallContractAmount/EstimatedOverallContractAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EstimatedOverallContractQuantity/EstimatedOverallContractQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EvaluationCriterionTypeCode/EvaluationCriterionTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/EvidenceTypeCode/EvidenceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExceptionResolutionCode/ExceptionResolutionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExceptionStatusCode/ExceptionStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExchangeMarketID/ExchangeMarketID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExclusionReason/ExclusionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExecutionRequirementCode/ExecutionRequirementCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExemptionReason/ExemptionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExemptionReasonCode/ExemptionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpectedOperatorQuantity/ExpectedOperatorQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpectedQuantity/ExpectedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpenseCode/ExpenseCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpiryDate/ExpiryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpiryTime/ExpiryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Expression/Expression`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExpressionCode/ExpressionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ExtendedID/ExtendedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Extension/Extension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FaceValueAmount/FaceValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FamilyName/FamilyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FeatureTacticTypeCode/FeatureTacticTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FeeAmount/FeeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FeeDescription/FeeDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FileName/FileName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FinancingInstrumentCode/FinancingInstrumentCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FirstName/FirstName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FirstShipmentAvailibilityDate/FirstShipmentAvailibilityDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Floor/Floor`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FollowupContractIndicator/FollowupContractIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ForecastPurposeCode/ForecastPurposeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ForecastTypeCode/ForecastTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FormatCode/FormatCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ForwarderServiceInstructions/ForwarderServiceInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FreeOfChargeIndicator/FreeOfChargeIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FreeOnBoardValueAmount/FreeOnBoardValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FreightForwarderAssignedID/FreightForwarderAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FreightRateClassCode/FreightRateClassCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Frequency/Frequency`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FrozenDocumentIndicator/FrozenDocumentIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FrozenPeriodDaysNumeric/FrozenPeriodDaysNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FullnessIndicationCode/FullnessIndicationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FullyPaidSharesIndicator/FullyPaidSharesIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FundingProgram/FundingProgram`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/FundingProgramCode/FundingProgramCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GasPressureQuantity/GasPressureQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GenderCode/GenderCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GeneralCargoIndicator/GeneralCargoIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GovernmentAgreementConstraintIndicator/GovernmentAgreementConstraintIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GrossTonnageMeasure/GrossTonnageMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GrossVolumeMeasure/GrossVolumeMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GrossWeightMeasure/GrossWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GuaranteeTypeCode/GuaranteeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GuaranteedDespatchDate/GuaranteedDespatchDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/GuaranteedDespatchTime/GuaranteedDespatchTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HandlingCode/HandlingCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HandlingInstructions/HandlingInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HashAlgorithmMethod/HashAlgorithmMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HaulageInstructions/HaulageInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HazardClassID/HazardClassID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HazardousCategoryCode/HazardousCategoryCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HazardousRegulationCode/HazardousRegulationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HazardousRiskIndicator/HazardousRiskIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HeatingType/HeatingType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HeatingTypeCode/HeatingTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HigherTenderAmount/HigherTenderAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HolderName/HolderName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HumanFoodApprovedIndicator/HumanFoodApprovedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HumanFoodIndicator/HumanFoodIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/HumidityPercent/HumidityPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ID/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IdentificationCode/IdentificationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IdentificationID/IdentificationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ImmobilizationCertificateID/ImmobilizationCertificateID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ImportanceCode/ImportanceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IndicationIndicator/IndicationIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IndustryClassificationCode/IndustryClassificationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Information/Information`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InformationURI/InformationURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InhalationToxicityZoneCode/InhalationToxicityZoneCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InhouseMail/InhouseMail`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InspectionMethodCode/InspectionMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InstallmentDueDate/InstallmentDueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InstructionID/InstructionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InstructionNote/InstructionNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Instructions/Instructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InsurancePremiumAmount/InsurancePremiumAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InsuranceValueAmount/InsuranceValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InventoryValueAmount/InventoryValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InvoiceTypeCode/InvoiceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InvoicedQuantity/InvoicedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/InvoicingPartyReference/InvoicingPartyReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IssueDate/IssueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IssueNumberID/IssueNumberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IssueTime/IssueTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/IssuerID/IssuerID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ItemClassificationCode/ItemClassificationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ItemUpdateRequestIndicator/ItemUpdateRequestIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/JobTitle/JobTitle`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/JourneyID/JourneyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Justification/Justification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/JustificationDescription/JustificationDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Keyword/Keyword`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LanguageID/LanguageID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LastRevisionDate/LastRevisionDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LastRevisionTime/LastRevisionTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestDeliveryDate/LatestDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestDeliveryTime/LatestDeliveryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestMeterQuantity/LatestMeterQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestMeterReadingDate/LatestMeterReadingDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestMeterReadingMethod/LatestMeterReadingMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestMeterReadingMethodCode/LatestMeterReadingMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestPickupDate/LatestPickupDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestPickupTime/LatestPickupTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestProposalAcceptanceDate/LatestProposalAcceptanceDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatestSecurityClearanceDate/LatestSecurityClearanceDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatitudeDegreesMeasure/LatitudeDegreesMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatitudeDirectionCode/LatitudeDirectionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LatitudeMinutesMeasure/LatitudeMinutesMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LeadTimeMeasure/LeadTimeMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LegalReference/LegalReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LegalStatusIndicator/LegalStatusIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LiabilityAmount/LiabilityAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LicensePlateID/LicensePlateID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LifeCycleStatusCode/LifeCycleStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LimitationDescription/LimitationDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Line/Line`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineCountNumeric/LineCountNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineExtensionAmount/LineExtensionAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineID/LineID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineNumberNumeric/LineNumberNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LineStatusCode/LineStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ListValue/ListValue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LivestockIndicator/LivestockIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LoadingLengthMeasure/LoadingLengthMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LoadingSequenceID/LoadingSequenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LocaleCode/LocaleCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Location/Location`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LocationID/LocationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LocationTypeCode/LocationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Login/Login`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LogoReferenceID/LogoReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LongitudeDegreesMeasure/LongitudeDegreesMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LongitudeDirectionCode/LongitudeDirectionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LongitudeMinutesMeasure/LongitudeMinutesMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LossRisk/LossRisk`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LossRiskResponsibilityCode/LossRiskResponsibilityCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LotNumberID/LotNumberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LowTendersDescription/LowTendersDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LowerOrangeHazardPlacardID/LowerOrangeHazardPlacardID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/LowerTenderAmount/LowerTenderAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MandateTypeCode/MandateTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ManufactureDate/ManufactureDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ManufactureTime/ManufactureTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkAttention/MarkAttention`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkAttentionIndicator/MarkAttentionIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkCare/MarkCare`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkCareIndicator/MarkCareIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarketValueAmount/MarketValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MarkingID/MarkingID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MathematicOperatorCode/MathematicOperatorCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumAdvertisementAmount/MaximumAdvertisementAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumAmount/MaximumAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumBackorderQuantity/MaximumBackorderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumCopiesNumeric/MaximumCopiesNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumMeasure/MaximumMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumNumberNumeric/MaximumNumberNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumOperatorQuantity/MaximumOperatorQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumOrderQuantity/MaximumOrderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumPaidAmount/MaximumPaidAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumPaymentInstructionsNumeric/MaximumPaymentInstructionsNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumPercent/MaximumPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumQuantity/MaximumQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumValue/MaximumValue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MaximumVariantQuantity/MaximumVariantQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Measure/Measure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MedicalFirstAidGuideCode/MedicalFirstAidGuideCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterConstant/MeterConstant`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterConstantCode/MeterConstantCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterName/MeterName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterNumber/MeterNumber`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterReadingComments/MeterReadingComments`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterReadingType/MeterReadingType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MeterReadingTypeCode/MeterReadingTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MiddleName/MiddleName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MimeCode/MimeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumAmount/MinimumAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumBackorderQuantity/MinimumBackorderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumImprovementBid/MinimumImprovementBid`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumInventoryQuantity/MinimumInventoryQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumMeasure/MinimumMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumNumberNumeric/MinimumNumberNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumOrderQuantity/MinimumOrderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumPercent/MinimumPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumQuantity/MinimumQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MinimumValue/MinimumValue`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MiscellaneousEventTypeCode/MiscellaneousEventTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ModelName/ModelName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MonetaryScope/MonetaryScope`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MovieTitle/MovieTitle`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MultipleOrderQuantity/MultipleOrderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/MultiplierFactorNumeric/MultiplierFactorNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Name/Name`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NameCode/NameCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NameSuffix/NameSuffix`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NationalityID/NationalityID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NatureCode/NatureCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NegotiationDescription/NegotiationDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetNetWeightMeasure/NetNetWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetTonnageMeasure/NetTonnageMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetVolumeMeasure/NetVolumeMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetWeightMeasure/NetWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NetworkID/NetworkID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NominationDate/NominationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NominationTime/NominationTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NormalTemperatureReductionQuantity/NormalTemperatureReductionQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Note/Note`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/NotificationTypeCode/NotificationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OccurrenceDate/OccurrenceDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OccurrenceTime/OccurrenceTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OnCarriageIndicator/OnCarriageIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OneTimeChargeType/OneTimeChargeType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OneTimeChargeTypeCode/OneTimeChargeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OntologyURI/OntologyURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OpenTenderID/OpenTenderID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OperatingYearsQuantity/OperatingYearsQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OptionalLineItemIndicator/OptionalLineItemIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OptionsDescription/OptionsDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderIntervalDaysNumeric/OrderIntervalDaysNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderQuantityIncrementNumeric/OrderQuantityIncrementNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderResponseCode/OrderResponseCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderTypeCode/OrderTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderableIndicator/OrderableIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderableUnit/OrderableUnit`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrderableUnitFactorRate/OrderableUnitFactorRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OrganizationDepartment/OrganizationDepartment`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OriginalContractingSystemID/OriginalContractingSystemID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OriginalJobID/OriginalJobID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OtherConditionsIndicator/OtherConditionsIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OtherInstruction/OtherInstruction`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OtherName/OtherName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OutstandingQuantity/OutstandingQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OutstandingReason/OutstandingReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OversupplyQuantity/OversupplyQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/OwnerTypeCode/OwnerTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackLevelCode/PackLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackQuantity/PackQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackSizeNumeric/PackSizeNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackageLevelCode/PackageLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackagingTypeCode/PackagingTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackingCriteriaCode/PackingCriteriaCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PackingMaterial/PackingMaterial`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaidAmount/PaidAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaidDate/PaidDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaidTime/PaidTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParentDocumentID/ParentDocumentID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParentDocumentLineReferenceID/ParentDocumentLineReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParentDocumentTypeCode/ParentDocumentTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParentDocumentVersionID/ParentDocumentVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartPresentationCode/PartPresentationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartecipationPercent/PartecipationPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartialDeliveryIndicator/PartialDeliveryIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ParticipationPercent/ParticipationPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartyCapacityAmount/PartyCapacityAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartyType/PartyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PartyTypeCode/PartyTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PassengerQuantity/PassengerQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Password/Password`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayPerView/PayPerView`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayableAlternativeAmount/PayableAlternativeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayableAmount/PayableAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayableRoundingAmount/PayableRoundingAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PayerReference/PayerReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentAlternativeCurrencyCode/PaymentAlternativeCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentChannelCode/PaymentChannelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentCurrencyCode/PaymentCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentDescription/PaymentDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentDueDate/PaymentDueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentFrequencyCode/PaymentFrequencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentID/PaymentID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentMeansCode/PaymentMeansCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentMeansID/PaymentMeansID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentNote/PaymentNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentOrderReference/PaymentOrderReference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentPercent/PaymentPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentPurposeCode/PaymentPurposeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PaymentTermsDetailsURI/PaymentTermsDetailsURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PenaltyAmount/PenaltyAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PenaltySurchargePercent/PenaltySurchargePercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PerUnitAmount/PerUnitAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Percent/Percent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PerformanceMetricTypeCode/PerformanceMetricTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PerformanceValueQuantity/PerformanceValueQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PerformingCarrierAssignedID/PerformingCarrierAssignedID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PersonalSituation/PersonalSituation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PhoneNumber/PhoneNumber`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PlacardEndorsement/PlacardEndorsement`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PlacardNotation/PlacardNotation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PlannedDate/PlannedDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PlotIdentification/PlotIdentification`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PositionCode/PositionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PostEventNotificationDurationMeasure/PostEventNotificationDurationMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PostalZone/PostalZone`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Postbox/Postbox`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PowerIndicator/PowerIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreCarriageIndicator/PreCarriageIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreEventNotificationDurationMeasure/PreEventNotificationDurationMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreferenceCriterionCode/PreferenceCriterionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrepaidAmount/PrepaidAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrepaidIndicator/PrepaidIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrepaidPaymentReferenceID/PrepaidPaymentReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousCancellationReasonCode/PreviousCancellationReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousJobID/PreviousJobID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousMeterQuantity/PreviousMeterQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousMeterReadingDate/PreviousMeterReadingDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousMeterReadingMethod/PreviousMeterReadingMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousMeterReadingMethodCode/PreviousMeterReadingMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PreviousVersionID/PreviousVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceAmount/PriceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceChangeReason/PriceChangeReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceEvaluationCode/PriceEvaluationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceRevisionFormulaDescription/PriceRevisionFormulaDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceType/PriceType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PriceTypeCode/PriceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PricingCurrencyCode/PricingCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PricingUpdateRequestIndicator/PricingUpdateRequestIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrimaryAccountNumberID/PrimaryAccountNumberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrintQualifier/PrintQualifier`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Priority/Priority`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrivacyCode/PrivacyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrizeDescription/PrizeDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PrizeIndicator/PrizeIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcedureCode/ProcedureCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcessDescription/ProcessDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcessReason/ProcessReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcessReasonCode/ProcessReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcurementSubTypeCode/ProcurementSubTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProcurementTypeCode/ProcurementTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProductTraceID/ProductTraceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProfileExecutionID/ProfileExecutionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProfileID/ProfileID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProfileStatusCode/ProfileStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProgressPercent/ProgressPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PromotionalEventTypeCode/PromotionalEventTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ProviderTypeCode/ProviderTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PublishAwardIndicator/PublishAwardIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Purpose/Purpose`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/PurposeCode/PurposeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/QualityControlCode/QualityControlCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Quantity/Quantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/QuantityDiscrepancyCode/QuantityDiscrepancyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RadioCallSignID/RadioCallSignID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RailCarID/RailCarID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Rank/Rank`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Rate/Rate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceiptAdviceTypeCode/ReceiptAdviceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedDate/ReceivedDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedElectronicTenderQuantity/ReceivedElectronicTenderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedForeignTenderQuantity/ReceivedForeignTenderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedQuantity/ReceivedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReceivedTenderQuantity/ReceivedTenderQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Reference/Reference`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferenceDate/ReferenceDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferenceEventCode/ReferenceEventCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferenceID/ReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferenceTime/ReferenceTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReferencedConsignmentID/ReferencedConsignmentID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RefrigeratedIndicator/RefrigeratedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RefrigerationOnIndicator/RefrigerationOnIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Region/Region`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegisteredDate/RegisteredDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegisteredTime/RegisteredTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationDate/RegistrationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationExpirationDate/RegistrationExpirationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationID/RegistrationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationName/RegistrationName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationNationality/RegistrationNationality`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegistrationNationalityID/RegistrationNationalityID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RegulatoryDomain/RegulatoryDomain`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectActionCode/RejectActionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectReason/RejectReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectReasonCode/RejectReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectedQuantity/RejectedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RejectionNote/RejectionNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReleaseID/ReleaseID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReliabilityPercent/ReliabilityPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Remarks/Remarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReminderSequenceNumeric/ReminderSequenceNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReminderTypeCode/ReminderTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReplenishmentOwnerDescription/ReplenishmentOwnerDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestForQuotationLineID/RequestForQuotationLineID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedDeliveryDate/RequestedDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedDespatchDate/RequestedDespatchDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedDespatchTime/RequestedDespatchTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedInvoiceCurrencyCode/RequestedInvoiceCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequestedPublicationDate/RequestedPublicationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredCurriculaIndicator/RequiredCurriculaIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredCustomsID/RequiredCustomsID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredDeliveryDate/RequiredDeliveryDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredDeliveryTime/RequiredDeliveryTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RequiredFeeAmount/RequiredFeeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResidenceType/ResidenceType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResidenceTypeCode/ResidenceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResidentOccupantsNumeric/ResidentOccupantsNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Resolution/Resolution`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResolutionCode/ResolutionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResolutionDate/ResolutionDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResolutionTime/ResolutionTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResponseCode/ResponseCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResponseDate/ResponseDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ResponseTime/ResponseTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RetailEventName/RetailEventName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RetailEventStatusCode/RetailEventStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReturnabilityIndicator/ReturnabilityIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReturnableMaterialIndicator/ReturnableMaterialIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ReturnableQuantity/ReturnableQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RevisedForecastLineID/RevisedForecastLineID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RevisionDate/RevisionDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RevisionStatusCode/RevisionStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RevisionTime/RevisionTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RoamingPartnerName/RoamingPartnerName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RoleCode/RoleCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RoleDescription/RoleDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Room/Room`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/RoundingAmount/RoundingAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SalesOrderID/SalesOrderID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SalesOrderLineID/SalesOrderLineID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SchemeURI/SchemeURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SealIssuerTypeCode/SealIssuerTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SealStatusCode/SealStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SealingPartyType/SealingPartyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SecurityClassificationCode/SecurityClassificationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SecurityID/SecurityID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SellerEventID/SellerEventID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SequenceID/SequenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SequenceNumberID/SequenceNumberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SequenceNumeric/SequenceNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SerialID/SerialID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceInformationPreferenceCode/ServiceInformationPreferenceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceName/ServiceName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceNumberCalled/ServiceNumberCalled`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceType/ServiceType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ServiceTypeCode/ServiceTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SettlementDiscountAmount/SettlementDiscountAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SettlementDiscountPercent/SettlementDiscountPercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SharesNumberQuantity/SharesNumberQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShippingMarks/ShippingMarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShippingOrderID/ShippingOrderID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShippingPriorityLevelCode/ShippingPriorityLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShipsRequirements/ShipsRequirements`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShortQuantity/ShortQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ShortageActionCode/ShortageActionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SignatureID/SignatureID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SignatureMethod/SignatureMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SizeTypeCode/SizeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SoleProprietorshipIndicator/SoleProprietorshipIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceCurrencyBaseRate/SourceCurrencyBaseRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceCurrencyCode/SourceCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceForecastIssueDate/SourceForecastIssueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceForecastIssueTime/SourceForecastIssueTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SourceValueMeasure/SourceValueMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialInstructions/SpecialInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialSecurityIndicator/SpecialSecurityIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialServiceInstructions/SpecialServiceInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialTerms/SpecialTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecialTransportRequirements/SpecialTransportRequirements`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecificationID/SpecificationID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SpecificationTypeCode/SpecificationTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SplitConsignmentIndicator/SplitConsignmentIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StartDate/StartDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StartTime/StartTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatementTypeCode/StatementTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatusAvailableIndicator/StatusAvailableIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatusCode/StatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatusReason/StatusReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StatusReasonCode/StatusReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/StreetName/StreetName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubcontractingConditionsCode/SubcontractingConditionsCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubmissionDate/SubmissionDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubmissionDueDate/SubmissionDueDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubmissionMethodCode/SubmissionMethodCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubscriberID/SubscriberID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubscriberType/SubscriberType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubscriberTypeCode/SubscriberTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SubstitutionStatusCode/SubstitutionStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SuccessiveSequenceID/SuccessiveSequenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SummaryDescription/SummaryDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SupplierAssignedAccountID/SupplierAssignedAccountID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/SupplyChainActivityTypeCode/SupplyChainActivityTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TareWeightMeasure/TareWeightMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TargetCurrencyBaseRate/TargetCurrencyBaseRate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TargetCurrencyCode/TargetCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TargetInventoryQuantity/TargetInventoryQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TargetServicePercent/TargetServicePercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TariffClassCode/TariffClassCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TariffCode/TariffCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TariffDescription/TariffDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxAmount/TaxAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxCurrencyCode/TaxCurrencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxEnergyAmount/TaxEnergyAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxEnergyBalanceAmount/TaxEnergyBalanceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxEnergyOnAccountAmount/TaxEnergyOnAccountAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxEvidenceIndicator/TaxEvidenceIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxExclusiveAmount/TaxExclusiveAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxExemptionReason/TaxExemptionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxExemptionReasonCode/TaxExemptionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxIncludedIndicator/TaxIncludedIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxInclusiveAmount/TaxInclusiveAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxLevelCode/TaxLevelCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxPointDate/TaxPointDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxTypeCode/TaxTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TaxableAmount/TaxableAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TechnicalCommitteeDescription/TechnicalCommitteeDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TechnicalName/TechnicalName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsServiceCall/TelecommunicationsServiceCall`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsServiceCallCode/TelecommunicationsServiceCallCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsServiceCategory/TelecommunicationsServiceCategory`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsServiceCategoryCode/TelecommunicationsServiceCategoryCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsSupplyType/TelecommunicationsSupplyType`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TelecommunicationsSupplyTypeCode/TelecommunicationsSupplyTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Telefax/Telefax`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Telephone/Telephone`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TenderEnvelopeID/TenderEnvelopeID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TenderEnvelopeTypeCode/TenderEnvelopeTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TenderResultCode/TenderResultCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TenderTypeCode/TenderTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TendererRequirementTypeCode/TendererRequirementTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TendererRoleCode/TendererRoleCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TestMethod/TestMethod`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Text/Text`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ThirdPartyPayerIndicator/ThirdPartyPayerIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ThresholdAmount/ThresholdAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ThresholdQuantity/ThresholdQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ThresholdValueComparisonCode/ThresholdValueComparisonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TierRange/TierRange`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TierRatePercent/TierRatePercent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimeAmount/TimeAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimeDeltaDaysQuantity/TimeDeltaDaysQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimeFrequencyCode/TimeFrequencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimezoneOffset/TimezoneOffset`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimingComplaint/TimingComplaint`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TimingComplaintCode/TimingComplaintCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Title/Title`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ToOrderIndicator/ToOrderIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalAmount/TotalAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalBalanceAmount/TotalBalanceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalConsumedQuantity/TotalConsumedQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalCreditAmount/TotalCreditAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalDebitAmount/TotalDebitAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalDeliveredQuantity/TotalDeliveredQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalGoodsItemQuantity/TotalGoodsItemQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalInvoiceAmount/TotalInvoiceAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalMeteredQuantity/TotalMeteredQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalPackageQuantity/TotalPackageQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalPackagesQuantity/TotalPackagesQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalPaymentAmount/TotalPaymentAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalTaskAmount/TotalTaskAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalTaxAmount/TotalTaxAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TotalTransportHandlingUnitQuantity/TotalTransportHandlingUnitQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TraceID/TraceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TrackingDeviceCode/TrackingDeviceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TrackingID/TrackingID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TradeItemPackingLabelingTypeCode/TradeItemPackingLabelingTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TradeServiceCode/TradeServiceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TradingRestrictions/TradingRestrictions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TrainID/TrainID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransactionCurrencyTaxAmount/TransactionCurrencyTaxAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransitDirectionCode/TransitDirectionCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportAuthorizationCode/TransportAuthorizationCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportEmergencyCardCode/TransportEmergencyCardCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportEquipmentTypeCode/TransportEquipmentTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportEventTypeCode/TransportEventTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportExecutionPlanReferenceID/TransportExecutionPlanReferenceID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportExecutionStatusCode/TransportExecutionStatusCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportHandlingUnitTypeCode/TransportHandlingUnitTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportMeansTypeCode/TransportMeansTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportModeCode/TransportModeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportServiceCode/TransportServiceCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportServiceProviderRemarks/TransportServiceProviderRemarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportServiceProviderSpecialTerms/TransportServiceProviderSpecialTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportUserRemarks/TransportUserRemarks`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportUserSpecialTerms/TransportUserSpecialTerms`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportationServiceDescription/TransportationServiceDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportationServiceDetailsURI/TransportationServiceDetailsURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TransportationStatusTypeCode/TransportationStatusTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/TypeCode/TypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UBLVersionID/UBLVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UNDGCode/UNDGCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/URI/URI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UUID/UUID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UnknownPriceIndicator/UnknownPriceIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UpperOrangeHazardPlacardID/UpperOrangeHazardPlacardID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UrgencyCode/UrgencyCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/UtilityStatementTypeCode/UtilityStatementTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidateProcess/ValidateProcess`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidateTool/ValidateTool`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidateToolVersion/ValidateToolVersion`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidationDate/ValidationDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidationResultCode/ValidationResultCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidationTime/ValidationTime`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidatorID/ValidatorID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValidityStartDate/ValidityStartDate`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Value/Value`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValueAmount/ValueAmount`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValueMeasure/ValueMeasure`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValueQualifier/ValueQualifier`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/ValueQuantity/ValueQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VarianceQuantity/VarianceQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VariantConstraintIndicator/VariantConstraintIndicator`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VariantID/VariantID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VersionID/VersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VesselID/VesselID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/VesselName/VesselName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WarrantyInformation/WarrantyInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WebsiteURI/WebsiteURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WeekDayCode/WeekDayCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/Weight/Weight`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WeightNumeric/WeightNumeric`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WeightingAlgorithmCode/WeightingAlgorithmCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WorkPhase/WorkPhase`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WorkPhaseCode/WorkPhaseCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/XPath/XPath`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[9]/ExtensionContent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyID/ExtensionAgencyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyName/ExtensionAgencyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyURI/ExtensionAgencyURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionContent/ExtensionContent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionReason/ExtensionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionReasonCode/ExtensionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionURI/ExtensionURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionVersionID/ExtensionVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/UBLExtension/UBLExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/UBLExtensions/UBLExtensions`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|global/UBLDocumentSignatures/UBLDocumentSignatures`
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|global/ContractAwardNotice/ContractAwardNotice`
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|global/ContractNotice/ContractNotice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|global/CreditNote/CreditNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|global/DebitNote/DebitNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2|UBL-DespatchAdvice-2.1.xsd|element|global/DespatchAdvice/DespatchAdvice`
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatus-2|UBL-DocumentStatus-2.1.xsd|element|global/DocumentStatus/DocumentStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatusRequest-2|UBL-DocumentStatusRequest-2.1.xsd|element|global/DocumentStatusRequest/DocumentStatusRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionCriteria-2|UBL-ExceptionCriteria-2.1.xsd|element|global/ExceptionCriteria/ExceptionCriteria`
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionNotification-2|UBL-ExceptionNotification-2.1.xsd|element|global/ExceptionNotification/ExceptionNotification`
+- `urn:oasis:names:specification:ubl:schema:xsd:Forecast-2|UBL-Forecast-2.1.xsd|element|global/Forecast/Forecast`
+- `urn:oasis:names:specification:ubl:schema:xsd:ForecastRevision-2|UBL-ForecastRevision-2.1.xsd|element|global/ForecastRevision/ForecastRevision`
+- `urn:oasis:names:specification:ubl:schema:xsd:ForwardingInstructions-2|UBL-ForwardingInstructions-2.1.xsd|element|global/ForwardingInstructions/ForwardingInstructions`
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|global/FreightInvoice/FreightInvoice`
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|global/FulfilmentCancellation/FulfilmentCancellation`
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|global/GoodsItemItinerary/GoodsItemItinerary`
+- `urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2|UBL-GuaranteeCertificate-2.1.xsd|element|global/GuaranteeCertificate/GuaranteeCertificate`
+- `urn:oasis:names:specification:ubl:schema:xsd:InstructionForReturns-2|UBL-InstructionForReturns-2.1.xsd|element|global/InstructionForReturns/InstructionForReturns`
+- `urn:oasis:names:specification:ubl:schema:xsd:InventoryReport-2|UBL-InventoryReport-2.1.xsd|element|global/InventoryReport/InventoryReport`
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|global/Invoice/Invoice`
+- `urn:oasis:names:specification:ubl:schema:xsd:ItemInformationRequest-2|UBL-ItemInformationRequest-2.1.xsd|element|global/ItemInformationRequest/ItemInformationRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|global/Order/Order`
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderCancellation-2|UBL-OrderCancellation-2.1.xsd|element|global/OrderCancellation/OrderCancellation`
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|global/OrderChange/OrderChange`
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|global/OrderResponse/OrderResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponseSimple-2|UBL-OrderResponseSimple-2.1.xsd|element|global/OrderResponseSimple/OrderResponseSimple`
+- `urn:oasis:names:specification:ubl:schema:xsd:PackingList-2|UBL-PackingList-2.1.xsd|element|global/PackingList/PackingList`
+- `urn:oasis:names:specification:ubl:schema:xsd:PriorInformationNotice-2|UBL-PriorInformationNotice-2.1.xsd|element|global/PriorInformationNotice/PriorInformationNotice`
+- `urn:oasis:names:specification:ubl:schema:xsd:ProductActivity-2|UBL-ProductActivity-2.1.xsd|element|global/ProductActivity/ProductActivity`
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|global/Quotation/Quotation`
+- `urn:oasis:names:specification:ubl:schema:xsd:ReceiptAdvice-2|UBL-ReceiptAdvice-2.1.xsd|element|global/ReceiptAdvice/ReceiptAdvice`
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|global/Reminder/Reminder`
+- `urn:oasis:names:specification:ubl:schema:xsd:RemittanceAdvice-2|UBL-RemittanceAdvice-2.1.xsd|element|global/RemittanceAdvice/RemittanceAdvice`
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|global/RequestForQuotation/RequestForQuotation`
+- `urn:oasis:names:specification:ubl:schema:xsd:RetailEvent-2|UBL-RetailEvent-2.1.xsd|element|global/RetailEvent/RetailEvent`
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|global/SelfBilledCreditNote/SelfBilledCreditNote`
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|global/SelfBilledInvoice/SelfBilledInvoice`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|global/SignatureInformation/SignatureInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|element|global/ReferencedSignatureID/ReferencedSignatureID`
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|global/Statement/Statement`
+- `urn:oasis:names:specification:ubl:schema:xsd:StockAvailabilityReport-2|UBL-StockAvailabilityReport-2.1.xsd|element|global/StockAvailabilityReport/StockAvailabilityReport`
+- `urn:oasis:names:specification:ubl:schema:xsd:Tender-2|UBL-Tender-2.1.xsd|element|global/Tender/Tender`
+- `urn:oasis:names:specification:ubl:schema:xsd:TenderReceipt-2|UBL-TenderReceipt-2.1.xsd|element|global/TenderReceipt/TenderReceipt`
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualification-2|UBL-TendererQualification-2.1.xsd|element|global/TendererQualification/TendererQualification`
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualificationResponse-2|UBL-TendererQualificationResponse-2.1.xsd|element|global/TendererQualificationResponse/TendererQualificationResponse`
+- `urn:oasis:names:specification:ubl:schema:xsd:TradeItemLocationProfile-2|UBL-TradeItemLocationProfile-2.1.xsd|element|global/TradeItemLocationProfile/TradeItemLocationProfile`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|global/TransportExecutionPlan/TransportExecutionPlan`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|global/TransportExecutionPlanRequest/TransportExecutionPlanRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatus-2|UBL-TransportProgressStatus-2.1.xsd|element|global/TransportProgressStatus/TransportProgressStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatusRequest-2|UBL-TransportProgressStatusRequest-2.1.xsd|element|global/TransportProgressStatusRequest/TransportProgressStatusRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescription-2|UBL-TransportServiceDescription-2.1.xsd|element|global/TransportServiceDescription/TransportServiceDescription`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescriptionRequest-2|UBL-TransportServiceDescriptionRequest-2.1.xsd|element|global/TransportServiceDescriptionRequest/TransportServiceDescriptionRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|global/TransportationStatus/TransportationStatus`
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|global/TransportationStatusRequest/TransportationStatusRequest`
+- `urn:oasis:names:specification:ubl:schema:xsd:UnawardedNotification-2|UBL-UnawardedNotification-2.1.xsd|element|global/UnawardedNotification/UnawardedNotification`
+- `urn:oasis:names:specification:ubl:schema:xsd:UtilityStatement-2|UBL-UtilityStatement-2.1.xsd|element|global/UtilityStatement/UtilityStatement`
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|global/Waybill/Waybill`
+
+## Uncovered sequenceMembers
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[0]/Issuer`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[1]/IssueTime`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[2]/Number`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[0]/DigestAlgAndValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[1]/CRLIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[0]/CertDigest`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[1]/IssuerSerial`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[0]/CommitmentTypeId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[1]/CommitmentTypeQualifiers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteCertificateRefsType/sequence[0]/CertRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[0]/CRLRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[1]/OCSPRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[2]/OtherRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CounterSignatureType/sequence[0]/Signature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[0]/Description`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[1]/ObjectIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[2]/MimeType`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[3]/Encoding`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[0]/DigestMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[1]/DigestValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/sequence[0]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|IntegerListType/sequence[0]/int`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|NoticeReferenceType/sequence[0]/Organization`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|NoticeReferenceType/sequence[1]/NoticeNumbers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPIdentifierType/sequence[0]/ResponderID`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPIdentifierType/sequence[1]/ProducedAt`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[0]/OCSPIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[1]/DigestAlgAndValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[0]/Identifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[1]/Description`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[2]/DocumentationReferences`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[1]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[0]/SignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[1]/UnsignedProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[0]/DigestMethod`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[1]/DigestValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[0]/CRLValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[1]/OCSPValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[2]/OtherValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[0]/NoticeRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[1]/ExplicitText`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[0]/SigPolicyId`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[1]/Transforms`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[2]/SigPolicyHash`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[3]/SigPolicyQualifiers`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[0]/City`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[1]/StateOrProvince`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[2]/PostalCode`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[3]/CountryName`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[0]/SignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[1]/SignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[0]/SigningTime`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[1]/SigningCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[2]/SignaturePolicyIdentifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[3]/SignatureProductionPlace`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[4]/SignerRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[0]/ClaimedRoles`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[1]/CertifiedRoles`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[0]/UnsignedSignatureProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[1]/UnsignedDataObjectProperties`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[1]/CanonicalizationMethod`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[0]/CertificateValues`
+- `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[1]/RevocationValues`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/G`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[0]/P`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[1]/Q`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/Y`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[0]/Seed`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[1]/PgenCounter`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[2]/J`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[0]/Modulus`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[1]/Exponent`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[0]/Transforms`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[1]/DigestMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[2]/DigestValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[0]/SignedInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[1]/SignatureValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[2]/KeyInfo`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[0]/CanonicalizationMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[1]/SignatureMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[1]/X509SerialNumber`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[2]/PerformanceValueQuantity`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[3]/PerformanceMetricTypeCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[4]/Period`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[5]/Item`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[1]/Name`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[2]/ExtensionAgencyID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[3]/ExtensionAgencyName`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[4]/ExtensionVersionID`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[5]/ExtensionAgencyURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[6]/ExtensionURI`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[7]/ExtensionReasonCode`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[8]/ExtensionReason`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[9]/ExtensionContent`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[0]/ID`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[1]/ReferencedSignatureID`
+- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[2]/Signature`
+
+## Uncovered wildcards
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|any|AnyType/sequence`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|any|UnsignedSignaturePropertiesType/choice`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|CanonicalizationMethodType/sequence`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|DigestMethodType/sequence`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|KeyInfoType/choice`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|KeyValueType/choice`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|ObjectType/sequence`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|PGPDataType/sequence[0]/sequence`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|PGPDataType/sequence[1]/sequence`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SPKIDataType/sequence`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SignatureMethodType/sequence`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SignaturePropertyType/choice`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|TransformType/choice`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|X509DataType/choice[0]/choice`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-ExtensionContentDataType-2.1.xsd|any|ExtensionContentType/sequence`
+
+## Repeatable particles with zero exercised occurrences
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|IntegerListType/sequence[0]/int`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
+
+## Repeatable particles missing required cardinalities
+
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[1]/XMLTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|IntegerListType/sequence[0]/int` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include` (exercised []; required [0 1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object` (exercised []; required [0 1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath` (exercised []; required [0 1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL` (exercised []; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ApplicationResponse-2|UBL-ApplicationResponse-2.1.xsd|element|ApplicationResponseType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ApplicationResponse-2|UBL-ApplicationResponse-2.1.xsd|element|ApplicationResponseType/sequence[13]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ApplicationResponse-2|UBL-ApplicationResponse-2.1.xsd|element|ApplicationResponseType/sequence[16]/DocumentResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AttachedDocument-2|UBL-AttachedDocument-2.1.xsd|element|AttachedDocumentType/sequence[15]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AttachedDocument-2|UBL-AttachedDocument-2.1.xsd|element|AttachedDocumentType/sequence[19]/ParentDocumentLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AttachedDocument-2|UBL-AttachedDocument-2.1.xsd|element|AttachedDocumentType/sequence[9]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AwardedNotification-2|UBL-AwardedNotification-2.1.xsd|element|AwardedNotificationType/sequence[11]/ContractName` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AwardedNotification-2|UBL-AwardedNotification-2.1.xsd|element|AwardedNotificationType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AwardedNotification-2|UBL-AwardedNotification-2.1.xsd|element|AwardedNotificationType/sequence[16]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AwardedNotification-2|UBL-AwardedNotification-2.1.xsd|element|AwardedNotificationType/sequence[17]/TenderResult` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AwardedNotification-2|UBL-AwardedNotification-2.1.xsd|element|AwardedNotificationType/sequence[18]/FinalFinancialGuarantee` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:AwardedNotification-2|UBL-AwardedNotification-2.1.xsd|element|AwardedNotificationType/sequence[19]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|BillOfLadingType/sequence[11]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|BillOfLadingType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|BillOfLadingType/sequence[18]/OtherInstruction` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|BillOfLadingType/sequence[23]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|BillOfLadingType/sequence[24]/ExchangeRate` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|BillOfLadingType/sequence[25]/DocumentDistribution` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:BillOfLading-2|UBL-BillOfLading-2.1.xsd|element|BillOfLadingType/sequence[26]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CallForTenders-2|UBL-CallForTenders-2.1.xsd|element|CallForTendersType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CallForTenders-2|UBL-CallForTenders-2.1.xsd|element|CallForTendersType/sequence[17]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CallForTenders-2|UBL-CallForTenders-2.1.xsd|element|CallForTendersType/sequence[18]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CallForTenders-2|UBL-CallForTenders-2.1.xsd|element|CallForTendersType/sequence[20]/OriginatorCustomerParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CallForTenders-2|UBL-CallForTenders-2.1.xsd|element|CallForTendersType/sequence[25]/ProcurementProjectLot` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|CatalogueType/sequence[13]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|CatalogueType/sequence[14]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|CatalogueType/sequence[18]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|CatalogueType/sequence[19]/ReferencedContract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|CatalogueType/sequence[21]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|CatalogueType/sequence[22]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|CatalogueType/sequence[27]/TradingTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Catalogue-2|UBL-Catalogue-2.1.xsd|element|CatalogueType/sequence[28]/CatalogueLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueDeletion-2|UBL-CatalogueDeletion-2.1.xsd|element|CatalogueDeletionType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueDeletion-2|UBL-CatalogueDeletion-2.1.xsd|element|CatalogueDeletionType/sequence[14]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueDeletion-2|UBL-CatalogueDeletion-2.1.xsd|element|CatalogueDeletionType/sequence[15]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueDeletion-2|UBL-CatalogueDeletion-2.1.xsd|element|CatalogueDeletionType/sequence[17]/ReferencedContract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueDeletion-2|UBL-CatalogueDeletion-2.1.xsd|element|CatalogueDeletionType/sequence[18]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueItemSpecificationUpdate-2|UBL-CatalogueItemSpecificationUpdate-2.1.xsd|element|CatalogueItemSpecificationUpdateType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueItemSpecificationUpdate-2|UBL-CatalogueItemSpecificationUpdate-2.1.xsd|element|CatalogueItemSpecificationUpdateType/sequence[13]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueItemSpecificationUpdate-2|UBL-CatalogueItemSpecificationUpdate-2.1.xsd|element|CatalogueItemSpecificationUpdateType/sequence[16]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueItemSpecificationUpdate-2|UBL-CatalogueItemSpecificationUpdate-2.1.xsd|element|CatalogueItemSpecificationUpdateType/sequence[18]/ReferencedContract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueItemSpecificationUpdate-2|UBL-CatalogueItemSpecificationUpdate-2.1.xsd|element|CatalogueItemSpecificationUpdateType/sequence[19]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueItemSpecificationUpdate-2|UBL-CatalogueItemSpecificationUpdate-2.1.xsd|element|CatalogueItemSpecificationUpdateType/sequence[26]/CatalogueItemSpecificationUpdateLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CataloguePricingUpdate-2|UBL-CataloguePricingUpdate-2.1.xsd|element|CataloguePricingUpdateType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CataloguePricingUpdate-2|UBL-CataloguePricingUpdate-2.1.xsd|element|CataloguePricingUpdateType/sequence[13]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CataloguePricingUpdate-2|UBL-CataloguePricingUpdate-2.1.xsd|element|CataloguePricingUpdateType/sequence[16]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CataloguePricingUpdate-2|UBL-CataloguePricingUpdate-2.1.xsd|element|CataloguePricingUpdateType/sequence[18]/ReferencedContract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CataloguePricingUpdate-2|UBL-CataloguePricingUpdate-2.1.xsd|element|CataloguePricingUpdateType/sequence[19]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CataloguePricingUpdate-2|UBL-CataloguePricingUpdate-2.1.xsd|element|CataloguePricingUpdateType/sequence[26]/CataloguePricingUpdateLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[11]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[15]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[16]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[22]/ReferencedContract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[24]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[25]/ApplicableTerritoryAddress` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[27]/RequestedClassificationScheme` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CatalogueRequest-2|UBL-CatalogueRequest-2.1.xsd|element|CatalogueRequestType/sequence[28]/CatalogueRequestLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CertificateOfOrigin-2|UBL-CertificateOfOrigin-2.1.xsd|element|CertificateOfOriginType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CertificateOfOrigin-2|UBL-CertificateOfOrigin-2.1.xsd|element|CertificateOfOriginType/sequence[12]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CertificateOfOrigin-2|UBL-CertificateOfOrigin-2.1.xsd|element|CertificateOfOriginType/sequence[15]/EndorserParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CertificateOfOrigin-2|UBL-CertificateOfOrigin-2.1.xsd|element|CertificateOfOriginType/sequence[9]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ActivityDataLineType/sequence[7]/SalesItem` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AddressType/sequence[24]/AddressLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AddressType/sequence[26]/LocationCoordinate` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AllowanceChargeType/sequence[12]/TaxCategory` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AllowanceChargeType/sequence[14]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AllowanceChargeType/sequence[3]/AllowanceChargeReason` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AppealTermsType/sequence[0]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AuctionTermsType/sequence[1]/JustificationDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AuctionTermsType/sequence[2]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AuctionTermsType/sequence[3]/ProcessDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AuctionTermsType/sequence[4]/ConditionsDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AuctionTermsType/sequence[5]/ElectronicDeviceDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingCriterionResponseType/sequence[2]/AwardingCriterionDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingCriterionResponseType/sequence[3]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingCriterionResponseType/sequence[6]/SubordinateAwardingCriterionResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingCriterionType/sequence[11]/MinimumImprovementBid` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingCriterionType/sequence[12]/SubordinateAwardingCriterion` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingCriterionType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingCriterionType/sequence[4]/Weight` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingCriterionType/sequence[5]/CalculationExpression` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingTermsType/sequence[10]/TechnicalCommitteePerson` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingTermsType/sequence[1]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingTermsType/sequence[2]/TechnicalCommitteeDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingTermsType/sequence[3]/LowTendersDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingTermsType/sequence[5]/PrizeDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingTermsType/sequence[6]/PaymentDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AwardingTermsType/sequence[9]/AwardingCriterion` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|BillingReferenceLineType/sequence[2]/AllowanceCharge` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|BillingReferenceType/sequence[7]/BillingReferenceLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|BudgetAccountLineType/sequence[2]/BudgetAccount` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CapabilityType/sequence[1]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CapabilityType/sequence[4]/EvidenceSupplied` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[11]/WarrantyInformation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[18]/ItemComparison` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[19]/ComponentRelatedItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[20]/AccessoryRelatedItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[21]/RequiredRelatedItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[22]/ReplacementRelatedItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[23]/ComplementaryRelatedItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[24]/ReplacedRelatedItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[25]/RequiredItemLocationQuantity` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[26]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[28]/KeywordItemProperty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueLineType/sequence[4]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CataloguePricingUpdateLineType/sequence[3]/RequiredItemLocationQuantity` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueReferenceType/sequence[6]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueReferenceType/sequence[7]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueRequestLineType/sequence[2]/Note` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CatalogueRequestLineType/sequence[4]/RequiredItemLocationQuantity` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CertificateOfOriginApplicationType/sequence[13]/DocumentDistribution` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CertificateOfOriginApplicationType/sequence[14]/SupportingDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CertificateOfOriginApplicationType/sequence[15]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CertificateOfOriginApplicationType/sequence[5]/Remarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CertificateOfOriginApplicationType/sequence[7]/EndorserParty` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CertificateType/sequence[3]/Remarks` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CertificateType/sequence[5]/DocumentReference` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CertificateType/sequence[6]/Signature` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ClassificationCategoryType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ClassificationCategoryType/sequence[3]/CategorizesClassificationCategory` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ClassificationSchemeType/sequence[13]/ClassificationCategory` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ClassificationSchemeType/sequence[4]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ClassificationSchemeType/sequence[6]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ClauseType/sequence[1]/Content` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CompletedTaskType/sequence[3]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CompletedTaskType/sequence[4]/EvidenceSupplied` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConditionType/sequence[2]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[11]/TariffDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[21]/Remarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[31]/CarrierServiceInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[32]/CustomsClearanceServiceInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[33]/ForwarderServiceInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[34]/SpecialServiceInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[38]/HandlingInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[39]/Information` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[46]/SpecialInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[48]/DeliveryInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[51]/HaulageInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[55]/ConsolidatedShipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[56]/CustomsDeclaration` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[61]/Status` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[62]/ChildConsignment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[82]/TransitCountry` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[84]/TransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[8]/SummaryDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[92]/FreightAllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[93]/ExtraAllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[94]/MainCarriageShipmentStage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[95]/PreCarriageShipmentStage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[96]/OnCarriageShipmentStage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsignmentType/sequence[97]/TransportHandlingUnit` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionAverageType/sequence[1]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionCorrectionType/sequence[7]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionHistoryType/sequence[5]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionLineType/sequence[5]/Delivery` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionLineType/sequence[6]/AllowanceCharge` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionLineType/sequence[7]/TaxTotal` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionPointType/sequence[1]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionPointType/sequence[8]/UtilityMeter` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionReportType/sequence[16]/ConsumptionReportReference` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionReportType/sequence[17]/ConsumptionHistory` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionReportType/sequence[3]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionType/sequence[2]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ConsumptionType/sequence[3]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContactType/sequence[5]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContactType/sequence[6]/OtherCommunication` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractExecutionRequirementType/sequence[0]/Name` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractExecutionRequirementType/sequence[2]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractExtensionType/sequence[0]/OptionsDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractExtensionType/sequence[4]/Renewal` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractType/sequence[11]/ContractDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractType/sequence[7]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractType/sequence[9]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractingPartyType/sequence[1]/ContractingPartyType` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ContractingPartyType/sequence[2]/ContractingActivity` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CorporateRegistrationSchemeType/sequence[3]/JurisdictionRegionAddress` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[10]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[11]/OrderLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[12]/DiscrepancyResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[13]/DespatchLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[14]/ReceiptLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[15]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[16]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[19]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[20]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[21]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[22]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[25]/DeliveryTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[26]/SubCreditNoteLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CreditNoteLineType/sequence[2]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|CustomerPartyType/sequence[2]/AdditionalAccountID` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[10]/DespatchLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[11]/ReceiptLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[12]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[13]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[15]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[16]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[17]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[20]/SubDebitNoteLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[2]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DebitNoteLineType/sequence[9]/DiscrepancyResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DeclarationType/sequence[0]/Name` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DeclarationType/sequence[2]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DeclarationType/sequence[3]/EvidenceSupplied` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DeliveryTermsType/sequence[1]/SpecialTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DeliveryTermsType/sequence[3]/LossRisk` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DeliveryType/sequence[18]/NotifyParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DeliveryType/sequence[20]/DeliveryTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DespatchLineType/sequence[10]/OrderLineReference` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DespatchLineType/sequence[11]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DespatchLineType/sequence[13]/Shipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DespatchLineType/sequence[2]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DespatchLineType/sequence[6]/BackorderReason` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DespatchLineType/sequence[8]/OutstandingReason` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DespatchType/sequence[10]/Instructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DespatchType/sequence[15]/NotifyParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DimensionType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DocumentReferenceType/sequence[12]/DocumentDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DocumentReferenceType/sequence[7]/XPath` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DocumentResponseType/sequence[1]/DocumentReference` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|DocumentResponseType/sequence[4]/LineResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EconomicOperatorRoleType/sequence[1]/RoleDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EconomicOperatorShortListType/sequence[0]/LimitationDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EconomicOperatorShortListType/sequence[4]/PreSelectedParty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EndorsementType/sequence[2]/Remarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EndorsementType/sequence[4]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EnergyWaterSupplyType/sequence[0]/ConsumptionReport` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EnergyWaterSupplyType/sequence[1]/EnergyTaxReport` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EnergyWaterSupplyType/sequence[2]/ConsumptionAverage` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EnergyWaterSupplyType/sequence[3]/EnergyWaterConsumptionCorrection` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EnvironmentalEmissionType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EnvironmentalEmissionType/sequence[3]/EmissionCalculationMethod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EvaluationCriterionType/sequence[1]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EvaluationCriterionType/sequence[5]/Expression` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EvaluationCriterionType/sequence[7]/SuggestedEvidence` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EventLineItemType/sequence[2]/RetailPlannedImpact` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EventType/sequence[4]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EventType/sequence[6]/CurrentStatus` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EventType/sequence[7]/Contact` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EvidenceType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|EvidenceType/sequence[3]/CandidateStatement` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ExceptionCriteriaLineType/sequence[10]/SupplyItem` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ExceptionCriteriaLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ExceptionNotificationLineType/sequence[12]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ExceptionNotificationLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ExceptionNotificationLineType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ExternalReferenceType/sequence[10]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|FinancialAccountType/sequence[6]/PaymentNote` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|FinancialGuaranteeType/sequence[1]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ForecastLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ForecastRevisionLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ForecastRevisionLineType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|FrameworkAgreementType/sequence[2]/Justification` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|FrameworkAgreementType/sequence[3]/Frequency` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|FrameworkAgreementType/sequence[5]/SubsequentProcessTenderRequirement` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemContainerType/sequence[2]/TransportEquipment` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[25]/Item` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[26]/GoodsItemContainer` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[27]/FreightAllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[28]/InvoiceLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[29]/Temperature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[30]/ContainedGoodsItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[35]/MeasurementDimension` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|GoodsItemType/sequence[36]/ContainingPackage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|HazardousItemType/sequence[18]/SecondaryHazard` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|HazardousItemType/sequence[19]/HazardousGoodsTransit` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|HazardousItemType/sequence[22]/AdditionalTemperature` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|HazardousItemType/sequence[3]/AdditionalInformation` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InstructionForReturnsLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InventoryReportLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[10]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[11]/OrderLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[12]/DespatchLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[13]/ReceiptLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[14]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[15]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[18]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[19]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[20]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[21]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[22]/WithholdingTaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[26]/SubInvoiceLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|InvoiceLineType/sequence[2]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemIdentificationType/sequence[3]/PhysicalAttribute` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemIdentificationType/sequence[4]/MeasurementDimension` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemInformationRequestLineType/sequence[4]/Period` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemInformationRequestLineType/sequence[5]/SalesItem` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemInstanceType/sequence[6]/AdditionalItemProperty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemLocationQuantityType/sequence[10]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemLocationQuantityType/sequence[4]/TradingRestrictions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemLocationQuantityType/sequence[5]/ApplicableTerritoryAddress` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemLocationQuantityType/sequence[7]/DeliveryUnit` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemLocationQuantityType/sequence[8]/ApplicableTaxCategory` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemManagementProfileType/sequence[4]/ReplenishmentOwnerDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemPropertyType/sequence[10]/ItemPropertyGroup` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemPropertyType/sequence[6]/ValueQualifier` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemPropertyType/sequence[8]/ListValue` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[0]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[12]/ManufacturersItemIdentification` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[15]/AdditionalItemIdentification` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[17]/ItemSpecificationDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[19]/CommodityClassification` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[20]/TransactionConditions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[21]/HazardousItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[22]/ClassifiedTaxCategory` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[23]/AdditionalItemProperty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[24]/ManufacturerParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[26]/OriginAddress` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[27]/ItemInstance` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[28]/Certificate` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[29]/Dimension` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[6]/AdditionalInformation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[7]/Keyword` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[8]/BrandName` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ItemType/sequence[9]/ModelName` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineItemType/sequence[17]/WarrantyInformation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineItemType/sequence[18]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineItemType/sequence[21]/OrderedShipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineItemType/sequence[23]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineItemType/sequence[26]/SubLineItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineItemType/sequence[29]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineItemType/sequence[31]/LineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineItemType/sequence[3]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LineResponseType/sequence[1]/Response` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LocationType/sequence[10]/SubsidiaryLocation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LocationType/sequence[11]/LocationCoordinate` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LocationType/sequence[1]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LocationType/sequence[2]/Conditions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LocationType/sequence[8]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|LotIdentificationType/sequence[2]/AdditionalItemProperty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|MaritimeTransportType/sequence[3]/ShipsRequirements` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|MeterPropertyType/sequence[4]/ValueQualifier` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|MeterReadingType/sequence[11]/MeterReadingComments` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|MeterType/sequence[5]/MeterReading` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|MeterType/sequence[6]/MeterProperty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|MiscellaneousEventType/sequence[1]/EventLineItem` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|NotificationRequirementType/sequence[3]/NotifyParty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|NotificationRequirementType/sequence[4]/NotificationPeriod` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|NotificationRequirementType/sequence[5]/NotificationLocation` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OnAccountPaymentType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OnAccountPaymentType/sequence[2]/PaymentTerms` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OrderLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OrderLineType/sequence[3]/SellerProposedSubstituteLineItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OrderLineType/sequence[4]/SellerSubstitutedLineItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OrderLineType/sequence[5]/BuyerProposedSubstituteLineItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OrderLineType/sequence[8]/OrderLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OrderLineType/sequence[9]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|OrderedShipmentType/sequence[1]/Package` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PackageType/sequence[10]/MeasurementDimension` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PackageType/sequence[11]/DeliveryUnit` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PackageType/sequence[5]/PackingMaterial` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PackageType/sequence[7]/ContainedPackage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PackageType/sequence[9]/GoodsItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyLegalEntityType/sequence[13]/ShareholderParty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyTaxSchemeType/sequence[4]/ExemptionReason` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyType/sequence[11]/PartyTaxScheme` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyType/sequence[12]/PartyLegalEntity` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyType/sequence[14]/Person` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyType/sequence[16]/ServiceProviderParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyType/sequence[17]/PowerOfAttorney` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyType/sequence[6]/PartyIdentification` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PartyType/sequence[7]/PartyName` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PaymentMandateType/sequence[9]/Clause` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PaymentMeansType/sequence[5]/InstructionNote` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PaymentMeansType/sequence[6]/PaymentID` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PaymentTermsType/sequence[1]/PaymentMeansID` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PaymentTermsType/sequence[3]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note` (exercised []; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PeriodType/sequence[5]/DescriptionCode` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PeriodType/sequence[6]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PersonType/sequence[15]/IdentityDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PhysicalAttributeType/sequence[3]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PowerOfAttorneyType/sequence[3]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PowerOfAttorneyType/sequence[6]/WitnessParty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PowerOfAttorneyType/sequence[7]/MandateDocumentReference` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PriceExtensionType/sequence[1]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PriceListType/sequence[2]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PriceType/sequence[2]/PriceChangeReason` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PriceType/sequence[6]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PriceType/sequence[8]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PricingReferenceType/sequence[1]/AlternativeConditionPrice` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcessJustificationType/sequence[2]/ProcessReason` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcessJustificationType/sequence[3]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcurementProjectType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcurementProjectType/sequence[13]/AdditionalCommodityClassification` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcurementProjectType/sequence[14]/RealizedLocation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcurementProjectType/sequence[17]/RequestForTenderLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcurementProjectType/sequence[1]/Name` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcurementProjectType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProcurementProjectType/sequence[7]/FeeDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ProjectReferenceType/sequence[3]/WorkPhaseReference` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PromotionalEventType/sequence[4]/PromotionalSpecification` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PromotionalSpecificationType/sequence[1]/PromotionalEventLineItem` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PromotionalSpecificationType/sequence[2]/EventTactic` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QualificationResolutionType/sequence[1]/ExclusionReason` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QualificationResolutionType/sequence[2]/Resolution` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QualifyingPartyType/sequence[10]/CompletedTask` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QualifyingPartyType/sequence[11]/Declaration` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QualifyingPartyType/sequence[1]/PersonalSituation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QualifyingPartyType/sequence[8]/TechnicalCapability` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QualifyingPartyType/sequence[9]/FinancialCapability` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QuotationLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QuotationLineType/sequence[6]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QuotationLineType/sequence[8]/SellerProposedSubstituteLineItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|QuotationLineType/sequence[9]/AlternativeLineItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReceiptLineType/sequence[16]/DespatchLineReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReceiptLineType/sequence[17]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReceiptLineType/sequence[18]/Item` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReceiptLineType/sequence[19]/Shipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReceiptLineType/sequence[2]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReceiptLineType/sequence[8]/RejectReason` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RelatedItemType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReminderLineType/sequence[11]/ReminderPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReminderLineType/sequence[12]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ReminderLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RemittanceAdviceLineType/sequence[14]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RemittanceAdviceLineType/sequence[15]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RemittanceAdviceLineType/sequence[16]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RemittanceAdviceLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestForQuotationLineType/sequence[2]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestForQuotationLineType/sequence[6]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestForTenderLineType/sequence[10]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestForTenderLineType/sequence[11]/DeliveryPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestForTenderLineType/sequence[12]/RequiredItemLocationQuantity` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestForTenderLineType/sequence[15]/SubRequestForTenderLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestForTenderLineType/sequence[2]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestedTenderTotalType/sequence[5]/MonetaryScope` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|RequestedTenderTotalType/sequence[7]/ApplicableTaxCategory` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ResponseType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ResponseType/sequence[5]/Status` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SalesItemType/sequence[1]/ActivityProperty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SalesItemType/sequence[2]/TaxExclusivePrice` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SalesItemType/sequence[3]/TaxInclusivePrice` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SecondaryHazardType/sequence[4]/Extension` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ServiceProviderPartyType/sequence[2]/ServiceType` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[12]/Instructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[13]/DemurrageInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[17]/CarrierParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[39]/FreightAllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[41]/DetentionTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[44]/RequestedWaypointTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[47]/PlannedWaypointTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[51]/TransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[54]/PassengerPerson` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[55]/DriverPerson` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentStageType/sequence[57]/CrewMemberPerson` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[17]/SpecialInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[18]/DeliveryInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[21]/Consignment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[22]/GoodsItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[23]/ShipmentStage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[25]/TransportHandlingUnit` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[31]/FreightAllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[3]/HandlingInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ShipmentType/sequence[4]/Information` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SignatureType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatementLineType/sequence[16]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatementLineType/sequence[17]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatementLineType/sequence[18]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatementLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatementLineType/sequence[20]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatementLineType/sequence[21]/CollectedPayment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatementLineType/sequence[9]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatusType/sequence[11]/Condition` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatusType/sequence[3]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatusType/sequence[5]/StatusReason` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StatusType/sequence[7]/Text` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StockAvailabilityReportLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StowageType/sequence[1]/Location` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|StowageType/sequence[2]/MeasurementDimension` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SubcontractTermsType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SubscriberConsumptionType/sequence[2]/Note` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SubscriberConsumptionType/sequence[6]/OnAccountPayment` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SubscriberConsumptionType/sequence[8]/SupplierConsumption` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SupplierConsumptionType/sequence[0]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SupplierConsumptionType/sequence[5]/ConsumptionLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|SupplierPartyType/sequence[1]/AdditionalAccountID` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TaxCategoryType/sequence[6]/TaxExemptionReason` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TaxSchemeType/sequence[4]/JurisdictionRegionAddress` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TaxTotalType/sequence[4]/TaxSubtotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsServiceType/sequence[16]/ExchangeRate` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsServiceType/sequence[17]/AllowanceCharge` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsServiceType/sequence[18]/TaxTotal` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsServiceType/sequence[19]/CallDuty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsServiceType/sequence[20]/TimeDuty` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsSupplyLineType/sequence[2]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsSupplyLineType/sequence[4]/ExchangeRate` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsSupplyLineType/sequence[5]/AllowanceCharge` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsSupplyLineType/sequence[6]/TaxTotal` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsSupplyLineType/sequence[7]/TelecommunicationsService` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsSupplyType/sequence[3]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TelecommunicationsSupplyType/sequence[5]/TelecommunicationsSupplyLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TemperatureType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderLineType/sequence[10]/WarrantyInformation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderLineType/sequence[12]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderLineType/sequence[14]/OfferedItemLocationQuantity` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderLineType/sequence[15]/ReplacementRelatedItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderLineType/sequence[18]/SubTenderLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderLineType/sequence[1]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderPreparationType/sequence[2]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderPreparationType/sequence[4]/ProcurementProjectLot` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderPreparationType/sequence[5]/DocumentTenderRequirement` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderRequirementType/sequence[1]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderResultType/sequence[14]/SubcontractTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderResultType/sequence[15]/WinningParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderResultType/sequence[1]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderedProjectType/sequence[10]/AwardingCriterionResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderedProjectType/sequence[2]/FeeDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderedProjectType/sequence[6]/EvidenceDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderedProjectType/sequence[7]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderedProjectType/sequence[9]/TenderLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererPartyQualificationType/sequence[0]/InterestedProcurementProjectLot` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererPartyQualificationType/sequence[2]/AdditionalQualifyingParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererQualificationRequestType/sequence[10]/EconomicOperatorRole` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererQualificationRequestType/sequence[2]/PersonalSituation` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererQualificationRequestType/sequence[5]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererQualificationRequestType/sequence[6]/RequiredBusinessClassificationScheme` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererQualificationRequestType/sequence[7]/TechnicalEvaluationCriterion` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererQualificationRequestType/sequence[8]/FinancialEvaluationCriterion` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererQualificationRequestType/sequence[9]/SpecificTendererRequirement` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererRequirementType/sequence[0]/Name` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererRequirementType/sequence[2]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TendererRequirementType/sequence[4]/SuggestedEvidence` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingProcessType/sequence[16]/NoticeDocumentReference` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingProcessType/sequence[17]/AdditionalDocumentReference` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingProcessType/sequence[18]/ProcessJustification` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingProcessType/sequence[20]/OpenTenderEvent` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingProcessType/sequence[2]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingProcessType/sequence[3]/NegotiationDescription` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[14]/AdditionalConditions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[17]/PenaltyClause` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[18]/RequiredFinancialGuarantee` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[23]/ContractualDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[26]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[27]/TendererQualificationRequest` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[28]/AllowedSubcontractTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[29]/TenderPreparation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[30]/ContractExecutionRequirement` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[36]/TenderEvaluationParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[40]/Language` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[41]/BudgetAccountLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[4]/AcceptedVariantsDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[5]/PriceRevisionFormulaDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[7]/FundingProgram` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TenderingTermsType/sequence[9]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TradeFinancingType/sequence[3]/DocumentReference` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TradeFinancingType/sequence[6]/Clause` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TradingTermsType/sequence[0]/Information` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransactionConditionsType/sequence[2]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransactionConditionsType/sequence[3]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[19]/DamageRemarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[1]/ReferencedConsignmentID` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[20]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[21]/SpecialTransportRequirements` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[28]/MeasurementDimension` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[29]/TransportEquipmentSeal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[40]/PositioningTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[41]/QuarantineTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[42]/DeliveryTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[43]/PickupTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[44]/HandlingTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[45]/LoadingTransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[46]/TransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[48]/HaulageTradingTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[49]/HazardousGoodsTransit` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[50]/PackagedTransportHandlingUnit` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[51]/ServiceAllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[52]/FreightAllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[53]/AttachedTransportEquipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[57]/ShipmentDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[58]/ContainedInTransportEquipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[59]/Package` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[60]/GoodsItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEquipmentType/sequence[9]/Information` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEventType/sequence[11]/Period` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEventType/sequence[4]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEventType/sequence[7]/CurrentStatus` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportEventType/sequence[8]/Contact` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportExecutionTermsType/sequence[0]/TransportUserSpecialTerms` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportExecutionTermsType/sequence[1]/TransportServiceProviderSpecialTerms` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportExecutionTermsType/sequence[2]/ChangeConditions` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportExecutionTermsType/sequence[3]/PaymentTerms` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportExecutionTermsType/sequence[4]/DeliveryTerms` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportExecutionTermsType/sequence[8]/EnvironmentalEmission` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportExecutionTermsType/sequence[9]/NotificationRequirement` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[10]/HandlingUnitDespatchLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[11]/ActualPackage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[12]/ReceivedHandlingUnitReceiptLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[13]/TransportEquipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[14]/TransportMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[15]/HazardousGoodsTransit` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[16]/MeasurementDimension` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[19]/GoodsItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[22]/ShipmentDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[23]/Status` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[24]/CustomsDeclaration` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[25]/ReferencedShipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[26]/Package` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[3]/HandlingInstructions` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[7]/DamageRemarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportHandlingUnitType/sequence[8]/ShippingMarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportMeansType/sequence[12]/MeasurementDimension` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportMeansType/sequence[2]/RegistrationNationality` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportScheduleType/sequence[4]/Remarks` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationSegmentType/sequence[5]/ShipmentStage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[10]/TransportEquipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[11]/SupportedTransportEquipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[12]/UnsupportedTransportEquipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[13]/CommodityClassification` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[14]/SupportedCommodityClassification` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[15]/UnsupportedCommodityClassification` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[17]/ShipmentStage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[18]/TransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[20]/EnvironmentalEmission` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[22]/ScheduledServiceFrequency` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|TransportationServiceType/sequence[4]/TransportationServiceDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|UtilityItemType/sequence[4]/Description` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|WorkPhaseReferenceType/sequence[2]/WorkPhase` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|WorkPhaseReferenceType/sequence[6]/WorkOrderDocumentReference` (exercised [1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension` (exercised []; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation` (exercised []; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|ContractAwardNoticeType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|ContractAwardNoticeType/sequence[12]/RegulatoryDomain` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|ContractAwardNoticeType/sequence[14]/PreviousDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|ContractAwardNoticeType/sequence[15]/MinutesDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|ContractAwardNoticeType/sequence[16]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|ContractAwardNoticeType/sequence[23]/ProcurementProjectLot` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|ContractAwardNoticeType/sequence[24]/TenderResult` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|ContractNoticeType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|ContractNoticeType/sequence[13]/RegulatoryDomain` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|ContractNoticeType/sequence[15]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|ContractNoticeType/sequence[17]/OriginatorCustomerParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|ContractNoticeType/sequence[22]/ProcurementProjectLot` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[22]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[23]/DiscrepancyResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[25]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[26]/DespatchDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[27]/ReceiptDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[28]/ContractDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[29]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[30]/StatementDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[31]/OriginatorDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[32]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[39]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[40]/DeliveryTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[41]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[42]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[47]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[48]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2|UBL-CreditNote-2.1.xsd|element|CreditNoteType/sequence[50]/CreditNoteLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[20]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[21]/DiscrepancyResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[23]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[24]/DespatchDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[25]/ReceiptDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[26]/StatementDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[27]/ContractDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[28]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[29]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[36]/PrepaidPayment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[37]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[38]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[39]/DeliveryTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[40]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[41]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[46]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2|UBL-DebitNote-2.1.xsd|element|DebitNoteType/sequence[48]/DebitNoteLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2|UBL-DespatchAdvice-2.1.xsd|element|DespatchAdviceType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2|UBL-DespatchAdvice-2.1.xsd|element|DespatchAdviceType/sequence[14]/OrderReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2|UBL-DespatchAdvice-2.1.xsd|element|DespatchAdviceType/sequence[15]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2|UBL-DespatchAdvice-2.1.xsd|element|DespatchAdviceType/sequence[16]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2|UBL-DespatchAdvice-2.1.xsd|element|DespatchAdviceType/sequence[23]/DespatchLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatus-2|UBL-DocumentStatus-2.1.xsd|element|DocumentStatusType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatus-2|UBL-DocumentStatus-2.1.xsd|element|DocumentStatusType/sequence[11]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatus-2|UBL-DocumentStatus-2.1.xsd|element|DocumentStatusType/sequence[15]/AdditionalDocumentResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatusRequest-2|UBL-DocumentStatusRequest-2.1.xsd|element|DocumentStatusRequestType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:DocumentStatusRequest-2|UBL-DocumentStatusRequest-2.1.xsd|element|DocumentStatusRequestType/sequence[13]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionCriteria-2|UBL-ExceptionCriteria-2.1.xsd|element|ExceptionCriteriaType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionCriteria-2|UBL-ExceptionCriteria-2.1.xsd|element|ExceptionCriteriaType/sequence[13]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionCriteria-2|UBL-ExceptionCriteria-2.1.xsd|element|ExceptionCriteriaType/sequence[14]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionCriteria-2|UBL-ExceptionCriteria-2.1.xsd|element|ExceptionCriteriaType/sequence[19]/ExceptionCriteriaLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionNotification-2|UBL-ExceptionNotification-2.1.xsd|element|ExceptionNotificationType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionNotification-2|UBL-ExceptionNotification-2.1.xsd|element|ExceptionNotificationType/sequence[12]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionNotification-2|UBL-ExceptionNotification-2.1.xsd|element|ExceptionNotificationType/sequence[13]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ExceptionNotification-2|UBL-ExceptionNotification-2.1.xsd|element|ExceptionNotificationType/sequence[18]/ExceptionNotificationLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Forecast-2|UBL-Forecast-2.1.xsd|element|ForecastType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Forecast-2|UBL-Forecast-2.1.xsd|element|ForecastType/sequence[15]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Forecast-2|UBL-Forecast-2.1.xsd|element|ForecastType/sequence[16]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Forecast-2|UBL-Forecast-2.1.xsd|element|ForecastType/sequence[21]/ForecastLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForecastRevision-2|UBL-ForecastRevision-2.1.xsd|element|ForecastRevisionType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForecastRevision-2|UBL-ForecastRevision-2.1.xsd|element|ForecastRevisionType/sequence[15]/OriginalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForecastRevision-2|UBL-ForecastRevision-2.1.xsd|element|ForecastRevisionType/sequence[16]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForecastRevision-2|UBL-ForecastRevision-2.1.xsd|element|ForecastRevisionType/sequence[21]/ForecastRevisionLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForwardingInstructions-2|UBL-ForwardingInstructions-2.1.xsd|element|ForwardingInstructionsType/sequence[11]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForwardingInstructions-2|UBL-ForwardingInstructions-2.1.xsd|element|ForwardingInstructionsType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForwardingInstructions-2|UBL-ForwardingInstructions-2.1.xsd|element|ForwardingInstructionsType/sequence[18]/OtherInstruction` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForwardingInstructions-2|UBL-ForwardingInstructions-2.1.xsd|element|ForwardingInstructionsType/sequence[23]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForwardingInstructions-2|UBL-ForwardingInstructions-2.1.xsd|element|ForwardingInstructionsType/sequence[24]/ExchangeRate` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ForwardingInstructions-2|UBL-ForwardingInstructions-2.1.xsd|element|ForwardingInstructionsType/sequence[25]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[21]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[22]/Shipment` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[24]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[25]/DespatchDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[26]/ReceiptDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[27]/OriginatorDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[28]/ContractDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[29]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[30]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[35]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[36]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[37]/PrepaidPayment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[38]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[43]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FreightInvoice-2|UBL-FreightInvoice-2.1.xsd|element|FreightInvoiceType/sequence[45]/InvoiceLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|FulfilmentCancellationType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|FulfilmentCancellationType/sequence[11]/CancellationNote` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|FulfilmentCancellationType/sequence[12]/DespatchDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|FulfilmentCancellationType/sequence[13]/ReceiptDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|FulfilmentCancellationType/sequence[14]/OrderReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|FulfilmentCancellationType/sequence[15]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|FulfilmentCancellationType/sequence[16]/Contract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:FulfilmentCancellation-2|UBL-FulfilmentCancellation-2.1.xsd|element|FulfilmentCancellationType/sequence[17]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|GoodsItemItineraryType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|GoodsItemItineraryType/sequence[13]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|GoodsItemItineraryType/sequence[16]/ReferencedConsignment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|GoodsItemItineraryType/sequence[17]/ReferencedTransportEquipment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|GoodsItemItineraryType/sequence[18]/ReferencedPackage` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|GoodsItemItineraryType/sequence[19]/ReferencedGoodsItem` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GoodsItemItinerary-2|UBL-GoodsItemItinerary-2.1.xsd|element|GoodsItemItineraryType/sequence[20]/TransportationSegment` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2|UBL-GuaranteeCertificate-2.1.xsd|element|GuaranteeCertificateType/sequence[12]/Purpose` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2|UBL-GuaranteeCertificate-2.1.xsd|element|GuaranteeCertificateType/sequence[15]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2|UBL-GuaranteeCertificate-2.1.xsd|element|GuaranteeCertificateType/sequence[17]/ApplicableRegulation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2|UBL-GuaranteeCertificate-2.1.xsd|element|GuaranteeCertificateType/sequence[18]/GuaranteeDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2|UBL-GuaranteeCertificate-2.1.xsd|element|GuaranteeCertificateType/sequence[19]/ImmobilizedSecurity` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:GuaranteeCertificate-2|UBL-GuaranteeCertificate-2.1.xsd|element|GuaranteeCertificateType/sequence[20]/Signature` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:InstructionForReturns-2|UBL-InstructionForReturns-2.1.xsd|element|InstructionForReturnsType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:InstructionForReturns-2|UBL-InstructionForReturns-2.1.xsd|element|InstructionForReturnsType/sequence[11]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:InstructionForReturns-2|UBL-InstructionForReturns-2.1.xsd|element|InstructionForReturnsType/sequence[12]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:InstructionForReturns-2|UBL-InstructionForReturns-2.1.xsd|element|InstructionForReturnsType/sequence[17]/InstructionForReturnsLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:InventoryReport-2|UBL-InventoryReport-2.1.xsd|element|InventoryReportType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:InventoryReport-2|UBL-InventoryReport-2.1.xsd|element|InventoryReportType/sequence[13]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:InventoryReport-2|UBL-InventoryReport-2.1.xsd|element|InventoryReportType/sequence[14]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:InventoryReport-2|UBL-InventoryReport-2.1.xsd|element|InventoryReportType/sequence[18]/InventoryReportLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[23]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[25]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[26]/DespatchDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[27]/ReceiptDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[28]/StatementDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[29]/OriginatorDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[30]/ContractDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[31]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[32]/ProjectReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[33]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[40]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[42]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[43]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[44]/PrepaidPayment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[45]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[50]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[51]/WithholdingTaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Invoice-2|UBL-Invoice-2.1.xsd|element|InvoiceType/sequence[53]/InvoiceLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ItemInformationRequest-2|UBL-ItemInformationRequest-2.1.xsd|element|ItemInformationRequestType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ItemInformationRequest-2|UBL-ItemInformationRequest-2.1.xsd|element|ItemInformationRequestType/sequence[12]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ItemInformationRequest-2|UBL-ItemInformationRequest-2.1.xsd|element|ItemInformationRequestType/sequence[13]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ItemInformationRequest-2|UBL-ItemInformationRequest-2.1.xsd|element|ItemInformationRequestType/sequence[18]/ItemInformationRequestLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[21]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[23]/OrderDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[26]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[27]/Contract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[28]/ProjectReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[29]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[35]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[36]/DeliveryTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[37]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[38]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[40]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[45]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Order-2|UBL-Order-2.1.xsd|element|OrderType/sequence[47]/OrderLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderCancellation-2|UBL-OrderCancellation-2.1.xsd|element|OrderCancellationType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderCancellation-2|UBL-OrderCancellation-2.1.xsd|element|OrderCancellationType/sequence[11]/CancellationNote` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderCancellation-2|UBL-OrderCancellation-2.1.xsd|element|OrderCancellationType/sequence[12]/OrderReference` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderCancellation-2|UBL-OrderCancellation-2.1.xsd|element|OrderCancellationType/sequence[14]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderCancellation-2|UBL-OrderCancellation-2.1.xsd|element|OrderCancellationType/sequence[15]/Contract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderCancellation-2|UBL-OrderCancellation-2.1.xsd|element|OrderCancellationType/sequence[16]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[21]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[25]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[26]/Contract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[27]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[34]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[36]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[37]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[39]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[44]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderChange-2|UBL-OrderChange-2.1.xsd|element|OrderChangeType/sequence[46]/OrderLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[26]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[27]/OrderReference` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[28]/OrderDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[30]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[31]/Contract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[32]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[39]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[41]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[42]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[43]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[49]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponse-2|UBL-OrderResponse-2.1.xsd|element|OrderResponseType/sequence[51]/OrderLine` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponseSimple-2|UBL-OrderResponseSimple-2.1.xsd|element|OrderResponseSimpleType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponseSimple-2|UBL-OrderResponseSimple-2.1.xsd|element|OrderResponseSimpleType/sequence[12]/RejectionNote` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponseSimple-2|UBL-OrderResponseSimple-2.1.xsd|element|OrderResponseSimpleType/sequence[17]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:OrderResponseSimple-2|UBL-OrderResponseSimple-2.1.xsd|element|OrderResponseSimpleType/sequence[18]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PackingList-2|UBL-PackingList-2.1.xsd|element|PackingListType/sequence[10]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PackingList-2|UBL-PackingList-2.1.xsd|element|PackingListType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PackingList-2|UBL-PackingList-2.1.xsd|element|PackingListType/sequence[18]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PackingList-2|UBL-PackingList-2.1.xsd|element|PackingListType/sequence[19]/DocumentDistribution` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PackingList-2|UBL-PackingList-2.1.xsd|element|PackingListType/sequence[20]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PriorInformationNotice-2|UBL-PriorInformationNotice-2.1.xsd|element|PriorInformationNoticeType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PriorInformationNotice-2|UBL-PriorInformationNotice-2.1.xsd|element|PriorInformationNoticeType/sequence[13]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PriorInformationNotice-2|UBL-PriorInformationNotice-2.1.xsd|element|PriorInformationNoticeType/sequence[14]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PriorInformationNotice-2|UBL-PriorInformationNotice-2.1.xsd|element|PriorInformationNoticeType/sequence[16]/OriginatorCustomerParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:PriorInformationNotice-2|UBL-PriorInformationNotice-2.1.xsd|element|PriorInformationNoticeType/sequence[21]/ProcurementProjectLot` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ProductActivity-2|UBL-ProductActivity-2.1.xsd|element|ProductActivityType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ProductActivity-2|UBL-ProductActivity-2.1.xsd|element|ProductActivityType/sequence[13]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ProductActivity-2|UBL-ProductActivity-2.1.xsd|element|ProductActivityType/sequence[14]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ProductActivity-2|UBL-ProductActivity-2.1.xsd|element|ProductActivityType/sequence[17]/SupplyChainActivityDataLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|QuotationType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|QuotationType/sequence[15]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|QuotationType/sequence[16]/Contract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|QuotationType/sequence[17]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|QuotationType/sequence[21]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|QuotationType/sequence[25]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|QuotationType/sequence[27]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Quotation-2|UBL-Quotation-2.1.xsd|element|QuotationType/sequence[29]/QuotationLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ReceiptAdvice-2|UBL-ReceiptAdvice-2.1.xsd|element|ReceiptAdviceType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ReceiptAdvice-2|UBL-ReceiptAdvice-2.1.xsd|element|ReceiptAdviceType/sequence[14]/OrderReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ReceiptAdvice-2|UBL-ReceiptAdvice-2.1.xsd|element|ReceiptAdviceType/sequence[15]/DespatchDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ReceiptAdvice-2|UBL-ReceiptAdvice-2.1.xsd|element|ReceiptAdviceType/sequence[16]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ReceiptAdvice-2|UBL-ReceiptAdvice-2.1.xsd|element|ReceiptAdviceType/sequence[17]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:ReceiptAdvice-2|UBL-ReceiptAdvice-2.1.xsd|element|ReceiptAdviceType/sequence[23]/ReceiptLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[22]/ReminderPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[23]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[24]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[29]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[30]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[31]/PrepaidPayment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[32]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[37]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Reminder-2|UBL-Reminder-2.1.xsd|element|ReminderType/sequence[39]/ReminderLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RemittanceAdvice-2|UBL-RemittanceAdvice-2.1.xsd|element|RemittanceAdviceType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RemittanceAdvice-2|UBL-RemittanceAdvice-2.1.xsd|element|RemittanceAdviceType/sequence[19]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RemittanceAdvice-2|UBL-RemittanceAdvice-2.1.xsd|element|RemittanceAdviceType/sequence[21]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RemittanceAdvice-2|UBL-RemittanceAdvice-2.1.xsd|element|RemittanceAdviceType/sequence[22]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RemittanceAdvice-2|UBL-RemittanceAdvice-2.1.xsd|element|RemittanceAdviceType/sequence[27]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RemittanceAdvice-2|UBL-RemittanceAdvice-2.1.xsd|element|RemittanceAdviceType/sequence[28]/RemittanceAdviceLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|RequestForQuotationType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|RequestForQuotationType/sequence[16]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|RequestForQuotationType/sequence[17]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|RequestForQuotationType/sequence[21]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|RequestForQuotationType/sequence[22]/DeliveryTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|RequestForQuotationType/sequence[24]/Contract` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RequestForQuotation-2|UBL-RequestForQuotation-2.1.xsd|element|RequestForQuotationType/sequence[25]/RequestForQuotationLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RetailEvent-2|UBL-RetailEvent-2.1.xsd|element|RetailEventType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RetailEvent-2|UBL-RetailEvent-2.1.xsd|element|RetailEventType/sequence[15]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RetailEvent-2|UBL-RetailEvent-2.1.xsd|element|RetailEventType/sequence[17]/OriginalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RetailEvent-2|UBL-RetailEvent-2.1.xsd|element|RetailEventType/sequence[18]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:RetailEvent-2|UBL-RetailEvent-2.1.xsd|element|RetailEventType/sequence[23]/EventComment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[20]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[21]/DiscrepancyResponse` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[23]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[24]/DespatchDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[25]/ReceiptDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[26]/ContractDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[27]/StatementDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[28]/OriginatorDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[29]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[30]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[37]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[38]/DeliveryTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[39]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[40]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[41]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[46]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|SelfBilledCreditNoteType/sequence[48]/CreditNoteLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[21]/InvoicePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[23]/BillingReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[24]/ContractDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[25]/DespatchDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[26]/ReceiptDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[27]/StatementDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[28]/OriginatorDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[29]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[30]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[37]/Delivery` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[38]/DeliveryTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[40]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[41]/PrepaidPayment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[42]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[47]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|SelfBilledInvoiceType/sequence[49]/InvoiceLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|StatementType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|StatementType/sequence[18]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|StatementType/sequence[19]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|StatementType/sequence[26]/PaymentMeans` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|StatementType/sequence[27]/PaymentTerms` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|StatementType/sequence[28]/AllowanceCharge` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|StatementType/sequence[29]/TaxTotal` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|StatementType/sequence[30]/StatementLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:StockAvailabilityReport-2|UBL-StockAvailabilityReport-2.1.xsd|element|StockAvailabilityReportType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:StockAvailabilityReport-2|UBL-StockAvailabilityReport-2.1.xsd|element|StockAvailabilityReportType/sequence[13]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:StockAvailabilityReport-2|UBL-StockAvailabilityReport-2.1.xsd|element|StockAvailabilityReportType/sequence[14]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:StockAvailabilityReport-2|UBL-StockAvailabilityReport-2.1.xsd|element|StockAvailabilityReportType/sequence[18]/StockAvailabilityReportLine` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Tender-2|UBL-Tender-2.1.xsd|element|TenderType/sequence[12]/ContractName` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Tender-2|UBL-Tender-2.1.xsd|element|TenderType/sequence[13]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Tender-2|UBL-Tender-2.1.xsd|element|TenderType/sequence[15]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Tender-2|UBL-Tender-2.1.xsd|element|TenderType/sequence[16]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Tender-2|UBL-Tender-2.1.xsd|element|TenderType/sequence[19]/SubcontractorParty` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Tender-2|UBL-Tender-2.1.xsd|element|TenderType/sequence[22]/TenderedProject` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TenderReceipt-2|UBL-TenderReceipt-2.1.xsd|element|TenderReceiptType/sequence[11]/ContractName` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TenderReceipt-2|UBL-TenderReceipt-2.1.xsd|element|TenderReceiptType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TenderReceipt-2|UBL-TenderReceipt-2.1.xsd|element|TenderReceiptType/sequence[15]/TenderDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TenderReceipt-2|UBL-TenderReceipt-2.1.xsd|element|TenderReceiptType/sequence[16]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualification-2|UBL-TendererQualification-2.1.xsd|element|TendererQualificationType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualification-2|UBL-TendererQualification-2.1.xsd|element|TendererQualificationType/sequence[14]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualification-2|UBL-TendererQualification-2.1.xsd|element|TendererQualificationType/sequence[15]/TendererPartyQualification` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualification-2|UBL-TendererQualification-2.1.xsd|element|TendererQualificationType/sequence[17]/Evidence` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualification-2|UBL-TendererQualification-2.1.xsd|element|TendererQualificationType/sequence[18]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualificationResponse-2|UBL-TendererQualificationResponse-2.1.xsd|element|TendererQualificationResponseType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualificationResponse-2|UBL-TendererQualificationResponse-2.1.xsd|element|TendererQualificationResponseType/sequence[16]/QualificationResolution` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualificationResponse-2|UBL-TendererQualificationResponse-2.1.xsd|element|TendererQualificationResponseType/sequence[18]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TendererQualificationResponse-2|UBL-TendererQualificationResponse-2.1.xsd|element|TendererQualificationResponseType/sequence[9]/ContractName` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TradeItemLocationProfile-2|UBL-TradeItemLocationProfile-2.1.xsd|element|TradeItemLocationProfileType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TradeItemLocationProfile-2|UBL-TradeItemLocationProfile-2.1.xsd|element|TradeItemLocationProfileType/sequence[13]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TradeItemLocationProfile-2|UBL-TradeItemLocationProfile-2.1.xsd|element|TradeItemLocationProfileType/sequence[14]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TradeItemLocationProfile-2|UBL-TradeItemLocationProfile-2.1.xsd|element|TradeItemLocationProfileType/sequence[19]/ItemManagementProfile` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[13]/DocumentStatusReasonDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[14]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[15]/TransportUserRemarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[16]/TransportServiceProviderRemarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[22]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[26]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[29]/TransportUserResponseRequiredPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[30]/ValidityPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[32]/AdditionalTransportationService` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlan-2|UBL-TransportExecutionPlan-2.1.xsd|element|TransportExecutionPlanType/sequence[39]/Consignment` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|TransportExecutionPlanRequestType/sequence[13]/DocumentStatusReasonDescription` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|TransportExecutionPlanRequestType/sequence[14]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|TransportExecutionPlanRequestType/sequence[15]/TransportUserRemarks` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|TransportExecutionPlanRequestType/sequence[21]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|TransportExecutionPlanRequestType/sequence[24]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|TransportExecutionPlanRequestType/sequence[26]/TransportServiceProviderResponseDeadlinePeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|TransportExecutionPlanRequestType/sequence[28]/AdditionalTransportationService` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportExecutionPlanRequest-2|UBL-TransportExecutionPlanRequest-2.1.xsd|element|TransportExecutionPlanRequestType/sequence[35]/Consignment` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatus-2|UBL-TransportProgressStatus-2.1.xsd|element|TransportProgressStatusType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatus-2|UBL-TransportProgressStatus-2.1.xsd|element|TransportProgressStatusType/sequence[12]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatus-2|UBL-TransportProgressStatus-2.1.xsd|element|TransportProgressStatusType/sequence[18]/TransportSchedule` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatusRequest-2|UBL-TransportProgressStatusRequest-2.1.xsd|element|TransportProgressStatusRequestType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatusRequest-2|UBL-TransportProgressStatusRequest-2.1.xsd|element|TransportProgressStatusRequestType/sequence[11]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatusRequest-2|UBL-TransportProgressStatusRequest-2.1.xsd|element|TransportProgressStatusRequestType/sequence[15]/StatusLocation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescription-2|UBL-TransportServiceDescription-2.1.xsd|element|TransportServiceDescriptionType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescription-2|UBL-TransportServiceDescription-2.1.xsd|element|TransportServiceDescriptionType/sequence[13]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescription-2|UBL-TransportServiceDescription-2.1.xsd|element|TransportServiceDescriptionType/sequence[20]/TransportationService` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescriptionRequest-2|UBL-TransportServiceDescriptionRequest-2.1.xsd|element|TransportServiceDescriptionRequestType/sequence[10]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescriptionRequest-2|UBL-TransportServiceDescriptionRequest-2.1.xsd|element|TransportServiceDescriptionRequestType/sequence[12]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportServiceDescriptionRequest-2|UBL-TransportServiceDescriptionRequest-2.1.xsd|element|TransportServiceDescriptionRequestType/sequence[16]/TransportationService` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|TransportationStatusType/sequence[11]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|TransportationStatusType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|TransportationStatusType/sequence[17]/Consignment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|TransportationStatusType/sequence[18]/TransportEvent` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|TransportationStatusType/sequence[19]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|TransportationStatusType/sequence[20]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|TransportationStatusType/sequence[27]/StatusLocation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatus-2|UBL-TransportationStatus-2.1.xsd|element|TransportationStatusType/sequence[28]/StatusPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|TransportationStatusRequestType/sequence[11]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|TransportationStatusRequestType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|TransportationStatusRequestType/sequence[19]/Consignment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|TransportationStatusRequestType/sequence[20]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|TransportationStatusRequestType/sequence[21]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|TransportationStatusRequestType/sequence[22]/RequestedStatusLocation` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2|UBL-TransportationStatusRequest-2.1.xsd|element|TransportationStatusRequestType/sequence[23]/RequestedStatusPeriod` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UnawardedNotification-2|UBL-UnawardedNotification-2.1.xsd|element|UnawardedNotificationType/sequence[11]/ContractName` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UnawardedNotification-2|UBL-UnawardedNotification-2.1.xsd|element|UnawardedNotificationType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UnawardedNotification-2|UBL-UnawardedNotification-2.1.xsd|element|UnawardedNotificationType/sequence[13]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UnawardedNotification-2|UBL-UnawardedNotification-2.1.xsd|element|UnawardedNotificationType/sequence[17]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UnawardedNotification-2|UBL-UnawardedNotification-2.1.xsd|element|UnawardedNotificationType/sequence[18]/TenderResult` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UtilityStatement-2|UBL-UtilityStatement-2.1.xsd|element|UtilityStatementType/sequence[11]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UtilityStatement-2|UBL-UtilityStatement-2.1.xsd|element|UtilityStatementType/sequence[16]/AdditionalDocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UtilityStatement-2|UBL-UtilityStatement-2.1.xsd|element|UtilityStatementType/sequence[17]/Signature` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UtilityStatement-2|UBL-UtilityStatement-2.1.xsd|element|UtilityStatementType/sequence[22]/MainOnAccountPayment` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:UtilityStatement-2|UBL-UtilityStatement-2.1.xsd|element|UtilityStatementType/sequence[23]/SubscriberConsumption` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|WaybillType/sequence[11]/Description` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|WaybillType/sequence[12]/Note` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|WaybillType/sequence[16]/OtherInstruction` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|WaybillType/sequence[21]/DocumentReference` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|WaybillType/sequence[22]/ExchangeRate` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|WaybillType/sequence[23]/DocumentDistribution` (exercised [0 1]; required [0 1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:Waybill-2|UBL-Waybill-2.1.xsd|element|WaybillType/sequence[24]/Signature` (exercised [0 1]; required [0 1 2 5])

@@ -57,8 +57,8 @@ func TestCardinalityStructuralGenerationHonoursSchemaBounds(t *testing.T) {
 	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "unbounded"}, state, 1); got != 5 {
 		t.Fatalf("unbounded cardinality = %d, want 5", got)
 	}
-	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "unbounded"}, state, 2); got != 5 {
-		t.Fatalf("nested broad cardinality = %d, want 5", got)
+	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "unbounded"}, state, 2); got != 1 {
+		t.Fatalf("nested broad cardinality = %d, want 1", got)
 	}
 	state.repeatOverrides = map[string]int{"Line": 100}
 	if got := occurrenceCount(xsdElementDecl{Name: "Line", MaxOccurs: "unbounded"}, state, 1); got != 100 {

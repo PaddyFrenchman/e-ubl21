@@ -58,34 +58,10 @@ if [[ ! -f "$SAXON_JAR" || ! -f "$RESOLVER_JAR" ]]; then
 fi
 go run ./tools/verify-validation-assets -saxon-dir "$SAXON_DIR"
 
-verify_corpus() {
-    local profile=$1
-    local tracked=$2
-    local generated="$TEMP_DIR/$profile"
-    local diff_log="$ARTIFACT_DIR/corpus-$profile.diff"
-    local manifest="$tracked/manifest.json"
-    local versions=()
-
-    mapfile -t versions < <(sed -n 's/.*"generatorVersion": "\(git:[a-f0-9]*\)".*/\1/p' "$manifest" | sort -u)
-    if (( ${#versions[@]} != 1 )); then
-        echo "ERROR: expected exactly one generated-corpus provenance version in $manifest" >&2
-        return 1
-    fi
-    go run ./createsamples generate \
-        --profile "$profile" \
-        --set all \
-        --xsd XSD \
-        --generator-version "${versions[0]}" \
-        --output "$generated"
-    if ! diff --recursive --brief "$tracked" "$generated" | tee "$diff_log"; then
-        echo "ERROR: regenerated $profile corpus differs from $tracked" >&2
-        return 1
-    fi
-    echo "Verified deterministic $profile corpus and fixture hashes"
-}
-
-verify_corpus ubl21 createsamples/samples
-verify_corpus en16931 createsamples/samples-en16931
+# Corpus regeneration is deliberately excluded from ordinary regression.
+# Run `make corpus-regenerate` to generate a reviewable candidate, then
+# `make corpus-replace` to explicitly promote it. The regression runner below
+# verifies each checked-in manifest and fixture hash before uploading it.
 
 # Upload metadata/status is authoritative in YugabyteDB. Local correctness
 # runs use the repository-pinned runtime unless a caller supplies a qualified

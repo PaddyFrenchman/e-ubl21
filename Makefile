@@ -163,8 +163,9 @@ performance-evidence:
 	PERFORMANCE_BASELINE="$(PERFORMANCE_BASELINE)" \
 	./devsetup/performance-evidence.sh
 
-# Regenerate and verify both tracked corpora, then run them through the real
-# authenticated API/worker topology with all required runtimes available.
+# Run the checked-in corpora through the real authenticated API/worker topology
+# with all required runtimes available. Corpus regeneration is an explicit
+# review operation (`make corpus-regenerate`), never part of regression.
 regression-report-test:
 	bash ./run-regression-tests_test.sh
 
