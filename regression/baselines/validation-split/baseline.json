@@ -6,7 +6,7 @@
     {
       "name": "ubl21",
       "manifest": "createsamples/samples/manifest.json",
-      "manifestSha256": "f27eac6bb78448a9b67fee52146deac308da4f4cef1caa8f4bfbd0a3009bf45a",
+      "manifestSha256": "9d3d391f20001baaf07c2977f0220ffdbb266c280c45dcf56d3aa56adbd058ae",
       "results": "regression/baselines/validation-split/ubl21.results.jsonl",
       "resultsSha256": "e1303b72a7ea27d4ef84d744ff6caf2141d56ddcb42a3ce986789c98425ad7ec",
       "fixtures": 71
