@@ -509,6 +509,11 @@ func matchFixtureBytes(index schemaIndex, data []byte) (map[string]int, error) {
 	return match.targets, err
 }
 
+func matchFixtureReader(index schemaIndex, reader io.Reader) (map[string]int, error) {
+	match, err := matchFixtureDetailedReader(index, reader)
+	return match.targets, err
+}
+
 func matchFixtureDetailed(index schemaIndex, path string) (fixtureMatch, error) {
 	file, err := os.Open(path)
 	if err != nil {

@@ -583,9 +583,6 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 		result.FixtureTargets[path] = ids
 	}
 	recordCardinalityObservations(&result, targets, matches)
-	for id := range result.ExercisedCardinalities {
-		sort.Ints(result.ExercisedCardinalities[id])
-	}
 	for _, item := range []struct {
 		name   string
 		values map[string]struct{}
@@ -688,6 +685,9 @@ func recordCardinalityObservations(result *schemaCoverage, targets coverageTarge
 				result.ExercisedCardinalities[id] = appendUniqueInt(result.ExercisedCardinalities[id], 0)
 			}
 		}
+	}
+	for id := range result.ExercisedCardinalities {
+		sort.Ints(result.ExercisedCardinalities[id])
 	}
 }
 func writeCoverageMarkdown(path string, report schemaCoverage) error {
