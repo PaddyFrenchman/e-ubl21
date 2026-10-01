@@ -304,6 +304,12 @@ go run ./createsamples generate \
 This profile is deliberately separate from the baseline corpus while the
 expanded corpus lifecycle is completed. Every fixture has a stable family ID,
 generator provenance, target document type, and structural-purpose tags.
+It includes optional-absent, cardinality-two, and cardinality-five families;
+the latter respects finite schema maxima. Invoice, CreditNote, and Order also
+receive deterministic 10-, 50-, 100-, and several-hundred-line collection
+fixtures (500, 250, and 250 at the largest tier respectively) for real-path
+stress validation. Targeted aggregate families also cover allowance/charge,
+tax, reference/attachment, shipment, and item-bearing collections.
 
 Generate the independent EN 16931 corpus (seven positive Invoice VAT-family
 variants, one positive CreditNote, two pinned official examples, and 22

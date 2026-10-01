@@ -204,10 +204,16 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 		if err != nil {
 			return generatedCorpus{}, fmt.Errorf("count %s choice sites: %w", root, err)
 		}
-		add := func(family string, choices map[int]int, recursiveDepth, facetBoundary int, tags ...string) error {
+		add := func(family string, choices map[int]int, recursiveDepth, facetBoundary, repeatCount int, repeatElement string, repeatElements map[string]int, tags ...string) error {
 			var content string
 			var err error
-			if facetBoundary > 0 {
+			if len(repeatElements) > 0 {
+				content, err = generateLargeCollectionsStructuralSample(index, root, xsdDir, schema.File, repeatElements)
+			} else if repeatElement != "" {
+				content, err = generateLargeCollectionStructuralSample(index, root, xsdDir, schema.File, repeatElement, repeatCount)
+			} else if repeatCount > 0 {
+				content, err = generateCardinalityStructuralSample(index, root, xsdDir, schema.File, repeatCount)
+			} else if facetBoundary > 0 {
 				content, err = generateFacetBoundaryStructuralSample(index, root, xsdDir, schema.File, facetBoundary)
 			} else {
 				content, err = generateTargetedStructuralSample(index, root, xsdDir, schema.File, choices, recursiveDepth)
@@ -255,24 +261,68 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			Provenance:        fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
 			ExpectedFinal:     "valid",
 			ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
-			Tags:              []string{"positive", "ubl21", "structural", "minimal", "optional-absent"},
+			Tags:              []string{"positive", "ubl21", "structural", "minimal", "optional-absent", "cardinality", "occurrences-0"},
 			StructuralTargets: minimalTargets,
 		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
-		if err := add("optional-rich", nil, 1, 0, "optional-elements", "optional-attributes"); err != nil {
+		if err := add("optional-rich", nil, 1, 0, 0, "", nil, "optional-elements", "optional-attributes", "cardinality", "occurrences-1"); err != nil {
 			return generatedCorpus{}, err
 		}
 		for planIndex, choices := range choicePlans[1:] {
-			if err := add(fmt.Sprintf("choice-path-%03d", planIndex+1), choices, 1, 0, "choice-alternative", "targeted"); err != nil {
+			if err := add(fmt.Sprintf("choice-path-%03d", planIndex+1), choices, 1, 0, 0, "", nil, "choice-alternative", "targeted"); err != nil {
 				return generatedCorpus{}, err
 			}
 		}
 		for boundary, family := range []string{"facet-boundary-low", "facet-boundary-high"} {
-			if err := add(family, nil, 1, boundary+1, "facet-boundary"); err != nil {
+			if err := add(family, nil, 1, boundary+1, 0, "", nil, "facet-boundary"); err != nil {
 				return generatedCorpus{}, err
 			}
 		}
 		for _, recursiveDepth := range []int{2, 3} {
-			if err := add(fmt.Sprintf("recursive-depth-%d", recursiveDepth), nil, recursiveDepth, 0, "recursive"); err != nil {
+			if err := add(fmt.Sprintf("recursive-depth-%d", recursiveDepth), nil, recursiveDepth, 0, 0, "", nil, "recursive"); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+		for _, count := range []int{2, 5} {
+			if err := add(fmt.Sprintf("cardinality-%d", count), nil, 1, 0, count, "", nil, "cardinality", fmt.Sprintf("occurrences-%d", count)); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+		// These fixtures exercise the progressive high-volume collection tiers
+		// seen by the real service without making every repeatable branch of a
+		// document enormous.  The smaller tiers make it possible to locate
+		// cardinality regressions before the several-hundred-line fixtures.
+		for _, large := range []struct {
+			document string
+			element  string
+			count    int
+			kind     string
+		}{
+			{"Invoice", "InvoiceLine", 10, "line-collection"}, {"Invoice", "InvoiceLine", 50, "line-collection"}, {"Invoice", "InvoiceLine", 100, "line-collection"}, {"Invoice", "InvoiceLine", 500, "line-collection"},
+			{"CreditNote", "CreditNoteLine", 10, "line-collection"}, {"CreditNote", "CreditNoteLine", 50, "line-collection"}, {"CreditNote", "CreditNoteLine", 100, "line-collection"}, {"CreditNote", "CreditNoteLine", 250, "line-collection"},
+			{"Order", "OrderLine", 10, "line-collection"}, {"Order", "OrderLine", 50, "line-collection"}, {"Order", "OrderLine", 100, "line-collection"}, {"Order", "OrderLine", 250, "line-collection"},
+			// Non-line collections exercise the aggregate-heavy paths that have
+			// historically been easy to overlook in document-size testing.
+			{"Invoice", "AllowanceCharge", 50, "aggregate-collection"}, {"Invoice", "TaxTotal", 50, "aggregate-collection"}, {"Invoice", "BillingReference", 50, "aggregate-collection"},
+			{"CreditNote", "AllowanceCharge", 50, "aggregate-collection"}, {"CreditNote", "TaxTotal", 50, "aggregate-collection"}, {"CreditNote", "BillingReference", 50, "aggregate-collection"},
+			{"Order", "AllowanceCharge", 50, "aggregate-collection"}, {"Order", "TaxTotal", 50, "aggregate-collection"}, {"Order", "ProjectReference", 50, "aggregate-collection"},
+			// AdditionalDocumentReference carries an Attachment; FreightInvoice
+			// is the main-document root with a repeatable Shipment collection.
+			{"Invoice", "AdditionalDocumentReference", 50, "attachment-collection"}, {"Order", "AdditionalDocumentReference", 50, "attachment-collection"},
+			{"FreightInvoice", "Shipment", 50, "shipment-collection"},
+			// A CatalogueLine carries its Item content, making this a practical
+			// high-cardinality item-bearing document without violating Item's
+			// own single-occurrence particle in each line.
+			{"Catalogue", "CatalogueLine", 100, "item-collection"},
+		} {
+			if root != large.document {
+				continue
+			}
+			if err := add(fmt.Sprintf("%s-%03d", strings.ToLower(large.element), large.count), nil, 1, 0, large.count, large.element, nil, "cardinality", "large-document", large.kind); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+		if root == "Invoice" {
+			if err := add("multi-collection-100", nil, 1, 0, 0, "", map[string]int{"InvoiceLine": 100, "AllowanceCharge": 50, "TaxTotal": 50}, "cardinality", "large-document", "line-collection", "aggregate-collection", "multi-collection"); err != nil {
 				return generatedCorpus{}, err
 			}
 		}

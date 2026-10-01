@@ -33,6 +33,34 @@ func TestMatchFixtureUsesNestedChoiceParticleAndSiblingCardinality(t *testing.T)
 	}
 }
 
+func TestCardinalityObservationsRetainEveryParentInstance(t *testing.T) {
+	const ns = "urn:test"
+	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Elements: map[string]xsdElementDecl{"Root": {Name: "Root", Type: "RootType"}}, Types: map[string]xsdComplexType{
+		"RootType":   {Name: "RootType", Sequence: &xsdSequence{Elements: []xsdElementDecl{{Name: "Parent", Type: "ParentType", MaxOccurs: "unbounded"}}}},
+		"ParentType": {Name: "ParentType", Sequence: &xsdSequence{Elements: []xsdElementDecl{{Name: "Item", MaxOccurs: "5"}}}},
+	}}
+	index := schemaIndex{ByTargetNS: map[string]*schemaDoc{ns: doc}, GlobalElements: map[string]xsdElementDecl{qualifiedKey(ns, "Root"): doc.Elements["Root"]}, GlobalTypes: map[string]xsdComplexType{qualifiedKey(ns, "RootType"): doc.Types["RootType"], qualifiedKey(ns, "ParentType"): doc.Types["ParentType"]}}
+	path := filepath.Join(t.TempDir(), "fixture.xml")
+	if err := os.WriteFile(path, []byte(`<Root xmlns="urn:test"><Parent/><Parent><Item/></Parent><Parent><Item/><Item/><Item/><Item/><Item/></Parent></Root>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	match, err := matchFixtureDetailed(index, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := ns + "|test.xsd|element|ParentType/sequence[0]/Item"
+	if got := match.cardinalities[id]; fmt.Sprint(got) != "[1 5]" {
+		t.Fatalf("nonzero parent counts = %v, want [1 5]", got)
+	}
+	targets := newCoverageTargets()
+	targets.repeatable[id] = struct{}{}
+	result := schemaCoverage{ExercisedCardinalities: map[string][]int{id: nil}}
+	recordCardinalityObservations(&result, targets, map[string]fixtureMatch{"fixture.xml": match})
+	if got := result.ExercisedCardinalities[id]; fmt.Sprint(got) != "[0 1 5]" {
+		t.Fatalf("parent-instance cardinalities = %v, want [0 1 5]", got)
+	}
+}
+
 func TestInheritedAttributeAndWildcardSitesUseDeclaringType(t *testing.T) {
 	const ns = "urn:test"
 	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Types: map[string]xsdComplexType{}}

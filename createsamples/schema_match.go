@@ -18,6 +18,16 @@ type schemaFrame struct {
 	seen     map[string]bool
 }
 
+// fixtureMatch retains the existing target maximums while preserving sibling
+// counts for every individual parent instance. Cardinality coverage must not
+// reduce these observations to one maximum per fixture: one document may
+// intentionally contain parents with zero, one, and many children.
+type fixtureMatch struct {
+	targets         map[string]int
+	cardinalities   map[string][]int
+	parentInstances map[string]int
+}
+
 func complexTypeIDForElement(typeDoc *schemaDoc, elementID, typeName string) string {
 	if typeName == "inline" {
 		return strings.Replace(elementID, "|element|", "|complexType|inline/", 1)
@@ -487,18 +497,35 @@ func matchFixture(index schemaIndex, path string) (map[string]int, error) {
 		return nil, err
 	}
 	defer file.Close()
-	return matchFixtureReader(index, file)
+	match, err := matchFixtureDetailedReader(index, file)
+	return match.targets, err
 }
 
 // matchFixtureBytes lets corpus generation record the targets of a fixture
 // before it is written. The same matcher powers the independent coverage
 // analyzer, keeping fixture metadata and observed coverage in one namespace.
 func matchFixtureBytes(index schemaIndex, data []byte) (map[string]int, error) {
-	return matchFixtureReader(index, bytes.NewReader(data))
+	match, err := matchFixtureDetailedReader(index, bytes.NewReader(data))
+	return match.targets, err
 }
 
 func matchFixtureReader(index schemaIndex, reader io.Reader) (map[string]int, error) {
-	out := map[string]int{}
+	match, err := matchFixtureDetailedReader(index, reader)
+	return match.targets, err
+}
+
+func matchFixtureDetailed(index schemaIndex, path string) (fixtureMatch, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return fixtureMatch{}, err
+	}
+	defer file.Close()
+	return matchFixtureDetailedReader(index, file)
+}
+
+func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMatch, error) {
+	match := fixtureMatch{targets: map[string]int{}, cardinalities: map[string][]int{}, parentInstances: map[string]int{}}
+	out := match.targets
 	dec := xml.NewDecoder(reader)
 	var stack []schemaFrame
 	for {
@@ -507,14 +534,14 @@ func matchFixtureReader(index schemaIndex, reader io.Reader) (map[string]int, er
 			break
 		}
 		if err != nil {
-			return nil, err
+			return fixtureMatch{}, err
 		}
 		switch v := tok.(type) {
 		case xml.StartElement:
 			if len(stack) == 0 {
 				root, ok := index.GlobalElements[qualifiedKey(v.Name.Space, v.Name.Local)]
 				if !ok {
-					return nil, fmt.Errorf("unknown root %s", v.Name)
+					return fixtureMatch{}, fmt.Errorf("unknown root %s", v.Name)
 				}
 				d := index.ByTargetNS[v.Name.Space]
 				td, t, n, ok := declaredType(index, d, root)
@@ -583,9 +610,28 @@ func matchFixtureReader(index schemaIndex, reader io.Reader) (map[string]int, er
 			}
 		case xml.EndElement:
 			if len(stack) > 0 {
+				frame := stack[len(stack)-1]
+				recordParentInstance(index, &match, frame)
+				for id, count := range frame.siblings {
+					match.cardinalities[id] = append(match.cardinalities[id], count)
+				}
 				stack = stack[:len(stack)-1]
 			}
 		}
 	}
-	return out, nil
+	return match, nil
+}
+
+func recordParentInstance(index schemaIndex, match *fixtureMatch, frame schemaFrame) {
+	for {
+		if frame.doc == nil || frame.typeName == "" {
+			return
+		}
+		match.parentInstances[complexTypeIDForElement(frame.doc, "", frame.typeName)]++
+		base, ok := baseFrame(index, frame)
+		if !ok {
+			return
+		}
+		frame = base
+	}
 }

@@ -62,7 +62,13 @@ type genState struct {
 	structural           bool
 	recursiveDepthLimit  int
 	facetBoundary        int
-	typeDepth            map[string]int
+	// repeatCount exercises every repeatable particle at this cardinality. A
+	// finite schema maximum is always respected. repeatOverrides is used for
+	// deliberately large, line-oriented documents without inflating unrelated
+	// collections in the same document.
+	repeatCount     int
+	repeatOverrides map[string]int
+	typeDepth       map[string]int
 }
 
 func newGenState() genState {
@@ -135,6 +141,22 @@ func generateTargetedStructuralSample(index schemaIndex, rootName, xsdDir, schem
 func generateFacetBoundaryStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, boundary int) (string, error) {
 	state := newTargetedStructuralGenState(nil, 1)
 	state.facetBoundary = boundary
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+func generateCardinalityStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, count int) (string, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	state.repeatCount = count
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+func generateLargeCollectionStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile, element string, count int) (string, error) {
+	return generateLargeCollectionsStructuralSample(index, rootName, xsdDir, schemaFile, map[string]int{element: count})
+}
+
+func generateLargeCollectionsStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, elements map[string]int) (string, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	state.repeatOverrides = elements
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
@@ -421,7 +443,7 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 			}
 			return nil, false
 		}
-		for i := 0; i < occurrenceCount(child); i++ {
+		for i := 0; i < occurrenceCount(child, state, depth); i++ {
 			out = append(out, node)
 		}
 	}
@@ -494,7 +516,7 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 			if !supported {
 				return nil, false
 			}
-			occurs := occurrenceCount(alt)
+			occurs := occurrenceCount(alt, state, depth)
 			if occurs == 0 {
 				occurs = 1
 			}
@@ -620,15 +642,42 @@ func isOptionalElement(element xsdElementDecl) bool {
 // declared minOccurs (defaulting to, and never falling below, 1 so that
 // optional elements are still represented at least once), capped at
 // maxOccursSample.
-func occurrenceCount(element xsdElementDecl) int {
+func occurrenceCount(element xsdElementDecl, state genState, depth int) int {
 	n := parseOccursInt(element.MinOccurs, 1)
 	if n < 1 {
 		n = 1
 	}
-	if n > maxOccursSample {
+	if desired, ok := state.repeatOverrides[elementNameForOccurrence(element)]; ok && isRepeatableElement(element) {
+		n = desired
+	} else if state.repeatCount > 0 && isRepeatableElement(element) {
+		n = state.repeatCount
+	}
+	max := parseMaxOccurs(element.MaxOccurs)
+	if max > 0 && n > max {
+		n = max
+	}
+	if state.repeatCount == 0 && len(state.repeatOverrides) == 0 && n > maxOccursSample {
 		n = maxOccursSample
 	}
 	return n
+}
+
+func elementNameForOccurrence(element xsdElementDecl) string {
+	if element.Ref != "" {
+		return localPart(element.Ref)
+	}
+	return element.Name
+}
+
+func isRepeatableElement(element xsdElementDecl) bool {
+	return element.MaxOccurs == "unbounded" || parseOccursInt(element.MaxOccurs, 1) > 1
+}
+
+func parseMaxOccurs(s string) int {
+	if s == "" || s == "unbounded" {
+		return 0
+	}
+	return parseOccursInt(s, 1)
 }
 
 func parseOccursInt(s string, def int) int {

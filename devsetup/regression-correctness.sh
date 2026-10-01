@@ -202,15 +202,25 @@ run_corpus() {
         RUNNER_STATUS=1
     fi
 
-    set +e
-    "$TEMP_DIR/e-ubl21" regression equivalence \
-        --baseline "$ROOT_DIR/regression/baselines/validation-split/$name.results.jsonl" \
-        --candidate "$output/results.jsonl" \
-        --output "$output/equivalence.json" 2>&1 | tee "$output/equivalence.log"
-    status=${PIPESTATUS[0]}
-    set -e
-    if (( status != 0 )); then
-        EQUIVALENCE_STATUS=1
+    local baseline="$ROOT_DIR/regression/baselines/validation-split/$name.results.jsonl"
+    if [[ "$name" == "ubl21-structural" ]]; then
+        echo "Skipping equivalence: structural corpus has no frozen baseline"
+    else
+        if [[ ! -f "$baseline" ]]; then
+            echo "ERROR: required frozen baseline is missing: $baseline" >&2
+            EQUIVALENCE_STATUS=1
+            return
+        fi
+        set +e
+        "$TEMP_DIR/e-ubl21" regression equivalence \
+            --baseline "$baseline" \
+            --candidate "$output/results.jsonl" \
+            --output "$output/equivalence.json" 2>&1 | tee "$output/equivalence.log"
+        status=${PIPESTATUS[0]}
+        set -e
+        if (( status != 0 )); then
+            EQUIVALENCE_STATUS=1
+        fi
     fi
 
     set +e
@@ -237,6 +247,7 @@ run_corpus() {
 
 run_corpus ubl21 "$ROOT_DIR/createsamples/samples/manifest.json"
 run_corpus en16931 "$ROOT_DIR/createsamples/samples-en16931/manifest.json"
+run_corpus ubl21-structural "$ROOT_DIR/createsamples/samples-structural/manifest.json"
 
 echo "Correctness regression artifacts: $ARTIFACT_DIR"
 if (( RUNNER_STATUS != 0 )); then

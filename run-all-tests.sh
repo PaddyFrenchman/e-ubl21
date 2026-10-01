@@ -38,6 +38,9 @@ go run ./createsamples generate \
   --xsd XSD \
   --output createsamples/samples-structural
 
+section "Measure structural schema and cardinality coverage"
+make schema-coverage
+
 section "Validation chaos, crash, and replay gate"
 make test-validation-chaos
 
@@ -110,5 +113,11 @@ make regression-minikube \
   MANIFEST=createsamples/samples-en16931/manifest.json \
   PROFILE=all \
   ARTIFACT_DIR=regression-results/minikube/en16931
+
+section "Minikube regression: generated structural large documents"
+make regression-minikube \
+  MANIFEST=createsamples/samples-structural/manifest.json \
+  PROFILE=all \
+  ARTIFACT_DIR=regression-results/minikube/ubl21-structural
 
 section "All local CI-equivalent tests passed"

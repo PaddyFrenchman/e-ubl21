@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,6 +45,143 @@ func TestShippedSchemaInventoryIndexAndGeneration(t *testing.T) {
 	}
 	if _, err := generateCompleteSample(index, "Missing", xsdDir, invoice.File); err == nil {
 		t.Fatal("expected missing root error")
+	}
+}
+
+func TestCardinalityStructuralGenerationHonoursSchemaBounds(t *testing.T) {
+	state := newStructuralGenState(0, 1, true)
+	state.repeatCount = 5
+	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "2"}, state, 1); got != 2 {
+		t.Fatalf("finite cardinality = %d, want 2", got)
+	}
+	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "unbounded"}, state, 1); got != 5 {
+		t.Fatalf("unbounded cardinality = %d, want 5", got)
+	}
+	if got := occurrenceCount(xsdElementDecl{MaxOccurs: "unbounded"}, state, 2); got != 5 {
+		t.Fatalf("nested broad cardinality = %d, want 5", got)
+	}
+	state.repeatOverrides = map[string]int{"Line": 100}
+	if got := occurrenceCount(xsdElementDecl{Name: "Line", MaxOccurs: "unbounded"}, state, 1); got != 100 {
+		t.Fatalf("targeted cardinality = %d, want 100", got)
+	}
+}
+
+func TestLargeInvoiceLineFixtureIsDeterministicAndValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := generateLargeCollectionStructuralSample(index, "Invoice", xsdDir, "UBL-Invoice-2.1.xsd", "InvoiceLine", 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := generateLargeCollectionStructuralSample(index, "Invoice", xsdDir, "UBL-Invoice-2.1.xsd", "InvoiceLine", 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first != second {
+		t.Fatal("large Invoice fixture is not deterministic")
+	}
+	if got, err := directChildCount(first, "InvoiceLine"); err != nil || got != 100 {
+		t.Fatalf("direct InvoiceLine count = %d, err = %v, want 100", got, err)
+	}
+	if err := validateStructuralCandidate([]byte(first), filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestMultiCollectionInvoiceFixtureIsValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	content, err := generateLargeCollectionsStructuralSample(index, "Invoice", xsdDir, "UBL-Invoice-2.1.xsd", map[string]int{
+		"InvoiceLine":     100,
+		"AllowanceCharge": 50,
+		"TaxTotal":        50,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for element, want := range map[string]int{"InvoiceLine": 100, "AllowanceCharge": 50, "TaxTotal": 50} {
+		got, err := directChildCount(content, element)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != want {
+			t.Fatalf("direct %s count = %d, want %d", element, got, want)
+		}
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLargeAttachmentReferenceAndShipmentFixturesAreValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fixture := range []struct {
+		root, schema, element string
+	}{
+		{"Invoice", "UBL-Invoice-2.1.xsd", "AdditionalDocumentReference"},
+		{"FreightInvoice", "UBL-FreightInvoice-2.1.xsd", "Shipment"},
+	} {
+		content, err := generateLargeCollectionStructuralSample(index, fixture.root, xsdDir, fixture.schema, fixture.element, 50)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, err := directChildCount(content, fixture.element); err != nil || got != 50 {
+			t.Fatalf("%s direct %s count = %d, err = %v, want 50", fixture.root, fixture.element, got, err)
+		}
+		if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", fixture.schema)); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestLargeItemBearingCatalogueFixtureIsValid(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	content, err := generateLargeCollectionStructuralSample(index, "Catalogue", xsdDir, "UBL-Catalogue-2.1.xsd", "CatalogueLine", 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := directChildCount(content, "CatalogueLine"); err != nil || got != 100 {
+		t.Fatalf("direct CatalogueLine count = %d, err = %v, want 100", got, err)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", "UBL-Catalogue-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func directChildCount(content, local string) (int, error) {
+	decoder := xml.NewDecoder(strings.NewReader(content))
+	depth, count := 0, 0
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			if err == io.EOF {
+				return count, nil
+			}
+			return 0, err
+		}
+		switch token := token.(type) {
+		case xml.StartElement:
+			if depth == 1 && token.Name.Local == local {
+				count++
+			}
+			depth++
+		case xml.EndElement:
+			depth--
+		}
 	}
 }
 
@@ -596,7 +735,7 @@ func TestQNameValuesAndGenerationHelpers(t *testing.T) {
 			t.Errorf("parseOccursInt(%q) = %d", input, got)
 		}
 	}
-	if occurrenceCount(xsdElementDecl{MinOccurs: "99"}) != maxOccursSample || occurrenceCount(xsdElementDecl{MinOccurs: "0"}) != 1 {
+	if occurrenceCount(xsdElementDecl{MinOccurs: "99"}, newGenState(), 1) != maxOccursSample || occurrenceCount(xsdElementDecl{MinOccurs: "0"}, newGenState(), 1) != 1 {
 		t.Error("occurrence cap/default incorrect")
 	}
 	if sequenceRequiresAny(nil) || sequenceRequiresAny(&xsdSequence{}) || !sequenceRequiresAny(&xsdSequence{Any: &xsdAny{}}) {
