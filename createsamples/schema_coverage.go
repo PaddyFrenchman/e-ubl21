@@ -441,6 +441,10 @@ func fixtureCoverage(samples string) (map[string]struct{}, map[string]struct{}, 
 		if d.IsDir() || filepath.Ext(path) != ".xml" {
 			return nil
 		}
+		relativePath, err := fixtureReportPath(samples, path)
+		if err != nil {
+			return err
+		}
 		file, err := os.Open(path)
 		if err != nil {
 			return err
@@ -454,7 +458,7 @@ func fixtureCoverage(samples string) (map[string]struct{}, map[string]struct{}, 
 				break
 			}
 			if err != nil {
-				unparseable[filepath.ToSlash(path)] = err.Error()
+				unparseable[relativePath] = err.Error()
 				return nil
 			}
 			if start, ok := token.(xml.StartElement); ok {
@@ -467,13 +471,27 @@ func fixtureCoverage(samples string) (map[string]struct{}, map[string]struct{}, 
 		for name := range fixtureElements {
 			elements[name] = struct{}{}
 		}
-		observations[filepath.ToSlash(path)] = fixtureObservation{Elements: sortedSet(fixtureElements), Attributes: sortedSet(fixtureAttributes)}
+		observations[relativePath] = fixtureObservation{Elements: sortedSet(fixtureElements), Attributes: sortedSet(fixtureAttributes)}
 		for name := range fixtureAttributes {
 			attributes[name] = struct{}{}
 		}
 		return nil
 	})
 	return elements, attributes, unparseable, observations, err
+}
+
+// fixtureReportPath keeps coverage artifacts independent of the caller's
+// staging directory. Corpus fixture IDs and manifest paths are relative too,
+// so this is the only stable representation for persisted coverage evidence.
+func fixtureReportPath(samples, path string) (string, error) {
+	relative, err := filepath.Rel(samples, path)
+	if err != nil {
+		return "", fmt.Errorf("make fixture path relative to corpus root: %w", err)
+	}
+	if relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("fixture path %q is outside corpus root %q", path, samples)
+	}
+	return filepath.ToSlash(relative), nil
 }
 func sortedSet(values map[string]struct{}) []string {
 	out := make([]string, 0, len(values))
@@ -521,12 +539,16 @@ func structuralFixtureTargets(index schemaIndex, samples string) (map[string]fix
 		if d.IsDir() || filepath.Ext(path) != ".xml" {
 			return nil
 		}
+		relativePath, e := fixtureReportPath(samples, path)
+		if e != nil {
+			return e
+		}
 		m, e := matchFixtureDetailed(index, path)
 		if e != nil {
-			bad[filepath.ToSlash(path)] = e.Error()
+			bad[relativePath] = e.Error()
 			return nil
 		}
-		out[filepath.ToSlash(path)] = m
+		out[relativePath] = m
 		return nil
 	})
 	return out, bad, err

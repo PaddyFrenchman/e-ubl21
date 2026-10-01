@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TransportProgressStatusRequest xmlns="urn:oasis:names:specification:ubl:schema:xsd:TransportProgressStatusRequest-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:struct="urn:e-ubl21:structural-fixture">
+    <ext:UBLExtensions>
+        <ext:UBLExtension>
+            <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+            <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+            <ext:ExtensionAgencyID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</ext:ExtensionAgencyID>
+            <ext:ExtensionAgencyName languageID="ID-001" languageLocaleID="ID-001">Value of ExtensionAgencyName</ext:ExtensionAgencyName>
+            <ext:ExtensionVersionID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</ext:ExtensionVersionID>
+            <ext:ExtensionAgencyURI schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of ExtensionAgencyURI</ext:ExtensionAgencyURI>
+            <ext:ExtensionURI schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of ExtensionURI</ext:ExtensionURI>
+            <ext:ExtensionReasonCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</ext:ExtensionReasonCode>
+            <ext:ExtensionReason languageID="ID-001" languageLocaleID="ID-001">Value of ExtensionReason</ext:ExtensionReason>
+            <ext:ExtensionContent>
+                <struct:Extension namespacePolicy="##other" processContents="lax" purpose="schema-coverage">
+                    <struct:Value>sample</struct:Value>
+                </struct:Extension>
+            </ext:ExtensionContent>
+        </ext:UBLExtension>
+    </ext:UBLExtensions>
+    <cbc:UBLVersionID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:UBLVersionID>
+    <cbc:CustomizationID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:CustomizationID>
+    <cbc:ProfileID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ProfileID>
+    <cbc:ProfileExecutionID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ProfileExecutionID>
+    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+    <cbc:CopyIndicator>true</cbc:CopyIndicator>
+    <cbc:UUID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of UUID</cbc:UUID>
+    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+    <cbc:IssueTime>12:00:00</cbc:IssueTime>
+    <cbc:Note languageID="ID-001" languageLocaleID="ID-001">Value of Note</cbc:Note>
+    <cbc:Note languageID="ID-001" languageLocaleID="ID-001">Value of Note</cbc:Note>
+    <cac:Signature>
+        <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+        <cbc:Note languageID="ID-001" languageLocaleID="ID-001">Value of Note</cbc:Note>
+        <cbc:ValidationDate>2026-01-01</cbc:ValidationDate>
+        <cbc:ValidationTime>12:00:00</cbc:ValidationTime>
+        <cbc:ValidatorID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ValidatorID>
+        <cbc:CanonicalizationMethod languageID="ID-001" languageLocaleID="ID-001">Value of CanonicalizationMethod</cbc:CanonicalizationMethod>
+        <cbc:SignatureMethod languageID="ID-001" languageLocaleID="ID-001">Value of SignatureMethod</cbc:SignatureMethod>
+        <cac:SignatoryParty>
+            <cbc:MarkCareIndicator>true</cbc:MarkCareIndicator>
+            <cbc:MarkAttentionIndicator>true</cbc:MarkAttentionIndicator>
+            <cbc:WebsiteURI schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of WebsiteURI</cbc:WebsiteURI>
+            <cbc:LogoReferenceID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:LogoReferenceID>
+            <cbc:EndpointID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:EndpointID>
+            <cbc:IndustryClassificationCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:IndustryClassificationCode>
+            <cac:PartyIdentification>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+            </cac:PartyName>
+            <cac:Language>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                <cbc:LocaleCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LocaleCode>
+            </cac:Language>
+            <cac:PostalAddress>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:AddressTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:AddressTypeCode>
+                <cbc:AddressFormatCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:AddressFormatCode>
+                <cbc:Postbox languageID="ID-001" languageLocaleID="ID-001">Value of Postbox</cbc:Postbox>
+                <cbc:Floor languageID="ID-001" languageLocaleID="ID-001">Value of Floor</cbc:Floor>
+                <cbc:Room languageID="ID-001" languageLocaleID="ID-001">Value of Room</cbc:Room>
+                <cbc:StreetName languageID="ID-001" languageLocaleID="ID-001">Value of StreetName</cbc:StreetName>
+                <cbc:AdditionalStreetName languageID="ID-001" languageLocaleID="ID-001">Value of AdditionalStreetName</cbc:AdditionalStreetName>
+                <cbc:BlockName languageID="ID-001" languageLocaleID="ID-001">Value of BlockName</cbc:BlockName>
+                <cbc:BuildingName languageID="ID-001" languageLocaleID="ID-001">Value of BuildingName</cbc:BuildingName>
+                <cbc:BuildingNumber languageID="ID-001" languageLocaleID="ID-001">Value of BuildingNumber</cbc:BuildingNumber>
+                <cbc:InhouseMail languageID="ID-001" languageLocaleID="ID-001">Value of InhouseMail</cbc:InhouseMail>
+                <cbc:Department languageID="ID-001" languageLocaleID="ID-001">Value of Department</cbc:Department>
+                <cbc:MarkAttention languageID="ID-001" languageLocaleID="ID-001">Value of MarkAttention</cbc:MarkAttention>
+                <cbc:MarkCare languageID="ID-001" languageLocaleID="ID-001">Value of MarkCare</cbc:MarkCare>
+                <cbc:PlotIdentification languageID="ID-001" languageLocaleID="ID-001">Value of PlotIdentification</cbc:PlotIdentification>
+                <cbc:CitySubdivisionName languageID="ID-001" languageLocaleID="ID-001">Value of CitySubdivisionName</cbc:CitySubdivisionName>
+                <cbc:CityName languageID="ID-001" languageLocaleID="ID-001">Value of CityName</cbc:CityName>
+                <cbc:PostalZone languageID="ID-001" languageLocaleID="ID-001">Value of PostalZone</cbc:PostalZone>
+                <cbc:CountrySubentity languageID="ID-001" languageLocaleID="ID-001">Value of CountrySubentity</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CountrySubentityCode>
+                <cbc:Region languageID="ID-001" languageLocaleID="ID-001">Value of Region</cbc:Region>
+                <cbc:District languageID="ID-001" languageLocaleID="ID-001">Value of District</cbc:District>
+                <cbc:TimezoneOffset languageID="ID-001" languageLocaleID="ID-001">Value of TimezoneOffset</cbc:TimezoneOffset>
+                <cac:AddressLine>
+                    <cbc:Line languageID="ID-001" languageLocaleID="ID-001">Value of Line</cbc:Line>
+                </cac:AddressLine>
+                <cac:Country>
+                    <cbc:IdentificationCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:IdentificationCode>
+                    <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                </cac:Country>
+                <cac:LocationCoordinate>
+                    <cbc:CoordinateSystemCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CoordinateSystemCode>
+                    <cbc:LatitudeDegreesMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:LatitudeDegreesMeasure>
+                    <cbc:LatitudeMinutesMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:LatitudeMinutesMeasure>
+                    <cbc:LatitudeDirectionCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LatitudeDirectionCode>
+                    <cbc:LongitudeDegreesMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:LongitudeDegreesMeasure>
+                    <cbc:LongitudeMinutesMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:LongitudeMinutesMeasure>
+                    <cbc:LongitudeDirectionCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LongitudeDirectionCode>
+                    <cbc:AltitudeMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:AltitudeMeasure>
+                </cac:LocationCoordinate>
+            </cac:PostalAddress>
+            <cac:PhysicalLocation>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                <cbc:Conditions languageID="ID-001" languageLocaleID="ID-001">Value of Conditions</cbc:Conditions>
+                <cbc:CountrySubentity languageID="ID-001" languageLocaleID="ID-001">Value of CountrySubentity</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CountrySubentityCode>
+                <cbc:LocationTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LocationTypeCode>
+                <cbc:InformationURI schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of InformationURI</cbc:InformationURI>
+                <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                <cac:ValidityPeriod>
+                    <cbc:StartDate>2026-01-01</cbc:StartDate>
+                    <cbc:StartTime>12:00:00</cbc:StartTime>
+                    <cbc:EndDate>2026-01-01</cbc:EndDate>
+                    <cbc:EndTime>12:00:00</cbc:EndTime>
+                    <cbc:DurationMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:DurationMeasure>
+                    <cbc:DescriptionCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:DescriptionCode>
+                    <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                </cac:ValidityPeriod>
+                <cac:Address></cac:Address>
+                <cac:SubsidiaryLocation></cac:SubsidiaryLocation>
+                <cac:LocationCoordinate></cac:LocationCoordinate>
+            </cac:PhysicalLocation>
+            <cac:PartyTaxScheme>
+                <cbc:RegistrationName languageID="ID-001" languageLocaleID="ID-001">Value of RegistrationName</cbc:RegistrationName>
+                <cbc:CompanyID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:CompanyID>
+                <cbc:TaxLevelCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:TaxLevelCode>
+                <cbc:ExemptionReasonCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:ExemptionReasonCode>
+                <cbc:ExemptionReason languageID="ID-001" languageLocaleID="ID-001">Value of ExemptionReason</cbc:ExemptionReason>
+                <cac:RegistrationAddress></cac:RegistrationAddress>
+                <cac:TaxScheme>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                    <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                    <cbc:TaxTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:TaxTypeCode>
+                    <cbc:CurrencyCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">USD</cbc:CurrencyCode>
+                    <cac:JurisdictionRegionAddress></cac:JurisdictionRegionAddress>
+                </cac:TaxScheme>
+            </cac:PartyTaxScheme>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName languageID="ID-001" languageLocaleID="ID-001">Value of RegistrationName</cbc:RegistrationName>
+                <cbc:CompanyID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:CompanyID>
+                <cbc:RegistrationDate>2026-01-01</cbc:RegistrationDate>
+                <cbc:RegistrationExpirationDate>2026-01-01</cbc:RegistrationExpirationDate>
+                <cbc:CompanyLegalFormCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CompanyLegalFormCode>
+                <cbc:CompanyLegalForm languageID="ID-001" languageLocaleID="ID-001">Value of CompanyLegalForm</cbc:CompanyLegalForm>
+                <cbc:SoleProprietorshipIndicator>true</cbc:SoleProprietorshipIndicator>
+                <cbc:CompanyLiquidationStatusCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CompanyLiquidationStatusCode>
+                <cbc:CorporateStockAmount currencyCodeListVersionID="ID-001" currencyID="USD">100.00</cbc:CorporateStockAmount>
+                <cbc:FullyPaidSharesIndicator>true</cbc:FullyPaidSharesIndicator>
+                <cac:RegistrationAddress></cac:RegistrationAddress>
+                <cac:CorporateRegistrationScheme>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                    <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                    <cbc:CorporateRegistrationTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CorporateRegistrationTypeCode>
+                    <cac:JurisdictionRegionAddress></cac:JurisdictionRegionAddress>
+                </cac:CorporateRegistrationScheme>
+                <cac:HeadOfficeParty></cac:HeadOfficeParty>
+                <cac:ShareholderParty>
+                    <cbc:PartecipationPercent format="Value of format">10.00</cbc:PartecipationPercent>
+                    <cac:Party></cac:Party>
+                </cac:ShareholderParty>
+            </cac:PartyLegalEntity>
+            <cac:Contact>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                <cbc:Telephone languageID="ID-001" languageLocaleID="ID-001">Value of Telephone</cbc:Telephone>
+                <cbc:Telefax languageID="ID-001" languageLocaleID="ID-001">Value of Telefax</cbc:Telefax>
+                <cbc:ElectronicMail languageID="ID-001" languageLocaleID="ID-001">Value of ElectronicMail</cbc:ElectronicMail>
+                <cbc:Note languageID="ID-001" languageLocaleID="ID-001">Value of Note</cbc:Note>
+                <cac:OtherCommunication>
+                    <cbc:ChannelCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:ChannelCode>
+                    <cbc:Channel languageID="ID-001" languageLocaleID="ID-001">Value of Channel</cbc:Channel>
+                    <cbc:Value languageID="ID-001" languageLocaleID="ID-001">Value of Value</cbc:Value>
+                </cac:OtherCommunication>
+            </cac:Contact>
+            <cac:Person>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:FirstName languageID="ID-001" languageLocaleID="ID-001">Value of FirstName</cbc:FirstName>
+                <cbc:FamilyName languageID="ID-001" languageLocaleID="ID-001">Value of FamilyName</cbc:FamilyName>
+                <cbc:Title languageID="ID-001" languageLocaleID="ID-001">Value of Title</cbc:Title>
+                <cbc:MiddleName languageID="ID-001" languageLocaleID="ID-001">Value of MiddleName</cbc:MiddleName>
+                <cbc:OtherName languageID="ID-001" languageLocaleID="ID-001">Value of OtherName</cbc:OtherName>
+                <cbc:NameSuffix languageID="ID-001" languageLocaleID="ID-001">Value of NameSuffix</cbc:NameSuffix>
+                <cbc:JobTitle languageID="ID-001" languageLocaleID="ID-001">Value of JobTitle</cbc:JobTitle>
+                <cbc:NationalityID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:NationalityID>
+                <cbc:GenderCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:GenderCode>
+                <cbc:BirthDate>2026-01-01</cbc:BirthDate>
+                <cbc:BirthplaceName languageID="ID-001" languageLocaleID="ID-001">Value of BirthplaceName</cbc:BirthplaceName>
+                <cbc:OrganizationDepartment languageID="ID-001" languageLocaleID="ID-001">Value of OrganizationDepartment</cbc:OrganizationDepartment>
+                <cac:Contact></cac:Contact>
+                <cac:FinancialAccount>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                    <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                    <cbc:AliasName languageID="ID-001" languageLocaleID="ID-001">Value of AliasName</cbc:AliasName>
+                    <cbc:AccountTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:AccountTypeCode>
+                    <cbc:AccountFormatCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:AccountFormatCode>
+                    <cbc:CurrencyCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">USD</cbc:CurrencyCode>
+                    <cbc:PaymentNote languageID="ID-001" languageLocaleID="ID-001">Value of PaymentNote</cbc:PaymentNote>
+                    <cac:FinancialInstitutionBranch>
+                        <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                        <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                        <cac:FinancialInstitution>
+                            <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                            <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                            <cac:Address></cac:Address>
+                        </cac:FinancialInstitution>
+                        <cac:Address></cac:Address>
+                    </cac:FinancialInstitutionBranch>
+                    <cac:Country></cac:Country>
+                </cac:FinancialAccount>
+                <cac:IdentityDocumentReference>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                    <cbc:CopyIndicator>true</cbc:CopyIndicator>
+                    <cbc:UUID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of UUID</cbc:UUID>
+                    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                    <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                    <cbc:DocumentTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:DocumentTypeCode>
+                    <cbc:DocumentType languageID="ID-001" languageLocaleID="ID-001">Value of DocumentType</cbc:DocumentType>
+                    <cbc:XPath languageID="ID-001" languageLocaleID="ID-001">Value of XPath</cbc:XPath>
+                    <cbc:LanguageID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:LanguageID>
+                    <cbc:LocaleCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LocaleCode>
+                    <cbc:VersionID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:VersionID>
+                    <cbc:DocumentStatusCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:DocumentStatusCode>
+                    <cbc:DocumentDescription languageID="ID-001" languageLocaleID="ID-001">Value of DocumentDescription</cbc:DocumentDescription>
+                    <cac:Attachment>
+                        <cbc:EmbeddedDocumentBinaryObject characterSetCode="CODE-001" encodingCode="CODE-001" filename="Value of filename" format="Value of format" mimeCode="CODE-001" uri="Value of uri">U2FtcGxlRGF0YQ==</cbc:EmbeddedDocumentBinaryObject>
+                        <cac:ExternalReference>
+                            <cbc:URI schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of URI</cbc:URI>
+                            <cbc:DocumentHash languageID="ID-001" languageLocaleID="ID-001">Value of DocumentHash</cbc:DocumentHash>
+                            <cbc:HashAlgorithmMethod languageID="ID-001" languageLocaleID="ID-001">Value of HashAlgorithmMethod</cbc:HashAlgorithmMethod>
+                            <cbc:ExpiryDate>2026-01-01</cbc:ExpiryDate>
+                            <cbc:ExpiryTime>12:00:00</cbc:ExpiryTime>
+                            <cbc:MimeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:MimeCode>
+                            <cbc:FormatCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:FormatCode>
+                            <cbc:EncodingCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:EncodingCode>
+                            <cbc:CharacterSetCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CharacterSetCode>
+                            <cbc:FileName languageID="ID-001" languageLocaleID="ID-001">Value of FileName</cbc:FileName>
+                            <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                        </cac:ExternalReference>
+                    </cac:Attachment>
+                    <cac:ValidityPeriod></cac:ValidityPeriod>
+                    <cac:IssuerParty></cac:IssuerParty>
+                    <cac:ResultOfVerification>
+                        <cbc:ValidatorID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ValidatorID>
+                        <cbc:ValidationResultCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:ValidationResultCode>
+                        <cbc:ValidationDate>2026-01-01</cbc:ValidationDate>
+                        <cbc:ValidationTime>12:00:00</cbc:ValidationTime>
+                        <cbc:ValidateProcess languageID="ID-001" languageLocaleID="ID-001">Value of ValidateProcess</cbc:ValidateProcess>
+                        <cbc:ValidateTool languageID="ID-001" languageLocaleID="ID-001">Value of ValidateTool</cbc:ValidateTool>
+                        <cbc:ValidateToolVersion languageID="ID-001" languageLocaleID="ID-001">Value of ValidateToolVersion</cbc:ValidateToolVersion>
+                        <cac:SignatoryParty></cac:SignatoryParty>
+                    </cac:ResultOfVerification>
+                </cac:IdentityDocumentReference>
+                <cac:ResidenceAddress></cac:ResidenceAddress>
+            </cac:Person>
+            <cac:AgentParty></cac:AgentParty>
+            <cac:ServiceProviderParty>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:ServiceTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:ServiceTypeCode>
+                <cbc:ServiceType languageID="ID-001" languageLocaleID="ID-001">Value of ServiceType</cbc:ServiceType>
+                <cac:Party></cac:Party>
+                <cac:SellerContact></cac:SellerContact>
+            </cac:ServiceProviderParty>
+            <cac:PowerOfAttorney>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                <cac:NotaryParty></cac:NotaryParty>
+                <cac:AgentParty></cac:AgentParty>
+                <cac:WitnessParty></cac:WitnessParty>
+                <cac:MandateDocumentReference>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                </cac:MandateDocumentReference>
+            </cac:PowerOfAttorney>
+            <cac:FinancialAccount></cac:FinancialAccount>
+        </cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment></cac:DigitalSignatureAttachment>
+        <cac:OriginalDocumentReference>
+            <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+        </cac:OriginalDocumentReference>
+    </cac:Signature>
+    <cac:Signature>
+        <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+        <cbc:Note languageID="ID-001" languageLocaleID="ID-001">Value of Note</cbc:Note>
+        <cbc:ValidationDate>2026-01-01</cbc:ValidationDate>
+        <cbc:ValidationTime>12:00:00</cbc:ValidationTime>
+        <cbc:ValidatorID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ValidatorID>
+        <cbc:CanonicalizationMethod languageID="ID-001" languageLocaleID="ID-001">Value of CanonicalizationMethod</cbc:CanonicalizationMethod>
+        <cbc:SignatureMethod languageID="ID-001" languageLocaleID="ID-001">Value of SignatureMethod</cbc:SignatureMethod>
+        <cac:SignatoryParty>
+            <cbc:MarkCareIndicator>true</cbc:MarkCareIndicator>
+            <cbc:MarkAttentionIndicator>true</cbc:MarkAttentionIndicator>
+            <cbc:WebsiteURI schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of WebsiteURI</cbc:WebsiteURI>
+            <cbc:LogoReferenceID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:LogoReferenceID>
+            <cbc:EndpointID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:EndpointID>
+            <cbc:IndustryClassificationCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:IndustryClassificationCode>
+            <cac:PartyIdentification>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+            </cac:PartyName>
+            <cac:Language>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                <cbc:LocaleCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LocaleCode>
+            </cac:Language>
+            <cac:PostalAddress>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:AddressTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:AddressTypeCode>
+                <cbc:AddressFormatCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:AddressFormatCode>
+                <cbc:Postbox languageID="ID-001" languageLocaleID="ID-001">Value of Postbox</cbc:Postbox>
+                <cbc:Floor languageID="ID-001" languageLocaleID="ID-001">Value of Floor</cbc:Floor>
+                <cbc:Room languageID="ID-001" languageLocaleID="ID-001">Value of Room</cbc:Room>
+                <cbc:StreetName languageID="ID-001" languageLocaleID="ID-001">Value of StreetName</cbc:StreetName>
+                <cbc:AdditionalStreetName languageID="ID-001" languageLocaleID="ID-001">Value of AdditionalStreetName</cbc:AdditionalStreetName>
+                <cbc:BlockName languageID="ID-001" languageLocaleID="ID-001">Value of BlockName</cbc:BlockName>
+                <cbc:BuildingName languageID="ID-001" languageLocaleID="ID-001">Value of BuildingName</cbc:BuildingName>
+                <cbc:BuildingNumber languageID="ID-001" languageLocaleID="ID-001">Value of BuildingNumber</cbc:BuildingNumber>
+                <cbc:InhouseMail languageID="ID-001" languageLocaleID="ID-001">Value of InhouseMail</cbc:InhouseMail>
+                <cbc:Department languageID="ID-001" languageLocaleID="ID-001">Value of Department</cbc:Department>
+                <cbc:MarkAttention languageID="ID-001" languageLocaleID="ID-001">Value of MarkAttention</cbc:MarkAttention>
+                <cbc:MarkCare languageID="ID-001" languageLocaleID="ID-001">Value of MarkCare</cbc:MarkCare>
+                <cbc:PlotIdentification languageID="ID-001" languageLocaleID="ID-001">Value of PlotIdentification</cbc:PlotIdentification>
+                <cbc:CitySubdivisionName languageID="ID-001" languageLocaleID="ID-001">Value of CitySubdivisionName</cbc:CitySubdivisionName>
+                <cbc:CityName languageID="ID-001" languageLocaleID="ID-001">Value of CityName</cbc:CityName>
+                <cbc:PostalZone languageID="ID-001" languageLocaleID="ID-001">Value of PostalZone</cbc:PostalZone>
+                <cbc:CountrySubentity languageID="ID-001" languageLocaleID="ID-001">Value of CountrySubentity</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CountrySubentityCode>
+                <cbc:Region languageID="ID-001" languageLocaleID="ID-001">Value of Region</cbc:Region>
+                <cbc:District languageID="ID-001" languageLocaleID="ID-001">Value of District</cbc:District>
+                <cbc:TimezoneOffset languageID="ID-001" languageLocaleID="ID-001">Value of TimezoneOffset</cbc:TimezoneOffset>
+                <cac:AddressLine>
+                    <cbc:Line languageID="ID-001" languageLocaleID="ID-001">Value of Line</cbc:Line>
+                </cac:AddressLine>
+                <cac:Country>
+                    <cbc:IdentificationCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:IdentificationCode>
+                    <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                </cac:Country>
+                <cac:LocationCoordinate>
+                    <cbc:CoordinateSystemCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CoordinateSystemCode>
+                    <cbc:LatitudeDegreesMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:LatitudeDegreesMeasure>
+                    <cbc:LatitudeMinutesMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:LatitudeMinutesMeasure>
+                    <cbc:LatitudeDirectionCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LatitudeDirectionCode>
+                    <cbc:LongitudeDegreesMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:LongitudeDegreesMeasure>
+                    <cbc:LongitudeMinutesMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:LongitudeMinutesMeasure>
+                    <cbc:LongitudeDirectionCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LongitudeDirectionCode>
+                    <cbc:AltitudeMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:AltitudeMeasure>
+                </cac:LocationCoordinate>
+            </cac:PostalAddress>
+            <cac:PhysicalLocation>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                <cbc:Conditions languageID="ID-001" languageLocaleID="ID-001">Value of Conditions</cbc:Conditions>
+                <cbc:CountrySubentity languageID="ID-001" languageLocaleID="ID-001">Value of CountrySubentity</cbc:CountrySubentity>
+                <cbc:CountrySubentityCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CountrySubentityCode>
+                <cbc:LocationTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LocationTypeCode>
+                <cbc:InformationURI schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of InformationURI</cbc:InformationURI>
+                <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                <cac:ValidityPeriod>
+                    <cbc:StartDate>2026-01-01</cbc:StartDate>
+                    <cbc:StartTime>12:00:00</cbc:StartTime>
+                    <cbc:EndDate>2026-01-01</cbc:EndDate>
+                    <cbc:EndTime>12:00:00</cbc:EndTime>
+                    <cbc:DurationMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:DurationMeasure>
+                    <cbc:DescriptionCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:DescriptionCode>
+                    <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                </cac:ValidityPeriod>
+                <cac:Address></cac:Address>
+                <cac:SubsidiaryLocation></cac:SubsidiaryLocation>
+                <cac:LocationCoordinate></cac:LocationCoordinate>
+            </cac:PhysicalLocation>
+            <cac:PartyTaxScheme>
+                <cbc:RegistrationName languageID="ID-001" languageLocaleID="ID-001">Value of RegistrationName</cbc:RegistrationName>
+                <cbc:CompanyID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:CompanyID>
+                <cbc:TaxLevelCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:TaxLevelCode>
+                <cbc:ExemptionReasonCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:ExemptionReasonCode>
+                <cbc:ExemptionReason languageID="ID-001" languageLocaleID="ID-001">Value of ExemptionReason</cbc:ExemptionReason>
+                <cac:RegistrationAddress></cac:RegistrationAddress>
+                <cac:TaxScheme>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                    <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                    <cbc:TaxTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:TaxTypeCode>
+                    <cbc:CurrencyCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">USD</cbc:CurrencyCode>
+                    <cac:JurisdictionRegionAddress></cac:JurisdictionRegionAddress>
+                </cac:TaxScheme>
+            </cac:PartyTaxScheme>
+            <cac:PartyLegalEntity>
+                <cbc:RegistrationName languageID="ID-001" languageLocaleID="ID-001">Value of RegistrationName</cbc:RegistrationName>
+                <cbc:CompanyID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:CompanyID>
+                <cbc:RegistrationDate>2026-01-01</cbc:RegistrationDate>
+                <cbc:RegistrationExpirationDate>2026-01-01</cbc:RegistrationExpirationDate>
+                <cbc:CompanyLegalFormCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CompanyLegalFormCode>
+                <cbc:CompanyLegalForm languageID="ID-001" languageLocaleID="ID-001">Value of CompanyLegalForm</cbc:CompanyLegalForm>
+                <cbc:SoleProprietorshipIndicator>true</cbc:SoleProprietorshipIndicator>
+                <cbc:CompanyLiquidationStatusCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CompanyLiquidationStatusCode>
+                <cbc:CorporateStockAmount currencyCodeListVersionID="ID-001" currencyID="USD">100.00</cbc:CorporateStockAmount>
+                <cbc:FullyPaidSharesIndicator>true</cbc:FullyPaidSharesIndicator>
+                <cac:RegistrationAddress></cac:RegistrationAddress>
+                <cac:CorporateRegistrationScheme>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                    <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                    <cbc:CorporateRegistrationTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CorporateRegistrationTypeCode>
+                    <cac:JurisdictionRegionAddress></cac:JurisdictionRegionAddress>
+                </cac:CorporateRegistrationScheme>
+                <cac:HeadOfficeParty></cac:HeadOfficeParty>
+                <cac:ShareholderParty>
+                    <cbc:PartecipationPercent format="Value of format">10.00</cbc:PartecipationPercent>
+                    <cac:Party></cac:Party>
+                </cac:ShareholderParty>
+            </cac:PartyLegalEntity>
+            <cac:Contact>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                <cbc:Telephone languageID="ID-001" languageLocaleID="ID-001">Value of Telephone</cbc:Telephone>
+                <cbc:Telefax languageID="ID-001" languageLocaleID="ID-001">Value of Telefax</cbc:Telefax>
+                <cbc:ElectronicMail languageID="ID-001" languageLocaleID="ID-001">Value of ElectronicMail</cbc:ElectronicMail>
+                <cbc:Note languageID="ID-001" languageLocaleID="ID-001">Value of Note</cbc:Note>
+                <cac:OtherCommunication>
+                    <cbc:ChannelCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:ChannelCode>
+                    <cbc:Channel languageID="ID-001" languageLocaleID="ID-001">Value of Channel</cbc:Channel>
+                    <cbc:Value languageID="ID-001" languageLocaleID="ID-001">Value of Value</cbc:Value>
+                </cac:OtherCommunication>
+            </cac:Contact>
+            <cac:Person>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:FirstName languageID="ID-001" languageLocaleID="ID-001">Value of FirstName</cbc:FirstName>
+                <cbc:FamilyName languageID="ID-001" languageLocaleID="ID-001">Value of FamilyName</cbc:FamilyName>
+                <cbc:Title languageID="ID-001" languageLocaleID="ID-001">Value of Title</cbc:Title>
+                <cbc:MiddleName languageID="ID-001" languageLocaleID="ID-001">Value of MiddleName</cbc:MiddleName>
+                <cbc:OtherName languageID="ID-001" languageLocaleID="ID-001">Value of OtherName</cbc:OtherName>
+                <cbc:NameSuffix languageID="ID-001" languageLocaleID="ID-001">Value of NameSuffix</cbc:NameSuffix>
+                <cbc:JobTitle languageID="ID-001" languageLocaleID="ID-001">Value of JobTitle</cbc:JobTitle>
+                <cbc:NationalityID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:NationalityID>
+                <cbc:GenderCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:GenderCode>
+                <cbc:BirthDate>2026-01-01</cbc:BirthDate>
+                <cbc:BirthplaceName languageID="ID-001" languageLocaleID="ID-001">Value of BirthplaceName</cbc:BirthplaceName>
+                <cbc:OrganizationDepartment languageID="ID-001" languageLocaleID="ID-001">Value of OrganizationDepartment</cbc:OrganizationDepartment>
+                <cac:Contact></cac:Contact>
+                <cac:FinancialAccount>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                    <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                    <cbc:AliasName languageID="ID-001" languageLocaleID="ID-001">Value of AliasName</cbc:AliasName>
+                    <cbc:AccountTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:AccountTypeCode>
+                    <cbc:AccountFormatCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:AccountFormatCode>
+                    <cbc:CurrencyCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">USD</cbc:CurrencyCode>
+                    <cbc:PaymentNote languageID="ID-001" languageLocaleID="ID-001">Value of PaymentNote</cbc:PaymentNote>
+                    <cac:FinancialInstitutionBranch>
+                        <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                        <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                        <cac:FinancialInstitution>
+                            <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                            <cbc:Name languageID="ID-001" languageLocaleID="ID-001">Value of Name</cbc:Name>
+                            <cac:Address></cac:Address>
+                        </cac:FinancialInstitution>
+                        <cac:Address></cac:Address>
+                    </cac:FinancialInstitutionBranch>
+                    <cac:Country></cac:Country>
+                </cac:FinancialAccount>
+                <cac:IdentityDocumentReference>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                    <cbc:CopyIndicator>true</cbc:CopyIndicator>
+                    <cbc:UUID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of UUID</cbc:UUID>
+                    <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                    <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                    <cbc:DocumentTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:DocumentTypeCode>
+                    <cbc:DocumentType languageID="ID-001" languageLocaleID="ID-001">Value of DocumentType</cbc:DocumentType>
+                    <cbc:XPath languageID="ID-001" languageLocaleID="ID-001">Value of XPath</cbc:XPath>
+                    <cbc:LanguageID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:LanguageID>
+                    <cbc:LocaleCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:LocaleCode>
+                    <cbc:VersionID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:VersionID>
+                    <cbc:DocumentStatusCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:DocumentStatusCode>
+                    <cbc:DocumentDescription languageID="ID-001" languageLocaleID="ID-001">Value of DocumentDescription</cbc:DocumentDescription>
+                    <cac:Attachment>
+                        <cbc:EmbeddedDocumentBinaryObject characterSetCode="CODE-001" encodingCode="CODE-001" filename="Value of filename" format="Value of format" mimeCode="CODE-001" uri="Value of uri">U2FtcGxlRGF0YQ==</cbc:EmbeddedDocumentBinaryObject>
+                        <cac:ExternalReference>
+                            <cbc:URI schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">Value of URI</cbc:URI>
+                            <cbc:DocumentHash languageID="ID-001" languageLocaleID="ID-001">Value of DocumentHash</cbc:DocumentHash>
+                            <cbc:HashAlgorithmMethod languageID="ID-001" languageLocaleID="ID-001">Value of HashAlgorithmMethod</cbc:HashAlgorithmMethod>
+                            <cbc:ExpiryDate>2026-01-01</cbc:ExpiryDate>
+                            <cbc:ExpiryTime>12:00:00</cbc:ExpiryTime>
+                            <cbc:MimeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:MimeCode>
+                            <cbc:FormatCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:FormatCode>
+                            <cbc:EncodingCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:EncodingCode>
+                            <cbc:CharacterSetCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:CharacterSetCode>
+                            <cbc:FileName languageID="ID-001" languageLocaleID="ID-001">Value of FileName</cbc:FileName>
+                            <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                        </cac:ExternalReference>
+                    </cac:Attachment>
+                    <cac:ValidityPeriod></cac:ValidityPeriod>
+                    <cac:IssuerParty></cac:IssuerParty>
+                    <cac:ResultOfVerification>
+                        <cbc:ValidatorID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ValidatorID>
+                        <cbc:ValidationResultCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:ValidationResultCode>
+                        <cbc:ValidationDate>2026-01-01</cbc:ValidationDate>
+                        <cbc:ValidationTime>12:00:00</cbc:ValidationTime>
+                        <cbc:ValidateProcess languageID="ID-001" languageLocaleID="ID-001">Value of ValidateProcess</cbc:ValidateProcess>
+                        <cbc:ValidateTool languageID="ID-001" languageLocaleID="ID-001">Value of ValidateTool</cbc:ValidateTool>
+                        <cbc:ValidateToolVersion languageID="ID-001" languageLocaleID="ID-001">Value of ValidateToolVersion</cbc:ValidateToolVersion>
+                        <cac:SignatoryParty></cac:SignatoryParty>
+                    </cac:ResultOfVerification>
+                </cac:IdentityDocumentReference>
+                <cac:ResidenceAddress></cac:ResidenceAddress>
+            </cac:Person>
+            <cac:AgentParty></cac:AgentParty>
+            <cac:ServiceProviderParty>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:ServiceTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:ServiceTypeCode>
+                <cbc:ServiceType languageID="ID-001" languageLocaleID="ID-001">Value of ServiceType</cbc:ServiceType>
+                <cac:Party></cac:Party>
+                <cac:SellerContact></cac:SellerContact>
+            </cac:ServiceProviderParty>
+            <cac:PowerOfAttorney>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                <cbc:IssueDate>2026-01-01</cbc:IssueDate>
+                <cbc:IssueTime>12:00:00</cbc:IssueTime>
+                <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                <cac:NotaryParty></cac:NotaryParty>
+                <cac:AgentParty></cac:AgentParty>
+                <cac:WitnessParty></cac:WitnessParty>
+                <cac:MandateDocumentReference>
+                    <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+                </cac:MandateDocumentReference>
+            </cac:PowerOfAttorney>
+            <cac:FinancialAccount></cac:FinancialAccount>
+        </cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment></cac:DigitalSignatureAttachment>
+        <cac:OriginalDocumentReference>
+            <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+        </cac:OriginalDocumentReference>
+    </cac:Signature>
+    <cac:SenderParty></cac:SenderParty>
+    <cac:ReceiverParty></cac:ReceiverParty>
+    <cac:TransportMeans>
+        <cbc:JourneyID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:JourneyID>
+        <cbc:RegistrationNationalityID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:RegistrationNationalityID>
+        <cbc:RegistrationNationality languageID="ID-001" languageLocaleID="ID-001">Value of RegistrationNationality</cbc:RegistrationNationality>
+        <cbc:DirectionCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:DirectionCode>
+        <cbc:TransportMeansTypeCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:TransportMeansTypeCode>
+        <cbc:TradeServiceCode languageID="ID-001" listAgencyID="ID-001" listAgencyName="Value of listAgencyName" listID="ID-001" listName="Value of listName" listSchemeURI="Value of listSchemeURI" listURI="Value of listURI" listVersionID="ID-001" name="Value of name">CODE-001</cbc:TradeServiceCode>
+        <cac:Stowage>
+            <cbc:LocationID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:LocationID>
+            <cbc:Location languageID="ID-001" languageLocaleID="ID-001">Value of Location</cbc:Location>
+            <cac:MeasurementDimension>
+                <cbc:AttributeID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:AttributeID>
+                <cbc:Measure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:Measure>
+                <cbc:Description languageID="ID-001" languageLocaleID="ID-001">Value of Description</cbc:Description>
+                <cbc:MinimumMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:MinimumMeasure>
+                <cbc:MaximumMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:MaximumMeasure>
+            </cac:MeasurementDimension>
+        </cac:Stowage>
+        <cac:AirTransport>
+            <cbc:AircraftID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:AircraftID>
+        </cac:AirTransport>
+        <cac:RoadTransport>
+            <cbc:LicensePlateID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:LicensePlateID>
+        </cac:RoadTransport>
+        <cac:RailTransport>
+            <cbc:TrainID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:TrainID>
+            <cbc:RailCarID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:RailCarID>
+        </cac:RailTransport>
+        <cac:MaritimeTransport>
+            <cbc:VesselID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:VesselID>
+            <cbc:VesselName languageID="ID-001" languageLocaleID="ID-001">Value of VesselName</cbc:VesselName>
+            <cbc:RadioCallSignID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:RadioCallSignID>
+            <cbc:ShipsRequirements languageID="ID-001" languageLocaleID="ID-001">Value of ShipsRequirements</cbc:ShipsRequirements>
+            <cbc:GrossTonnageMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:GrossTonnageMeasure>
+            <cbc:NetTonnageMeasure unitCode="CODE-001" unitCodeListVersionID="ID-001">1</cbc:NetTonnageMeasure>
+            <cac:RegistryCertificateDocumentReference>
+                <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
+            </cac:RegistryCertificateDocumentReference>
+            <cac:RegistryPortLocation></cac:RegistryPortLocation>
+        </cac:MaritimeTransport>
+        <cac:OwnerParty></cac:OwnerParty>
+        <cac:MeasurementDimension>
+            <cbc:AttributeID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:AttributeID>
+        </cac:MeasurementDimension>
+    </cac:TransportMeans>
+    <cac:StatusLocation></cac:StatusLocation>
+    <cac:StatusLocation></cac:StatusLocation>
+</TransportProgressStatusRequest>
+

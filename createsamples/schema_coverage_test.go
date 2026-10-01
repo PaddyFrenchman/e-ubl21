@@ -36,6 +36,21 @@ func TestMarshalCoverageIncludesCompactFixtureTargetMappings(t *testing.T) {
 	}
 }
 
+func TestFixtureReportPathIsRelativeToCorpusRoot(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "corpus")
+	path := filepath.Join(root, "Invoice", "Invoice-minimal.xml")
+	got, err := fixtureReportPath(root, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "Invoice/Invoice-minimal.xml" {
+		t.Fatalf("fixture report path = %q", got)
+	}
+	if _, err := fixtureReportPath(root, filepath.Join(filepath.Dir(root), "outside.xml")); err == nil {
+		t.Fatal("expected outside-corpus fixture path rejection")
+	}
+}
+
 func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 	xsd := filepath.Join("..", "XSD")
 	samples := "samples"
