@@ -1118,6 +1118,16 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/161
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/162
 
+### 73. #163 — TEST COVERAGE — Add cardinality and large-document fixture generation
+
+**Goal:** Exercise repeatable UBL structures as real collections and add realistic large-document stress fixtures.
+
+**Status:** Complete / closed. The structural corpus now includes deterministic zero, one, multiple, five-occurrence, finite-maximum, and large-collection families. Schema coverage records each parent-instance cardinality observation and independently requires an ordinary multiple case, while retaining maximum-cardinality evidence. Parent #160 remains open for final qualification.
+
+**Dependencies:** #162.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/163
+
 ---
 
 ## Dependency summary
