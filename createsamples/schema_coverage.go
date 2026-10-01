@@ -16,16 +16,18 @@ import (
 // the tracked corpus can currently exercise. IDs include the declaring
 // namespace and schema path, so same-named UBL declarations cannot collide.
 type schemaCoverage struct {
-	SchemaVersion       int                           `json:"schemaVersion"`
-	Fixtures            int                           `json:"fixtures"`
-	Categories          map[string]coverageCategory   `json:"categories"`
-	Uncovered           map[string][]string           `json:"uncovered"`
-	Unparseable         map[string]string             `json:"unparseable"`
-	FixtureObservations map[string]fixtureObservation `json:"fixtureObservations"`
-	FixtureTargets      map[string][]string           `json:"fixtureTargets"`
-	MaximumCardinality  map[string]int                `json:"maximumCardinality"`
-	CardinalityGaps     []string                      `json:"cardinalityGaps"`
-	MaximumDepth        map[string]int                `json:"maximumDepth"`
+	SchemaVersion          int                           `json:"schemaVersion"`
+	Fixtures               int                           `json:"fixtures"`
+	Categories             map[string]coverageCategory   `json:"categories"`
+	Uncovered              map[string][]string           `json:"uncovered"`
+	Unparseable            map[string]string             `json:"unparseable"`
+	FixtureObservations    map[string]fixtureObservation `json:"fixtureObservations"`
+	FixtureTargets         map[string][]string           `json:"fixtureTargets"`
+	MaximumCardinality     map[string]int                `json:"maximumCardinality"`
+	ExercisedCardinalities map[string][]int              `json:"exercisedCardinalities"`
+	RequiredCardinalities  map[string][]int              `json:"requiredCardinalities"`
+	CardinalityGaps        []string                      `json:"cardinalityGaps"`
+	MaximumDepth           map[string]int                `json:"maximumDepth"`
 }
 
 type coverageCategory struct {
@@ -40,10 +42,15 @@ type fixtureObservation struct {
 
 type coverageTargets struct {
 	elements, roots, required, optional, repeatable, sequenceMembers, allMembers, attributes, requiredAttributes, optionalAttributes, choices, choiceAlternatives, wildcards, inheritance, substitutions, recursiveEdges, complexTypes map[string]struct{}
+	repeatableBounds                                                                                                                                                                                                                   map[string]occurrenceBounds
 }
 
+// occurrenceBounds are the effective bounds after enclosing model groups.
+// An unbounded maximum is represented by -1.
+type occurrenceBounds struct{ min, max int }
+
 func newCoverageTargets() coverageTargets {
-	return coverageTargets{elements: map[string]struct{}{}, roots: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, requiredAttributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, inheritance: map[string]struct{}{}, substitutions: map[string]struct{}{}, recursiveEdges: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
+	return coverageTargets{elements: map[string]struct{}{}, roots: map[string]struct{}{}, required: map[string]struct{}{}, optional: map[string]struct{}{}, repeatable: map[string]struct{}{}, repeatableBounds: map[string]occurrenceBounds{}, sequenceMembers: map[string]struct{}{}, allMembers: map[string]struct{}{}, attributes: map[string]struct{}{}, requiredAttributes: map[string]struct{}{}, optionalAttributes: map[string]struct{}{}, choices: map[string]struct{}{}, choiceAlternatives: map[string]struct{}{}, wildcards: map[string]struct{}{}, inheritance: map[string]struct{}{}, substitutions: map[string]struct{}{}, recursiveEdges: map[string]struct{}{}, complexTypes: map[string]struct{}{}}
 }
 
 func coverageID(doc *schemaDoc, kind, name string) string {
@@ -247,16 +254,33 @@ func (t coverageTargets) addRecursiveEdge(index schemaIndex, doc *schemaDoc, own
 	}
 }
 
-type occurrence struct{ optional, repeatable bool }
+type occurrence struct {
+	optional, repeatable bool
+	bounds               occurrenceBounds
+}
 
 func withOccurs(parent occurrence, min, max string) occurrence {
-	return occurrence{parent.optional || min == "0", parent.repeatable || max == "unbounded" || (max != "" && max != "1")}
+	if parent.bounds.max == 0 {
+		parent.bounds = occurrenceBounds{min: 1, max: 1}
+	}
+	childMin := parseOccursInt(min, 1)
+	childMax := parseMaxOccurs(max)
+	if max == "unbounded" {
+		childMax = -1
+	} else if max == "" {
+		childMax = 1
+	}
+	bounds := occurrenceBounds{min: parent.bounds.min * childMin, max: parent.bounds.max * childMax}
+	if parent.bounds.max < 0 || childMax < 0 {
+		bounds.max = -1
+	}
+	return occurrence{parent.optional || childMin == 0, bounds.max < 0 || bounds.max > 1, bounds}
 }
 func currentOccurrence(values []occurrence) occurrence {
 	if len(values) > 0 {
 		return values[0]
 	}
-	return occurrence{}
+	return occurrence{bounds: occurrenceBounds{min: 1, max: 1}}
 }
 
 func (t coverageTargets) addElement(doc *schemaDoc, parent string, element xsdElementDecl, choice bool, inherited ...occurrence) {
@@ -287,6 +311,7 @@ func (t coverageTargets) addElement(doc *schemaDoc, parent string, element xsdEl
 	}
 	if occurs.repeatable {
 		t.repeatable[id] = struct{}{}
+		t.repeatableBounds[id] = occurs.bounds
 	}
 	if choice {
 		t.choiceAlternatives[id] = struct{}{}
@@ -530,12 +555,14 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 	for path := range unparseable {
 		fixturePaths[path] = struct{}{}
 	}
-	result := schemaCoverage{SchemaVersion: 4, Fixtures: len(fixturePaths), Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}, Unparseable: unparseable, FixtureObservations: observations, FixtureTargets: map[string][]string{}, MaximumCardinality: map[string]int{}, MaximumDepth: map[string]int{}}
+	result := schemaCoverage{SchemaVersion: 5, Fixtures: len(fixturePaths), Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}, Unparseable: unparseable, FixtureObservations: observations, FixtureTargets: map[string][]string{}, MaximumCardinality: map[string]int{}, ExercisedCardinalities: map[string][]int{}, RequiredCardinalities: map[string][]int{}, MaximumDepth: map[string]int{}}
 	// Record every repeatable schema particle even when no fixture reaches it.
 	// A zero is meaningful: it identifies an unexercised collection instead of
 	// silently omitting it from the cardinality report.
 	for id := range targets.repeatable {
 		result.MaximumCardinality[id] = 0
+		result.ExercisedCardinalities[id] = nil
+		result.RequiredCardinalities[id] = requiredCardinalities(targets.repeatableBounds[id])
 	}
 	exercised := map[string]struct{}{}
 	for path, found := range matches {
@@ -553,6 +580,24 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 		}
 		sort.Strings(ids)
 		result.FixtureTargets[path] = ids
+		// An absent particle is a zero-cardinality observation only when this
+		// fixture instantiated that particle's owning complex type. Fixtures for
+		// unrelated document types must not manufacture zero coverage.
+		for id := range targets.repeatable {
+			if _, present := found[id]; !present && fixtureInstantiatesParticleParent(found, id) {
+				found[id] = 0
+			}
+		}
+	}
+	for _, found := range matches {
+		for id, value := range found {
+			if _, repeatable := targets.repeatable[id]; repeatable {
+				result.ExercisedCardinalities[id] = appendUniqueInt(result.ExercisedCardinalities[id], value)
+			}
+		}
+	}
+	for id := range result.ExercisedCardinalities {
+		sort.Ints(result.ExercisedCardinalities[id])
 	}
 	for _, item := range []struct {
 		name   string
@@ -574,19 +619,75 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 		result.Categories[item.name] = coverageCategory{len(item.values), count, pct}
 	}
 	for id := range targets.repeatable {
-		if result.MaximumCardinality[id] < 2 {
+		if !containsAllInts(result.ExercisedCardinalities[id], result.RequiredCardinalities[id]) {
 			result.CardinalityGaps = append(result.CardinalityGaps, id)
 		}
 	}
 	sort.Strings(result.CardinalityGaps)
 	return result, nil
 }
+
+func requiredCardinalities(bounds occurrenceBounds) []int {
+	maximum := bounds.max
+	if maximum < 0 || maximum > maxOccursSample {
+		maximum = maxOccursSample
+	}
+	required := []int{}
+	if bounds.min == 0 {
+		required = append(required, 0)
+	}
+	if bounds.min <= 1 && maximum >= 1 {
+		required = append(required, 1)
+	}
+	if maximum >= 2 {
+		required = append(required, maximum)
+	}
+	return required
+}
+
+func appendUniqueInt(values []int, value int) []int {
+	for _, existing := range values {
+		if existing == value {
+			return values
+		}
+	}
+	return append(values, value)
+}
+
+func containsAllInts(values, required []int) bool {
+	for _, want := range required {
+		found := false
+		for _, value := range values {
+			if value == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+func fixtureInstantiatesParticleParent(found map[string]int, particleID string) bool {
+	parts := strings.Split(particleID, "|")
+	if len(parts) != 4 {
+		return false
+	}
+	parent := parts[3]
+	if slash := strings.Index(parent, "/"); slash >= 0 {
+		parent = parent[:slash]
+	}
+	complexTypeID := parts[0] + "|" + parts[1] + "|complexType|" + parent
+	return found[complexTypeID] > 0
+}
 func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	var out strings.Builder
 	out.WriteString("# UBL 2.1 schema coverage\n\n")
 	out.WriteString(fmt.Sprintf("Fixtures analyzed: %d\n\n", report.Fixtures))
 
-	out.WriteString("Maximum cardinality is the greatest number of sibling matches for one schema particle under a single parent instance in a fixture.\n\n")
+	out.WriteString("Maximum cardinality is the greatest number of sibling matches for one schema particle under a single parent instance in a fixture. The acceptance gate requires schema-permitted zero (when optional), one, and the schema maximum (capped at five for unbounded particles).\n\n")
 	out.WriteString("Maximum recursive depth is the greatest number of occurrences of the repeated target type along a fixture path.\n\n")
 	out.WriteString("| Construct | Exercised | Total | Coverage |\n|---|---:|---:|---:|\n")
 	keys := make([]string, 0, len(report.Categories))
@@ -620,9 +721,9 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 		}
 	}
 	if len(report.CardinalityGaps) > 0 {
-		out.WriteString("\n## Repeatable particles below the two-occurrence acceptance floor\n\n")
+		out.WriteString("\n## Repeatable particles missing required cardinalities\n\n")
 		for _, id := range report.CardinalityGaps {
-			out.WriteString("- `" + id + "`\n")
+			out.WriteString(fmt.Sprintf("- `%s` (exercised %v; required %v)\n", id, report.ExercisedCardinalities[id], report.RequiredCardinalities[id]))
 		}
 	}
 	if len(report.Unparseable) > 0 {
@@ -645,7 +746,7 @@ func runCoverage(args []string) error {
 	samples := flags.String("samples", filepath.Join("createsamples", "samples-structural"), "structural corpus directory")
 	jsonPath := flags.String("json", "", "required JSON report path")
 	markdownPath := flags.String("markdown", "", "required Markdown report path")
-	requireCardinality := flags.Bool("require-cardinality", true, "fail when a repeatable particle is not exercised at least twice")
+	requireCardinality := flags.Bool("require-cardinality", true, "fail when a repeatable particle misses a schema-required cardinality")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -673,7 +774,7 @@ func runCoverage(args []string) error {
 		return err
 	}
 	if *requireCardinality && len(report.CardinalityGaps) > 0 {
-		return fmt.Errorf("cardinality acceptance failed: %d repeatable particles have fewer than two exercised occurrences (see %s)", len(report.CardinalityGaps), *markdownPath)
+		return fmt.Errorf("cardinality acceptance failed: %d repeatable particles miss required cardinalities (see %s)", len(report.CardinalityGaps), *markdownPath)
 	}
 	return nil
 }

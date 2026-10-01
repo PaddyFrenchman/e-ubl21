@@ -203,7 +203,14 @@ run_corpus() {
     fi
 
     local baseline="$ROOT_DIR/regression/baselines/validation-split/$name.results.jsonl"
-    if [[ -f "$baseline" ]]; then
+    if [[ "$name" == "ubl21-structural" ]]; then
+        echo "Skipping equivalence: structural corpus has no frozen baseline"
+    else
+        if [[ ! -f "$baseline" ]]; then
+            echo "ERROR: required frozen baseline is missing: $baseline" >&2
+            EQUIVALENCE_STATUS=1
+            return
+        fi
         set +e
         "$TEMP_DIR/e-ubl21" regression equivalence \
             --baseline "$baseline" \

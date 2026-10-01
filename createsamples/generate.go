@@ -647,13 +647,9 @@ func occurrenceCount(element xsdElementDecl, state genState, depth int) int {
 	if n < 1 {
 		n = 1
 	}
-	if desired, ok := state.repeatOverrides[elementNameForOccurrence(element)]; ok && depth == 1 && isRepeatableElement(element) {
+	if desired, ok := state.repeatOverrides[elementNameForOccurrence(element)]; ok && isRepeatableElement(element) {
 		n = desired
-		// Targeted and broad cardinality families are deliberately limited to a
-		// document's direct collections. Repeating a same-named nested aggregate
-		// as well would distort the requested count and can create an exponential
-		// document, neither of which is realistic or useful.
-	} else if state.repeatCount > 0 && depth == 1 && isRepeatableElement(element) {
+	} else if state.repeatCount > 0 && isRepeatableElement(element) {
 		n = state.repeatCount
 	}
 	max := parseMaxOccurs(element.MaxOccurs)

@@ -73,9 +73,21 @@ func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 		t.Fatal("coverage Markdown omits zero-cardinality repeatable particles")
 	}
 	if len(first.CardinalityGaps) == 0 {
-		t.Fatal("coverage did not identify repeatable particles below the two-occurrence floor")
+		t.Fatal("coverage did not identify repeatable particles missing required cardinalities")
 	}
-	if !bytes.Contains(data, []byte("Repeatable particles below the two-occurrence acceptance floor")) {
+	if !bytes.Contains(data, []byte("Repeatable particles missing required cardinalities")) {
 		t.Fatal("coverage Markdown omits cardinality acceptance gaps")
+	}
+}
+
+func TestCardinalityRequirementsUseSchemaBounds(t *testing.T) {
+	if got := requiredCardinalities(occurrenceBounds{min: 0, max: 5}); !containsAllInts(got, []int{0, 1, 5}) {
+		t.Fatalf("finite bounds requirements = %v, want 0, 1, and 5", got)
+	}
+	if containsAllInts([]int{0, 1, 2}, requiredCardinalities(occurrenceBounds{min: 0, max: 5})) {
+		t.Fatal("two occurrences satisfied a particle whose schema permits five")
+	}
+	if !containsAllInts([]int{0, 1, 5}, requiredCardinalities(occurrenceBounds{min: 0, max: -1})) {
+		t.Fatal("unbounded particle did not require the capped multiple case")
 	}
 }
