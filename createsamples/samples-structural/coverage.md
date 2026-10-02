@@ -1,6 +1,6 @@
 # UBL 2.1 schema coverage
 
-Fixtures analyzed: 554
+Fixtures analyzed: 578
 
 Maximum cardinality is the greatest number of sibling matches for one schema particle under a single parent instance in a fixture. The acceptance gate records every parent-instance count and requires schema-permitted zero (when optional), one, a multiple case (two or more), and the schema maximum (capped at five for unbounded particles).
 
@@ -9,51 +9,42 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 | Construct | Exercised | Total | Coverage |
 |---|---:|---:|---:|
 | allMembers | 0 | 0 | 100.0% |
-| attributes | 42 | 92 | 45.7% |
-| choiceAlternatives | 7 | 46 | 15.2% |
-| choiceSites | 4 | 15 | 26.7% |
-| complexTypes | 1192 | 1286 | 92.7% |
-| elements | 3911 | 5740 | 68.1% |
-| inheritance | 880 | 916 | 96.1% |
-| optionalAttributes | 35 | 76 | 46.1% |
-| optionalElements | 3378 | 3480 | 97.1% |
+| attributes | 54 | 92 | 58.7% |
+| choiceAlternatives | 25 | 46 | 54.3% |
+| choiceSites | 9 | 15 | 60.0% |
+| complexTypes | 1217 | 1286 | 94.6% |
+| elements | 3953 | 5740 | 68.9% |
+| inheritance | 883 | 916 | 96.4% |
+| optionalAttributes | 45 | 76 | 59.2% |
+| optionalElements | 3408 | 3480 | 97.9% |
 | recursiveEdges | 62 | 84 | 73.8% |
-| repeatableElements | 1014 | 1068 | 94.9% |
-| requiredAttributes | 7 | 16 | 43.8% |
-| requiredElements | 533 | 2260 | 23.6% |
+| repeatableElements | 1033 | 1068 | 96.7% |
+| requiredAttributes | 9 | 16 | 56.2% |
+| requiredElements | 545 | 2260 | 24.1% |
 | roots | 65 | 65 | 100.0% |
-| sequenceMembers | 3904 | 4011 | 97.3% |
+| sequenceMembers | 3928 | 4011 | 97.9% |
 | substitutionGroups | 0 | 0 | 100.0% |
-| wildcards | 2 | 15 | 13.3% |
+| wildcards | 9 | 15 | 60.0% |
 
 ## Uncovered attributes
 
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CRLIdentifierType/@URI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CertIDType/@URI`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CertificateValuesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CompleteCertificateRefsType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CompleteRevocationRefsType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|DataObjectFormatType/@ObjectReference`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|EncapsulatedPKIDataType/@Encoding`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|EncapsulatedPKIDataType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|GenericTimeStampType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IdentifierType/@Qualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@URI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@referencedData`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OCSPIdentifierType/@URI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OtherTimeStampType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@URI`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Target`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|ReferenceInfoType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|ReferenceInfoType/@URI`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|RevocationValuesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedDataObjectPropertiesType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedPropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedSignaturePropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedDataObjectPropertiesType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedPropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedSignaturePropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|XAdESTimeStampType/@Id`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@Id`
@@ -61,14 +52,11 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|KeyInfoType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ManifestType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Encoding`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Id`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@MimeType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Type`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@Type`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertiesType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Id`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Target`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureValueType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignedInfoType/@Id`
@@ -81,10 +69,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 
 ## Uncovered choiceAlternatives
 
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[1]/AllSignedDataObjects`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp`
@@ -93,71 +78,44 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[0]/ByName`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[0]/SignaturePolicyId`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[1]/SignaturePolicyImplied`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[0]`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[1]`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 
 ## Uncovered choiceSites
 
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|CertificateValuesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|CommitmentTypeIndicationType/choice[0]`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|GenericTimeStampType/choice[0]`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|GenericTimeStampType/choice[1]`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|OtherTimeStampType/choice[0]`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|ResponderIDType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|SignaturePolicyIdentifierType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|UnsignedSignaturePropertiesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|XAdESTimeStampType/choice[0]`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|PGPDataType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|SignaturePropertyType`
 
 ## Uncovered complexTypes
 
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|AnyType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CRLIdentifierType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CRLRefType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CRLRefsType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CRLValuesType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CertIDListType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CertIDType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CertificateValuesType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CertifiedRolesListType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|ClaimedRolesListType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CommitmentTypeIndicationType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CommitmentTypeQualifiersListType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CompleteCertificateRefsType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CompleteRevocationRefsType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|CounterSignatureType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|DataObjectFormatType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|DigestAlgAndValueType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|DocumentationReferencesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|EncapsulatedPKIDataType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|GenericTimeStampType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|IdentifierType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|IncludeType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|IntegerListType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|NoticeReferenceType`
@@ -165,39 +123,21 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OCSPRefType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OCSPRefsType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OCSPValuesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|ObjectIdentifierType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OtherCertStatusRefsType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OtherCertStatusValuesType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|OtherTimeStampType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|QualifierType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|QualifyingPropertiesReferenceType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|QualifyingPropertiesType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|ReferenceInfoType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|ResponderIDType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|RevocationValuesType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SPUserNoticeType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SigPolicyQualifiersListType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignaturePolicyIdType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignaturePolicyIdentifierType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignatureProductionPlaceType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignedDataObjectPropertiesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignedPropertiesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignedSignaturePropertiesType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|SignerRoleType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|UnsignedDataObjectPropertiesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|UnsignedPropertiesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|UnsignedSignaturePropertiesType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|XAdESTimeStampType`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|complexType|ValidationDataType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|DSAKeyValueType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|HMACOutputLengthType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|ManifestType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|ObjectType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|PGPDataType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SPKIDataType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignaturePropertiesType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignaturePropertyType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|X509IssuerSerialType`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|complexType|PerformanceDataLineType`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|complexType|PerformanceValueQuantityType`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|complexType|ReferencedSignatureIDType`
@@ -240,17 +180,12 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[0]/DigestAlgAndValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[1]/CRLIdentifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[0]/CertDigest`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[1]/IssuerSerial`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[1]/AllSignedDataObjects`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[0]/CommitmentTypeId`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[1]/CommitmentTypeQualifiers`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteCertificateRefsType/sequence[0]/CertRefs`
@@ -262,8 +197,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[1]/ObjectIdentifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[2]/MimeType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[3]/Encoding`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[0]/DigestMethod`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[1]/DigestValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo`
@@ -279,7 +212,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[1]/DigestAlgAndValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[0]/Identifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[1]/Description`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[2]/DocumentationReferences`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef`
@@ -288,59 +220,41 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[1]/CanonicalizationMethod`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[0]/SignedProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[1]/UnsignedProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[0]/DigestMethod`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[1]/DigestValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[0]/ByName`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[0]/CRLValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[1]/OCSPValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[2]/OtherValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[0]/NoticeRef`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[1]/ExplicitText`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[0]/SigPolicyId`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[1]/Transforms`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[2]/SigPolicyHash`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[3]/SigPolicyQualifiers`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[0]/SignaturePolicyId`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[1]/SignaturePolicyImplied`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[0]/City`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[1]/StateOrProvince`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[2]/PostalCode`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[3]/CountryName`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[0]/SignedSignatureProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[1]/SignedDataObjectProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[0]/SigningTime`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[1]/SigningCertificate`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[2]/SignaturePolicyIdentifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[3]/SignatureProductionPlace`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[4]/SignerRole`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[0]/ClaimedRoles`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[1]/CertifiedRoles`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[0]/UnsignedSignatureProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[1]/UnsignedDataObjectProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[1]/CanonicalizationMethod`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AllDataObjectsTimeStamp/AllDataObjectsTimeStamp`
@@ -389,29 +303,13 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/G`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[0]/P`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[1]/Q`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/Y`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[0]/Seed`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[1]/PgenCounter`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[2]/J`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[1]/X509SerialNumber`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/CanonicalizationMethod/CanonicalizationMethod`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DSAKeyValue/DSAKeyValue`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DigestMethod/DigestMethod`
@@ -2066,10 +1964,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 
 ## Uncovered inheritance
 
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|EncapsulatedPKIDataType->#base64Binary`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|IdentifierType->#anyURI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|OtherTimeStampType->http://uri.etsi.org/01903/v1.3.2##GenericTimeStampType`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|XAdESTimeStampType->http://uri.etsi.org/01903/v1.3.2##GenericTimeStampType`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|inheritance|PerformanceValueQuantityType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#QuantityType`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|inheritance|ReferencedSignatureIDType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|AmountType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#AmountType`
@@ -2107,26 +2002,18 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CRLIdentifierType/@URI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CertIDType/@URI`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CertificateValuesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CompleteCertificateRefsType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|CompleteRevocationRefsType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|EncapsulatedPKIDataType/@Encoding`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|EncapsulatedPKIDataType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|GenericTimeStampType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IdentifierType/@Qualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@referencedData`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OCSPIdentifierType/@URI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OtherTimeStampType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|ReferenceInfoType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|ReferenceInfoType/@URI`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|RevocationValuesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedDataObjectPropertiesType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedPropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|SignedSignaturePropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedDataObjectPropertiesType/@Id`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedPropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|UnsignedSignaturePropertiesType/@Id`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|XAdESTimeStampType/@Id`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@Id`
@@ -2134,8 +2021,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|KeyInfoType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ManifestType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Encoding`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Id`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@MimeType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Type`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@Type`
@@ -2151,10 +2036,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[2]/Number`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[1]/CRLIdentifier`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[1]/AllSignedDataObjects`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[1]/CommitmentTypeQualifiers`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteRevocationRefsType/sequence[0]/CRLRefs`
@@ -2176,53 +2058,37 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[1]/CanonicalizationMethod`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[0]/SignedProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[1]/UnsignedProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[0]/ByName`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[0]/CRLValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[1]/OCSPValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[2]/OtherValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[0]/NoticeRef`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[1]/ExplicitText`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[1]/Transforms`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[3]/SigPolicyQualifiers`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[0]/SignaturePolicyId`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdentifierType/choice[1]/SignaturePolicyImplied`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[0]/City`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[1]/StateOrProvince`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[2]/PostalCode`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[3]/CountryName`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[0]/SignedSignatureProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[1]/SignedDataObjectProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[0]/SigningTime`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[1]/SigningCertificate`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[2]/SignaturePolicyIdentifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[3]/SignatureProductionPlace`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[4]/SignerRole`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[0]/ClaimedRoles`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[1]/CertifiedRoles`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[0]/UnsignedSignatureProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[1]/UnsignedDataObjectProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[1]/CanonicalizationMethod`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[0]/CertificateValues`
@@ -2233,20 +2099,9 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[0]/Seed`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[1]/PgenCounter`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[2]/J`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[4]/Period`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[5]/Item`
@@ -2280,13 +2135,10 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 ## Uncovered repeatableElements
 
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
@@ -2301,7 +2153,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
@@ -2309,29 +2160,14 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
 
 ## Uncovered requiredAttributes
@@ -2339,8 +2175,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|DataObjectFormatType/@ObjectReference`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@URI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@URI`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Target`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Target`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|GraphicType/@mimeCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|PictureType/@mimeCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|SoundType/@mimeCode`
@@ -2352,17 +2186,13 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLIdentifierType/sequence[1]/IssueTime`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[0]/DigestAlgAndValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[0]/CertDigest`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[1]/IssuerSerial`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[0]/CommitmentTypeId`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteCertificateRefsType/sequence[0]/CertRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CounterSignatureType/sequence[0]/Signature`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[0]/DigestMethod`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[1]/DigestValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|NoticeReferenceType/sequence[0]/Organization`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|NoticeReferenceType/sequence[1]/NoticeNumbers`
@@ -2371,15 +2201,12 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[0]/OCSPIdentifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[0]/Identifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[0]/DigestMethod`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[1]/DigestValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[0]/SigPolicyId`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[2]/SigPolicyHash`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/AllDataObjectsTimeStamp/AllDataObjectsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/Any/Any`
@@ -2422,12 +2249,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/XAdESTimeStamp/XAdESTimeStamp`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/ArchiveTimeStampV2/ArchiveTimeStampV2`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/TimeStampValidationData/TimeStampValidationData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/Y`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[1]/X509SerialNumber`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/CanonicalizationMethod/CanonicalizationMethod`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DSAKeyValue/DSAKeyValue`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/DigestMethod/DigestMethod`
@@ -4084,13 +3906,11 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[0]/DigestAlgAndValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefType/sequence[1]/CRLIdentifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[0]/CertDigest`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDType/sequence[1]/IssuerSerial`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[0]/CommitmentTypeId`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/sequence[1]/CommitmentTypeQualifiers`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CompleteCertificateRefsType/sequence[0]/CertRefs`
@@ -4102,8 +3922,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[1]/ObjectIdentifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[2]/MimeType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DataObjectFormatType/sequence[3]/Encoding`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[0]/DigestMethod`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DigestAlgAndValueType/sequence[1]/DigestValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/sequence[0]/CanonicalizationMethod`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|IntegerListType/sequence[0]/int`
@@ -4115,46 +3933,34 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefType/sequence[1]/DigestAlgAndValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[0]/Identifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[1]/Description`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ObjectIdentifierType/sequence[2]/DocumentationReferences`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusRefsType/sequence[0]/OtherRef`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[1]/CanonicalizationMethod`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[0]/SignedProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|QualifyingPropertiesType/sequence[1]/UnsignedProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[0]/DigestMethod`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ReferenceInfoType/sequence[1]/DigestValue`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[0]/CRLValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[1]/OCSPValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|RevocationValuesType/sequence[2]/OtherValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[0]/NoticeRef`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SPUserNoticeType/sequence[1]/ExplicitText`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[0]/SigPolicyId`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[1]/Transforms`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[2]/SigPolicyHash`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignaturePolicyIdType/sequence[3]/SigPolicyQualifiers`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[0]/City`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[1]/StateOrProvince`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[2]/PostalCode`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignatureProductionPlaceType/sequence[3]/CountryName`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[0]/SignedSignatureProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedPropertiesType/sequence[1]/SignedDataObjectProperties`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[0]/SigningTime`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[1]/SigningCertificate`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[2]/SignaturePolicyIdentifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[3]/SignatureProductionPlace`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedSignaturePropertiesType/sequence[4]/SignerRole`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[0]/ClaimedRoles`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignerRoleType/sequence[1]/CertifiedRoles`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[0]/UnsignedSignatureProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedPropertiesType/sequence[1]/UnsignedDataObjectProperties`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[1]/CanonicalizationMethod`
@@ -4163,21 +3969,13 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/G`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[0]/P`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[0]/sequence[1]/Q`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/Y`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[0]/Seed`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[1]/PgenCounter`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[2]/J`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[1]/X509SerialNumber`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[0]/ID`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[2]/PerformanceValueQuantity`
@@ -4188,30 +3986,20 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 
 ## Uncovered wildcards
 
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|any|AnyType/sequence`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|any|UnsignedSignaturePropertiesType/choice`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|CanonicalizationMethodType/sequence`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|DigestMethodType/sequence`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|KeyInfoType/choice`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|KeyValueType/choice`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|ObjectType/sequence`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|PGPDataType/sequence[0]/sequence`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|PGPDataType/sequence[1]/sequence`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SPKIDataType/sequence`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SignatureMethodType/sequence`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SignaturePropertyType/choice`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|X509DataType/choice[0]/choice`
 
 ## Repeatable particles with zero exercised occurrences
 
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include`
@@ -4226,7 +4014,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty`
@@ -4234,47 +4021,32 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
 
 ## Repeatable particles missing required cardinalities
 
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLRefsType/sequence[0]/CRLRef` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CRLValuesType/sequence[0]/EncapsulatedCRLValue` (exercised [1]; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertIDListType/sequence[0]/Cert` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate` (exercised []; required [0 1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[0]/EncapsulatedX509Certificate` (exercised [1]; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertificateValuesType/choice[1]/OtherCertificate` (exercised [0]; required [0 1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CertifiedRolesListType/sequence[0]/CertifiedRole` (exercised []; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ClaimedRolesListType/sequence[0]/ClaimedRole` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeIndicationType/choice[0]/choice[0]/ObjectReference` (exercised [0 1]; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|CommitmentTypeQualifiersListType/sequence[0]/CommitmentTypeQualifier` (exercised []; required [0 1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|DocumentationReferencesType/sequence[0]/DocumentationReference` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include` (exercised []; required [0 1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo` (exercised []; required [0 1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[1]/XMLTimeStamp` (exercised []; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[0]/Include` (exercised [0]; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[0]/choice[1]/ReferenceInfo` (exercised [0]; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[0]/EncapsulatedTimeStamp` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|GenericTimeStampType/choice[1]/choice[1]/XMLTimeStamp` (exercised [0]; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|IntegerListType/sequence[0]/int` (exercised []; required [0 1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPRefsType/sequence[0]/OCSPRef` (exercised []; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OCSPValuesType/sequence[0]/EncapsulatedOCSPValue` (exercised []; required [1 2 5])
@@ -4282,46 +4054,46 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherCertStatusValuesType/sequence[0]/OtherValue` (exercised []; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/sequence[0]/ReferenceInfo` (exercised []; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SigPolicyQualifiersListType/sequence[0]/SigPolicyQualifier` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat` (exercised []; required [0 1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication` (exercised []; required [0 1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp` (exercised []; required [0 1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[0]/DataObjectFormat` (exercised [0]; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[1]/CommitmentTypeIndication` (exercised [1]; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[2]/AllDataObjectsTimeStamp` (exercised [0]; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|SignedDataObjectPropertiesType/sequence[3]/IndividualDataObjectsTimeStamp` (exercised [0]; required [0 1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedDataObjectPropertiesType/sequence[0]/UnsignedDataObjectProperty` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp` (exercised []; required [1 2 5])
-- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include` (exercised []; required [0 1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[0]/CounterSignature` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[10]/AttrAuthoritiesCertValues` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[11]/AttributeRevocationValues` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[12]/ArchiveTimeStamp` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[1]/SignatureTimeStamp` (exercised [0 1]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[2]/CompleteCertificateRefs` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[3]/CompleteRevocationRefs` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[4]/AttributeCertificateRefs` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[5]/AttributeRevocationRefs` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[6]/SigAndRefsTimeStamp` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[7]/RefsOnlyTimeStamp` (exercised [0]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[8]/CertificateValues` (exercised [0 1]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|UnsignedSignaturePropertiesType/choice[9]/RevocationValues` (exercised [0 1]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp` (exercised [0 1]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp` (exercised [0 1]; required [1 2 5])
+- `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include` (exercised [0]; required [0 1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName` (exercised [0 1]; required [1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue` (exercised [0 1]; required [1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod` (exercised [0 1]; required [1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data` (exercised [0 1]; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData` (exercised [0]; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData` (exercised [0]; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData` (exercised [0]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData` (exercised [0 1]; required [1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object` (exercised [0]; required [0 1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp` (exercised [1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty` (exercised [1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object` (exercised [1]; required [0 1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference` (exercised [1]; required [1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath` (exercised [0 1]; required [0 1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform` (exercised [1]; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial` (exercised [0]; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI` (exercised [0]; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName` (exercised [1]; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate` (exercised [0]; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL` (exercised [0]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL` (exercised [0 1]; required [1 2 5])
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ActivityDataLineType/sequence[7]/SalesItem` (exercised [1]; required [1 2 5])
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AddressType/sequence[24]/AddressLine` (exercised [0 1]; required [0 1 2 5])
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AddressType/sequence[26]/LocationCoordinate` (exercised [0 1]; required [0 1 2 5])

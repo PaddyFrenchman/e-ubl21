@@ -9,24 +9,24 @@ coverage. The exhaustive, machine-readable list is
 `createsamples/samples-structural/coverage.md`. Both are regenerated with the
 corpus and take precedence over the counts in this document.
 
-The current report analyzes 554 fixtures. It records 4,134 uncovered targets:
+The current report analyzes 578 fixtures. It records 3,925 uncovered targets:
 
 | Target kind | Remaining |
 |---|---:|
-| attributes | 50 |
-| choice alternatives | 39 |
-| choice sites | 11 |
-| complex types | 94 |
-| elements | 1,829 |
-| inheritance edges | 36 |
-| optional attributes | 41 |
-| optional elements | 102 |
+| attributes | 38 |
+| choice alternatives | 21 |
+| choice sites | 6 |
+| complex types | 69 |
+| elements | 1,787 |
+| inheritance edges | 33 |
+| optional attributes | 31 |
+| optional elements | 72 |
 | recursive edges | 22 |
-| repeatable elements | 54 |
-| required attributes | 9 |
-| required elements | 1,727 |
-| sequence members | 107 |
-| wildcards | 13 |
+| repeatable elements | 35 |
+| required attributes | 7 |
+| required elements | 1,715 |
+| sequence members | 83 |
+| wildcards | 6 |
 
 ## Review classification
 
@@ -34,9 +34,8 @@ The current report analyzes 554 fixtures. It records 4,134 uncovered targets:
 
 These targets are schema-reachable and are not approved as unsupported:
 
-- The remaining XMLDSig choices and attributes: PGP, SPKI, management data,
-  DSA, X.509 issuer/SKI/certificate/CRL branches, signature-object and
-  signature-property attributes, and associated wildcard positions.
+- The remaining XMLDSig signature-object and signature-property branches and
+  attributes, plus their associated wildcard positions.
 - The remaining XAdES 1.3.2 and 1.4.1 qualification graph: certificate and
   revocation references and values, policy qualifiers, signer roles,
   counter-signatures, timestamp/reference forms, validation data, and their
@@ -44,7 +43,7 @@ These targets are schema-reachable and are not approved as unsupported:
 - Uncovered wildcards, recursive edges, and cardinality combinations identified
   in the generated register.
 - UBL document content not present in the representative root fixtures,
-  including the 1,727 required-element targets and 1,829 total element targets.
+  including the 1,715 required-element targets and 1,787 total element targets.
 
 These are ordinary coverage gaps. They must remain visible in the generated
 register and should be addressed by adding XSD-valid fixtures, not by excluding

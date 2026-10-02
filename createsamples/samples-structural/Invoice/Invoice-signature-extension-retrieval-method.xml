@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:sac="urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2" xmlns:sig="urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2" xmlns:struct="urn:e-ubl21:structural-fixture">
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:sac="urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2" xmlns:sig="urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2" xmlns:struct="urn:e-ubl21:structural-fixture" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#">
     <ext:UBLExtensions>
         <ext:UBLExtension>
             <cbc:ID schemeAgencyID="ID-001" schemeAgencyName="Value of schemeAgencyName" schemeDataURI="Value of schemeDataURI" schemeID="ID-001" schemeName="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001">ID-001</cbc:ID>
@@ -33,6 +33,40 @@
                             <ds:KeyInfo>
                                 <ds:RetrievalMethod URI="#key"></ds:RetrievalMethod>
                             </ds:KeyInfo>
+                            <ds:Object Id="object-1" MimeType="application/xml">
+                                <ds:SignatureProperties>
+                                    <ds:SignatureProperty Target="#signature">
+                                        <struct:Property>sample</struct:Property>
+                                    </ds:SignatureProperty>
+                                </ds:SignatureProperties>
+                                <xades:QualifyingProperties Id="qualifying-properties" Target="#signature">
+                                    <xades:SignedProperties Id="signed-properties">
+                                        <xades:SignedSignatureProperties>
+                                            <xades:SigningTime>2026-10-02T00:00:00Z</xades:SigningTime>
+                                            <xades:SignaturePolicyIdentifier>
+                                                <xades:SignaturePolicyImplied></xades:SignaturePolicyImplied>
+                                            </xades:SignaturePolicyIdentifier>
+                                        </xades:SignedSignatureProperties>
+                                        <xades:SignedDataObjectProperties>
+                                            <xades:CommitmentTypeIndication>
+                                                <xades:CommitmentTypeId>
+                                                    <xades:Identifier Qualifier="OIDAsURI">urn:e-ubl21:commitment</xades:Identifier>
+                                                </xades:CommitmentTypeId>
+                                                <xades:AllSignedDataObjects></xades:AllSignedDataObjects>
+                                            </xades:CommitmentTypeIndication>
+                                        </xades:SignedDataObjectProperties>
+                                    </xades:SignedProperties>
+                                    <xades:UnsignedProperties Id="unsigned-properties">
+                                        <xades:UnsignedSignatureProperties>
+                                            <xades:RevocationValues Id="revocations">
+                                                <xades:CRLValues>
+                                                    <xades:EncapsulatedCRLValue>Y3Js</xades:EncapsulatedCRLValue>
+                                                </xades:CRLValues>
+                                            </xades:RevocationValues>
+                                        </xades:UnsignedSignatureProperties>
+                                    </xades:UnsignedProperties>
+                                </xades:QualifyingProperties>
+                            </ds:Object>
                         </ds:Signature>
                     </sac:SignatureInformation>
                 </sig:UBLDocumentSignatures>
