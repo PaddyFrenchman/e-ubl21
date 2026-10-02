@@ -2,6 +2,20 @@
 Date: 2026-10-02
 Status: proposed roadmap; worldwide support is the target, not a current product claim.
 
+## Approved scope update — 2026-10-02
+The user has narrowed implementation and documentation to countries with published Peppol specifications or explicit country-specific rules in the official Peppol artefacts. This supersedes the earlier worldwide/all-ISO inventory target and any all-countries requirement below: “all” now means all countries in this published Peppol inventory.
+Do not research or implement every country's wider national invoicing legislation as part of this task.
+
+Initial verified inventory:
+- Dedicated jurisdiction profiles: Australia (AU), New Zealand (NZ), Japan (JP), Malaysia (MY), Singapore (SG), Oman (OM), United Arab Emirates (AE).
+- Additional countries with national or identifier rules in the inspected BIS Billing catalogue: Germany (DE), Denmark (DK), Greece (GR), Iceland (IS), Italy (IT), Netherlands (NL), Norway (NO), Sweden (SE), Belgium (BE).
+- Shared EU BIS/PINT profiles are common resources, not an additional country.
+
+This is 16 countries, with different coverage types. Belgium's identifier-format rule is not a standalone national invoice specification. Australia also has a common identifier rule and is counted only once.
+Inventory must be refreshed against official published releases. Add a country only with an authoritative published profile or rule reference. Membership in the Peppol network alone does not establish a separate country ruleset.
+
+Create one Markdown implementation resource per country, backed by versioned official rules/assets. Shared profiles and expressions may be referenced from shared resources. Createsamples must cover every supported country/profile in this narrowed inventory. Document scope limits explicitly; Peppol profile support does not establish all national tax obligations.
+
 ## Objective
 Cover every country through an explicit, maintained inventory and a verifiable implementation plan. No country may be silently omitted or declared supported solely because generic UBL or Peppol Billing validation passes.
 
