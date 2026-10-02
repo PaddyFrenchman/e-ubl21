@@ -128,3 +128,32 @@ Every remaining scenario has a named gap and development package. Worldwide impl
 - [Provider routing plan](PEPPOL-ROUTE.md)
 - [Access Point accreditation](PEPPOL-CERTIFICATION.md)
 - [ISO and Peppol certification requirements](ISO-27001-CERTIFICATION.md)
+
+## Mandatory Createsamples enhancement
+Createsamples MUST be amended to generate samples for every country/jurisdiction in the coverage registry. It remains the main generation engine; separate country scripts must not become independent generators.
+
+### Generator requirements
+- Read the versioned jurisdiction/profile registry and expose country, profile and ruleset-release selection.
+- Provide full-inventory generation and selective regeneration for one country/profile.
+- Use shared generation primitives with country-specific data, constraints and controlled mutations.
+- Generate valid and intentionally invalid examples for each implemented country rule and supported business scenario.
+- Include supplier/buyer country combinations and domestic/cross-border applicability cases.
+- Pin input rulesets, deterministic seed and generator version so regeneration is reproducible.
+- Produce country/profile manifests containing fixture ID, jurisdiction/applicability context, document type, file/hash, ruleset identity, expected stages/outcomes and expected diagnostics.
+- Produce a generation summary accounting for every registry entry: generated, not applicable with evidence, or blocked with an explicit missing implementation.
+- Fail complete-coverage generation when required country/profile packages are missing; never fill gaps with generic UBL samples labelled country-compliant.
+- Enforce file-size/resource budgets and use the controlled large-artefact workflow where needed.
+
+A proposed command contract should support selectors equivalent to country, profile, release, seed and all-countries. Final CLI names must follow the existing Createsamples conventions; this document does not claim such flags already exist.
+
+### Regression integration
+Ordinary regression runs consume the generated country manifests without regeneration. A full-country suite ingests all fixtures through UBL21 and checks applicable stages, expected rule evidence and structured failures.
+Provider transport and tax-reporting examples are exercised through separate integration harnesses; Createsamples produces their document inputs but does not itself prove network delivery or clearance.
+
+### Acceptance criteria
+1. Each country is explicitly accounted for in full-generation output.
+2. Each supported country/profile has valid and invalid fixtures and declared rule/scenario coverage.
+3. Identical pinned inputs reproduce identical document bytes and hashes.
+4. Invalid mutations fail the intended rule/stage; unexpected additional failures are recorded and reviewed.
+5. Regression failures identify country, profile/release, fixture, expected/actual evidence and reproduction instructions.
+6. Missing national support blocks a complete-coverage claim.
