@@ -37,3 +37,14 @@ Publish exact supported scenarios and limitations. Profile catalogue presence is
 - [Worldwide development plan](../../country-support.md)
 - [Official sources catalogue](../../PEPPOL-OFFICIAL-SPECS.md)
 - [Shared national-rule methodology](README.md)
+
+## Detailed extraction: first verified increment
+The invoice validation catalogue separates shared PINT rules from the SG aligned rules. The SG rule page is labelled 1.4.0 while the profile landing page is 1.4.1; record both and resolve the release package before assigning a ruleset identity. Receiver capability affects whether jurisdiction-specific rules are applied. Do not make supplier country the sole selector. Complete SG rule expressions remain to be extracted.
+
+### Direct implementation resources
+- [Profile](https://docs.peppol.eu/poac/sg/pint-sg/)
+- [Invoice business rules](https://docs.peppol.eu/poac/sg/pint-sg/trn-invoice/businessrule/)
+- [Shared/jurisdiction Schematron catalogue](https://docs.peppol.eu/poac/sg/pint-sg/trn-invoice/rule/)
+- [Jurisdiction aligned rule index](https://docs.peppol.eu/poac/sg/pint-sg/trn-invoice/rule/PINT-jurisdiction-aligned-rules/)
+
+Generation must include missing/wrong profile identifiers, shared-rule failures and jurisdiction-only failures, plus receiving-capability applicability cases. Preserve the exact official expressions in separately acquired original assets; prose anchors are explanatory.
