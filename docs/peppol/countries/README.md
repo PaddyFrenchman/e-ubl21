@@ -1,25 +1,28 @@
-# Country resource index for Codex
-Checked: 2026-10-02
-Status: generation in progress; full specification extraction is not complete.
+# Peppol country resources for Codex
 
-## Current files
-- [Australia](AU.md)
-- [New Zealand](NZ.md)
-- [Japan](JP.md)
-- [Malaysia](MY.md)
-- [Singapore](SG.md)
-- [Oman](OM.md)
-- [United Arab Emirates](AE.md)
+Extraction snapshot: 2026-10-02. Country-specific inventory: 16 countries, plus the shared EU profile. This is not a geographic restriction on standard BIS Billing use.
 
-JP, MY, SG, AU and NZ now include verified rule/applicability anchors and direct rule-catalogue links. OM and AE currently contain profile overviews. EU/BIS national-rule country annexes and additional national profiles remain outstanding.
+All assertions/reports in the acquired Schematron packages are extracted, with contexts, tests, scoped/global definitions, severities and source checksums. Full narrative standards are not reproduced. Implementation, generated fixtures and regression qualification remain separate work.
 
-## Shared applicability requirement
-The official BIS national-rule methodology prioritises the seller VAT country prefix, then the tax-representative VAT country prefix, then seller address country. Do not replace this with a supplier postal-country-only check. Specific pinned XPath expressions remain authoritative.
-PINT jurisdiction selection also depends on specification identity and receiver capabilities. Do not apply BIS methodology universally to every PINT profile.
+| Country | Resource |
+| --- | --- |
+| Australia | [AU](AU.md) |
+| New Zealand | [NZ](NZ.md) |
+| Japan | [JP](JP.md) |
+| Malaysia | [MY](MY.md) |
+| Singapore | [SG](SG.md) |
+| Oman | [OM](OM.md) |
+| United Arab Emirates | [AE](AE.md) |
+| Germany | [DE](DE.md) |
+| Denmark | [DK](DK.md) |
+| Greece | [GR](GR.md) |
+| Iceland | [IS](IS.md) |
+| Italy | [IT](IT.md) |
+| Netherlands | [NL](NL.md) |
+| Norway | [NO](NO.md) |
+| Sweden | [SE](SE.md) |
+| Belgium | [BE](BE.md) |
 
-## Generation completion gates
-Extract every applicable rule and dependency from pinned official assets; document expression/severity and version; map valid/invalid/other-country fixtures through Createsamples; verify licence and source hashes. Account for unresolved profiles explicitly.
-This index and the country overviews are not proof of complete coverage.
+[Shared EU resources](EU.md) · [Extraction verification](../extracted/VERIFICATION.md) · [Package manifest](../extracted/PACKAGE-MANIFEST.md)
 
-[Official national-rule methodology](https://docs.peppol.eu/poacc/billing/3.0/national-rules/)
-[Worldwide plan](../../country-support.md)
+Country determination is rule-specific. For this BIS release, generic supplierCountry uses VAT prefix, tax-representative VAT prefix, then postal country; Germany has separate postal-country booleans. Never substitute a single country heuristic for all rules.

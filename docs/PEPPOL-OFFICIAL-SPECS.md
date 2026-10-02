@@ -146,3 +146,8 @@ For every profile and every country represented in the ruleset, the eventual col
 9. Licence, original-source links and checksums.
 
 Current completion status: the source catalogue is gathered; full country annex extraction and acquisition of every original jurisdiction package are not yet completed. Those tasks belong in the worldwide support plan. Countries without a Peppol-specific profile still require official national requirements research; no country-specific Peppol specification should be invented for them.
+
+
+## Executable-rule resources — 2026-10-02
+
+The [country index](peppol/countries/README.md) now links extracted contexts, assertions, severities and scoped/global dependencies. The [package manifest](peppol/extracted/PACKAGE-MANIFEST.md) pins official ZIP and member checksums, versions, schemas, code lists and examples. The [verification report](peppol/extracted/VERIFICATION.md) records completeness counts. This is executable-rule extraction, not a verbatim reproduction of narrative specifications or a claim of implemented profile support.

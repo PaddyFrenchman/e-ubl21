@@ -1,39 +1,41 @@
-# Oman: Peppol country resource
-Country code: OM
-Checked: 2026-10-02
-Status: verified official-profile overview; detailed normative rule extraction is incomplete.
-Implementation status: this resource does not establish that these profiles are implemented in UBL21.
+# Oman — Peppol implementation resource
 
-## Official specifications
-[Official country portal](https://docs.peppol.eu/poac/om/)
-Published families: PINT OM Billing, Self-Billing and Tax Data Document 1.0.1.
-[OpenPeppol release directory](https://peppol.org/documentation/technical-documentation/post-award-documentation/)
+Extraction date: 2026-10-02. [Rule selection contract](../COUNTRY-OVERLAY-RULES.md).
 
-## Country-specific findings
-TDD is a report to the Oman tax authority, not an invoice exchanged between trading partners. Self-billing uses the Billing semantic model with additional process constraints.
+Select the declared supported profile and its release; country alone does not select a validator. Preserve the exact contexts and scoped dependencies in the linked technical extraction.
 
-## Instructions for Codex
-Use this file as an entry point. Retrieve the exact versioned official profile before implementing requirements. Do not infer tax rates, field cardinality, identifier formats, effective dates or CustomizationID/ProfileID values from country names or generic EU Billing rules.
-Follow each portal's Billing/Self-Billing/TDD links as applicable, then collect semantic model, syntax mapping, rules, code lists, validation assets and official examples. Record their immutable provenance and licence.
-Existing UBL21 support for EU BIS Billing 3.0.21 does not automatically implement this jurisdiction profile.
+## BIS Billing 3.0.21
 
-## Required detailed annex
-Record every applicable rule's ID, applicability, severity, test condition and implementation/test mapping. Separate common PINT rules from jurisdiction rules. Document unresolved facts; this annex is pending.
-Confirm accepted invoice/credit-note scenarios, business roles, currencies, rounding, identifiers, taxes, corrections and domestic/cross-border constraints from official assets.
-Assess national requirements beyond the Peppol payload separately using the relevant Authority's publications.
+Always include [all 63 common assertions](../extracted/COMMON-BIS-RULES.md) and [global definitions](../extracted/BIS-DEPENDENCIES.md) when BIS Billing is the declared profile. These include country-dependent exceptions and identifier checks. Do not universally apply BIS rules to PINT specialisations.
 
-## Createsamples requirements
-Add explicit OM and versioned-profile selection to the common engine.
-Generate valid minimal/rich documents and deliberate invalid mutations for each implemented national rule. Include supplier/buyer country applicability and cases where national rules must not fire.
-Use distinct fixtures for each document/process family. Manifests must retain country/profile/ruleset identity, input hashes, expected stages, outcomes and diagnostics.
-Missing rules/profile support blocks a country-qualified claim; generic UBL samples must not be relabelled compliant.
+## Jurisdiction-specific packages
 
-## Qualification gates
-Pin original assets and hashes; verify official examples; compare validator results against authoritative rules; run the corpus through UBL21's public API.
-Provider delivery and authority reporting require separate integration qualification.
-Publish exact supported scenarios and limitations. Profile catalogue presence is not certification or national legal-compliance evidence.
+### om/om-tdd 1.0.1
 
-## Related resources
-- [Worldwide development plan](../../country-support.md)
-- [Official sources catalogue](../../PEPPOL-OFFICIAL-SPECS.md)
-- [Shared national-rule methodology](README.md)
+Official package: [https://docs.peppol.eu/poac/om/om-tdd/resources.zip](https://docs.peppol.eu/poac/om/om-tdd/resources.zip). ZIP SHA-256: `8750f70b4ab787ee6ead44103a5ab8030487408420d0ef5e943013c8fa904373`.
+
+- `trn-tdd/schematron/peppol-om-tdd.sch`: 66 assertions, 0 reports; [complete expressions and dependencies](../extracted/pint/ffe8a198e3e60790.md).
+
+### om/pint-om 1.0.1
+
+Official package: [https://docs.peppol.eu/poac/om/pint-om/resources.zip](https://docs.peppol.eu/poac/om/pint-om/resources.zip). ZIP SHA-256: `023f57b9cc13ae641dab0c1726fc8167b86c125837875da98274cc6c0aaf8402`.
+
+- `trn-creditnote/schematron/PINT-UBL-validation-preprocessed.sch`: 170 assertions, 0 reports; [complete expressions and dependencies](../extracted/pint/4e66ec0e7659e82c.md).
+- `trn-creditnote/schematron/PINT-jurisdiction-aligned-rules.sch`: 154 assertions, 1 reports; [complete expressions and dependencies](../extracted/pint/8652075b907b83dc.md).
+- `trn-invoice/schematron/PINT-UBL-validation-preprocessed.sch`: 170 assertions, 0 reports; [complete expressions and dependencies](../extracted/pint/4e66ec0e7659e82c.md).
+- `trn-invoice/schematron/PINT-jurisdiction-aligned-rules.sch`: 154 assertions, 1 reports; [complete expressions and dependencies](../extracted/pint/8652075b907b83dc.md).
+
+### om/pint-om-sb 1.0.1
+
+Official package: [https://docs.peppol.eu/poac/om/pint-om-sb/resources.zip](https://docs.peppol.eu/poac/om/pint-om-sb/resources.zip). ZIP SHA-256: `0f8095fecc15393d792cfddfd4cfc56b58e6fc3588b02b0e7c47df9de5fb532b`.
+
+- `trn-creditnote/schematron/PINT-UBL-validation-preprocessed.sch`: 170 assertions, 0 reports; [complete expressions and dependencies](../extracted/pint/1f91639206c8377a.md).
+- `trn-creditnote/schematron/PINT-jurisdiction-aligned-rules.sch`: 154 assertions, 1 reports; [complete expressions and dependencies](../extracted/pint/ab44bc25c0c52047.md).
+- `trn-invoice/schematron/PINT-UBL-validation-preprocessed.sch`: 170 assertions, 0 reports; [complete expressions and dependencies](../extracted/pint/1f91639206c8377a.md).
+- `trn-invoice/schematron/PINT-jurisdiction-aligned-rules.sch`: 154 assertions, 1 reports; [complete expressions and dependencies](../extracted/pint/ab44bc25c0c52047.md).
+
+## Test and implementation requirements
+
+Each extracted rule defines planned valid/invalid/boundary/non-applicable fixture identifiers. CreateSamples must qualify these by country, profile, release, transaction and rule. Fixture mutations must satisfy or negate the exact XPath while controlling other rules. Manifest expected assertion IDs and severity; run stored fixtures through regression without regeneration. Planned identifiers are not generated samples or proof of support.
+
+Source code lists, schemas and official examples are inventoried with hashes in [the package manifest](../extracted/PACKAGE-MANIFEST.md). Acquire the exact ZIP with the provided downloader; verify the checksum before use. Reuse official Schematron/XSLT rather than independently rewriting validation logic.

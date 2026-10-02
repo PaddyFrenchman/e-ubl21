@@ -96,3 +96,8 @@ Reuse the existing official validator rather than rewriting XPath rules by hand.
 ## Completion gate
 
 This reference currently contains two verified examples and the extraction contract. Full country coverage is not complete. Mark a country/profile implementation-ready only after every applicable assertion and dependency is inventoried, pinned, documented and covered by generated fixtures and regression evidence.
+
+
+## Completed executable-rule extraction — 2026-10-02
+
+The two examples above are supplemented by the [complete extraction index](countries/README.md), [verification report](extracted/VERIFICATION.md) and [package manifest](extracted/PACKAGE-MANIFEST.md). All checks in the listed acquired rule assets are extracted. Fixture generation and regression qualification are not complete; earlier statements about extraction being pending are superseded by this dated update.

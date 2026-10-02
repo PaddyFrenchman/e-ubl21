@@ -171,3 +171,10 @@ Provider transport and tax-reporting examples are exercised through separate int
 4. Invalid mutations fail the intended rule/stage; unexpected additional failures are recorded and reviewed.
 5. Regression failures identify country, profile/release, fixture, expected/actual evidence and reproduction instructions.
 6. Missing national support blocks a complete-coverage claim.
+
+
+## Scope and extraction update — 2026-10-02
+
+The 16-country inventory identifies country-specific resources; it does not restrict common BIS Billing validation to those countries. Standard-profile validation is an EU-27 target wherever the declared supported profile applies. Full national legal/reporting compliance is a separate claim.
+
+[Complete executable-rule extraction](peppol/countries/README.md) now records the listed jurisdiction packages and shared EU resources. CreateSamples enhancements and regression qualification remain required implementation work.
