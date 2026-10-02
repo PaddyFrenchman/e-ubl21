@@ -37,3 +37,14 @@ Publish exact supported scenarios and limitations. Profile catalogue presence is
 - [Worldwide development plan](../../country-support.md)
 - [Official sources catalogue](../../PEPPOL-OFFICIAL-SPECS.md)
 - [Shared national-rule methodology](README.md)
+
+## Detailed extraction: first verified increment
+The A-NZ invoice catalogue separates shared and jurisdiction-aligned rules. National applicability follows the selected specialisation and receiving capability. Its documentation states that invoice references in these rules normally include credit notes and that their Schematrons are identical. Keep separate transaction manifests and verify this against downloaded release bytes. Complete rule expressions and identifiers remain to be extracted.
+
+### Direct implementation resources
+- [Profile](https://docs.peppol.eu/poac/aunz/pint-aunz/)
+- [Invoice business rules](https://docs.peppol.eu/poac/aunz/pint-aunz/trn-invoice/businessrule/)
+- [Shared/jurisdiction Schematron catalogue](https://docs.peppol.eu/poac/aunz/pint-aunz/trn-invoice/rule/)
+- [Jurisdiction aligned rule index](https://docs.peppol.eu/poac/aunz/pint-aunz/trn-invoice/rule/PINT-jurisdiction-aligned-rules/)
+
+Generation must include missing/wrong profile identifiers, shared-rule failures and jurisdiction-only failures, plus receiving-capability applicability cases. Preserve the exact official expressions in separately acquired original assets; prose anchors are explanatory.
