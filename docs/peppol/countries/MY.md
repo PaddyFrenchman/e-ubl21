@@ -37,3 +37,14 @@ Publish exact supported scenarios and limitations. Profile catalogue presence is
 - [Worldwide development plan](../../country-support.md)
 - [Official sources catalogue](../../PEPPOL-OFFICIAL-SPECS.md)
 - [Shared national-rule methodology](README.md)
+
+## Detailed extraction: first verified increment
+Verified profile prefix: urn:peppol:pint:billing-1@my-1 (ALIGNED-IBRP-001-MY). The process rule uses urn:peppol:bis:billing. VAT and AAL/TTX tax subtotals have different requirements: TTX identifies AAL subtotals, which must omit the tax rate. The official rule introduction distinguishes sender obligations from an overseas receiver's advertised capability. Do not impose the complete MY specialisation on a receiver supporting only shared PINT. Exact expressions and remaining rules still require extraction.
+
+### Direct implementation resources
+- [Profile](https://docs.peppol.eu/poac/my/pint-my/)
+- [Invoice business rules](https://docs.peppol.eu/poac/my/pint-my/trn-invoice/businessrule/)
+- [Shared/jurisdiction Schematron catalogue](https://docs.peppol.eu/poac/my/pint-my/trn-invoice/rule/)
+- [Jurisdiction aligned rule index](https://docs.peppol.eu/poac/my/pint-my/trn-invoice/rule/PINT-jurisdiction-aligned-rules/)
+
+Generation must include missing/wrong profile identifiers, shared-rule failures and jurisdiction-only failures, plus receiving-capability applicability cases. Preserve the exact official expressions in separately acquired original assets; prose anchors are explanatory.
