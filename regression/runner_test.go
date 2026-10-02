@@ -127,7 +127,7 @@ func TestRunCorpusWritesFailuresAndReturnsError(t *testing.T) {
 			_, _ = w.Write([]byte(`{"id":"0123456789abcdef0123456789abcdef","profile":"ubl21"}`))
 			return
 		}
-		_, _ = w.Write([]byte(`{"status":"invalid","profile":"ubl21","validationStages":[{"layer":"ubl21-xsd","valid":false,"issues":[{"kind":"xsd-report","severity":"error"}]}]}`))
+		_, _ = w.Write([]byte(`{"status":"invalid","profile":"ubl21","processingAttempts":2,"error":"Bearer secret-token","validationStages":[{"layer":"ubl21-xsd","valid":false,"issues":[{"kind":"xsd-report","severity":"error","message":"Bearer message-token","location":"https://user:pass@example.test/path"}]}]}`))
 	}))
 	defer server.Close()
 	output := t.TempDir()
@@ -147,6 +147,25 @@ func TestRunCorpusWritesFailuresAndReturnsError(t *testing.T) {
 		if _, err := os.Stat(filepath.Join(output, name)); err != nil {
 			t.Errorf("missing %s: %v", name, err)
 		}
+	}
+	diagnostic, readErr := os.ReadFile(filepath.Join(output, "failures", "ubl21.invoice.runner", "diagnostic.json"))
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	for _, want := range []string{`"processingAttempts": 2`, `"validatorDiagnostics"`, "[REDACTED]", "[REDACTED]@"} {
+		if !strings.Contains(string(diagnostic), want) {
+			t.Errorf("diagnostic missing %q: %s", want, diagnostic)
+		}
+	}
+	if strings.Contains(string(diagnostic), "message-token") || strings.Contains(string(diagnostic), "user:pass") {
+		t.Errorf("diagnostic leaks credentials: %s", diagnostic)
+	}
+	runMapBytes, readErr := os.ReadFile(filepath.Join(output, "run-map.jsonl"))
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if strings.Contains(string(runMapBytes), "message-token") || strings.Contains(string(runMapBytes), "user:pass") {
+		t.Errorf("run map leaks credentials: %s", runMapBytes)
 	}
 }
 

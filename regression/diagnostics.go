@@ -13,15 +13,18 @@ import (
 // FailureDiagnostic is a redacted, per-fixture investigation bundle. It is
 // deliberately separate from normalized regression equivalence artifacts.
 type FailureDiagnostic struct {
-	SchemaVersion       int              `json:"schemaVersion"`
-	Fixture             Fixture          `json:"fixture"`
-	Expected            NormalizedResult `json:"expectedVsActual"`
-	UploadID            string           `json:"uploadId,omitempty"`
-	TerminalStatus      string           `json:"terminalStatus"`
-	ObjectStoreKey      string           `json:"objectStoreKey,omitempty"`
-	Classification      string           `json:"classification"`
-	EvidenceBackedCause string           `json:"evidenceBackedCause"`
-	Reproduction        string           `json:"reproduction"`
+	SchemaVersion        int              `json:"schemaVersion"`
+	Fixture              Fixture          `json:"fixture"`
+	Expected             NormalizedResult `json:"expectedVsActual"`
+	UploadID             string           `json:"uploadId,omitempty"`
+	TerminalStatus       string           `json:"terminalStatus"`
+	ObjectStoreKey       string           `json:"objectStoreKey,omitempty"`
+	ProcessingAttempts   int              `json:"processingAttempts,omitempty"`
+	RuntimeError         string           `json:"runtimeError,omitempty"`
+	ValidatorDiagnostics []apiStage       `json:"validatorDiagnostics,omitempty"`
+	Classification       string           `json:"classification"`
+	EvidenceBackedCause  string           `json:"evidenceBackedCause"`
+	Reproduction         string           `json:"reproduction"`
 }
 
 func writeFailureDiagnostics(outputDir, manifestPath, baseURL string, fixtureTimeout time.Duration, fixtures []Fixture, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure) error {
@@ -49,7 +52,7 @@ func writeFailureDiagnostics(outputDir, manifestPath, baseURL string, fixtureTim
 		fixture := fixtureByID[result.FixtureID]
 		entry := mapByID[result.FixtureID]
 		classification, cause := classifyDiagnostic(result, entry, failureByID[result.FixtureID])
-		diagnostic := FailureDiagnostic{SchemaVersion: 1, Fixture: fixture, Expected: result, UploadID: entry.UploadID, TerminalStatus: entry.TerminalStatus, Classification: classification, EvidenceBackedCause: cause,
+		diagnostic := FailureDiagnostic{SchemaVersion: 1, Fixture: fixture, Expected: result, UploadID: entry.UploadID, TerminalStatus: entry.TerminalStatus, ProcessingAttempts: entry.ProcessingAttempts, RuntimeError: redactDiagnostic(entry.RuntimeError), ValidatorDiagnostics: redactStageDiagnostics(entry.ValidatorDiagnostics), Classification: classification, EvidenceBackedCause: cause,
 			Reproduction: fmt.Sprintf("EUBL21_REGRESSION_TOKEN=${EUBL21_REGRESSION_TOKEN:?set_token} go run . regression --base-url %s --manifest %s --profile %s --fixture-id %s --fixture-timeout %s", shellQuote(baseURL), shellQuote(manifestPath), shellQuote(fixture.Profile), shellQuote(fixture.ID), fixtureTimeout)}
 		if entry.UploadID != "" {
 			diagnostic.ObjectStoreKey = "uploads/" + entry.UploadID + "/document.xml"
@@ -93,4 +96,16 @@ func shellQuote(value string) string { return "'" + strings.ReplaceAll(value, "'
 func redactDiagnostic(value string) string {
 	value = credentialURLPattern.ReplaceAllString(value, "://[REDACTED]@")
 	return redactBearer(value)
+}
+
+func redactStageDiagnostics(stages []apiStage) []apiStage {
+	redacted := append([]apiStage(nil), stages...)
+	for index := range redacted {
+		redacted[index].Issues = append([]apiIssue(nil), redacted[index].Issues...)
+		for issueIndex := range redacted[index].Issues {
+			redacted[index].Issues[issueIndex].Message = redactDiagnostic(redacted[index].Issues[issueIndex].Message)
+			redacted[index].Issues[issueIndex].Location = redactDiagnostic(redacted[index].Issues[issueIndex].Location)
+		}
+	}
+	return redacted
 }

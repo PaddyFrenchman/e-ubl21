@@ -256,7 +256,7 @@ func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, toke
 	correlation.TerminalStatus = response.Status
 	correlation.ProcessingAttempts = response.ProcessingAttempts
 	correlation.RuntimeError = redactDiagnostic(response.Error)
-	correlation.ValidatorDiagnostics = response.Stages
+	correlation.ValidatorDiagnostics = redactStageDiagnostics(response.Stages)
 	if response.Profile != fixture.Profile {
 		err := fmt.Errorf("status profile %q does not match requested %q", response.Profile, fixture.Profile)
 		return operationalResult(result, err), correlation, fixtureFailure(fixture.ID, err)
