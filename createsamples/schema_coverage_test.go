@@ -134,6 +134,12 @@ func TestCardinalityRequirementsUseSchemaBounds(t *testing.T) {
 	if containsAllInts([]int{0, 1, 5}, requiredCardinalities(occurrenceBounds{min: 0, max: 5})) {
 		t.Fatal("maximum cardinality did not require a distinct multiple case")
 	}
+	if got := requiredCardinalities(occurrenceBounds{min: 0, max: 10}); !containsAllInts(got, []int{0, 1, 2, 10}) {
+		t.Fatalf("finite maximum above the fixture cap was truncated: got %v, want 0, 1, 2, and 10", got)
+	}
+	if containsAllInts([]int{0, 1, 2, 5}, requiredCardinalities(occurrenceBounds{min: 0, max: 10})) {
+		t.Fatal("five occurrences satisfied a particle whose schema permits ten")
+	}
 	if !containsAllInts([]int{0, 1, 2, 5}, requiredCardinalities(occurrenceBounds{min: 0, max: -1})) {
 		t.Fatal("unbounded particle did not require the capped multiple case")
 	}

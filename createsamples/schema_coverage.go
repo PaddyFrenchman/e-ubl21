@@ -635,7 +635,9 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 
 func requiredCardinalities(bounds occurrenceBounds) []int {
 	maximum := bounds.max
-	if maximum < 0 || maximum > maxOccursSample {
+	// The fixture cap applies only to unbounded particles. A finite schema
+	// maximum is itself the boundary this acceptance check must require.
+	if maximum < 0 {
 		maximum = maxOccursSample
 	}
 	required := []int{}
