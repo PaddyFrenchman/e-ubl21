@@ -76,3 +76,34 @@ Obtain quotations based on entity size, service scope, locations, existing contr
 [Italian Peppol Authority: ISO/IEC 27001 mandatory from 1 July 2027](https://peppol.agid.gov.it/en/news/ISO-IEC-27001-Certification-Mandatory-for-Peppol-Service-Providers-from-1-July-2027/)
 
 The notice links OpenPeppol's dedicated guidance and implementation plan. Confirm applicant-specific requirements directly with the responsible Authority and certification body.
+
+## Peppol Access Point certification requirements
+This checklist complements ISO/IEC 27001; completing ISO certification alone does not authorise operation on the Peppol network.
+
+| Requirement | Evidence / completion criterion |
+| --- | --- |
+| Legal entity and responsible Authority | Corporate registration and confirmation of applicable jurisdiction/service-domain requirements |
+| OpenPeppol service-provider membership | Approved membership in the applicable category; candidate status alone is not production authorisation |
+| Service Provider Agreement | Signed agreement accepted by the responsible Peppol Authority |
+| Test environment and PKI | Authorised test certificates installed, keys protected, and test AP endpoint operational |
+| Peppol-compatible transport | Implementation conforms to applicable Peppol AS4, identifier, message-security and envelope specifications |
+| Discovery and participant registration | Working SML/SMP lookup and an authorised SMP publication arrangement; running our own SMP is a separate choice |
+| Business-document validation | Documents confirmed valid under applicable BIS rules before acceptance for transport; UBL21 pinned release suitability verified |
+| Technical conformance | Required OpenPeppol Testbed tests completed, with retained results and all blocking findings resolved |
+| Authority-specific checks | Additional applicable accreditation, security, onboarding or reporting conditions satisfied |
+| Production authorisation | Required approvals and production PKI credentials obtained under the current Authority process |
+| Operational readiness | Monitoring, incident response, renewal, delivery evidence, recovery and customer-support procedures demonstrated |
+| ISO security certification | Valid ISO/IEC 27001 certificate with appropriate Peppol scope by the applicable deadline and required progress submissions confirmed |
+
+Do not equate provider acceptance or an AS4 transport receipt with recipient business acceptance. Billing Profile 02 also involves Invoice Response in the business process; UBL21 invoice validation does not establish support for validating or exchanging those separate response messages.
+
+### Recommended execution order
+Confirm the Authority and service scope first. Obtain membership/agreement and test access while implementing the ISMS in parallel. Qualify the transport and validation integration in the test environment, complete required accreditation and independent ISO audits, then obtain production authorisation and verify operational readiness.
+
+### Official Peppol references
+- [Membership categories](https://peppol.org/join/membership/)
+- [Access Point onboarding guide, April 2024](https://peppol.org/wp-content/uploads/2024/04/how_to_set-up_a__post-award__peppol_access_point_v2.1.pdf)
+- [Technical conformance and Testbed support](https://peppol.org/support/)
+- [Membership fees](https://peppol.org/join/fees/)
+
+The onboarding guide provides a baseline. Confirm the current applicant-specific requirements with the responsible Authority before treating this checklist as an approved accreditation plan.
