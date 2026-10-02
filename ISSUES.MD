@@ -1144,6 +1144,19 @@ open until final qualification.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/165
 
+### 75. #166 — TEST COVERAGE — Produce per-fixture diagnostics and Codex handoff
+
+**Goal:** Preserve a redacted, independently diagnosable evidence bundle for
+every full-corpus regression failure and generate a Codex-ready handoff index.
+
+**Acceptance:** Each failure includes fixture metadata, expected/actual
+validation evidence, correlation/storage identifiers where available, bounded
+classified diagnostics, and an exact single-fixture reproduction command.
+
+**Dependency:** #165. Parent #160 remains open.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/166
+
 ---
 
 ## Dependency summary

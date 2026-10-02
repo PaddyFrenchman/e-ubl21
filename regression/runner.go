@@ -165,7 +165,7 @@ func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
 		}
 	}
 	summary := summarize(results, runMap)
-	if err := writeArtifacts(cfg.OutputDir, results, runMap, failures, summary); err != nil {
+	if err := writeArtifacts(cfg.OutputDir, cfg.ManifestPath, fixtures, results, runMap, failures, summary); err != nil {
 		return Summary{}, err
 	}
 	if summary.Failed > 0 || len(summary.MissingFixtureIDs) > 0 {
@@ -472,7 +472,7 @@ func isTerminalStatus(status string) bool {
 	}
 }
 
-func writeArtifacts(outputDir string, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure, summary Summary) error {
+func writeArtifacts(outputDir, manifestPath string, fixtures []Fixture, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure, summary Summary) error {
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("create regression output: %w", err)
 	}
@@ -526,7 +526,7 @@ func writeArtifacts(outputDir string, results []NormalizedResult, runMap []RunMa
 			return err
 		}
 	}
-	return nil
+	return writeFailureDiagnostics(outputDir, manifestPath, fixtures, results, runMap, failures)
 }
 
 type junitSuite struct {

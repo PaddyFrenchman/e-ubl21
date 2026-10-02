@@ -143,6 +143,11 @@ func TestRunCorpusWritesFailuresAndReturnsError(t *testing.T) {
 			t.Errorf("missing %s: %v", name, err)
 		}
 	}
+	for _, name := range []string{"codex-handoff.md", filepath.Join("failures", "ubl21.invoice.runner", "diagnostic.json")} {
+		if _, err := os.Stat(filepath.Join(output, name)); err != nil {
+			t.Errorf("missing %s: %v", name, err)
+		}
+	}
 }
 
 func TestRunCorpusRetainsUploadIDWhenPollingFails(t *testing.T) {
