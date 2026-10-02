@@ -106,3 +106,43 @@ A complete collection claim requires a defined release snapshot and inventory pl
 - [Peppol accreditation](PEPPOL-CERTIFICATION.md)
 - [ISO and Peppol certification requirements](ISO-27001-CERTIFICATION.md)
 - [Current validation contract](PEPPOL-VALIDATION-CONTRACT.md)
+
+## Jurisdiction-specific specification catalogue
+Snapshot: official OpenPeppol post-award directory checked 2026-10-02. The rows below include all jurisdiction-specific invoice, self-billing and tax-data entries in that inspected directory. They are references to specifications, not a reproduction of their complete normative content.
+
+| Jurisdiction | Specification family | Listed release | Official source |
+| --- | --- | --- | --- |
+| EU | BIS Billing | 3.0 / repository pin 3.0.21 | https://docs.peppol.eu/poacc/billing/3.0/ |
+| EU | BIS Self-Billing | 3.0.1 | https://docs.peppol.eu/poacc/self-billing/3.0/v3.0.1/ |
+| EU | PINT Billing | 1.1.1 | https://docs.peppol.eu/poac/eu/ |
+| Australia/New Zealand | PINT Billing; Self-Billing | 1.1.3 | https://docs.peppol.eu/poac/aunz |
+| Japan | PINT Billing; Self-Billing | 1.1.3 | https://docs.peppol.eu/poac/jp/ |
+| Malaysia | PINT Billing; Self-Billing | 1.3.1 | https://docs.peppol.eu/poac/my/ |
+| Singapore | SG BIS Billing | 3.0 | https://www.peppolguide.sg/billing/ |
+| Singapore | PINT Billing | 1.4.1 | https://docs.peppol.eu/poac/sg/ |
+| Oman | PINT Billing; Self-Billing; Tax Data Document | 1.0.1 | https://docs.peppol.eu/poac/om/ |
+| UAE | PINT Billing; Self-Billing; Tax Data Document | 1.0.4 | https://docs.peppol.eu/poac/ae/ |
+
+The international baseline PINT release listed in the directory is 1.1.3. It is not interchangeable with every jurisdiction specialisation.
+
+## Country-specific rules inside BIS Billing
+Country-specific BIS rules are additional to the jurisdiction profiles above. Their applicability can depend on supplier country and other document context.
+- [Official national-rule methodology](https://docs.peppol.eu/poacc/billing/3.0/national-rules/)
+- [Complete official Billing rule catalogue](https://docs.peppol.eu/poacc/billing/3.0/rules/ubl-peppol/)
+- The pinned official Schematron and national examples acquired through standard/peppol/download.sh.
+
+A complete per-country rule inventory must be extracted from the pinned source, retaining every rule ID, context/applicability expression, assertion, severity and release. Do not infer the complete country list from selected examples or from the PINT jurisdiction table.
+
+## Required country annexes
+For every profile and every country represented in the ruleset, the eventual collected documentation must include:
+1. Scope, version and effective dates.
+2. Specification/customisation and process identifiers.
+3. Document syntax, cardinality and semantic constraints.
+4. Country-specific rule catalogue and applicability.
+5. Code lists and identifier schemes.
+6. Official schemas/Schematron and their dependency manifest.
+7. Official examples, generated test coverage and unresolved gaps.
+8. Transport, registration and reporting requirements with sources.
+9. Licence, original-source links and checksums.
+
+Current completion status: the source catalogue is gathered; full country annex extraction and acquisition of every original jurisdiction package are not yet completed. Those tasks belong in the worldwide support plan. Countries without a Peppol-specific profile still require official national requirements research; no country-specific Peppol specification should be invented for them.
