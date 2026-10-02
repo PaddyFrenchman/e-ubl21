@@ -249,6 +249,7 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 			rootNode.Attributes["xmlns:sig"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2"
 			rootNode.Attributes["xmlns:sac"] = "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2"
 			rootNode.Attributes["xmlns:ds"] = "http://www.w3.org/2000/09/xmldsig#"
+			rootNode.Attributes["xmlns:xades"] = "http://uri.etsi.org/01903/v1.3.2#"
 		}
 	}
 	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(rootNode, 0) + "\n", nil
@@ -515,6 +516,30 @@ func structuralSignatureExtensionNode(variant int) xmlNode {
 		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "RetrievalMethod", Attributes: map[string]string{"URI": "#key"}}}
 	case 3:
 		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509SubjectName", Value: "CN=e-ubl21"}}}}
+	case 4:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "PGPData", Children: []xmlNode{{Prefix: "ds", Name: "PGPKeyID", Value: "cGdwLWtleQ=="}}}}
+	case 5:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "PGPData", Children: []xmlNode{{Prefix: "ds", Name: "PGPKeyPacket", Value: "cGdwLXBhY2tldA=="}}}}
+	case 6:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "SPKIData", Children: []xmlNode{{Prefix: "ds", Name: "SPKISexp", Value: "c3BraQ=="}}}}
+	case 7:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "MgmtData", Value: "e-ubl21"}}
+	case 8:
+		keyInfo.Children = []xmlNode{{Prefix: "struct", Name: "KeyData", Value: "sample"}}
+	case 9:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "KeyValue", Children: []xmlNode{{Prefix: "ds", Name: "DSAKeyValue", Children: []xmlNode{{Prefix: "ds", Name: "Y", Value: "c2FtcGxl"}}}}}}
+	case 10:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "KeyValue", Children: []xmlNode{{Prefix: "struct", Name: "KeyValueData", Value: "sample"}}}}
+	case 11:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509IssuerSerial", Children: []xmlNode{{Prefix: "ds", Name: "X509IssuerName", Value: "CN=e-ubl21"}, {Prefix: "ds", Name: "X509SerialNumber", Value: "1"}}}}}}
+	case 12:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509SKI", Value: "c2tp"}}}}
+	case 13:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509Certificate", Value: "Y2VydGlmaWNhdGU="}}}}
+	case 14:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509CRL", Value: "Y3Js"}}}}
+	case 15:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "struct", Name: "CertificateData", Value: "sample"}}}}
 	}
 	return xmlNode{Prefix: "sig", Name: "UBLDocumentSignatures", Children: []xmlNode{{Prefix: "sac", Name: "SignatureInformation", Children: []xmlNode{
 		{Prefix: "cbc", Name: "ID", Value: "SIG-001"},
@@ -530,8 +555,51 @@ func structuralSignatureExtensionNode(variant int) xmlNode {
 			}},
 			{Prefix: "ds", Name: "SignatureValue", Value: "c2lnbmF0dXJl"},
 			keyInfo,
+			{Prefix: "ds", Name: "Object", Attributes: map[string]string{"Id": "object-1", "MimeType": "application/xml"}, Children: []xmlNode{
+				{Prefix: "ds", Name: "SignatureProperties", Children: []xmlNode{{Prefix: "ds", Name: "SignatureProperty", Attributes: map[string]string{"Target": "#signature"}, Children: []xmlNode{{Prefix: "struct", Name: "Property", Value: "sample"}}}}},
+				xadesQualifyingProperties(variant),
+			}},
 		}},
 	}}}}
+}
+
+func xadesQualifyingProperties(variant int) xmlNode {
+	timestamp := xmlNode{Prefix: "xades", Name: "SignatureTimeStamp", Children: []xmlNode{{Prefix: "xades", Name: "EncapsulatedTimeStamp", Value: "dGltZXN0YW1w"}}}
+	if variant%2 == 1 {
+		timestamp.Children = []xmlNode{{Prefix: "xades", Name: "XMLTimeStamp", Children: []xmlNode{{Prefix: "struct", Name: "TimeStampData", Value: "sample"}}}}
+	}
+	unsigned := xmlNode{Prefix: "xades", Name: "UnsignedSignatureProperties", Children: []xmlNode{timestamp}}
+	switch (variant / 2) % 4 {
+	case 1:
+		unsigned.Children = []xmlNode{{Prefix: "xades", Name: "CertificateValues", Attributes: map[string]string{"Id": "cert-values"}, Children: []xmlNode{{Prefix: "xades", Name: "EncapsulatedX509Certificate", Attributes: map[string]string{"Id": "cert-1", "Encoding": "urn:e-ubl21:base64"}, Value: "Y2VydGlmaWNhdGU="}}}}
+	case 2:
+		unsigned.Children = []xmlNode{{Prefix: "xades", Name: "RevocationValues", Attributes: map[string]string{"Id": "revocations"}, Children: []xmlNode{{Prefix: "xades", Name: "CRLValues", Children: []xmlNode{{Prefix: "xades", Name: "EncapsulatedCRLValue", Value: "Y3Js"}}}}}}
+	case 3:
+		// This wildcard has strict processing; use a declared foreign XMLDSig
+		// element rather than an invented private payload.
+		unsigned.Children = []xmlNode{{Prefix: "ds", Name: "SignatureValue", Value: "dW5zaWduZWQ="}}
+	}
+	policy := xmlNode{Prefix: "xades", Name: "SignaturePolicyIdentifier", Children: []xmlNode{{Prefix: "xades", Name: "SignaturePolicyImplied"}}}
+	if variant%4 >= 2 {
+		policy.Children = []xmlNode{{Prefix: "xades", Name: "SignaturePolicyId", Children: []xmlNode{
+			{Prefix: "xades", Name: "SigPolicyId", Children: []xmlNode{{Prefix: "xades", Name: "Identifier", Attributes: map[string]string{"Qualifier": "OIDAsURI"}, Value: "urn:e-ubl21:policy"}}},
+			{Prefix: "xades", Name: "SigPolicyHash", Children: []xmlNode{{Prefix: "ds", Name: "DigestMethod", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:digest"}}, {Prefix: "ds", Name: "DigestValue", Value: "c2FtcGxl"}}},
+		}}}
+	}
+	commitment := xmlNode{Prefix: "xades", Name: "CommitmentTypeIndication", Children: []xmlNode{
+		{Prefix: "xades", Name: "CommitmentTypeId", Children: []xmlNode{{Prefix: "xades", Name: "Identifier", Attributes: map[string]string{"Qualifier": "OIDAsURI"}, Value: "urn:e-ubl21:commitment"}}},
+		{Prefix: "xades", Name: "AllSignedDataObjects"},
+	}}
+	if variant%4 == 1 {
+		commitment.Children[1] = xmlNode{Prefix: "xades", Name: "ObjectReference", Value: "#document"}
+	}
+	return xmlNode{Prefix: "xades", Name: "QualifyingProperties", Attributes: map[string]string{"Target": "#signature", "Id": "qualifying-properties"}, Children: []xmlNode{
+		{Prefix: "xades", Name: "SignedProperties", Attributes: map[string]string{"Id": "signed-properties"}, Children: []xmlNode{
+			{Prefix: "xades", Name: "SignedSignatureProperties", Children: []xmlNode{{Prefix: "xades", Name: "SigningTime", Value: "2026-10-02T00:00:00Z"}, policy}},
+			{Prefix: "xades", Name: "SignedDataObjectProperties", Children: []xmlNode{commitment}},
+		}},
+		{Prefix: "xades", Name: "UnsignedProperties", Attributes: map[string]string{"Id": "unsigned-properties"}, Children: []xmlNode{unsigned}},
+	}}
 }
 
 // structuralWildcardNode is deliberately foreign to every UBL namespace.

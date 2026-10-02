@@ -21,6 +21,9 @@ RESOLVER_JAR="$SAXON_DIR/xmlresolver-6.0.17.jar"
 SAXON_CONFIG="$ROOT_DIR/validation-assets/saxon/saxon-config.xml"
 EN16931_XSLT="$ROOT_DIR/validation-assets/en16931/1.3.16/EN16931-UBL-validation.xslt"
 DATABASE_URL="${EUBL21_DATABASE_URL:-}"
+# Set STRUCTURAL_FIXTURE_ID to reproduce exactly one checked-in structural
+# fixture through the same disposable API/database/NATS/worker topology.
+STRUCTURAL_FIXTURE_ID="${STRUCTURAL_FIXTURE_ID:-}"
 
 for command in go java xmllint docker curl diff; do
     if ! command -v "$command" >/dev/null 2>&1; then
@@ -163,6 +166,11 @@ run_corpus() {
     local manifest=$2
     local output="$ARTIFACT_DIR/$name"
     local status
+    local fixture_args=()
+
+    if [[ "$name" == "ubl21-structural" && -n "$STRUCTURAL_FIXTURE_ID" ]]; then
+        fixture_args=(--fixture-id "$STRUCTURAL_FIXTURE_ID")
+    fi
 
     mkdir -p "$output"
     set +e
@@ -171,6 +179,7 @@ run_corpus() {
         --token "$TOKEN" \
         --manifest "$manifest" \
         --profile all \
+        "${fixture_args[@]}" \
         --output "$output" 2>&1 | tee "$output/runner.log"
     status=${PIPESTATUS[0]}
     set -e
@@ -221,9 +230,13 @@ run_corpus() {
     fi
 }
 
-run_corpus ubl21 "$ROOT_DIR/createsamples/samples/manifest.json"
-run_corpus en16931 "$ROOT_DIR/createsamples/samples-en16931/manifest.json"
-run_corpus ubl21-structural "$ROOT_DIR/createsamples/samples-structural/manifest.json"
+if [[ -n "$STRUCTURAL_FIXTURE_ID" ]]; then
+    run_corpus ubl21-structural "$ROOT_DIR/createsamples/samples-structural/manifest.json"
+else
+    run_corpus ubl21 "$ROOT_DIR/createsamples/samples/manifest.json"
+    run_corpus en16931 "$ROOT_DIR/createsamples/samples-en16931/manifest.json"
+    run_corpus ubl21-structural "$ROOT_DIR/createsamples/samples-structural/manifest.json"
+fi
 
 echo "Correctness regression artifacts: $ARTIFACT_DIR"
 if (( RUNNER_STATUS != 0 )); then

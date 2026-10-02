@@ -520,7 +520,7 @@ func TestGenerateSignatureExtensionStructuralSampleIsXSDValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"KeyInfoType/choice", "TransformType/choice"} {
+	for _, want := range []string{"KeyInfoType/choice", "TransformType/choice", "SignaturePolicyIdentifierType", "CommitmentTypeIndicationType", "UnsignedSignaturePropertiesType", "XAdESTimeStampType"} {
 		found := false
 		for target := range matched {
 			if strings.Contains(target, want) {
@@ -540,7 +540,7 @@ func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *t
 		t.Fatal(err)
 	}
 	seen := map[string]bool{}
-	for variant := 0; variant < 8; variant++ {
+	for variant := 0; variant < 32; variant++ {
 		content, err := generateSignatureExtensionStructuralSample(index, "Invoice", filepath.Join("..", "XSD"), "UBL-Invoice-2.1.xsd", variant)
 		if err != nil {
 			t.Fatalf("variant %d: %v", variant, err)

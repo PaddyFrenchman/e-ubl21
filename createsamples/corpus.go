@@ -268,7 +268,24 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 		// extension payload so that schema choices are measured against real UBL
 		// extension content rather than an invented private namespace.
 		if root == "Invoice" {
-			for variant, family := range []string{"key-name", "key-name-transform-wildcard", "key-value", "key-value-transform-wildcard", "retrieval-method", "retrieval-method-transform-wildcard", "x509-data", "x509-data-transform-wildcard"} {
+			for variant, family := range []string{
+				"key-name", "key-name-transform-wildcard",
+				"rsa-key-value", "rsa-key-value-transform-wildcard",
+				"retrieval-method", "retrieval-method-transform-wildcard",
+				"x509-subject-name", "x509-subject-name-transform-wildcard",
+				"pgp-key-id", "pgp-key-id-transform-wildcard",
+				"pgp-key-packet", "pgp-key-packet-transform-wildcard",
+				"spki-data", "spki-data-transform-wildcard",
+				"management-data", "management-data-transform-wildcard",
+				"key-info-wildcard", "key-info-wildcard-transform-wildcard",
+				"dsa-key-value", "dsa-key-value-transform-wildcard",
+				"key-value-wildcard", "key-value-wildcard-transform-wildcard",
+				"x509-issuer-serial", "x509-issuer-serial-transform-wildcard",
+				"x509-ski", "x509-ski-transform-wildcard",
+				"x509-certificate", "x509-certificate-transform-wildcard",
+				"x509-crl", "x509-crl-transform-wildcard",
+				"x509-wildcard", "x509-wildcard-transform-wildcard",
+			} {
 				content, err := generateSignatureExtensionStructuralSample(index, root, xsdDir, schema.File, variant)
 				if err != nil {
 					return generatedCorpus{}, fmt.Errorf("generate %s signature extension %s: %w", root, family, err)

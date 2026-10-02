@@ -1,6 +1,6 @@
 # UBL 2.1 schema coverage
 
-Fixtures analyzed: 546
+Fixtures analyzed: 554
 
 Maximum cardinality is the greatest number of sibling matches for one schema particle under a single parent instance in a fixture. The acceptance gate records every parent-instance count and requires schema-permitted zero (when optional), one, a multiple case (two or more), and the schema maximum (capped at five for unbounded particles).
 
@@ -9,22 +9,22 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 | Construct | Exercised | Total | Coverage |
 |---|---:|---:|---:|
 | allMembers | 0 | 0 | 100.0% |
-| attributes | 36 | 92 | 39.1% |
-| choiceAlternatives | 0 | 46 | 0.0% |
-| choiceSites | 0 | 15 | 0.0% |
-| complexTypes | 1164 | 1286 | 90.5% |
-| elements | 3878 | 5740 | 67.6% |
-| inheritance | 872 | 916 | 95.2% |
-| optionalAttributes | 33 | 76 | 43.4% |
-| optionalElements | 3358 | 3480 | 96.5% |
+| attributes | 42 | 92 | 45.7% |
+| choiceAlternatives | 7 | 46 | 15.2% |
+| choiceSites | 4 | 15 | 26.7% |
+| complexTypes | 1192 | 1286 | 92.7% |
+| elements | 3911 | 5740 | 68.1% |
+| inheritance | 880 | 916 | 96.1% |
+| optionalAttributes | 35 | 76 | 46.1% |
+| optionalElements | 3378 | 3480 | 97.1% |
 | recursiveEdges | 62 | 84 | 73.8% |
-| repeatableElements | 1004 | 1068 | 94.0% |
-| requiredAttributes | 3 | 16 | 18.8% |
-| requiredElements | 520 | 2260 | 23.0% |
+| repeatableElements | 1014 | 1068 | 94.9% |
+| requiredAttributes | 7 | 16 | 43.8% |
+| requiredElements | 533 | 2260 | 23.6% |
 | roots | 65 | 65 | 100.0% |
-| sequenceMembers | 3878 | 4011 | 96.7% |
+| sequenceMembers | 3904 | 4011 | 97.3% |
 | substitutionGroups | 0 | 0 | 100.0% |
-| wildcards | 0 | 15 | 0.0% |
+| wildcards | 2 | 15 | 13.3% |
 
 ## Uncovered attributes
 
@@ -58,8 +58,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|XAdESTimeStampType/@Id`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@Id`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@UR`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|CanonicalizationMethodType/@Algorithm`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|DigestMethodType/@Algorithm`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|KeyInfoType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ManifestType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@Encoding`
@@ -67,17 +65,13 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@MimeType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Type`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@URI`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@Type`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@URI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureMethodType/@Algorithm`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertiesType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Target`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureValueType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignedInfoType/@Id`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|TransformType/@Algorithm`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|GraphicType/@mimeCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|PictureType/@mimeCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|SoundType/@mimeCode`
@@ -118,19 +112,12 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[0]`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[1]`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[1]/RSAKeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 
@@ -145,12 +132,8 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|SignaturePolicyIdentifierType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|UnsignedSignaturePropertiesType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|choice|XAdESTimeStampType/choice[0]`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|KeyInfoType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|KeyValueType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|PGPDataType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|SignaturePropertyType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|TransformType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|X509DataType/choice[0]`
 
 ## Uncovered complexTypes
 
@@ -206,45 +189,17 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|UnsignedSignaturePropertiesType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|XAdESTimeStampType`
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|complexType|ValidationDataType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|CanonicalizationMethodType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|CryptoBinary`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|DSAKeyValueType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|DigestMethodType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|DigestValueType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|HMACOutputLengthType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|KeyInfoType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|KeyValueType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|ManifestType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|ObjectType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|PGPDataType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|RSAKeyValueType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|ReferenceType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|RetrievalMethodType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SPKIDataType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignatureMethodType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignaturePropertiesType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignaturePropertyType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignatureType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignatureValueType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|SignedInfoType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|TransformType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|TransformsType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|X509DataType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|complexType|X509IssuerSerialType`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|complexType|PerformanceDataLineType`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|complexType|PerformanceValueQuantityType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionAgencyIDType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionAgencyNameType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionAgencyURIType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionReasonCodeType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionReasonType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionURIType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|ExtensionVersionIDType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|UBLExtensionType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|complexType|UBLExtensionsType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-ExtensionContentDataType-2.1.xsd|complexType|ExtensionContentType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|complexType|UBLDocumentSignaturesType`
-- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|complexType|SignatureInformationType`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|complexType|ReferencedSignatureIDType`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|AmountType`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|BinaryObjectType`
@@ -438,40 +393,21 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[0]/Seed`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[1]/PgenCounter`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[2]/J`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[1]/RSAKeyValue`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[0]/Modulus`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[1]/Exponent`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[0]/Transforms`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[1]/DigestMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[2]/DigestValue`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[0]/SignedInfo`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[1]/SignatureValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[2]/KeyInfo`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[0]/CanonicalizationMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[1]/SignatureMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
@@ -2059,17 +1995,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WorkPhase/WorkPhase`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WorkPhaseCode/WorkPhaseCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/XPath/XPath`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[0]/ID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[1]/Name`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[2]/ExtensionAgencyID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[3]/ExtensionAgencyName`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[4]/ExtensionVersionID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[5]/ExtensionAgencyURI`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[6]/ExtensionURI`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[7]/ExtensionReasonCode`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[8]/ExtensionReason`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[9]/ExtensionContent`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyID/ExtensionAgencyID`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyName/ExtensionAgencyName`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyURI/ExtensionAgencyURI`
@@ -2080,7 +2005,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionVersionID/ExtensionVersionID`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/UBLExtension/UBLExtension`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/UBLExtensions/UBLExtensions`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|global/UBLDocumentSignatures/UBLDocumentSignatures`
 - `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|global/ContractAwardNotice/ContractAwardNotice`
 - `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|global/ContractNotice/ContractNotice`
@@ -2118,9 +2042,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `urn:oasis:names:specification:ubl:schema:xsd:RetailEvent-2|UBL-RetailEvent-2.1.xsd|element|global/RetailEvent/RetailEvent`
 - `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledCreditNote-2|UBL-SelfBilledCreditNote-2.1.xsd|element|global/SelfBilledCreditNote/SelfBilledCreditNote`
 - `urn:oasis:names:specification:ubl:schema:xsd:SelfBilledInvoice-2|UBL-SelfBilledInvoice-2.1.xsd|element|global/SelfBilledInvoice/SelfBilledInvoice`
-- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[0]/ID`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[1]/ReferencedSignatureID`
-- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[2]/Signature`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|global/SignatureInformation/SignatureInformation`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|element|global/ReferencedSignatureID/ReferencedSignatureID`
 - `urn:oasis:names:specification:ubl:schema:xsd:Statement-2|UBL-Statement-2.1.xsd|element|global/Statement/Statement`
@@ -2148,15 +2070,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|IdentifierType->#anyURI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|OtherTimeStampType->http://uri.etsi.org/01903/v1.3.2##GenericTimeStampType`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|inheritance|XAdESTimeStampType->http://uri.etsi.org/01903/v1.3.2##GenericTimeStampType`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|inheritance|SignatureValueType->http://www.w3.org/2000/09/xmldsig##base64Binary`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|inheritance|PerformanceValueQuantityType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#QuantityType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionAgencyIDType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionAgencyNameType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#TextType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionAgencyURIType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionReasonCodeType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#CodeType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionReasonType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#TextType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionURIType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|inheritance|ExtensionVersionIDType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2|UBL-SignatureBasicComponents-2.1.xsd|inheritance|ReferencedSignatureIDType->urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2#IdentifierType`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|AmountType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#AmountType`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|BinaryObjectType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType`
@@ -2224,9 +2138,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ObjectType/@MimeType`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@Type`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|ReferenceType/@URI`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@Type`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|RetrievalMethodType/@URI`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertiesType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Id`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureType/@Id`
@@ -2321,44 +2233,24 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[0]/Seed`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/sequence[1]/PgenCounter`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[2]/J`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[0]/DSAKeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyValueType/choice[1]/RSAKeyValue`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[0]/Transforms`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[2]/KeyInfo`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[4]/Period`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[5]/Item`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[0]/ID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[1]/Name`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[2]/ExtensionAgencyID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[3]/ExtensionAgencyName`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[4]/ExtensionVersionID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[5]/ExtensionAgencyURI`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[6]/ExtensionURI`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[7]/ExtensionReasonCode`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[8]/ExtensionReason`
-- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[0]/ID`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[1]/ReferencedSignatureID`
-- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[2]/Signature`
 
 ## Uncovered recursiveEdges
 
@@ -2429,10 +2321,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
@@ -2440,17 +2328,11 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
 
 ## Uncovered requiredAttributes
 
@@ -2458,11 +2340,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|IncludeType/@URI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesReferenceType/@URI`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|QualifyingPropertiesType/@Target`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|CanonicalizationMethodType/@Algorithm`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|DigestMethodType/@Algorithm`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignatureMethodType/@Algorithm`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|SignaturePropertyType/@Target`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|attribute|TransformType/@Algorithm`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|GraphicType/@mimeCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|PictureType/@mimeCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|SoundType/@mimeCode`
@@ -2546,18 +2424,8 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/TimeStampValidationData/TimeStampValidationData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|DSAKeyValueType/sequence[1]/Y`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[0]/Modulus`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[1]/Exponent`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[1]/DigestMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[2]/DigestValue`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[0]/SignedInfo`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[1]/SignatureValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[0]/CanonicalizationMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[1]/SignatureMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[1]/X509SerialNumber`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|global/CanonicalizationMethod/CanonicalizationMethod`
@@ -4140,8 +4008,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WorkPhase/WorkPhase`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/WorkPhaseCode/WorkPhaseCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/XPath/XPath`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[9]/ExtensionContent`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyID/ExtensionAgencyID`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyName/ExtensionAgencyName`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionAgencyURI/ExtensionAgencyURI`
@@ -4152,7 +4018,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/ExtensionVersionID/ExtensionVersionID`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/UBLExtension/UBLExtension`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|global/UBLExtensions/UBLExtensions`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|global/UBLDocumentSignatures/UBLDocumentSignatures`
 - `urn:oasis:names:specification:ubl:schema:xsd:ContractAwardNotice-2|UBL-ContractAwardNotice-2.1.xsd|element|global/ContractAwardNotice/ContractAwardNotice`
 - `urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2|UBL-ContractNotice-2.1.xsd|element|global/ContractNotice/ContractNotice`
@@ -4306,23 +4171,11 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[0]/PGPKeyID`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[0]/sequence[1]/PGPKeyPacket`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[0]/Modulus`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RSAKeyValueType/sequence[1]/Exponent`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[0]/Transforms`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[1]/DigestMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ReferenceType/sequence[2]/DigestValue`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|RetrievalMethodType/sequence[0]/Transforms`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureMethodType/sequence[0]/HMACOutputLength`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[0]/SignedInfo`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[1]/SignatureValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[2]/KeyInfo`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[0]/CanonicalizationMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[1]/SignatureMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[0]/X509IssuerName`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509IssuerSerialType/sequence[1]/X509SerialNumber`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[0]/ID`
@@ -4331,21 +4184,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[3]/PerformanceMetricTypeCode`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[4]/Period`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[5]/Item`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[0]/ID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[1]/Name`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[2]/ExtensionAgencyID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[3]/ExtensionAgencyName`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[4]/ExtensionVersionID`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[5]/ExtensionAgencyURI`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[6]/ExtensionURI`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[7]/ExtensionReasonCode`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[8]/ExtensionReason`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionType/sequence[9]/ExtensionContent`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
-- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[0]/ID`
 - `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[1]/ReferencedSignatureID`
-- `urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2|UBL-SignatureAggregateComponents-2.1.xsd|element|SignatureInformationType/sequence[2]/Signature`
 
 ## Uncovered wildcards
 
@@ -4361,9 +4200,7 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SPKIDataType/sequence`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SignatureMethodType/sequence`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SignaturePropertyType/choice`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|TransformType/choice`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|X509DataType/choice[0]/choice`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-ExtensionContentDataType-2.1.xsd|any|ExtensionContentType/sequence`
 
 ## Repeatable particles with zero exercised occurrences
 
@@ -4409,10 +4246,6 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp`
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData`
@@ -4420,17 +4253,11 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI`
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate`
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL`
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|PerformanceDataLineType/sequence[1]/Note`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension`
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation`
 
 ## Repeatable particles missing required cardinalities
 
@@ -4476,25 +4303,25 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[0]/EncapsulatedTimeStamp` (exercised []; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/choice[0]/choice[1]/XMLTimeStamp` (exercised []; required [1 2 5])
 - `http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|XAdESTimeStampType/sequence[0]/Include` (exercised []; required [0 1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[0]/KeyName` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[1]/KeyValue` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[2]/RetrievalMethod` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[3]/X509Data` (exercised [0 1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[4]/PGPData` (exercised [0]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[5]/SPKIData` (exercised [0]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|KeyInfoType/choice[6]/MgmtData` (exercised [0]; required [1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|ManifestType/sequence[0]/Reference` (exercised []; required [1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SPKIDataType/sequence[0]/SPKISexp` (exercised []; required [1 2 5])
 - `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignaturePropertiesType/sequence[0]/SignatureProperty` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object` (exercised []; required [0 1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath` (exercised []; required [0 1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate` (exercised []; required [1 2 5])
-- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL` (exercised []; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignatureType/sequence[3]/Object` (exercised [0]; required [0 1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|SignedInfoType/sequence[2]/Reference` (exercised [1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformType/choice[0]/XPath` (exercised [0 1]; required [0 1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|TransformsType/sequence[0]/Transform` (exercised [1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[0]/X509IssuerSerial` (exercised [0]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[1]/X509SKI` (exercised [0]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[2]/X509SubjectName` (exercised [1]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[3]/X509Certificate` (exercised [0]; required [1 2 5])
+- `http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|X509DataType/choice[0]/choice[4]/X509CRL` (exercised [0]; required [1 2 5])
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|ActivityDataLineType/sequence[7]/SalesItem` (exercised [1]; required [1 2 5])
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AddressType/sequence[24]/AddressLine` (exercised [0 1]; required [0 1 2 5])
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|AddressType/sequence[26]/LocationCoordinate` (exercised [0 1]; required [0 1 2 5])
@@ -5054,5 +4881,5 @@ Maximum recursive depth is the greatest number of occurrences of the repeated ta
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|UtilityItemType/sequence[4]/Description` (exercised [1]; required [0 1 2 5])
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|WorkPhaseReferenceType/sequence[2]/WorkPhase` (exercised [1]; required [0 1 2 5])
 - `urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|WorkPhaseReferenceType/sequence[6]/WorkOrderDocumentReference` (exercised [1]; required [0 1 2 5])
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension` (exercised []; required [1 2 5])
-- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation` (exercised []; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-CommonExtensionComponents-2.1.xsd|element|UBLExtensionsType/sequence[0]/UBLExtension` (exercised [1]; required [1 2 5])
+- `urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2|UBL-CommonSignatureComponents-2.1.xsd|element|UBLDocumentSignaturesType/sequence[0]/SignatureInformation` (exercised [1]; required [1 2 5])
