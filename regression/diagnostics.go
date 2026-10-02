@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 // FailureDiagnostic is a redacted, per-fixture investigation bundle. It is
@@ -23,7 +24,7 @@ type FailureDiagnostic struct {
 	Reproduction        string           `json:"reproduction"`
 }
 
-func writeFailureDiagnostics(outputDir, manifestPath string, fixtures []Fixture, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure) error {
+func writeFailureDiagnostics(outputDir, manifestPath, baseURL string, fixtureTimeout time.Duration, fixtures []Fixture, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure) error {
 	fixtureByID := map[string]Fixture{}
 	for _, fixture := range fixtures {
 		fixtureByID[fixture.ID] = fixture
@@ -49,7 +50,7 @@ func writeFailureDiagnostics(outputDir, manifestPath string, fixtures []Fixture,
 		entry := mapByID[result.FixtureID]
 		classification, cause := classifyDiagnostic(result, entry, failureByID[result.FixtureID])
 		diagnostic := FailureDiagnostic{SchemaVersion: 1, Fixture: fixture, Expected: result, UploadID: entry.UploadID, TerminalStatus: entry.TerminalStatus, Classification: classification, EvidenceBackedCause: cause,
-			Reproduction: fmt.Sprintf("go run . regression --manifest %s --profile %s --fixture-id %s", manifestPath, fixture.Profile, fixture.ID)}
+			Reproduction: fmt.Sprintf("EUBL21_REGRESSION_TOKEN=${EUBL21_REGRESSION_TOKEN:?set_token} go run . regression --base-url %s --manifest %s --profile %s --fixture-id %s --fixture-timeout %s", shellQuote(baseURL), shellQuote(manifestPath), shellQuote(fixture.Profile), shellQuote(fixture.ID), fixtureTimeout)}
 		if entry.UploadID != "" {
 			diagnostic.ObjectStoreKey = "uploads/" + entry.UploadID + "/document.xml"
 		}
@@ -79,16 +80,15 @@ func classifyDiagnostic(result NormalizedResult, entry RunMapEntry, failure stri
 		if strings.Contains(strings.ToLower(failure), "deadline") || strings.Contains(strings.ToLower(failure), "timeout") {
 			return "timeout/resource failure", failure
 		}
-		if entry.UploadID == "" {
-			return "persistence/storage failure", failure
-		}
-		return "queue/orchestration failure", failure
+		return "unknown", failure
 	}
 	if result.ExpectedFinal != result.ActualFinal {
 		return "expectation mismatch", fmt.Sprintf("expected final %q, received %q", result.ExpectedFinal, result.ActualFinal)
 	}
 	return "standards-validator failure", "terminal validation stages differ from the manifest expectation"
 }
+
+func shellQuote(value string) string { return "'" + strings.ReplaceAll(value, "'", "'\\''") + "'" }
 
 func redactDiagnostic(value string) string {
 	value = credentialURLPattern.ReplaceAllString(value, "://[REDACTED]@")

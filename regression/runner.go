@@ -39,6 +39,9 @@ type Fixture struct {
 	ExpectedFinal     string          `json:"expectedFinal"`
 	ExpectedStages    []ExpectedStage `json:"expectedStages"`
 	StructuralTargets []string        `json:"structuralTargets,omitempty"`
+	Standards         json.RawMessage `json:"standards,omitempty"`
+	Provenance        json.RawMessage `json:"provenance,omitempty"`
+	Tags              []string        `json:"tags,omitempty"`
 }
 
 type Manifest struct {
@@ -67,12 +70,15 @@ type NormalizedResult struct {
 // RunMapEntry correlates a fixture with its volatile durable-upload identity.
 // It is diagnostic evidence and must not participate in semantic comparison.
 type RunMapEntry struct {
-	SchemaVersion  int    `json:"schemaVersion"`
-	FixtureID      string `json:"fixtureId"`
-	UploadID       string `json:"uploadId,omitempty"`
-	DocumentType   string `json:"documentType"`
-	Profile        string `json:"profile"`
-	TerminalStatus string `json:"terminalStatus"`
+	SchemaVersion        int        `json:"schemaVersion"`
+	FixtureID            string     `json:"fixtureId"`
+	UploadID             string     `json:"uploadId,omitempty"`
+	DocumentType         string     `json:"documentType"`
+	Profile              string     `json:"profile"`
+	TerminalStatus       string     `json:"terminalStatus"`
+	ProcessingAttempts   int        `json:"processingAttempts,omitempty"`
+	RuntimeError         string     `json:"runtimeError,omitempty"`
+	ValidatorDiagnostics []apiStage `json:"validatorDiagnostics,omitempty"`
 }
 
 // FixtureFailure preserves an operational error without including it in semantic equivalence.
@@ -165,7 +171,7 @@ func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
 		}
 	}
 	summary := summarize(results, runMap)
-	if err := writeArtifacts(cfg.OutputDir, cfg.ManifestPath, fixtures, results, runMap, failures, summary); err != nil {
+	if err := writeArtifacts(cfg.OutputDir, cfg.ManifestPath, cfg.BaseURL, cfg.FixtureTimeout, fixtures, results, runMap, failures, summary); err != nil {
 		return Summary{}, err
 	}
 	if summary.Failed > 0 || len(summary.MissingFixtureIDs) > 0 {
@@ -248,6 +254,9 @@ func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, toke
 		return operationalResult(result, err), correlation, fixtureFailure(fixture.ID, err)
 	}
 	correlation.TerminalStatus = response.Status
+	correlation.ProcessingAttempts = response.ProcessingAttempts
+	correlation.RuntimeError = redactDiagnostic(response.Error)
+	correlation.ValidatorDiagnostics = response.Stages
 	if response.Profile != fixture.Profile {
 		err := fmt.Errorf("status profile %q does not match requested %q", response.Profile, fixture.Profile)
 		return operationalResult(result, err), correlation, fixtureFailure(fixture.ID, err)
@@ -292,9 +301,11 @@ func uploadFixture(ctx context.Context, client *http.Client, baseURL *url.URL, t
 }
 
 type apiResponse struct {
-	Status  string     `json:"status"`
-	Profile string     `json:"profile"`
-	Stages  []apiStage `json:"validationStages"`
+	Status             string     `json:"status"`
+	Profile            string     `json:"profile"`
+	Stages             []apiStage `json:"validationStages"`
+	ProcessingAttempts int        `json:"processingAttempts"`
+	Error              string     `json:"error"`
 }
 
 type apiStage struct {
@@ -307,6 +318,8 @@ type apiIssue struct {
 	Kind     string `json:"kind"`
 	Rule     string `json:"rule"`
 	Severity string `json:"severity"`
+	Message  string `json:"message"`
+	Location string `json:"location"`
 }
 
 func pollFixture(ctx context.Context, client *http.Client, baseURL *url.URL, token, id string, interval time.Duration) (apiResponse, error) {
@@ -472,7 +485,7 @@ func isTerminalStatus(status string) bool {
 	}
 }
 
-func writeArtifacts(outputDir, manifestPath string, fixtures []Fixture, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure, summary Summary) error {
+func writeArtifacts(outputDir, manifestPath, baseURL string, fixtureTimeout time.Duration, fixtures []Fixture, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure, summary Summary) error {
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return fmt.Errorf("create regression output: %w", err)
 	}
@@ -504,6 +517,7 @@ func writeArtifacts(outputDir, manifestPath string, fixtures []Fixture, results 
 	var failureLines bytes.Buffer
 	failureWriter := bufio.NewWriter(&failureLines)
 	for _, failure := range failures {
+		failure.Error = redactDiagnostic(failure.Error)
 		encoded, err := json.Marshal(failure)
 		if err != nil {
 			return err
@@ -526,7 +540,7 @@ func writeArtifacts(outputDir, manifestPath string, fixtures []Fixture, results 
 			return err
 		}
 	}
-	return writeFailureDiagnostics(outputDir, manifestPath, fixtures, results, runMap, failures)
+	return writeFailureDiagnostics(outputDir, manifestPath, baseURL, fixtureTimeout, fixtures, results, runMap, failures)
 }
 
 type junitSuite struct {
