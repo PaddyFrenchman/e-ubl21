@@ -36,7 +36,10 @@ import (
 // full, and a body over the limit is rejected outright with 413, never
 // silently truncated and processed as if it were the caller's whole
 // document.
-const maxUploadBytes = 10 << 20
+// The structural corpus includes legitimate high-volume UBL documents slightly
+// above 10 MiB. Sixteen MiB remains bounded while allowing every tracked
+// fixture to exercise the public ingestion pipeline.
+const maxUploadBytes = 16 << 20
 
 var errPayloadTooLarge = fmt.Errorf("request body exceeds the maximum allowed size of %d bytes", maxUploadBytes)
 
@@ -343,7 +346,7 @@ func (h *uploadHandlers) handleGetUpload(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Polling is deliberately metadata-only unless the caller explicitly
-	// opts in. This keeps repeated status checks small even for 10 MiB XML.
+	// opts in. This keeps repeated status checks small even for 16 MiB XML.
 	if includeContent {
 		if record.ContentExpiredAt != "" {
 			writeJSON(w, http.StatusGone, map[string]string{"error": "upload content has expired"})

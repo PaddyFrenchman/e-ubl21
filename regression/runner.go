@@ -88,11 +88,14 @@ type Counts struct {
 }
 
 type Summary struct {
-	SchemaVersion int               `json:"schemaVersion"`
-	Total         int               `json:"total"`
-	Passed        int               `json:"passed"`
-	Failed        int               `json:"failed"`
-	ByProfile     map[string]Counts `json:"byProfile"`
+	SchemaVersion       int               `json:"schemaVersion"`
+	Total               int               `json:"total"`
+	Submitted           int               `json:"submitted"`
+	TerminallyEvaluated int               `json:"terminallyEvaluated"`
+	MissingFixtureIDs   []string          `json:"missingFixtureIds"`
+	Passed              int               `json:"passed"`
+	Failed              int               `json:"failed"`
+	ByProfile           map[string]Counts `json:"byProfile"`
 }
 
 type RunnerConfig struct {
@@ -101,6 +104,7 @@ type RunnerConfig struct {
 	ManifestPath   string
 	OutputDir      string
 	Profile        string
+	FixtureIDs     []string
 	Client         *http.Client
 	PollInterval   time.Duration
 	FixtureTimeout time.Duration
@@ -128,9 +132,12 @@ func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
 	if err := json.Unmarshal(manifestBytes, &manifest); err != nil {
 		return Summary{}, fmt.Errorf("decode fixture manifest: %w", err)
 	}
-	fixtures := selectFixtures(manifest.Fixtures, cfg.Profile)
+	fixtures, err := selectFixtures(manifest.Fixtures, cfg.Profile, cfg.FixtureIDs)
+	if err != nil {
+		return Summary{}, err
+	}
 	if len(fixtures) == 0 {
-		return Summary{}, fmt.Errorf("manifest contains no fixtures for profile %q", cfg.Profile)
+		return Summary{}, fmt.Errorf("manifest contains no fixtures for the requested selection")
 	}
 	sort.Slice(fixtures, func(i, j int) bool { return fixtures[i].ID < fixtures[j].ID })
 	client := cfg.Client
@@ -157,31 +164,63 @@ func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
 			failures = append(failures, *failure)
 		}
 	}
-	summary := summarize(results)
+	summary := summarize(results, runMap)
 	if err := writeArtifacts(cfg.OutputDir, results, runMap, failures, summary); err != nil {
 		return Summary{}, err
 	}
-	if summary.Failed > 0 {
+	if summary.Failed > 0 || len(summary.MissingFixtureIDs) > 0 {
 		failed := make([]string, 0, summary.Failed)
 		for _, result := range results {
 			if result.Result == "fail" {
 				failed = append(failed, result.FixtureID)
 			}
 		}
-		return summary, fmt.Errorf("regression mismatches: %d of %d fixtures failed: %s", summary.Failed, summary.Total, strings.Join(failed, ", "))
+		return summary, fmt.Errorf("regression mismatches: %d of %d fixtures failed; submitted=%d terminally evaluated=%d missing=%s; failed fixtures: %s", summary.Failed, summary.Total, summary.Submitted, summary.TerminallyEvaluated, strings.Join(summary.MissingFixtureIDs, ", "), strings.Join(failed, ", "))
 	}
 	return summary, nil
 }
 
-func selectFixtures(fixtures []Fixture, profile string) []Fixture {
+func selectFixtures(fixtures []Fixture, profile string, fixtureIDs []string) ([]Fixture, error) {
 	profile = strings.TrimSpace(profile)
+	wanted := make(map[string]struct{}, len(fixtureIDs))
+	for _, fixtureID := range fixtureIDs {
+		fixtureID = strings.TrimSpace(fixtureID)
+		if fixtureID == "" {
+			continue
+		}
+		if _, duplicate := wanted[fixtureID]; duplicate {
+			return nil, fmt.Errorf("fixture ID %q was selected more than once", fixtureID)
+		}
+		wanted[fixtureID] = struct{}{}
+	}
 	selected := make([]Fixture, 0, len(fixtures))
 	for _, fixture := range fixtures {
-		if profile == "" || profile == "all" || fixture.Profile == profile {
+		if (profile == "" || profile == "all" || fixture.Profile == profile) && (len(wanted) == 0 || containsFixtureID(wanted, fixture.ID)) {
 			selected = append(selected, fixture)
 		}
 	}
-	return selected
+	if len(wanted) > 0 {
+		found := make(map[string]struct{}, len(selected))
+		for _, fixture := range selected {
+			found[fixture.ID] = struct{}{}
+		}
+		missing := make([]string, 0)
+		for fixtureID := range wanted {
+			if _, ok := found[fixtureID]; !ok {
+				missing = append(missing, fixtureID)
+			}
+		}
+		if len(missing) > 0 {
+			sort.Strings(missing)
+			return nil, fmt.Errorf("requested fixture IDs are absent from the selected manifest/profile: %s", strings.Join(missing, ", "))
+		}
+	}
+	return selected, nil
+}
+
+func containsFixtureID(ids map[string]struct{}, fixtureID string) bool {
+	_, ok := ids[fixtureID]
+	return ok
 }
 
 func runFixture(ctx context.Context, client *http.Client, baseURL *url.URL, token, corpusRoot string, fixture Fixture, pollInterval, timeout time.Duration) (NormalizedResult, RunMapEntry, *FixtureFailure) {
@@ -394,8 +433,18 @@ func uniqueStrings(values []string) []string {
 	return result
 }
 
-func summarize(results []NormalizedResult) Summary {
-	summary := Summary{SchemaVersion: 1, Total: len(results), ByProfile: map[string]Counts{}}
+func summarize(results []NormalizedResult, runMap []RunMapEntry) Summary {
+	summary := Summary{SchemaVersion: 1, Total: len(results), MissingFixtureIDs: []string{}, ByProfile: map[string]Counts{}}
+	terminal := make(map[string]struct{}, len(runMap))
+	for _, entry := range runMap {
+		if entry.UploadID != "" {
+			summary.Submitted++
+		}
+		if isTerminalStatus(entry.TerminalStatus) {
+			summary.TerminallyEvaluated++
+			terminal[entry.FixtureID] = struct{}{}
+		}
+	}
 	for _, result := range results {
 		counts := summary.ByProfile[result.Profile]
 		if result.Result == "pass" {
@@ -406,8 +455,21 @@ func summarize(results []NormalizedResult) Summary {
 			counts.Failed++
 		}
 		summary.ByProfile[result.Profile] = counts
+		if _, ok := terminal[result.FixtureID]; !ok {
+			summary.MissingFixtureIDs = append(summary.MissingFixtureIDs, result.FixtureID)
+		}
 	}
+	sort.Strings(summary.MissingFixtureIDs)
 	return summary
+}
+
+func isTerminalStatus(status string) bool {
+	switch status {
+	case "valid", "invalid", "processing_failed", "acceptance_failed":
+		return true
+	default:
+		return false
+	}
 }
 
 func writeArtifacts(outputDir string, results []NormalizedResult, runMap []RunMapEntry, failures []FixtureFailure, summary Summary) error {
