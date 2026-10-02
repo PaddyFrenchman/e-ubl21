@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -56,7 +57,7 @@ func TestRunCorpusProducesDeterministicArtifacts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if summary.Total != 1 || summary.Passed != 1 || summary.Failed != 0 {
+	if summary.Total != 1 || summary.Submitted != 1 || summary.TerminallyEvaluated != 1 || len(summary.MissingFixtureIDs) != 0 || summary.Passed != 1 || summary.Failed != 0 {
 		t.Fatalf("summary = %+v", summary)
 	}
 	config.OutputDir = second
@@ -83,6 +84,38 @@ func TestRunCorpusProducesDeterministicArtifacts(t *testing.T) {
 	}
 	if len(secondMap) != 1 || secondMap[0].UploadID != "22222222222222222222222222222222" {
 		t.Fatalf("second run map = %+v", secondMap)
+	}
+}
+
+func TestSelectFixturesSupportsExactFixtureIDsAndRejectsUnknownIDs(t *testing.T) {
+	fixtures := []Fixture{
+		{ID: "ubl21.invoice.one", Profile: "ubl21"},
+		{ID: "ubl21.order.one", Profile: "ubl21"},
+		{ID: "en16931.invoice.one", Profile: "ubl21-en16931"},
+	}
+	selected, err := selectFixtures(fixtures, "all", []string{"ubl21.order.one", "ubl21.invoice.one"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(selected) != 2 || selected[0].ID != "ubl21.invoice.one" || selected[1].ID != "ubl21.order.one" {
+		t.Fatalf("selected fixtures = %+v", selected)
+	}
+	if _, err := selectFixtures(fixtures, "ubl21", []string{"en16931.invoice.one"}); err == nil || !strings.Contains(err.Error(), "en16931.invoice.one") {
+		t.Fatalf("profile-filtered fixture selection error = %v", err)
+	}
+	if _, err := selectFixtures(fixtures, "all", []string{"missing.fixture"}); err == nil || !strings.Contains(err.Error(), "missing.fixture") {
+		t.Fatalf("unknown fixture selection error = %v", err)
+	}
+}
+
+func TestSummarizeReportsUnsubmittedAndUnprocessedFixtureIDs(t *testing.T) {
+	results := []NormalizedResult{
+		{FixtureID: "ubl21.invoice.submitted", Profile: "ubl21", Result: "pass"},
+		{FixtureID: "ubl21.invoice.missing", Profile: "ubl21", Result: "fail"},
+	}
+	summary := summarize(results, []RunMapEntry{{FixtureID: "ubl21.invoice.submitted", UploadID: "upload", TerminalStatus: "valid"}, {FixtureID: "ubl21.invoice.missing", TerminalStatus: "operational-failure"}})
+	if summary.Total != 2 || summary.Submitted != 1 || summary.TerminallyEvaluated != 1 || !reflect.DeepEqual(summary.MissingFixtureIDs, []string{"ubl21.invoice.missing"}) {
+		t.Fatalf("summary = %+v", summary)
 	}
 }
 

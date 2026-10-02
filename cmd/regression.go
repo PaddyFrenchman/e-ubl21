@@ -12,6 +12,7 @@ import (
 
 func newRegressionCmd(cfg *Config) *cobra.Command {
 	var baseURL, token, manifest, outputDir, profile string
+	var fixtureIDs []string
 	var pollInterval, fixtureTimeout time.Duration
 	command := &cobra.Command{
 		Use:   "regression",
@@ -23,9 +24,9 @@ func newRegressionCmd(cfg *Config) *cobra.Command {
 			}
 			summary, err := regression.RunCorpus(cmd.Context(), regression.RunnerConfig{
 				BaseURL: baseURL, Token: token, ManifestPath: manifest, OutputDir: outputDir,
-				Profile: profile, PollInterval: pollInterval, FixtureTimeout: fixtureTimeout,
+				Profile: profile, FixtureIDs: fixtureIDs, PollInterval: pollInterval, FixtureTimeout: fixtureTimeout,
 			})
-			fmt.Fprintf(cmd.OutOrStdout(), "regression total=%d passed=%d failed=%d artifacts=%s\n", summary.Total, summary.Passed, summary.Failed, outputDir)
+			fmt.Fprintf(cmd.OutOrStdout(), "regression total=%d submitted=%d terminally-evaluated=%d missing=%d passed=%d failed=%d artifacts=%s\n", summary.Total, summary.Submitted, summary.TerminallyEvaluated, len(summary.MissingFixtureIDs), summary.Passed, summary.Failed, outputDir)
 			return err
 		},
 	}
@@ -34,6 +35,7 @@ func newRegressionCmd(cfg *Config) *cobra.Command {
 	command.Flags().StringVar(&manifest, "manifest", "createsamples/samples-en16931/manifest.json", "Fixture manifest to execute")
 	command.Flags().StringVar(&outputDir, "output", "regression-results/latest", "Directory for normalized regression artifacts")
 	command.Flags().StringVar(&profile, "profile", "all", "Fixture profile selector (all, ubl21, or ubl21-en16931)")
+	command.Flags().StringSliceVar(&fixtureIDs, "fixture-id", nil, "One or more exact fixture IDs to run through the real pipeline")
 	command.Flags().DurationVar(&pollInterval, "poll-interval", 100*time.Millisecond, "Delay between durable status polls")
 	command.Flags().DurationVar(&fixtureTimeout, "fixture-timeout", 60*time.Second, "Maximum upload-to-terminal time per fixture")
 	command.AddCommand(newRegressionEvidenceCmd(cfg))

@@ -213,7 +213,7 @@ The current public API is intentionally small and document-oriented.
 | `GET` | `/api/v1/ubl/{id}` | Retrieve validation status and metadata |
 | `GET` | `/api/v1/ubl/{id}?includeContent=true` | Retrieve status plus retained original XML |
 
-Uploads are limited to 10 MiB. The API performs only lightweight root-element/document recognition synchronously. Full parsing, XSD validation, and applicable semantic validation happen asynchronously in the worker.
+Uploads are limited to 16 MiB. The API performs only lightweight root-element/document recognition synchronously. Full parsing, XSD validation, and applicable semantic validation happen asynchronously in the worker.
 
 Select a validation contract with `validationProfile=auto`, `ubl21`,
 `ubl21-en16931`, or `peppol-bis-billing`. Omitting the parameter is equivalent

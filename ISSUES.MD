@@ -1128,6 +1128,22 @@ Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/162
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/163
 
+### 74. #165 — TEST COVERAGE — Run the entire structural corpus through e-ubl21
+
+**Goal:** Run every tracked structural fixture through the authenticated public
+API, object storage, YugabyteDB metadata, NATS/orchestration, applicable
+validation stages, and durable terminal-status retrieval.
+
+**Acceptance:** The regression records and enforces equal selected, submitted,
+and terminally evaluated fixture counts, names every missing fixture ID on
+failure, verifies each expected outcome, and supports exact single-fixture or
+explicit small-set reproduction through the same pipeline. Parent #160 remains
+open until final qualification.
+
+**Dependencies:** #161 through #164.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/165
+
 ---
 
 ## Dependency summary

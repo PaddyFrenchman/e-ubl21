@@ -76,13 +76,13 @@ The documents stream no longer carries raw XML. Its payload is a small JSON desc
 
 The same upload id/type/timestamp are present in NATS headers. The upload id remains the `Nats-Msg-Id` de-duplication key.
 
-A representative descriptor is about 102 bytes, rather than as much as 10 MiB when the work stream carried the XML itself.
+A representative descriptor is about 102 bytes, rather than as much as 16 MiB when the work stream carried the XML itself.
 
 ## Upload processing
 
 `POST /api/v1/ubl/upload`:
 
-1. enforces the 10 MiB body limit exactly with `http.MaxBytesReader`;
+1. enforces the 16 MiB body limit exactly with `http.MaxBytesReader`;
 2. accepts XML/octet-stream content types;
 3. recognizes the first root `StartElement` and checks its local name and UBL namespace;
 4. resolves `auto` from bounded top-level Peppol identifiers when possible;

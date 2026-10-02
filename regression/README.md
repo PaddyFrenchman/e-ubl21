@@ -50,6 +50,13 @@ profile, and terminal status for diagnostics. It returns non-zero after
 writing the artifacts if any expected final outcome, stage outcome, or required
 rule ID differs. Use the UBL manifest path to run the structural corpus.
 
+The summary records `total`, `submitted`, `terminallyEvaluated`, and
+`missingFixtureIds`. A complete run requires all three counts to agree; an
+upload or terminal-status failure names every missing fixture ID. To reproduce
+an individual structural fixture through the identical public pipeline, add
+`--fixture-id ubl21.invoice.invoiceline-500`. Repeat the flag or provide a
+comma-separated list for an explicit small set.
+
 ## Validation-split equivalence gate
 
 The reviewed monolithic-worker result sets live in

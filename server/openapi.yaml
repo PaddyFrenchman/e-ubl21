@@ -164,7 +164,7 @@ paths:
             type: string
       requestBody:
         required: true
-        description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 10 MiB; see the 413 response.
+        description: Raw XML document payload for a UBL 2.1 invoice or other supported main document type. Limited to 16 MiB; see the 413 response.
         content:
           application/xml:
             schema:
@@ -235,7 +235,7 @@ paths:
         '405':
           $ref: '#/components/responses/MethodNotAllowed'
         '413':
-          description: Request body exceeds the 10 MiB upload limit.
+          description: Request body exceeds the 16 MiB upload limit.
           content:
             application/json:
               schema:
