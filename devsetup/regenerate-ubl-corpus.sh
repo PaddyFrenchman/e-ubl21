@@ -38,7 +38,15 @@ fi
 stage=$(mktemp -d "${TMPDIR:-/tmp}/e-ubl21-corpus.XXXXXX")
 trap 'rm -rf "$stage"' EXIT
 go_cache="$stage/go-cache"
-version="git:$(git log -1 --format=%H -- createsamples regression/manifest.go regression/schemas/fixture-manifest.schema.json XSD)"
+# Generated fixtures are deliberately excluded. Otherwise, committing a
+# regenerated manifest changes the computed version embedded in that manifest
+# and makes the next no-write regeneration differ solely due to itself.
+version="git:$(git log -1 --format=%H -- \
+  ':(glob)createsamples/**/*.go' \
+  ':(exclude,glob)createsamples/**/*_test.go' \
+  regression/manifest.go \
+  regression/schemas/fixture-manifest.schema.json \
+  ':(glob)XSD/**/*.xsd')"
 run_generator() {
   GOCACHE="$go_cache" go run ./createsamples generate --xsd XSD --generator-version "$version" "$@"
 }
