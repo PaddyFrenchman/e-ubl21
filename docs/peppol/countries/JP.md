@@ -37,3 +37,14 @@ Publish exact supported scenarios and limitations. Profile catalogue presence is
 - [Worldwide development plan](../../country-support.md)
 - [Official sources catalogue](../../PEPPOL-OFFICIAL-SPECS.md)
 - [Shared national-rule methodology](README.md)
+
+## Detailed extraction: first verified increment
+The JP invoice rule index contains 43 jurisdiction-aligned entries. Verified anchors: ALIGNED-IBR-JP-04 requires a seller tax identifier; ALIGNED-IBR-JP-05 constrains a supplied tax-accounting currency to JPY; ALIGNED-IBR-JP-06 prohibits fractional JPY tax-breakdown amounts. ALIGNED-IBRP-CL-02-JP selects invoice type 380. Test these independently of shared PINT rules. Exact XPath, severity and source hashes remain to be extracted; these anchors do not constitute complete rule coverage.
+
+### Direct implementation resources
+- [Profile](https://docs.peppol.eu/poac/jp/pint-jp/)
+- [Invoice business rules](https://docs.peppol.eu/poac/jp/pint-jp/trn-invoice/businessrule/)
+- [Shared/jurisdiction Schematron catalogue](https://docs.peppol.eu/poac/jp/pint-jp/trn-invoice/rule/)
+- [Jurisdiction aligned rule index](https://docs.peppol.eu/poac/jp/pint-jp/trn-invoice/rule/PINT-jurisdiction-aligned-rules/)
+
+Generation must include missing/wrong profile identifiers, shared-rule failures and jurisdiction-only failures, plus receiving-capability applicability cases. Preserve the exact official expressions in separately acquired original assets; prose anchors are explanatory.
