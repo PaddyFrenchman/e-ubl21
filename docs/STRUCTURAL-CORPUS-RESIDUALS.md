@@ -9,7 +9,13 @@ coverage. The exhaustive, machine-readable list is
 `createsamples/samples-structural/coverage.md`. Both are regenerated with the
 corpus and take precedence over the counts in this document.
 
-The current report analyzes 578 fixtures. It records 3,925 uncovered targets:
+The current report analyzes 578 fixtures. It records 3,925 uncovered targets
+and 622 failed cardinality target contracts. The report's
+`cardinalityResiduals` array is the per-target residual register: it records
+each target's exercised, required, and missing counts, its disposition, and
+whether it has an approval. Each current entry is explicitly
+`requires-xsd-valid-fixture` with `approved: false`; this is an open work item,
+not a waiver.
 
 | Target kind | Remaining |
 |---|---:|
@@ -40,8 +46,8 @@ These targets are schema-reachable and are not approved as unsupported:
   revocation references and values, policy qualifiers, signer roles,
   counter-signatures, timestamp/reference forms, validation data, and their
   IDs/URIs/encodings.
-- Uncovered wildcards, recursive edges, and cardinality combinations identified
-  in the generated register.
+- Uncovered wildcards, recursive edges, and all 622 cardinality combinations
+  identified in the generated per-target register.
 - UBL document content not present in the representative root fixtures,
   including the 1,715 required-element targets and 1,787 total element targets.
 
@@ -71,4 +77,7 @@ The approval recorded on 2026-10-02 was withdrawn by the repository user on
 
 Every schema-reachable construct and each documented boundary behavior remains
 an open coverage obligation. The generated `coverage.json`/`coverage.md`
-register remains the source of truth for the residual target list.
+register remains the source of truth for the residual target list. In
+particular, cardinality enforcement remains a qualification gate: a report
+with any `cardinalityResiduals` fails `createsamples coverage`, including when
+corpus regeneration is requested.

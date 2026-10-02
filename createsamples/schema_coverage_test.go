@@ -144,3 +144,25 @@ func TestCardinalityRequirementsUseSchemaBounds(t *testing.T) {
 		t.Fatal("unbounded particle did not require the capped multiple case")
 	}
 }
+
+func TestCardinalityResidualsAreTargetLevelAndNonWaiving(t *testing.T) {
+	report := schemaCoverage{
+		CardinalityGaps:        []string{"target-b", "target-a"},
+		ExercisedCardinalities: map[string][]int{"target-a": {0, 1}, "target-b": {1, 2}},
+		RequiredCardinalities:  map[string][]int{"target-a": {0, 1, 2}, "target-b": {0, 1, 2}},
+	}
+	got := cardinalityResiduals(report)
+	if len(got) != 2 || got[0].Target != "target-a" || got[1].Target != "target-b" {
+		t.Fatalf("residuals = %#v, want sorted per-target records", got)
+	}
+	if got[0].Disposition != "requires-xsd-valid-fixture" || got[0].Approved || !containsAllInts(got[0].Missing, []int{2}) {
+		t.Fatalf("target-a residual = %#v, want non-waiving missing-fixture disposition", got[0])
+	}
+	data, err := marshalCoverage(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(data, []byte("\"cardinalityResiduals\"")) {
+		t.Fatal("coverage JSON omits target-level cardinality residuals")
+	}
+}

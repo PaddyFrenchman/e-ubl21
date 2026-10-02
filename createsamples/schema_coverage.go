@@ -30,6 +30,19 @@ type schemaCoverage struct {
 	MaximumDepth           map[string]int                `json:"maximumDepth"`
 }
 
+// cardinalityResidual is a target-level, non-waiving disposition for a
+// repeatable particle that has not met the structural cardinality contract.
+// A residual is never an approval: its only disposition is to add an
+// XSD-valid fixture that exercises each missing cardinality.
+type cardinalityResidual struct {
+	Target      string `json:"target"`
+	Exercised   []int  `json:"exercised"`
+	Required    []int  `json:"required"`
+	Missing     []int  `json:"missing"`
+	Disposition string `json:"disposition"`
+	Approved    bool   `json:"approved"`
+}
+
 type coverageCategory struct {
 	Total     int     `json:"total"`
 	Exercised int     `json:"exercised"`
@@ -754,8 +767,10 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	}
 	if len(report.CardinalityGaps) > 0 {
 		out.WriteString("\n## Repeatable particles missing required cardinalities\n\n")
-		for _, id := range report.CardinalityGaps {
-			out.WriteString(fmt.Sprintf("- `%s` (exercised %v; required %v)\n", id, report.ExercisedCardinalities[id], report.RequiredCardinalities[id]))
+		out.WriteString("Every residual below has the non-waiving disposition `requires-xsd-valid-fixture`. No residual is approved, and this list does not relax the cardinality acceptance gate.\n\n")
+		out.WriteString("| Target | Exercised | Required | Missing | Disposition | Approved |\n|---|---|---|---|---|---|\n")
+		for _, residual := range cardinalityResiduals(report) {
+			out.WriteString(fmt.Sprintf("| `%s` | %v | %v | %v | %s | %t |\n", residual.Target, residual.Exercised, residual.Required, residual.Missing, residual.Disposition, residual.Approved))
 		}
 	}
 	if len(report.Unparseable) > 0 {
@@ -770,6 +785,23 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 		}
 	}
 	return os.WriteFile(path, []byte(out.String()), 0o644)
+}
+
+func cardinalityResiduals(report schemaCoverage) []cardinalityResidual {
+	residuals := make([]cardinalityResidual, 0, len(report.CardinalityGaps))
+	for _, id := range report.CardinalityGaps {
+		exercised := append([]int(nil), report.ExercisedCardinalities[id]...)
+		required := append([]int(nil), report.RequiredCardinalities[id]...)
+		missing := make([]int, 0, len(required))
+		for _, count := range required {
+			if !containsAllInts(exercised, []int{count}) {
+				missing = append(missing, count)
+			}
+		}
+		residuals = append(residuals, cardinalityResidual{Target: id, Exercised: exercised, Required: required, Missing: missing, Disposition: "requires-xsd-valid-fixture", Approved: false})
+	}
+	sort.Slice(residuals, func(i, j int) bool { return residuals[i].Target < residuals[j].Target })
+	return residuals
 }
 
 func runCoverage(args []string) error {
@@ -851,6 +883,7 @@ func marshalCoverage(report schemaCoverage) ([]byte, error) {
 		ExercisedCardinalities map[string][]int              `json:"exercisedCardinalities"`
 		RequiredCardinalities  map[string][]int              `json:"requiredCardinalities"`
 		CardinalityGaps        []string                      `json:"cardinalityGaps"`
+		CardinalityResiduals   []cardinalityResidual         `json:"cardinalityResiduals"`
 		MaximumDepth           map[string]int                `json:"maximumDepth"`
 	}{
 		SchemaVersion: report.SchemaVersion, Fixtures: report.Fixtures,
@@ -858,6 +891,7 @@ func marshalCoverage(report schemaCoverage) ([]byte, error) {
 		FixtureObservations: report.FixtureObservations, TargetCatalog: catalog, FixtureTargetIndexes: fixtureTargets,
 		MaximumCardinality: report.MaximumCardinality, ExercisedCardinalities: report.ExercisedCardinalities,
 		RequiredCardinalities: report.RequiredCardinalities, CardinalityGaps: report.CardinalityGaps, MaximumDepth: report.MaximumDepth,
+		CardinalityResiduals: cardinalityResiduals(report),
 	}
 	data, err := json.MarshalIndent(encoded, "", "  ")
 	return append(data, '\n'), err
