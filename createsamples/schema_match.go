@@ -41,6 +41,10 @@ func complexTypeIDForElement(typeDoc *schemaDoc, elementID, typeName string) str
 func elementDeclaration(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) (*schemaDoc, xsdElementDecl, string, string) {
 	if decl.Ref != "" {
 		ns, n := qualifyRef(decl.Ref, doc.TargetNamespace)
+		key := qualifiedKey(ns, n)
+		if d := index.GlobalElementDocs[key]; d != nil {
+			return d, index.GlobalElements[key], ns, n
+		}
 		if d := index.ByTargetNS[ns]; d != nil {
 			if x, ok := d.Elements[n]; ok {
 				return d, x, ns, n
@@ -151,12 +155,33 @@ func declaredType(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) (*sche
 		return nil, xsdComplexType{}, "", false
 	}
 	ns, n := qualifyRef(x.Type, d.TargetNamespace)
-	td := index.ByTargetNS[ns]
-	if td == nil {
-		return nil, xsdComplexType{}, "", false
-	}
-	t, ok := td.Types[n]
+	td, t, ok := schemaTypeDocument(index, ns, n)
 	return td, t, n, ok
+}
+
+// schemaTypeDocument resolves types declared in xsd:include files as well as
+// in the namespace's primary document.  Includes share a target namespace;
+// ByTargetNS deliberately has one representative document, so using it alone
+// loses the included ExtensionContentType and makes otherwise observed
+// wildcard content invisible to coverage matching.
+func schemaTypeDocument(index schemaIndex, namespace, name string) (*schemaDoc, xsdComplexType, bool) {
+	if doc := index.GlobalTypeDocs[qualifiedKey(namespace, name)]; doc != nil {
+		return doc, index.GlobalTypes[qualifiedKey(namespace, name)], true
+	}
+	if doc := index.ByTargetNS[namespace]; doc != nil {
+		if typ, ok := doc.Types[name]; ok {
+			return doc, typ, true
+		}
+	}
+	for _, doc := range index.ByFile {
+		if doc == nil || doc.TargetNamespace != namespace {
+			continue
+		}
+		if typ, ok := doc.Types[name]; ok {
+			return doc, typ, true
+		}
+	}
+	return nil, xsdComplexType{}, false
 }
 func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
 	base := typeBase(f.typ)
@@ -164,11 +189,7 @@ func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
 		return schemaFrame{}, false
 	}
 	ns, name := qualifyRef(base, f.doc.TargetNamespace)
-	doc := index.ByTargetNS[ns]
-	if doc == nil {
-		return schemaFrame{}, false
-	}
-	typ, ok := doc.Types[name]
+	doc, typ, ok := schemaTypeDocument(index, ns, name)
 	if !ok {
 		return schemaFrame{}, false
 	}
@@ -562,6 +583,29 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			if !ok {
 				if wildcard := wildcardSite(index, parent, v.Name); wildcard != "" {
 					out[wildcard]++
+					// A lax wildcard may contain a declaration from an imported
+					// schema. Continue matching through it when we know that
+					// declaration; otherwise it remains an intentionally opaque
+					// private extension payload.
+					if global, exists := index.GlobalElements[qualifiedKey(v.Name.Space, v.Name.Local)]; exists {
+						doc := index.GlobalElementDocs[qualifiedKey(v.Name.Space, v.Name.Local)]
+						if doc == nil {
+							doc = index.ByTargetNS[v.Name.Space]
+						}
+						if doc != nil {
+							td, typ, typeName, known := declaredType(index, doc, global)
+							if known {
+								globalID := fmt.Sprintf("%s|%s|element|global/%s", doc.TargetNamespace, doc.File, v.Name.Local)
+								out[globalID]++
+								out[complexTypeIDForElement(td, globalID, typeName)]++
+								frame := schemaFrame{doc: td, typ: typ, typeName: typeName, targets: out, siblings: map[string]int{}, seen: map[string]bool{}}
+								recordAttributes(index, frame, v)
+								recordInheritance(index, frame)
+								stack = append(stack, frame)
+								continue
+							}
+						}
+					}
 				}
 				stack = append(stack, schemaFrame{})
 				continue

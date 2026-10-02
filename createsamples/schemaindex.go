@@ -16,7 +16,9 @@ type schemaIndex struct {
 	ByFile            map[string]*schemaDoc
 	ByTargetNS        map[string]*schemaDoc
 	GlobalElements    map[string]xsdElementDecl
+	GlobalElementDocs map[string]*schemaDoc
 	GlobalTypes       map[string]xsdComplexType
+	GlobalTypeDocs    map[string]*schemaDoc
 	GlobalSimpleTypes map[string]xsdSimpleType
 }
 
@@ -76,7 +78,9 @@ func buildSchemaIndex(xsdDir string) (schemaIndex, error) {
 		ByFile:            map[string]*schemaDoc{},
 		ByTargetNS:        map[string]*schemaDoc{},
 		GlobalElements:    map[string]xsdElementDecl{},
+		GlobalElementDocs: map[string]*schemaDoc{},
 		GlobalTypes:       map[string]xsdComplexType{},
+		GlobalTypeDocs:    map[string]*schemaDoc{},
 		GlobalSimpleTypes: map[string]xsdSimpleType{},
 	}
 
@@ -98,10 +102,14 @@ func buildSchemaIndex(xsdDir string) (schemaIndex, error) {
 			index.ByTargetNS[doc.TargetNamespace] = doc
 		}
 		for name, decl := range doc.Elements {
-			index.GlobalElements[qualifiedKey(doc.TargetNamespace, name)] = decl
+			key := qualifiedKey(doc.TargetNamespace, name)
+			index.GlobalElements[key] = decl
+			index.GlobalElementDocs[key] = doc
 		}
 		for name, typ := range doc.Types {
-			index.GlobalTypes[qualifiedKey(doc.TargetNamespace, name)] = typ
+			key := qualifiedKey(doc.TargetNamespace, name)
+			index.GlobalTypes[key] = typ
+			index.GlobalTypeDocs[key] = doc
 		}
 		for name, typ := range doc.SimpleTypes {
 			index.GlobalSimpleTypes[qualifiedKey(doc.TargetNamespace, name)] = typ

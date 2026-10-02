@@ -8,6 +8,50 @@ import (
 	"testing"
 )
 
+func TestSchemaTypeDocumentFindsIncludedSchemaType(t *testing.T) {
+	const ns = "urn:test"
+	primary := &schemaDoc{TargetNamespace: ns, Types: map[string]xsdComplexType{}}
+	included := &schemaDoc{TargetNamespace: ns, Types: map[string]xsdComplexType{"Included": {Name: "Included"}}}
+	index := schemaIndex{
+		ByTargetNS: map[string]*schemaDoc{ns: primary},
+		ByFile:     map[string]*schemaDoc{"primary.xsd": primary, "included.xsd": included},
+	}
+	doc, typ, ok := schemaTypeDocument(index, ns, "Included")
+	if !ok || doc != included || typ.Name != "Included" {
+		t.Fatalf("included type resolution = (%#v, %#v, %v)", doc, typ, ok)
+	}
+}
+
+func TestElementDeclarationFindsIncludedSchemaElement(t *testing.T) {
+	const ns = "urn:test"
+	primary := &schemaDoc{TargetNamespace: ns, Elements: map[string]xsdElementDecl{}}
+	included := &schemaDoc{TargetNamespace: ns, Elements: map[string]xsdElementDecl{"Included": {Name: "Included", Type: "IncludedType"}}}
+	index := schemaIndex{
+		ByTargetNS:        map[string]*schemaDoc{ns: primary},
+		GlobalElements:    map[string]xsdElementDecl{qualifiedKey(ns, "Included"): included.Elements["Included"]},
+		GlobalElementDocs: map[string]*schemaDoc{qualifiedKey(ns, "Included"): included},
+	}
+	doc, declaration, gotNS, name := elementDeclaration(index, primary, xsdElementDecl{Ref: "Included"})
+	if doc != included || declaration.Name != "Included" || gotNS != ns || name != "Included" {
+		t.Fatalf("included element resolution = (%#v, %#v, %q, %q)", doc, declaration, gotNS, name)
+	}
+}
+
+func TestMatchFixtureRecordsExtensionContentWildcardFromIncludedSchema(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixture(index, filepath.Join("samples-structural", "Invoice", "Invoice-optional-rich.xml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	wildcard := "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2|UBL-ExtensionContentDataType-2.1.xsd|any|ExtensionContentType/sequence"
+	if matched[wildcard] != 1 {
+		t.Fatalf("extension wildcard matches = %d, want 1", matched[wildcard])
+	}
+}
+
 func TestMatchFixtureUsesNestedChoiceParticleAndSiblingCardinality(t *testing.T) {
 	const ns = "urn:test"
 	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Elements: map[string]xsdElementDecl{}, Types: map[string]xsdComplexType{}, SimpleTypes: map[string]xsdSimpleType{}}

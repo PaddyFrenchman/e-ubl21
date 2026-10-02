@@ -499,6 +499,62 @@ func TestTargetedChoiceSelectionIsPerSite(t *testing.T) {
 	}
 }
 
+func TestGenerateSignatureExtensionStructuralSampleIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content, err := generateSignatureExtensionStructuralSample(index, "Invoice", filepath.Join("..", "XSD"), "UBL-Invoice-2.1.xsd", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"<sig:UBLDocumentSignatures>", "<ds:KeyInfo>", "<ds:XPath>/*</ds:XPath>"} {
+		if !strings.Contains(content, want) {
+			t.Errorf("signature extension missing %q", want)
+		}
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixtureBytes(index, []byte(content))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"KeyInfoType/choice", "TransformType/choice"} {
+		found := false
+		for target := range matched {
+			if strings.Contains(target, want) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("signature extension did not exercise %s", want)
+		}
+	}
+}
+
+func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := map[string]bool{}
+	for variant := 0; variant < 8; variant++ {
+		content, err := generateSignatureExtensionStructuralSample(index, "Invoice", filepath.Join("..", "XSD"), "UBL-Invoice-2.1.xsd", variant)
+		if err != nil {
+			t.Fatalf("variant %d: %v", variant, err)
+		}
+		if seen[content] {
+			t.Fatalf("variant %d duplicates an earlier signature fixture", variant)
+		}
+		seen[content] = true
+		if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+			t.Fatalf("variant %d: %v", variant, err)
+		}
+	}
+}
+
 func TestStructuralChoiceSiteCountIsRootLocal(t *testing.T) {
 	ns := "urn:test"
 	index := schemaIndex{

@@ -60,8 +60,13 @@ type genState struct {
 	choiceAlternatives   *map[int]int
 	includeOptionalAttrs bool
 	structural           bool
-	recursiveDepthLimit  int
-	facetBoundary        int
+	// signatureExtension replaces the generic private extension payload with a
+	// declared UBL XMLDSig payload. It is used only by the dedicated structural
+	// signature family, leaving ordinary wildcard pass-through fixtures intact.
+	signatureExtension  bool
+	signatureVariant    int
+	recursiveDepthLimit int
+	facetBoundary       int
 	// repeatCount exercises every repeatable particle at this cardinality. A
 	// finite schema maximum is always respected. repeatOverrides is used for
 	// deliberately large, line-oriented documents without inflating unrelated
@@ -160,6 +165,13 @@ func generateLargeCollectionsStructuralSample(index schemaIndex, rootName, xsdDi
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
+func generateSignatureExtensionStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, variant int) (string, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	state.signatureVariant = variant
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
 // structuralChoiceSiteCount counts choice sites reached while expanding this
 // root. Choice-site ordinals are traversal-local: counting every choice in
 // the global schema graph would create variants for unrelated document types.
@@ -233,6 +245,11 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 	rootNode.Attributes["xmlns:ext"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
 	if state.structural {
 		rootNode.Attributes["xmlns:struct"] = "urn:e-ubl21:structural-fixture"
+		if state.signatureExtension {
+			rootNode.Attributes["xmlns:sig"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2"
+			rootNode.Attributes["xmlns:sac"] = "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2"
+			rootNode.Attributes["xmlns:ds"] = "http://www.w3.org/2000/09/xmldsig#"
+		}
 	}
 	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(rootNode, 0) + "\n", nil
 }
@@ -471,12 +488,50 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 		}
 		out = append(out, children...)
 	}
-	if seq.Any != nil && state.structural {
+	if seq.Any != nil && state.signatureExtension && ns == "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" && seq.Any.Namespace == "##other" && seq.Any.ProcessContents == "lax" {
+		out = append(out, structuralSignatureExtensionNode(state.signatureVariant))
+	} else if seq.Any != nil && state.structural {
 		if node, ok := structuralWildcardNode(*seq.Any); ok {
 			out = append(out, node)
 		}
 	}
 	return out, true
+}
+
+// structuralSignatureExtensionNode is a deliberately unsigned, XSD-valid
+// XMLDSig skeleton carried through UBL's declared extension point. Its two
+// choice-bearing children exercise declared signature choices without claiming
+// cryptographic validity (signature verification is outside XSD scope).
+func structuralSignatureExtensionNode(variant int) xmlNode {
+	transform := xmlNode{Prefix: "ds", Name: "Transform", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:transform"}, Children: []xmlNode{{Prefix: "ds", Name: "XPath", Value: "/*"}}}
+	if variant%2 == 1 {
+		transform.Children = []xmlNode{{Prefix: "struct", Name: "TransformData", Value: "sample"}}
+	}
+	keyInfo := xmlNode{Prefix: "ds", Name: "KeyInfo", Children: []xmlNode{{Prefix: "ds", Name: "KeyName", Value: "e-ubl21-structural"}}}
+	switch variant / 2 {
+	case 1:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "KeyValue", Children: []xmlNode{{Prefix: "ds", Name: "RSAKeyValue", Children: []xmlNode{{Prefix: "ds", Name: "Modulus", Value: "c2FtcGxl"}, {Prefix: "ds", Name: "Exponent", Value: "AQAB"}}}}}}
+	case 2:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "RetrievalMethod", Attributes: map[string]string{"URI": "#key"}}}
+	case 3:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509SubjectName", Value: "CN=e-ubl21"}}}}
+	}
+	return xmlNode{Prefix: "sig", Name: "UBLDocumentSignatures", Children: []xmlNode{{Prefix: "sac", Name: "SignatureInformation", Children: []xmlNode{
+		{Prefix: "cbc", Name: "ID", Value: "SIG-001"},
+		{Prefix: "ds", Name: "Signature", Children: []xmlNode{
+			{Prefix: "ds", Name: "SignedInfo", Children: []xmlNode{
+				{Prefix: "ds", Name: "CanonicalizationMethod", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:canonicalization"}},
+				{Prefix: "ds", Name: "SignatureMethod", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:signature"}},
+				{Prefix: "ds", Name: "Reference", Attributes: map[string]string{"URI": "#document"}, Children: []xmlNode{
+					{Prefix: "ds", Name: "Transforms", Children: []xmlNode{transform}},
+					{Prefix: "ds", Name: "DigestMethod", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:digest"}},
+					{Prefix: "ds", Name: "DigestValue", Value: "c2FtcGxl"},
+				}},
+			}},
+			{Prefix: "ds", Name: "SignatureValue", Value: "c2lnbmF0dXJl"},
+			keyInfo,
+		}},
+	}}}}
 }
 
 // structuralWildcardNode is deliberately foreign to every UBL namespace.
@@ -649,11 +704,11 @@ func occurrenceCount(element xsdElementDecl, state genState, depth int) int {
 	}
 	if desired, ok := state.repeatOverrides[elementNameForOccurrence(element)]; ok && isRepeatableElement(element) {
 		n = desired
-	// Generic cardinality fixtures deliberately exercise only the
-	// main-document particle level. Repeating every reachable nested particle
-	// multiplies UBL's shared aggregate graph exponentially, producing a corpus
-	// too large to generate or review. Targeted large-collection fixtures use
-	// repeatOverrides and remain valid at any depth.
+		// Generic cardinality fixtures deliberately exercise only the
+		// main-document particle level. Repeating every reachable nested particle
+		// multiplies UBL's shared aggregate graph exponentially, producing a corpus
+		// too large to generate or review. Targeted large-collection fixtures use
+		// repeatOverrides and remain valid at any depth.
 	} else if state.repeatCount > 0 && depth <= 1 && isRepeatableElement(element) {
 		n = state.repeatCount
 	}

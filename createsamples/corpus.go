@@ -263,6 +263,34 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 		if err := add("optional-rich", nil, 1, 0, 0, "", nil, "optional-elements", "optional-attributes", "cardinality", "occurrences-1"); err != nil {
 			return generatedCorpus{}, err
 		}
+		// XMLDSig/XAdES is reachable only through UBL's extension wildcard.
+		// Keep a focused declared-signature fixture alongside the generic foreign
+		// extension payload so that schema choices are measured against real UBL
+		// extension content rather than an invented private namespace.
+		if root == "Invoice" {
+			for variant, family := range []string{"key-name", "key-name-transform-wildcard", "key-value", "key-value-transform-wildcard", "retrieval-method", "retrieval-method-transform-wildcard", "x509-data", "x509-data-transform-wildcard"} {
+				content, err := generateSignatureExtensionStructuralSample(index, root, xsdDir, schema.File, variant)
+				if err != nil {
+					return generatedCorpus{}, fmt.Errorf("generate %s signature extension %s: %w", root, family, err)
+				}
+				if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
+					return generatedCorpus{}, fmt.Errorf("validate %s signature extension %s: %w", root, family, err)
+				}
+				fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+					ID:                "ubl21.invoice.signature-extension-" + family,
+					DocumentType:      root,
+					Profile:           "ubl21",
+					File:              filepath.ToSlash(filepath.Join(root, "Invoice-signature-extension-"+family+".xml")),
+					SHA256:            fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+					Standards:         fixtureStandards{UBL: "2.1"},
+					Provenance:        fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+					ExpectedFinal:     "valid",
+					ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+					Tags:              []string{"positive", "ubl21", "structural", "signature-extension", "choice-alternative", "wildcard", family},
+					StructuralTargets: []string{"schema-root:" + root, "family:signature-extension", "signature-variant:" + family},
+				}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
+			}
+		}
 		for planIndex, choices := range choicePlans[1:] {
 			if err := add(fmt.Sprintf("choice-path-%03d", planIndex+1), choices, 1, 0, 0, "", nil, "choice-alternative", "targeted"); err != nil {
 				return generatedCorpus{}, err
