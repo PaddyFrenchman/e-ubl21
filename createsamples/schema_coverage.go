@@ -546,7 +546,7 @@ func coverageCategoryFor(targets map[string]struct{}, observed map[string]struct
 func structuralFixtureTargets(index schemaIndex, samples string) (map[string]fixtureMatch, map[string]string, error) {
 	out, bad := map[string]fixtureMatch{}, map[string]string{}
 	processed := 0
-	fmt.Println("Coverage: matching structural fixtures")
+	fmt.Fprintln(os.Stderr, "Coverage: matching structural fixtures")
 	err := filepath.WalkDir(samples, func(path string, d os.DirEntry, e error) error {
 		if e != nil {
 			return e
@@ -566,40 +566,148 @@ func structuralFixtureTargets(index schemaIndex, samples string) (map[string]fix
 		out[relativePath] = m
 		processed++
 		if processed%100 == 0 {
-			fmt.Printf("Coverage: matched %d fixtures\n", processed)
+			fmt.Fprintf(os.Stderr, "Coverage: matched %d fixtures\n", processed)
 		}
 		return nil
 	})
 	if err == nil {
-		fmt.Printf("Coverage: matched %d fixtures\n", processed)
+		fmt.Fprintf(os.Stderr, "Coverage: matched %d fixtures\n", processed)
 	}
 	return out, bad, err
 }
+
+// streamFixtureCoverage parses one fixture at a time and retains only global
+// element/attribute sets plus parse failures. Per-fixture observations are
+// emitted to stdout for optional redirected audit evidence, never retained.
+func streamFixtureCoverage(samples string, audit io.Writer) (map[string]struct{}, map[string]struct{}, map[string]string, int, error) {
+	elements, attributes, unparseable := map[string]struct{}{}, map[string]struct{}{}, map[string]string{}
+	fixtures := 0
+	err := filepath.WalkDir(samples, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() || filepath.Ext(path) != ".xml" {
+			return nil
+		}
+		fixtures++
+		relativePath, err := fixtureReportPath(samples, path)
+		if err != nil {
+			return err
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		fixtureElements, fixtureAttributes := map[string]struct{}{}, map[string]struct{}{}
+		decoder := xml.NewDecoder(file)
+		for {
+			token, err := decoder.Token()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				unparseable[relativePath] = err.Error()
+				return nil
+			}
+			if start, ok := token.(xml.StartElement); ok {
+				fixtureElements[start.Name.Space+"\x23"+start.Name.Local] = struct{}{}
+				for _, attribute := range start.Attr {
+					fixtureAttributes[attribute.Name.Space+"\x23"+attribute.Name.Local] = struct{}{}
+				}
+			}
+		}
+		for name := range fixtureElements {
+			elements[name] = struct{}{}
+		}
+		for name := range fixtureAttributes {
+			attributes[name] = struct{}{}
+		}
+		if audit != nil {
+			// Keep a line-oriented, redirectable audit trail without retaining
+			// per-fixture evidence in the report.
+			encoded, err := json.Marshal(fixtureObservation{Elements: sortedSet(fixtureElements), Attributes: sortedSet(fixtureAttributes)})
+			if err != nil {
+				return err
+			}
+			if _, err := fmt.Fprintf(audit, "observation %s %s\n", relativePath, encoded); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	return elements, attributes, unparseable, fixtures, err
+}
+
+func recordCardinalityObservation(result *schemaCoverage, targets coverageTargets, match fixtureMatch) {
+	for id := range targets.repeatable {
+		for _, count := range match.cardinalities[id] {
+			result.ExercisedCardinalities[id] = appendUniqueInt(result.ExercisedCardinalities[id], count)
+		}
+		missing := match.parentInstances[particleParentComplexTypeID(id)] - len(match.cardinalities[id])
+		for i := 0; i < missing; i++ {
+			result.ExercisedCardinalities[id] = appendUniqueInt(result.ExercisedCardinalities[id], 0)
+		}
+	}
+}
+
+func streamStructuralMatches(index schemaIndex, samples string, result *schemaCoverage, targets coverageTargets, exercised map[string]struct{}) (map[string]string, error) {
+	bad := map[string]string{}
+	processed := 0
+	fmt.Fprintln(os.Stderr, "Coverage: matching structural fixtures")
+	err := filepath.WalkDir(samples, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || filepath.Ext(path) != ".xml" {
+			return nil
+		}
+		relativePath, err := fixtureReportPath(samples, path)
+		if err != nil {
+			return err
+		}
+		match, err := matchFixtureDetailed(index, path)
+		if err != nil {
+			bad[relativePath] = err.Error()
+			return nil
+		}
+		for id, value := range match.targets {
+			if strings.Contains(id, "|recursive|") {
+				if value > result.MaximumDepth[id] {
+					result.MaximumDepth[id] = value
+				}
+			} else if value > result.MaximumCardinality[id] {
+				result.MaximumCardinality[id] = value
+			}
+			exercised[id] = struct{}{}
+		}
+		recordCardinalityObservation(result, targets, match)
+		processed++
+		if processed%100 == 0 {
+			fmt.Fprintf(os.Stderr, "Coverage: matched %d fixtures\n", processed)
+		}
+		return nil
+	})
+	if err == nil {
+		fmt.Fprintf(os.Stderr, "Coverage: matched %d fixtures\n", processed)
+	}
+	return bad, err
+}
 func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
+	return buildSchemaCoverageWithAudit(xsdDir, samples, nil)
+}
+
+func buildSchemaCoverageWithAudit(xsdDir, samples string, audit io.Writer) (schemaCoverage, error) {
 	index, err := buildSchemaIndex(xsdDir)
 	if err != nil {
 		return schemaCoverage{}, err
 	}
 	targets := schemaCoverageTargets(index)
-	_, _, unparseable, observations, err := fixtureCoverage(samples)
+	_, _, unparseable, fixtures, err := streamFixtureCoverage(samples, audit)
 	if err != nil {
 		return schemaCoverage{}, err
 	}
-	matches, bad, err := structuralFixtureTargets(index, samples)
-	if err != nil {
-		return schemaCoverage{}, err
-	}
-	for path, message := range bad {
-		unparseable[path] = message
-	}
-	fixturePaths := map[string]struct{}{}
-	for path := range observations {
-		fixturePaths[path] = struct{}{}
-	}
-	for path := range unparseable {
-		fixturePaths[path] = struct{}{}
-	}
-	result := schemaCoverage{SchemaVersion: 5, Fixtures: len(fixturePaths), Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}, Unparseable: unparseable, FixtureObservations: observations, FixtureTargets: map[string][]string{}, MaximumCardinality: map[string]int{}, ExercisedCardinalities: map[string][]int{}, RequiredCardinalities: map[string][]int{}, MaximumDepth: map[string]int{}}
+	result := schemaCoverage{SchemaVersion: 5, Fixtures: fixtures, Categories: map[string]coverageCategory{}, Uncovered: map[string][]string{}, Unparseable: unparseable, FixtureObservations: map[string]fixtureObservation{}, FixtureTargets: map[string][]string{}, MaximumCardinality: map[string]int{}, ExercisedCardinalities: map[string][]int{}, RequiredCardinalities: map[string][]int{}, MaximumDepth: map[string]int{}}
 	// Record every repeatable schema particle even when no fixture reaches it.
 	// A zero is meaningful: it identifies an unexercised collection instead of
 	// silently omitting it from the cardinality report.
@@ -609,24 +717,16 @@ func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {
 		result.RequiredCardinalities[id] = requiredCardinalities(targets.repeatableBounds[id])
 	}
 	exercised := map[string]struct{}{}
-	for path, match := range matches {
-		found := match.targets
-		ids := make([]string, 0, len(found))
-		for id, value := range found {
-			if strings.Contains(id, "|recursive|") {
-				if value > result.MaximumDepth[id] {
-					result.MaximumDepth[id] = value
-				}
-			} else if value > result.MaximumCardinality[id] {
-				result.MaximumCardinality[id] = value
-			}
-			exercised[id] = struct{}{}
-			ids = append(ids, id)
-		}
-		sort.Strings(ids)
-		result.FixtureTargets[path] = ids
+	bad, err := streamStructuralMatches(index, samples, &result, targets, exercised)
+	if err != nil {
+		return schemaCoverage{}, err
 	}
-	recordCardinalityObservations(&result, targets, matches)
+	for path, message := range bad {
+		unparseable[path] = message
+	}
+	for id := range result.ExercisedCardinalities {
+		sort.Ints(result.ExercisedCardinalities[id])
+	}
 	for _, item := range []struct {
 		name   string
 		values map[string]struct{}
@@ -826,7 +926,7 @@ func runCoverage(args []string) error {
 	if *jsonPath == "" || *markdownPath == "" {
 		return fmt.Errorf("--json and --markdown are required")
 	}
-	report, err := buildSchemaCoverage(*xsdDir, *samples)
+	report, err := buildSchemaCoverageWithAudit(*xsdDir, *samples, os.Stdout)
 	if err != nil {
 		return err
 	}
@@ -847,8 +947,10 @@ func runCoverage(args []string) error {
 		return err
 	}
 	if *requireCardinality && len(report.CardinalityGaps) > 0 {
+		fmt.Fprintf(os.Stderr, "COVERAGE FAIL: %d repeatable particles miss required cardinalities. See %s and %s.\n", len(report.CardinalityGaps), *jsonPath, *markdownPath)
 		return fmt.Errorf("cardinality acceptance failed: %d repeatable particles miss required cardinalities (see %s)", len(report.CardinalityGaps), *markdownPath)
 	}
+	fmt.Fprintf(os.Stderr, "COVERAGE PASS: %d fixtures qualified. Reports: %s and %s.\n", report.Fixtures, *jsonPath, *markdownPath)
 	return nil
 }
 

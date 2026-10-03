@@ -521,6 +521,57 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			}
 		}
 	}
+	// XMLDSig and XAdES declarations are schema-reachable through the UBL
+	// signature extension, but many are not reachable through its deliberately
+	// small hand-authored payload. Generate their global roots directly so the
+	// same schema matcher can qualify those contracts without fabricating them
+	// inside a business document.
+	signatureNamespaces := map[string]string{
+		"http://www.w3.org/2000/09/xmldsig#": "xmldsig",
+		"http://uri.etsi.org/01903/v1.3.2#":  "xades",
+	}
+	type signatureRoot struct{ namespace, name string }
+	var roots []signatureRoot
+	for key := range index.GlobalElements {
+		namespace, name, _ := strings.Cut(key, "#")
+		if _, ok := signatureNamespaces[namespace]; ok {
+			roots = append(roots, signatureRoot{namespace, name})
+		}
+	}
+	sort.Slice(roots, func(i, j int) bool {
+		if roots[i].namespace == roots[j].namespace {
+			return roots[i].name < roots[j].name
+		}
+		return roots[i].namespace < roots[j].namespace
+	})
+	for _, root := range roots {
+		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
+		if doc == nil {
+			continue
+		}
+		state := newTargetedStructuralGenState(nil, 1)
+		state.signatureExtension = true
+		content, err := generateSampleWithState(index, root.name, xsdDir, doc.File, state)
+		if err != nil {
+			return generatedCorpus{}, fmt.Errorf("generate signature root %s: %w", root.name, err)
+		}
+		schemaPath := filepath.Join(xsdDir, "common", doc.File)
+		if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
+			return generatedCorpus{}, fmt.Errorf("validate signature root %s: %w", root.name, err)
+		}
+		family := signatureNamespaces[root.namespace] + "-root-" + strings.ToLower(root.name)
+		if err := record(generatedFixture{entry: fixtureManifestEntry{
+			ID: "ubl21.signature." + family, DocumentType: root.name, Profile: "ubl21",
+			File:   filepath.ToSlash(filepath.Join("SignatureSchemas", family+".xml")),
+			SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+			Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+			ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+			Tags:              []string{"positive", "ubl21", "structural", "signature-schema", signatureNamespaces[root.namespace]},
+			StructuralTargets: []string{"signature-root:" + root.name},
+		}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+			return generatedCorpus{}, err
+		}
+	}
 	return buildGeneratedCorpus(fixtures)
 }
 

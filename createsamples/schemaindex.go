@@ -7,6 +7,7 @@ package main
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -152,6 +153,11 @@ func loadSchemaDoc(path string) (*schemaDoc, error) {
 
 func rootNamespaceForSchema(xsdDir, schemaFile string) (string, error) {
 	path := filepath.Join(xsdDir, "maindoc", schemaFile)
+	if filepath.Dir(schemaFile) != "." {
+		path = filepath.Join(xsdDir, schemaFile)
+	} else if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		path = filepath.Join(xsdDir, "common", schemaFile)
+	}
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", err

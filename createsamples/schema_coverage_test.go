@@ -89,8 +89,8 @@ func TestSchemaCoverageIsDeterministicAndIncludesNestedParticles(t *testing.T) {
 	if first.Categories["choiceAlternatives"].Total == 0 {
 		t.Fatal("choice alternatives were not indexed")
 	}
-	if len(first.FixtureTargets) == 0 {
-		t.Fatal("fixture-to-target mappings were not recorded")
+	if len(first.FixtureTargets) != 0 || len(first.FixtureObservations) != 0 {
+		t.Fatal("streaming coverage retained per-fixture evidence")
 	}
 	if len(first.MaximumCardinality) == 0 {
 		t.Fatal("maximum cardinalities were not recorded")
