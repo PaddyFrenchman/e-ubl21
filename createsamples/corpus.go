@@ -195,6 +195,7 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 		choiceVariants = 1
 	}
 	fixtures := make([]generatedFixture, 0, len(report.MainFiles)*(choiceVariants+3))
+	repeatableTargets := schemaCoverageTargets(index)
 	for _, schema := range report.MainFiles {
 		root := schema.RootElement
 		if root == "" {
@@ -262,6 +263,47 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
 		if err := add("optional-rich", nil, 1, 0, 0, "", nil, "optional-elements", "optional-attributes", "cardinality", "occurrences-1"); err != nil {
 			return generatedCorpus{}, err
+		}
+		// Exercise nested cardinality contracts one particle at a time.  The
+		// ordinary cardinality families deliberately limit themselves to the
+		// document root because repeating every nested collection at once grows
+		// exponentially.  Starting from the same full structural expansion used
+		// by optional-rich gives us the particles this document can reach; an
+		// override then repeats just one element, preserving a small, XSD-valid
+		// fixture for each required non-singleton count.
+		baseline, err := generateTargetedStructuralSample(index, root, xsdDir, schema.File, nil, 1)
+		if err != nil {
+			return generatedCorpus{}, fmt.Errorf("generate %s cardinality baseline: %w", root, err)
+		}
+		matched, err := matchFixtureDetailedReader(index, strings.NewReader(baseline))
+		if err != nil {
+			return generatedCorpus{}, fmt.Errorf("match %s cardinality baseline: %w", root, err)
+		}
+		reachable := make([]string, 0, len(matched.cardinalities))
+		for id := range matched.cardinalities {
+			if _, ok := repeatableTargets.repeatable[id]; ok {
+				reachable = append(reachable, id)
+			}
+		}
+		sort.Strings(reachable)
+		for targetIndex, id := range reachable {
+			parts := strings.Split(id, "|")
+			if len(parts) != 4 {
+				return generatedCorpus{}, fmt.Errorf("invalid repeatable target %q", id)
+			}
+			element := filepath.Base(parts[3])
+			for _, count := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+				// The baseline covers the singleton case and the minimal family
+				// covers optional zero.  Only add fixtures that demonstrate an
+				// additional cardinality contract.
+				if count <= 1 {
+					continue
+				}
+				family := fmt.Sprintf("cardinality-target-%04d-%d", targetIndex+1, count)
+				if err := add(family, nil, 1, 0, count, element, nil, "cardinality", "targeted", fmt.Sprintf("occurrences-%d", count)); err != nil {
+					return generatedCorpus{}, err
+				}
+			}
 		}
 		// XMLDSig/XAdES is reachable only through UBL's extension wildcard.
 		// Keep a focused declared-signature fixture alongside the generic foreign
