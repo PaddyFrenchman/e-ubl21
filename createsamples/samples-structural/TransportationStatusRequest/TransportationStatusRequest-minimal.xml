@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<TransportationStatusRequest xmlns="urn:oasis:names:specification:ubl:schema:xsd:TransportationStatusRequest-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
-    <cbc:ID>ID-001</cbc:ID>
-</TransportationStatusRequest>
-
