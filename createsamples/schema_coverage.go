@@ -545,6 +545,8 @@ func coverageCategoryFor(targets map[string]struct{}, observed map[string]struct
 
 func structuralFixtureTargets(index schemaIndex, samples string) (map[string]fixtureMatch, map[string]string, error) {
 	out, bad := map[string]fixtureMatch{}, map[string]string{}
+	processed := 0
+	fmt.Println("Coverage: matching structural fixtures")
 	err := filepath.WalkDir(samples, func(path string, d os.DirEntry, e error) error {
 		if e != nil {
 			return e
@@ -562,8 +564,15 @@ func structuralFixtureTargets(index schemaIndex, samples string) (map[string]fix
 			return nil
 		}
 		out[relativePath] = m
+		processed++
+		if processed%100 == 0 {
+			fmt.Printf("Coverage: matched %d fixtures\n", processed)
+		}
 		return nil
 	})
+	if err == nil {
+		fmt.Printf("Coverage: matched %d fixtures\n", processed)
+	}
 	return out, bad, err
 }
 func buildSchemaCoverage(xsdDir, samples string) (schemaCoverage, error) {

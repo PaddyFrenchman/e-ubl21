@@ -14,9 +14,9 @@
 # Code coverage profiles and other test artifacts
 *.out
 coverage.*
-# The structural corpus's coverage reports are reviewable generator output.
-!createsamples/samples-structural/coverage.json
-!createsamples/samples-structural/coverage.md
+# The structural corpus is regenerated locally from the pinned XSD inputs.
+# It can be multi-gigabyte and must never be committed.
+createsamples/samples-structural/
 *.coverprofile
 profile.cov
 

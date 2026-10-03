@@ -190,11 +190,97 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 // variants share the ordinary manifest/provenance contract and remain wholly
 // generated from the pinned schema graph.
 func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string) (generatedCorpus, error) {
+	return generateUBLStructuralCorpusWithSink(report, index, xsdDir, generatorVersion, nil)
+}
+
+// generateAndWriteUBLStructuralCorpus streams each fixture to an isolated
+// staging directory.  It keeps manifest metadata only; XML content is written
+// and released before the next fixture is generated.
+func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventory, index schemaIndex, xsdDir, generatorVersion string) error {
+	if err := validateCorpusOutputDirectory(outputDir); err != nil {
+		return err
+	}
+	absolute, err := filepath.Abs(outputDir)
+	if err != nil {
+		return fmt.Errorf("resolve generated corpus output: %w", err)
+	}
+	parent := filepath.Dir(absolute)
+	if err := os.MkdirAll(parent, 0o755); err != nil {
+		return fmt.Errorf("create generated corpus parent: %w", err)
+	}
+	staging, err := os.MkdirTemp(parent, "."+filepath.Base(absolute)+".staging-*")
+	if err != nil {
+		return fmt.Errorf("create generated corpus staging directory: %w", err)
+	}
+	defer os.RemoveAll(staging)
+	generated := 0
+	fmt.Printf("Structural corpus: streaming validated fixtures to staging directory\n")
+	sink := func(fixture generatedFixture) error {
+		path := filepath.Join(staging, filepath.FromSlash(fixture.entry.File))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(path, fixture.content, 0o644); err != nil {
+			return err
+		}
+		generated++
+		if generated%100 == 0 {
+			fmt.Printf("Structural corpus: generated and validated %d fixtures\n", generated)
+		}
+		return nil
+	}
+	corpus, err := generateUBLStructuralCorpusWithSink(report, index, xsdDir, generatorVersion, sink)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(staging, corpusOwnershipMarkerName), []byte(corpusOwnershipMarkerContent), 0o644); err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(staging, "manifest.json"), corpus.manifestJSON, 0o644); err != nil {
+		return err
+	}
+	fmt.Printf("Structural corpus: wrote manifest for %d fixtures; installing corpus\n", generated)
+	if _, err := os.Stat(absolute); err == nil {
+		backup, err := os.MkdirTemp(parent, "."+filepath.Base(absolute)+".backup-*")
+		if err != nil {
+			return err
+		}
+		if err := os.Remove(backup); err != nil {
+			return err
+		}
+		if err := os.Rename(absolute, backup); err != nil {
+			return err
+		}
+		if err := os.Rename(staging, absolute); err != nil {
+			_ = os.Rename(backup, absolute)
+			return err
+		}
+		return os.RemoveAll(backup)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return os.Rename(staging, absolute)
+}
+
+// generateUBLStructuralCorpusWithSink sends each validated structural fixture
+// to sink before the next fixture is generated.  With a sink, only manifest
+// metadata is retained in the returned corpus.
+func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string, sink func(generatedFixture) error) (generatedCorpus, error) {
 	choiceVariants := maxChoiceAlternatives(index)
 	if choiceVariants < 1 {
 		choiceVariants = 1
 	}
 	fixtures := make([]generatedFixture, 0, len(report.MainFiles)*(choiceVariants+3))
+	record := func(fixture generatedFixture) error {
+		if sink != nil {
+			if err := sink(fixture); err != nil {
+				return err
+			}
+			fixture.content = nil
+		}
+		fixtures = append(fixtures, fixture)
+		return nil
+	}
 	repeatableTargets := schemaCoverageTargets(index)
 	for _, schema := range report.MainFiles {
 		root := schema.RootElement
@@ -225,7 +311,7 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
 				return fmt.Errorf("validate %s %s: %w", root, family, err)
 			}
-			fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+			if err := record(generatedFixture{entry: fixtureManifestEntry{
 				ID:             fmt.Sprintf("ubl21.%s.%s", strings.ToLower(root), family),
 				DocumentType:   root,
 				Profile:        "ubl21",
@@ -241,14 +327,16 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 				// in coverage.json; duplicating it in every manifest entry makes a
 				// versioned corpus needlessly enormous.
 				StructuralTargets: []string{"schema-root:" + root, "family:" + family},
-			}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
+			}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
+				return err
+			}
 			return nil
 		}
 		minimal, err := generateMinimalSample(index, root, xsdDir, schema.File)
 		if err != nil {
 			return generatedCorpus{}, fmt.Errorf("generate %s minimal: %w", root, err)
 		}
-		fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+		if err := record(generatedFixture{entry: fixtureManifestEntry{
 			ID:                fmt.Sprintf("ubl21.%s.minimal", strings.ToLower(root)),
 			DocumentType:      root,
 			Profile:           "ubl21",
@@ -260,7 +348,9 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
 			Tags:              []string{"positive", "ubl21", "structural", "minimal", "optional-absent", "cardinality", "occurrences-0"},
 			StructuralTargets: []string{"schema-root:" + root, "family:minimal"},
-		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
+		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
+			return generatedCorpus{}, err
+		}
 		if err := add("optional-rich", nil, 1, 0, 0, "", nil, "optional-elements", "optional-attributes", "cardinality", "occurrences-1"); err != nil {
 			return generatedCorpus{}, err
 		}
@@ -286,12 +376,16 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			}
 		}
 		sort.Strings(reachable)
-		for targetIndex, id := range reachable {
+		planned := map[string]map[int]struct{}{}
+		for _, id := range reachable {
 			parts := strings.Split(id, "|")
 			if len(parts) != 4 {
 				return generatedCorpus{}, fmt.Errorf("invalid repeatable target %q", id)
 			}
 			element := filepath.Base(parts[3])
+			if planned[element] == nil {
+				planned[element] = map[int]struct{}{}
+			}
 			for _, count := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
 				// The baseline covers the singleton case and the minimal family
 				// covers optional zero.  Only add fixtures that demonstrate an
@@ -299,7 +393,22 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 				if count <= 1 {
 					continue
 				}
-				family := fmt.Sprintf("cardinality-target-%04d-%d", targetIndex+1, count)
+				planned[element][count] = struct{}{}
+			}
+		}
+		elements := make([]string, 0, len(planned))
+		for element := range planned {
+			elements = append(elements, element)
+		}
+		sort.Strings(elements)
+		for _, element := range elements {
+			counts := make([]int, 0, len(planned[element]))
+			for count := range planned[element] {
+				counts = append(counts, count)
+			}
+			sort.Ints(counts)
+			for _, count := range counts {
+				family := fmt.Sprintf("cardinality-target-%s-%d", strings.ToLower(element), count)
 				if err := add(family, nil, 1, 0, count, element, nil, "cardinality", "targeted", fmt.Sprintf("occurrences-%d", count)); err != nil {
 					return generatedCorpus{}, err
 				}
@@ -335,7 +444,7 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 				if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
 					return generatedCorpus{}, fmt.Errorf("validate %s signature extension %s: %w", root, family, err)
 				}
-				fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+				if err := record(generatedFixture{entry: fixtureManifestEntry{
 					ID:                "ubl21.invoice.signature-extension-" + family,
 					DocumentType:      root,
 					Profile:           "ubl21",
@@ -347,7 +456,9 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 					ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
 					Tags:              []string{"positive", "ubl21", "structural", "signature-extension", "choice-alternative", "wildcard", family},
 					StructuralTargets: []string{"schema-root:" + root, "family:signature-extension", "signature-variant:" + family},
-				}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
+				}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
+					return generatedCorpus{}, err
+				}
 			}
 		}
 		for planIndex, choices := range choicePlans[1:] {
