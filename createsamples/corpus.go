@@ -572,6 +572,85 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			return generatedCorpus{}, err
 		}
 	}
+	// A main-document expansion intentionally demotes repeated aggregate types
+	// after their first full visit.  That keeps ordinary fixtures bounded, but
+	// it also means a repeatable particle owned by one of those types might
+	// never be a direct child of an instantiated parent.  Generate focused
+	// roots for every globally-declared type that owns a repeatable particle.
+	// At a root the generic cardinality state applies directly to that type's
+	// particles, exercising the zero, two and capped-unbounded (five) cases
+	// without multiplying unrelated nested collections.
+	cardinalityOwners := map[string]struct{}{}
+	for id := range repeatableTargets.repeatable {
+		parts := strings.Split(id, "|")
+		if len(parts) != 4 {
+			return generatedCorpus{}, fmt.Errorf("invalid repeatable target %q", id)
+		}
+		owner, _, _ := strings.Cut(parts[3], "/")
+		cardinalityOwners[qualifiedKey(parts[0], owner)] = struct{}{}
+	}
+	type cardinalityRoot struct{ namespace, name string }
+	var cardinalityRoots []cardinalityRoot
+	for key, declaration := range index.GlobalElements {
+		doc := index.GlobalElementDocs[key]
+		if doc == nil || declaration.Type == "" {
+			continue
+		}
+		typeNamespace, typeName := qualifyRef(declaration.Type, doc.TargetNamespace)
+		if _, ok := cardinalityOwners[qualifiedKey(typeNamespace, typeName)]; !ok {
+			continue
+		}
+		namespace, name, _ := strings.Cut(key, "#")
+		cardinalityRoots = append(cardinalityRoots, cardinalityRoot{namespace: namespace, name: name})
+	}
+	sort.Slice(cardinalityRoots, func(i, j int) bool {
+		if cardinalityRoots[i].namespace == cardinalityRoots[j].namespace {
+			return cardinalityRoots[i].name < cardinalityRoots[j].name
+		}
+		return cardinalityRoots[i].namespace < cardinalityRoots[j].namespace
+	})
+	for _, root := range cardinalityRoots {
+		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
+		if doc == nil {
+			continue
+		}
+		rootKey := strings.NewReplacer(":", "-", "/", "-", "#", "-").Replace(root.namespace)
+		for _, variant := range []struct {
+			name  string
+			count int
+		}{
+			{name: "minimal"},
+			{name: "cardinality-2", count: 2},
+			{name: "cardinality-5", count: 5},
+		} {
+			var content string
+			var err error
+			if variant.count == 0 {
+				content, err = generateMinimalSample(index, root.name, xsdDir, doc.File)
+			} else {
+				content, err = generateCardinalityStructuralSample(index, root.name, xsdDir, doc.File, variant.count)
+			}
+			if err != nil {
+				return generatedCorpus{}, fmt.Errorf("generate cardinality root %s %s: %w", root.name, variant.name, err)
+			}
+			schemaPath := filepath.Join(xsdDir, "common", doc.File)
+			if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
+				return generatedCorpus{}, fmt.Errorf("validate cardinality root %s %s: %w", root.name, variant.name, err)
+			}
+			family := "cardinality-root-" + variant.name
+			if err := record(generatedFixture{entry: fixtureManifestEntry{
+				ID: "ubl21.cardinality." + rootKey + "." + strings.ToLower(root.name) + "." + variant.name, DocumentType: root.name, Profile: "ubl21",
+				File:   filepath.ToSlash(filepath.Join("CardinalityRoots", rootKey, root.name+"-"+variant.name+".xml")),
+				SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+				Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+				ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+				Tags:              []string{"positive", "ubl21", "structural", "cardinality", "cardinality-root", variant.name},
+				StructuralTargets: []string{"schema-root:" + root.name, "family:" + family},
+			}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+				return generatedCorpus{}, err
+			}
+		}
+	}
 	return buildGeneratedCorpus(fixtures)
 }
 
