@@ -48,6 +48,14 @@ func TestShippedSchemaInventoryIndexAndGeneration(t *testing.T) {
 	}
 }
 
+func TestSplitQualifiedKeyPreservesFragmentNamespace(t *testing.T) {
+	key := qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "AllDataObjectsTimeStamp")
+	namespace, name, ok := splitQualifiedKey(key)
+	if !ok || namespace != "http://uri.etsi.org/01903/v1.3.2#" || name != "AllDataObjectsTimeStamp" {
+		t.Fatalf("splitQualifiedKey(%q) = %q, %q, %t", key, namespace, name, ok)
+	}
+}
+
 func TestCardinalityStructuralGenerationHonoursSchemaBounds(t *testing.T) {
 	state := newStructuralGenState(0, 1, true)
 	state.repeatCount = 5

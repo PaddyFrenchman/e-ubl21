@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type schemaIndex struct {
@@ -64,6 +65,17 @@ func qualifyRef(raw, contextNS string) (namespace, name string) {
 
 func qualifiedKey(namespace, name string) string {
 	return namespace + "#" + name
+}
+
+// splitQualifiedKey reverses qualifiedKey. Namespace URIs such as XMLDSig
+// and XAdES legitimately end in '#', so the final separator is the only
+// unambiguous boundary between namespace and local name.
+func splitQualifiedKey(key string) (namespace, name string, ok bool) {
+	separator := strings.LastIndex(key, "#")
+	if separator <= 0 || separator == len(key)-1 {
+		return "", "", false
+	}
+	return key[:separator], key[separator+1:], true
 }
 
 type schemaDoc struct {

@@ -533,7 +533,10 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 	type signatureRoot struct{ namespace, name string }
 	var roots []signatureRoot
 	for key := range index.GlobalElements {
-		namespace, name, _ := strings.Cut(key, "#")
+		namespace, name, ok := splitQualifiedKey(key)
+		if !ok {
+			return generatedCorpus{}, fmt.Errorf("invalid global element key %q", key)
+		}
 		if _, ok := signatureNamespaces[namespace]; ok {
 			roots = append(roots, signatureRoot{namespace, name})
 		}
@@ -600,7 +603,10 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		if _, ok := cardinalityOwners[qualifiedKey(typeNamespace, typeName)]; !ok {
 			continue
 		}
-		namespace, name, _ := strings.Cut(key, "#")
+		namespace, name, ok := splitQualifiedKey(key)
+		if !ok {
+			return generatedCorpus{}, fmt.Errorf("invalid global element key %q", key)
+		}
 		cardinalityRoots = append(cardinalityRoots, cardinalityRoot{namespace: namespace, name: name})
 	}
 	sort.Slice(cardinalityRoots, func(i, j int) bool {
