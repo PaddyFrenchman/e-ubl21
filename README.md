@@ -318,6 +318,18 @@ tracked. Regenerate them into staging and print a reviewable diff with:
 make corpus-regenerate
 ```
 
+For the complete issue #167 qualification sequence (regeneration, coverage,
+runtime corpus regression, high-cardinality/single-fixture checks, and
+diagnostic-handoff checks), run:
+
+```bash
+make qualify-structural-corpus
+```
+
+It stores evidence under `regression-results/issue-167/<timestamp>/` and does
+not promote any generated output. It exits non-zero while coverage residuals
+remain unapproved.
+
 This command never changes a tracked fixture. After reviewing its output, use
 `make corpus-replace` to explicitly promote the staged-equivalent output. The
 workflow discovers the pinned `XSD/` inventory, generates twice for
