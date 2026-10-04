@@ -185,14 +185,6 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 	return buildGeneratedCorpus(fixtures)
 }
 
-// generateUBLStructuralCorpus produces purpose-specific fixtures instead of
-// trying to force every legal structural variation into one document. The
-// variants share the ordinary manifest/provenance contract and remain wholly
-// generated from the pinned schema graph.
-func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string) (generatedCorpus, error) {
-	return generateUBLStructuralCorpusWithSink(report, index, xsdDir, generatorVersion, nil)
-}
-
 // generateAndWriteUBLStructuralCorpus streams each fixture to an isolated
 // staging directory.  It keeps manifest metadata only; XML content is written
 // and released before the next fixture is generated.
@@ -671,72 +663,6 @@ func validateStructuralCandidate(content []byte, schemaPath string) error {
 		return fmt.Errorf("XSD validation failed: %w: %s", err, strings.TrimSpace(string(output)))
 	}
 	return nil
-}
-
-func structuralTargetIDs(index schemaIndex, content []byte) ([]string, error) {
-	matches, err := matchFixtureBytes(index, content)
-	if err != nil {
-		return nil, err
-	}
-	targets := make([]string, 0, len(matches))
-	for target := range matches {
-		targets = append(targets, target)
-	}
-	sort.Strings(targets)
-	return targets, nil
-}
-
-func countChoiceSites(index schemaIndex) int {
-	count := 0
-	var sequence func(*xsdSequence)
-	var choice func(*xsdChoice)
-	var all func(*xsdAll)
-	sequence = func(p *xsdSequence) {
-		if p != nil {
-			for i := range p.Sequences {
-				sequence(&p.Sequences[i])
-			}
-			for i := range p.Choices {
-				choice(&p.Choices[i])
-			}
-			for i := range p.Alls {
-				all(&p.Alls[i])
-			}
-		}
-	}
-	choice = func(p *xsdChoice) {
-		if p != nil {
-			count++
-			for i := range p.Sequences {
-				sequence(&p.Sequences[i])
-			}
-			for i := range p.Choices {
-				choice(&p.Choices[i])
-			}
-			for i := range p.Alls {
-				all(&p.Alls[i])
-			}
-		}
-	}
-	all = func(p *xsdAll) {
-		if p != nil {
-			for i := range p.Sequences {
-				sequence(&p.Sequences[i])
-			}
-			for i := range p.Choices {
-				choice(&p.Choices[i])
-			}
-			for i := range p.Alls {
-				all(&p.Alls[i])
-			}
-		}
-	}
-	for _, typ := range index.GlobalTypes {
-		sequence(typ.Sequence)
-		choice(typ.Choice)
-		all(typ.All)
-	}
-	return count
 }
 
 func maxChoiceAlternatives(index schemaIndex) int {
