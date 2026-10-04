@@ -56,6 +56,27 @@ func TestSplitQualifiedKeyPreservesFragmentNamespace(t *testing.T) {
 	}
 }
 
+func TestGenerateRestrictedXAdESTimestampRoot(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "http://uri.etsi.org/01903/v1.3.2#"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, "AllDataObjectsTimeStamp")]
+	if doc == nil {
+		t.Fatal("AllDataObjectsTimeStamp declaration missing")
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "AllDataObjectsTimeStamp", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCardinalityStructuralGenerationHonoursSchemaBounds(t *testing.T) {
 	state := newStructuralGenState(0, 1, true)
 	state.repeatCount = 5

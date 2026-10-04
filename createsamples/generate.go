@@ -376,7 +376,15 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 		// Any complex type reaching this point has no simple content: it is
 		// either element-only or attribute-only. Neither permits text, so no
 		// Value fallback is applied here.
-		children, supported := flattenContentModel(ct.Sequence, ct.Choice, ct.All, index, typeNS, state, depth+1)
+		sequence, choice, all := ct.Sequence, ct.Choice, ct.All
+		// XAdES timestamp roots restrict an abstract base type and declare their
+		// required timestamp choice inside the restriction. Use that restricted
+		// content model rather than treating the derived type as empty.
+		if ct.ComplexContent != nil && ct.ComplexContent.Restriction != nil {
+			restriction := ct.ComplexContent.Restriction
+			sequence, choice, all = restriction.Sequence, restriction.Choice, restriction.All
+		}
+		children, supported := flattenContentModel(sequence, choice, all, index, typeNS, state, depth+1)
 		if !supported {
 			return node, false
 		}
