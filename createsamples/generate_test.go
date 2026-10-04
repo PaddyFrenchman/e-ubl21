@@ -649,6 +649,9 @@ func TestStructuralWildcardHonorsPolicy(t *testing.T) {
 	if _, ok := structuralWildcardNode(xsdAny{Namespace: "##other", ProcessContents: "strict"}); ok {
 		t.Fatal("strict wildcard must not invent an undeclared node")
 	}
+	if _, ok := structuralWildcardNode(xsdAny{Namespace: "##other"}); ok {
+		t.Fatal("an omitted wildcard policy defaults to strict")
+	}
 	if n, ok := structuralWildcardNode(xsdAny{Namespace: "##local", ProcessContents: "skip"}); !ok || n.Attributes["xmlns"] != "" {
 		t.Fatalf("local wildcard = %#v, %v", n, ok)
 	}

@@ -616,7 +616,8 @@ func xadesQualifyingProperties(variant int) xmlNode {
 // business content.
 func structuralWildcardNode(any xsdAny) (xmlNode, bool) {
 	// Strict processing needs a declared permitted element; do not invent one.
-	if any.ProcessContents == "strict" {
+	// XML Schema defaults an omitted processContents attribute to strict.
+	if any.ProcessContents == "" || any.ProcessContents == "strict" {
 		return xmlNode{}, false
 	}
 	switch any.Namespace {
