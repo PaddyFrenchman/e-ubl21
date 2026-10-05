@@ -248,14 +248,16 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 	rootNode.Attributes["xmlns:cbc"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
 	rootNode.Attributes["xmlns:cac"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
 	rootNode.Attributes["xmlns:ext"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+	// XMLDSig and XAdES types are imported by UBL and may be reached from a
+	// standalone root even in the minimal (non-structural) generation path.
+	rootNode.Attributes["xmlns:ds"] = "http://www.w3.org/2000/09/xmldsig#"
+	rootNode.Attributes["xmlns:xades"] = "http://uri.etsi.org/01903/v1.3.2#"
 	if state.structural {
 		rootNode.Attributes["xmlns:struct"] = "urn:e-ubl21:structural-fixture"
 		// Standalone XMLDSig/XAdES cardinality roots can contain imported
 		// declarations even when they are not being rendered as a UBL signature
 		// extension. Keep these prefixes available for those schema-derived
 		// children in every structural fixture.
-		rootNode.Attributes["xmlns:ds"] = "http://www.w3.org/2000/09/xmldsig#"
-		rootNode.Attributes["xmlns:xades"] = "http://uri.etsi.org/01903/v1.3.2#"
 		if state.signatureExtension {
 			rootNode.Attributes["xmlns:sig"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2"
 			rootNode.Attributes["xmlns:sac"] = "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2"

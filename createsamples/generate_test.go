@@ -691,6 +691,24 @@ func TestGenerateAllDataObjectsTimeStampCardinalityRootIsXSDValid(t *testing.T) 
 	}
 }
 
+func TestGenerateOtherTimeStampMinimalRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "OtherTimeStamp")]
+	if doc == nil {
+		t.Fatal("OtherTimeStamp declaration not found")
+	}
+	content, err := generateMinimalSample(index, "OtherTimeStamp", filepath.Join("..", "XSD"), doc.File)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *testing.T) {
 	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
 	if err != nil {
