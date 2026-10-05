@@ -466,48 +466,93 @@ func sequenceRequiresAny(seq *xsdSequence) bool {
 // to the caller.
 func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genState, depth int) ([]xmlNode, bool) {
 	var out []xmlNode
-	for _, child := range seq.Elements {
+	appendElement := func(child xsdElementDecl) bool {
 		name, prefix := elementNameAndPrefix(child)
 		if name == "" {
-			continue
+			return true
 		}
 		if !state.full && isOptionalElement(child) {
-			continue
+			return true
 		}
 		node, supported := expandElement(index, child, name, prefix, ns, state, depth)
 		if !supported {
 			if isOptionalElement(child) {
-				continue
+				return true
 			}
-			return nil, false
+			return false
 		}
 		for i := 0; i < occurrenceCount(child, state, depth); i++ {
 			out = append(out, node)
 		}
+		return true
 	}
-	for i := range seq.Sequences {
-		children, supported := flattenSequence(seq.Sequences[i], index, ns, state, depth)
+	appendChoice := func(choice xsdChoice) bool {
+		if !state.full && choice.MinOccurs == "0" {
+			return true
+		}
+		children, supported := flattenChoice(choice, index, ns, state, depth)
 		if !supported {
-			return nil, false
+			return false
 		}
 		out = append(out, children...)
+		return true
 	}
-	for i := range seq.Choices {
-		if !state.full && seq.Choices[i].MinOccurs == "0" {
-			continue
-		}
-		children, supported := flattenChoice(seq.Choices[i], index, ns, state, depth)
+	appendSequence := func(nested xsdSequence) bool {
+		children, supported := flattenSequence(nested, index, ns, state, depth)
 		if !supported {
-			return nil, false
+			return false
 		}
 		out = append(out, children...)
+		return true
 	}
-	for i := range seq.Alls {
-		children, supported := flattenAll(seq.Alls[i], index, ns, state, depth)
+	appendAll := func(all xsdAll) bool {
+		children, supported := flattenAll(all, index, ns, state, depth)
 		if !supported {
-			return nil, false
+			return false
 		}
 		out = append(out, children...)
+		return true
+	}
+	if len(seq.Particles) > 0 {
+		for _, particle := range seq.Particles {
+			var ok bool
+			switch particle.kind {
+			case "element":
+				ok = appendElement(seq.Elements[particle.index])
+			case "sequence":
+				ok = appendSequence(seq.Sequences[particle.index])
+			case "choice":
+				ok = appendChoice(seq.Choices[particle.index])
+			case "all":
+				ok = appendAll(seq.Alls[particle.index])
+			default:
+				continue // xsd:any is handled below.
+			}
+			if !ok {
+				return nil, false
+			}
+		}
+	} else {
+		for _, child := range seq.Elements {
+			if !appendElement(child) {
+				return nil, false
+			}
+		}
+		for i := range seq.Sequences {
+			if !appendSequence(seq.Sequences[i]) {
+				return nil, false
+			}
+		}
+		for i := range seq.Choices {
+			if !appendChoice(seq.Choices[i]) {
+				return nil, false
+			}
+		}
+		for i := range seq.Alls {
+			if !appendAll(seq.Alls[i]) {
+				return nil, false
+			}
+		}
 	}
 	if seq.Any != nil && state.signatureExtension && ns == "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" && seq.Any.Namespace == "##other" && seq.Any.ProcessContents == "lax" {
 		out = append(out, structuralSignatureExtensionNode(state.signatureVariant))
@@ -885,7 +930,10 @@ func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, v
 				*nextID = *nextID + 1
 				attrs[attr.Name] = fmt.Sprintf("id-%d", *nextID)
 			} else {
-				attrs[attr.Name] = sampleValueForType(attr.Name, attr.Type, 0)
+				// Attributes can carry named simple types with enumerations (for
+				// example XAdES Identifier/@Qualifier). Resolve those constraints
+				// before falling back to name-based scalar generation.
+				attrs[attr.Name] = sampleScalarForType(index, attr.Name, attr.Type, ns, 0)
 			}
 		}
 	}

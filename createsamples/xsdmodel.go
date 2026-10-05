@@ -71,6 +71,79 @@ type xsdSequence struct {
 	Alls      []xsdAll         `xml:"all"`
 	Elements  []xsdElementDecl `xml:"element"`
 	Any       *xsdAny          `xml:"any"`
+	Particles []xsdParticle    `xml:"-"`
+}
+
+// xsdParticle retains the declaration order which encoding/xml otherwise
+// loses by collecting each child element into a separate slice. Sequence
+// ordering is significant: an xsd:choice may appear between two elements.
+type xsdParticle struct {
+	kind  string
+	index int
+}
+
+func (s *xsdSequence) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	*s = xsdSequence{}
+	for _, attr := range start.Attr {
+		switch attr.Name.Local {
+		case "minOccurs":
+			s.MinOccurs = attr.Value
+		case "maxOccurs":
+			s.MaxOccurs = attr.Value
+		}
+	}
+	for {
+		token, err := d.Token()
+		if err != nil {
+			return err
+		}
+		switch token := token.(type) {
+		case xml.EndElement:
+			return nil
+		case xml.StartElement:
+			switch token.Name.Local {
+			case "element":
+				var value xsdElementDecl
+				if err := d.DecodeElement(&value, &token); err != nil {
+					return err
+				}
+				s.Elements = append(s.Elements, value)
+				s.Particles = append(s.Particles, xsdParticle{"element", len(s.Elements) - 1})
+			case "sequence":
+				var value xsdSequence
+				if err := d.DecodeElement(&value, &token); err != nil {
+					return err
+				}
+				s.Sequences = append(s.Sequences, value)
+				s.Particles = append(s.Particles, xsdParticle{"sequence", len(s.Sequences) - 1})
+			case "choice":
+				var value xsdChoice
+				if err := d.DecodeElement(&value, &token); err != nil {
+					return err
+				}
+				s.Choices = append(s.Choices, value)
+				s.Particles = append(s.Particles, xsdParticle{"choice", len(s.Choices) - 1})
+			case "all":
+				var value xsdAll
+				if err := d.DecodeElement(&value, &token); err != nil {
+					return err
+				}
+				s.Alls = append(s.Alls, value)
+				s.Particles = append(s.Particles, xsdParticle{"all", len(s.Alls) - 1})
+			case "any":
+				var value xsdAny
+				if err := d.DecodeElement(&value, &token); err != nil {
+					return err
+				}
+				s.Any = &value
+				s.Particles = append(s.Particles, xsdParticle{"any", 0})
+			default:
+				if err := d.Skip(); err != nil {
+					return err
+				}
+			}
+		}
+	}
 }
 
 type xsdAny struct {
