@@ -331,13 +331,17 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 		typeNS = ns
 	case typeName != "":
 		tNS, tName := qualifyRef(typeName, ns)
-		if t, ok := index.GlobalTypes[qualifiedKey(tNS, tName)]; ok {
+		// Prefer simple declarations when resolving scalar content. Some
+		// imported XMLDSig names are also present in the complex-type index;
+		// treating their empty complex shell as authoritative loses the
+		// restricted scalar value (e.g. HMACOutputLengthType's integer).
+		if _, ok := index.GlobalSimpleTypes[qualifiedKey(tNS, tName)]; ok {
+			node.Value = sampleScalarForType(index, elementName, typeName, tNS, state.facetBoundary)
+			return node, true
+		} else if t, ok := index.GlobalTypes[qualifiedKey(tNS, tName)]; ok {
 			typeCopy := t
 			ct = &typeCopy
 			typeNS = tNS
-		} else if _, ok := index.GlobalSimpleTypes[qualifiedKey(tNS, tName)]; ok {
-			node.Value = sampleScalarForType(index, elementName, typeName, tNS, state.facetBoundary)
-			return node, true
 		}
 	}
 

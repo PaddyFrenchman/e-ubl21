@@ -611,6 +611,48 @@ func TestGenerateSignatureExtensionStructuralSampleIsXSDValid(t *testing.T) {
 	}
 }
 
+func TestGenerateCounterSignatureRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "CounterSignature")]
+	if doc == nil {
+		t.Fatal("CounterSignature declaration not found")
+	}
+	signatureMethod := index.GlobalTypes[qualifiedKey("http://www.w3.org/2000/09/xmldsig#", "SignatureMethodType")]
+	if signatureMethod.Sequence == nil || len(signatureMethod.Sequence.Elements) == 0 {
+		t.Fatal("SignatureMethod HMACOutputLength declaration not found")
+	}
+	if got := signatureMethod.Sequence.Elements[0].Type; got != "ds:HMACOutputLengthType" {
+		t.Fatalf("HMACOutputLength type = %q", got)
+	}
+	if _, ok := index.GlobalSimpleTypes[qualifiedKey("http://www.w3.org/2000/09/xmldsig#", "HMACOutputLengthType")]; !ok {
+		t.Fatal("HMACOutputLengthType not indexed as a simple type")
+	}
+	if signatureMethod.Sequence.Elements[0].ComplexType != nil {
+		t.Fatal("HMACOutputLength unexpectedly has an inline complex type")
+	}
+	if got := sampleScalarForType(index, "HMACOutputLength", "ds:HMACOutputLengthType", "http://www.w3.org/2000/09/xmldsig#", 1); got != "1" {
+		t.Fatalf("direct HMACOutputLength = %q", got)
+	}
+	if node, ok := expandElement(index, signatureMethod.Sequence.Elements[0], "HMACOutputLength", "ds", "http://www.w3.org/2000/09/xmldsig#", newTargetedStructuralGenState(nil, 1), 0); !ok || node.Value != "1" {
+		t.Fatalf("generated HMACOutputLength = %#v, supported=%v", node, ok)
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "CounterSignature", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(content, ">1</ds:HMACOutputLength>") {
+		t.Fatalf("HMACOutputLength is not a valid integer:\n%s", content)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *testing.T) {
 	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
 	if err != nil {
@@ -855,6 +897,10 @@ func TestSchemaIndexReadErrorsAndNamespaceFallback(t *testing.T) {
 }
 
 func TestQNameValuesAndGenerationHelpers(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	if localPart("cbc:ID") != "ID" || prefixPart("cbc:ID") != "cbc" || trimUBLDocumentType("UBL-Invoice-2.1.xsd") != "Invoice" {
 		t.Fatal("QName helpers returned unexpected values")
 	}
@@ -875,6 +921,9 @@ func TestQNameValuesAndGenerationHelpers(t *testing.T) {
 	}
 	if got := sampleValueForType("IssueTime", "xsd:dateTime", 0); got != "2026-01-01T12:00:00Z" {
 		t.Errorf("xsd:dateTime IssueTime = %q, want a valid date-time", got)
+	}
+	if got := sampleScalarForType(index, "HMACOutputLength", "ds:HMACOutputLengthType", "http://www.w3.org/2000/09/xmldsig#", 0); got != "1" {
+		t.Errorf("HMACOutputLength = %q, want a valid integer", got)
 	}
 	if !isPrimitiveType("xsd:string") || isPrimitiveType("custom") {
 		t.Error("primitive detection incorrect")
