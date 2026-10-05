@@ -707,6 +707,13 @@ func TestGenerateOtherTimeStampMinimalRootIsXSDValid(t *testing.T) {
 	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
+	content, err = generateCardinalityStructuralSample(index, "OtherTimeStamp", filepath.Join("..", "XSD"), doc.File, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *testing.T) {

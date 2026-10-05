@@ -492,7 +492,7 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 			return false
 		}
 		for i := 0; i < occurrenceCount(child, state, depth); i++ {
-			out = append(out, node)
+			out = append(out, nodeWithDistinctID(node, i, state))
 		}
 		return true
 	}
@@ -721,7 +721,7 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 			}
 			out := make([]xmlNode, 0, occurs)
 			for i := 0; i < occurs; i++ {
-				out = append(out, node)
+				out = append(out, nodeWithDistinctID(node, i, state))
 			}
 			return out, true
 		})
@@ -767,6 +767,23 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 		}
 	}
 	return nil, false
+}
+
+// nodeWithDistinctID gives repeated schema particles their own XML ID. A
+// repeated occurrence must not reuse the first node's xs:ID, even though its
+// other generated content is identical.
+func nodeWithDistinctID(node xmlNode, occurrence int, state genState) xmlNode {
+	if occurrence == 0 || node.Attributes == nil || node.Attributes["Id"] == "" || state.nextID == nil {
+		return node
+	}
+	*state.nextID = *state.nextID + 1
+	attributes := make(map[string]string, len(node.Attributes))
+	for key, value := range node.Attributes {
+		attributes[key] = value
+	}
+	attributes["Id"] = fmt.Sprintf("id-%d", *state.nextID)
+	node.Attributes = attributes
+	return node
 }
 
 // flattenAll emits every member of an xsd:all group while state.full is true
