@@ -98,6 +98,22 @@ func valueCategoryForName(name string) string {
 }
 
 func sampleValueForType(name, typeName string, index int) string {
+	// An element's business name is normally the best hint, but XML Schema
+	// primitive types take precedence when they impose a distinct lexical
+	// format.  In particular, XAdES has an IssueTime whose declared type is
+	// xsd:dateTime; treating it as a UBL-style Time produces "12:00:00",
+	// which is not a valid xs:dateTime.
+	switch canonicalPrimitiveType(typeName) {
+	case "xsd:date":
+		return "2026-01-01"
+	case "xsd:time":
+		return "12:00:00"
+	case "xsd:dateTime":
+		return "2026-01-01T12:00:00Z"
+	case "xsd:duration":
+		return "P0D"
+	}
+
 	category := valueCategoryForName(name)
 	if category == "" {
 		// Fall back to the type name (e.g. for an attribute whose own name

@@ -873,6 +873,9 @@ func TestQNameValuesAndGenerationHelpers(t *testing.T) {
 	if sampleValueForType("Rate", "", 2) != "1.15" || sampleValueForType("Text", "", 2) != "Value of Text 2" {
 		t.Error("indexed sample values incorrect")
 	}
+	if got := sampleValueForType("IssueTime", "xsd:dateTime", 0); got != "2026-01-01T12:00:00Z" {
+		t.Errorf("xsd:dateTime IssueTime = %q, want a valid date-time", got)
+	}
 	if !isPrimitiveType("xsd:string") || isPrimitiveType("custom") {
 		t.Error("primitive detection incorrect")
 	}
