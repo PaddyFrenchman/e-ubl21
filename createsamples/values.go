@@ -64,6 +64,10 @@ var oneWordValueCategories = map[string]string{
 	"date":       "date",
 	"time":       "time",
 	"duration":   "duration",
+	"integer":    "numeric",
+	"int":        "numeric",
+	"decimal":    "numeric",
+	"double":     "numeric",
 	"code":       "code",
 	"id":         "identifier",
 	"identifier": "identifier",
@@ -195,7 +199,7 @@ func scalarBaseType(index schemaIndex, typeName, ns string) string {
 	seen := map[string]bool{}
 	for typeName != "" {
 		if isPrimitiveType(typeName) {
-			return typeName
+			return canonicalPrimitiveType(typeName)
 		}
 		tNS, tName := qualifyRef(typeName, ns)
 		key := qualifiedKey(tNS, tName)
@@ -293,10 +297,20 @@ func mustPositiveInt(value string, fallback int) int {
 }
 
 func isPrimitiveType(t string) bool {
-	set := map[string]bool{
-		"xsd:string": true, "xsd:boolean": true, "xsd:int": true, "xsd:integer": true, "xsd:decimal": true, "xsd:double": true,
-		"xsd:date": true, "xsd:dateTime": true, "xsd:time": true, "xsd:token": true, "xsd:normalizedString": true,
-		"xsd:anyURI": true, "xsd:language": true, "xsd:base64Binary": true, "xsd:duration": true,
+	return canonicalPrimitiveType(t) != ""
+}
+
+// canonicalPrimitiveType accepts both the conventional xsd: spelling and
+// the unprefixed built-ins used by the XMLDSig schema, whose default
+// namespace is XML Schema.
+func canonicalPrimitiveType(t string) string {
+	if strings.HasPrefix(t, "xsd:") {
+		t = strings.TrimPrefix(t, "xsd:")
 	}
-	return set[t]
+	switch t {
+	case "string", "boolean", "int", "integer", "decimal", "double", "date", "dateTime", "time", "token", "normalizedString", "anyURI", "language", "base64Binary", "duration":
+		return "xsd:" + t
+	default:
+		return ""
+	}
 }

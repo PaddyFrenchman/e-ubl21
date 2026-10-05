@@ -101,6 +101,30 @@ func TestGenerateXAdESCertificateValuesRoot(t *testing.T) {
 	}
 }
 
+func TestGenerateXAdESAttributeCertificateRefsRoot(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "http://uri.etsi.org/01903/v1.3.2#"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, "AttributeCertificateRefs")]
+	if doc == nil {
+		t.Fatal("AttributeCertificateRefs declaration missing")
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "AttributeCertificateRefs", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(content, "<ds:X509IssuerName>") {
+		t.Fatalf("X509IssuerName lacks XMLDSig namespace: %s", content)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCardinalityStructuralGenerationHonoursSchemaBounds(t *testing.T) {
 	state := newStructuralGenState(0, 1, true)
 	state.repeatCount = 5

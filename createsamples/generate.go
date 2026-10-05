@@ -61,6 +61,7 @@ type genState struct {
 	choiceAlternatives   *map[int]int
 	includeOptionalAttrs bool
 	structural           bool
+	rootNamespace        string
 	// signatureExtension replaces the generic private extension payload with a
 	// declared UBL XMLDSig payload. It is used only by the dedicated structural
 	// signature family, leaving ordinary wildcard pass-through fixtures intact.
@@ -235,6 +236,7 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 	if !ok {
 		return "", fmt.Errorf("root element %q not found in schema index", rootName)
 	}
+	state.rootNamespace = rootNS
 	rootNode, supported := expandElement(index, rootDecl, rootName, "", rootNS, state, 0)
 	if !supported {
 		return "", fmt.Errorf("root element %q requires an unsupported XSD construct (e.g. xsd:any) that cannot be generated", rootName)
@@ -283,6 +285,13 @@ const maxOccursSample = 5
 // Callers skip an unsupported element if it was itself optional, or
 // propagate the failure upward if it was required.
 func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefix, ns string, state genState, depth int) (xmlNode, bool) {
+	// Local declarations belong to their declaring type's namespace. When a
+	// foreign type is used from a schema root with a different default
+	// namespace (notably XAdES' ds:X509IssuerSerialType), render its local
+	// children with the declared namespace prefix.
+	if prefix == "" && ns != state.rootNamespace {
+		prefix = schemaNamespacePrefix(ns)
+	}
 	node := xmlNode{Prefix: prefix, Name: elementName}
 	if depth > maxDepth {
 		node.Value = sampleValueForType(elementName, element.Type, 0)
@@ -302,7 +311,7 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 			// not the main-document default namespace used by the rendered
 			// root, so give it the conventional UBL prefix.
 			if state.structural && prefix == "" {
-				prefix = ublNamespacePrefix(refNS)
+				prefix = schemaNamespacePrefix(refNS)
 			}
 			return expandElement(index, target, elementName, prefix, refNS, state, depth)
 		}
@@ -310,7 +319,7 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 
 	typeName := element.Type
 	if typeName != "" && isPrimitiveType(typeName) {
-		node.Value = sampleValueForType(elementName, typeName, 0)
+		node.Value = sampleValueForType(elementName, canonicalPrimitiveType(typeName), 0)
 		return node, true
 	}
 
@@ -757,7 +766,7 @@ func elementNameAndPrefix(element xsdElementDecl) (string, string) {
 	return element.Name, ""
 }
 
-func ublNamespacePrefix(namespace string) string {
+func schemaNamespacePrefix(namespace string) string {
 	switch namespace {
 	case "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2":
 		return "cbc"
@@ -765,6 +774,10 @@ func ublNamespacePrefix(namespace string) string {
 		return "cac"
 	case "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2":
 		return "ext"
+	case "http://www.w3.org/2000/09/xmldsig#":
+		return "ds"
+	case "http://uri.etsi.org/01903/v1.3.2#":
+		return "xades"
 	}
 	return ""
 }
@@ -868,7 +881,7 @@ func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, v
 			if attr.Name == "" || attr.Use == "prohibited" || (attr.Use != "required" && !includeOptional) {
 				continue
 			}
-			if attr.Type == "xsd:ID" && nextID != nil {
+			if (attr.Type == "xsd:ID" || attr.Type == "ID") && nextID != nil {
 				*nextID = *nextID + 1
 				attrs[attr.Name] = fmt.Sprintf("id-%d", *nextID)
 			} else {
