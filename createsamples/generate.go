@@ -697,7 +697,7 @@ func structuralWildcardNode(any xsdAny) (xmlNode, bool) {
 // unsupported, the choice itself is unsupported.
 func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genState, depth int) ([]xmlNode, bool) {
 	type alternative func() ([]xmlNode, bool)
-	alternatives := make([]alternative, 0, len(choice.Elements)+len(choice.Sequences)+len(choice.Choices)+len(choice.Alls))
+	alternatives := make([]alternative, 0, len(choice.Elements)+len(choice.Sequences)+len(choice.Choices)+len(choice.Alls)+1)
 	for _, element := range choice.Elements {
 		alt := element
 		alternatives = append(alternatives, func() ([]xmlNode, bool) {
@@ -731,6 +731,16 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 	for i := range choice.Alls {
 		alt := choice.Alls[i]
 		alternatives = append(alternatives, func() ([]xmlNode, bool) { return flattenAll(alt, index, ns, state, depth) })
+	}
+	if choice.Any != nil && state.structural {
+		any := *choice.Any
+		alternatives = append(alternatives, func() ([]xmlNode, bool) {
+			node, ok := structuralWildcardNode(any)
+			if !ok {
+				return nil, false
+			}
+			return []xmlNode{node}, true
+		})
 	}
 	selection := state.choiceAlternative
 	site := -1

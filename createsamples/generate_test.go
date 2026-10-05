@@ -653,6 +653,26 @@ func TestGenerateCounterSignatureRootIsXSDValid(t *testing.T) {
 	}
 }
 
+func TestGenerateSignaturePropertiesRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://www.w3.org/2000/09/xmldsig#", "SignatureProperties")]
+	if doc == nil {
+		t.Fatal("SignatureProperties declaration not found")
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "SignatureProperties", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *testing.T) {
 	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
 	if err != nil {
