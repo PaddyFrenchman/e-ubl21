@@ -57,6 +57,7 @@ type genState struct {
 	choiceAlternative    int
 	choiceSelections     map[int]int
 	nextChoice           *int
+	nextID               *int
 	choiceAlternatives   *map[int]int
 	includeOptionalAttrs bool
 	structural           bool
@@ -77,7 +78,8 @@ type genState struct {
 }
 
 func newGenState() genState {
-	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, recursiveDepthLimit: 1, typeDepth: map[string]int{}}
+	nextID := 0
+	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, nextID: &nextID, recursiveDepthLimit: 1, typeDepth: map[string]int{}}
 }
 
 // newStructuralGenState keeps the ordinary shared-type expansion bound. UBL's
@@ -91,8 +93,9 @@ func newStructuralGenState(choiceAlternative, recursiveDepthLimit int, includeOp
 		recursiveDepthLimit = 1
 	}
 	nextChoice := 0
+	nextID := 0
 	observed := map[int]int{}
-	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, choiceAlternative: choiceAlternative, choiceSelections: map[int]int{}, nextChoice: &nextChoice, choiceAlternatives: &observed, includeOptionalAttrs: includeOptionalAttrs, structural: true, recursiveDepthLimit: recursiveDepthLimit, typeDepth: map[string]int{}}
+	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, choiceAlternative: choiceAlternative, choiceSelections: map[int]int{}, nextChoice: &nextChoice, nextID: &nextID, choiceAlternatives: &observed, includeOptionalAttrs: includeOptionalAttrs, structural: true, recursiveDepthLimit: recursiveDepthLimit, typeDepth: map[string]int{}}
 }
 
 // newTargetedStructuralGenState selects alternatives independently by traversal-site ordinal.
@@ -331,7 +334,7 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 
 	if ct != nil {
 		if ct.SimpleContent != nil {
-			node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs)
+			node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs, state.nextID)
 			node.Value = sampleScalarForType(index, elementName, typeName, typeNS, state.facetBoundary)
 			return node, true
 		}
@@ -372,7 +375,7 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 				state = state.withAncestor(cycleKey)
 			}
 		}
-		node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs)
+		node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs, state.nextID)
 		// Any complex type reaching this point has no simple content: it is
 		// either element-only or attribute-only. Neither permits text, so no
 		// Value fallback is applied here.
@@ -849,13 +852,13 @@ func withAncestor(ancestors map[string]bool, name string) map[string]bool {
 // the many UBL types that merely extend those base types with no attributes
 // of their own.
 func requiredAttributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, visited map[string]bool, depth int) map[string]string {
-	return attributesForComplexType(index, ct, ns, visited, depth, false)
+	return attributesForComplexType(index, ct, ns, visited, depth, false, nil)
 }
 
 // attributesForComplexType follows the same inheritance chain as the
 // baseline generator but can include optional attributes for structural
 // fixtures. Attribute-only and simple-content types use this path too.
-func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, visited map[string]bool, depth int, includeOptional bool) map[string]string {
+func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, visited map[string]bool, depth int, includeOptional bool, nextID *int) map[string]string {
 	if depth > 10 {
 		return nil
 	}
@@ -865,18 +868,23 @@ func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, v
 			if attr.Name == "" || attr.Use == "prohibited" || (attr.Use != "required" && !includeOptional) {
 				continue
 			}
-			attrs[attr.Name] = sampleValueForType(attr.Name, attr.Type, 0)
+			if attr.Type == "xsd:ID" && nextID != nil {
+				*nextID = *nextID + 1
+				attrs[attr.Name] = fmt.Sprintf("id-%d", *nextID)
+			} else {
+				attrs[attr.Name] = sampleValueForType(attr.Name, attr.Type, 0)
+			}
 		}
 	}
 	collect(ct.Attributes)
 	if ct.SimpleContent != nil {
 		if r := ct.SimpleContent.Restriction; r != nil {
 			collect(r.Attributes)
-			mergeBaseTypeAttributes(index, r.Base, ns, visited, depth, attrs, includeOptional)
+			mergeBaseTypeAttributes(index, r.Base, ns, visited, depth, attrs, includeOptional, nextID)
 		}
 		if e := ct.SimpleContent.Extension; e != nil {
 			collect(e.Attributes)
-			mergeBaseTypeAttributes(index, e.Base, ns, visited, depth, attrs, includeOptional)
+			mergeBaseTypeAttributes(index, e.Base, ns, visited, depth, attrs, includeOptional, nextID)
 		}
 	}
 	if len(attrs) == 0 {
@@ -885,7 +893,7 @@ func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, v
 	return attrs
 }
 
-func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[string]bool, depth int, attrs map[string]string, includeOptional bool) {
+func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[string]bool, depth int, attrs map[string]string, includeOptional bool, nextID *int) {
 	baseNS, name := qualifyRef(base, ns)
 	key := qualifiedKey(baseNS, name)
 	if name == "" || visited[key] {
@@ -896,7 +904,7 @@ func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[str
 		return
 	}
 	visited = withAncestor(visited, key)
-	for k, v := range attributesForComplexType(index, baseType, baseNS, visited, depth+1, includeOptional) {
+	for k, v := range attributesForComplexType(index, baseType, baseNS, visited, depth+1, includeOptional, nextID) {
 		if _, exists := attrs[k]; !exists {
 			attrs[k] = v
 		}

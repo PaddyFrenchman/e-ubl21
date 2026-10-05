@@ -39,6 +39,7 @@ func camelWords(s string) []string {
 // (e.g. "BinaryObject" by plain "Object", "CurrencyCode"/"CurrencyID" by
 // plain "Code"/"ID").
 var twoWordValueCategories = map[string]string{
+	"base64binary": "binary",
 	"binaryobject": "binary",
 	"datetime":     "datetime",
 	"currencycode": "currency",
@@ -183,7 +184,42 @@ func sampleScalarForType(index schemaIndex, name, typeName, ns string, idx int) 
 	// Boundary mode must leave unrestricted values unchanged: passing idx
 	// through would alter ordinary text/rate samples without exercising a
 	// schema facet.
-	return sampleValueForType(name, typeName, 0)
+	return sampleValueForType(name, scalarBaseType(index, typeName, ns), 0)
+}
+
+// scalarBaseType follows simple-content inheritance so a complex wrapper of
+// xsd:base64Binary (such as XAdES EncapsulatedPKIDataType) receives a value
+// legal for the primitive type rather than generic text based on its element
+// name.
+func scalarBaseType(index schemaIndex, typeName, ns string) string {
+	seen := map[string]bool{}
+	for typeName != "" {
+		if isPrimitiveType(typeName) {
+			return typeName
+		}
+		tNS, tName := qualifyRef(typeName, ns)
+		key := qualifiedKey(tNS, tName)
+		if seen[key] {
+			break
+		}
+		seen[key] = true
+		if typ, ok := index.GlobalTypes[key]; ok && typ.SimpleContent != nil {
+			if typ.SimpleContent.Extension != nil {
+				typeName, ns = typ.SimpleContent.Extension.Base, tNS
+				continue
+			}
+			if typ.SimpleContent.Restriction != nil {
+				typeName, ns = typ.SimpleContent.Restriction.Base, tNS
+				continue
+			}
+		}
+		if typ, ok := index.GlobalSimpleTypes[key]; ok && typ.Restriction != nil {
+			typeName, ns = typ.Restriction.Base, tNS
+			continue
+		}
+		break
+	}
+	return typeName
 }
 
 // facetBoundaryValuesForType returns legal representative endpoints for the

@@ -77,6 +77,30 @@ func TestGenerateRestrictedXAdESTimestampRoot(t *testing.T) {
 	}
 }
 
+func TestGenerateXAdESCertificateValuesRoot(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "http://uri.etsi.org/01903/v1.3.2#"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, "AttrAuthoritiesCertValues")]
+	if doc == nil {
+		t.Fatal("AttrAuthoritiesCertValues declaration missing")
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "AttrAuthoritiesCertValues", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(content, ">U2FtcGxlRGF0YQ==</") {
+		t.Fatalf("EncapsulatedX509Certificate is not base64: %s", content)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCardinalityStructuralGenerationHonoursSchemaBounds(t *testing.T) {
 	state := newStructuralGenState(0, 1, true)
 	state.repeatCount = 5
