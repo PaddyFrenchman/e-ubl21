@@ -773,16 +773,34 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 // repeated occurrence must not reuse the first node's xs:ID, even though its
 // other generated content is identical.
 func nodeWithDistinctID(node xmlNode, occurrence int, state genState) xmlNode {
-	if occurrence == 0 || node.Attributes == nil || node.Attributes["Id"] == "" || state.nextID == nil {
+	if occurrence == 0 || state.nextID == nil {
 		return node
 	}
-	*state.nextID = *state.nextID + 1
-	attributes := make(map[string]string, len(node.Attributes))
-	for key, value := range node.Attributes {
-		attributes[key] = value
+	return nodeWithFreshDescendantIDs(node, state)
+}
+
+// nodeWithFreshDescendantIDs deep-copies a repeated subtree and remaps every
+// Id it contains. Repeating a parent otherwise duplicates IDs held by its
+// descendants, which violates xs:ID's document-wide uniqueness constraint.
+func nodeWithFreshDescendantIDs(node xmlNode, state genState) xmlNode {
+	if node.Attributes != nil {
+		attributes := make(map[string]string, len(node.Attributes))
+		for key, value := range node.Attributes {
+			attributes[key] = value
+		}
+		if _, ok := attributes["Id"]; ok {
+			*state.nextID = *state.nextID + 1
+			attributes["Id"] = fmt.Sprintf("id-%d", *state.nextID)
+		}
+		node.Attributes = attributes
 	}
-	attributes["Id"] = fmt.Sprintf("id-%d", *state.nextID)
-	node.Attributes = attributes
+	if len(node.Children) > 0 {
+		children := make([]xmlNode, len(node.Children))
+		for i, child := range node.Children {
+			children[i] = nodeWithFreshDescendantIDs(child, state)
+		}
+		node.Children = children
+	}
 	return node
 }
 
