@@ -112,6 +112,8 @@ func sampleValueForType(name, typeName string, index int) string {
 		return "2026-01-01T12:00:00Z"
 	case "xsd:duration":
 		return "P0D"
+	case "xsd:base64Binary":
+		return "U2FtcGxlRGF0YQ=="
 	}
 
 	category := valueCategoryForName(name)

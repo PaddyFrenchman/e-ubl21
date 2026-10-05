@@ -922,6 +922,9 @@ func TestQNameValuesAndGenerationHelpers(t *testing.T) {
 	if got := sampleValueForType("IssueTime", "xsd:dateTime", 0); got != "2026-01-01T12:00:00Z" {
 		t.Errorf("xsd:dateTime IssueTime = %q, want a valid date-time", got)
 	}
+	if got := sampleValueForType("PGPKeyID", "xsd:base64Binary", 0); got != "U2FtcGxlRGF0YQ==" {
+		t.Errorf("xsd:base64Binary PGPKeyID = %q, want valid base64", got)
+	}
 	if got := sampleScalarForType(index, "HMACOutputLength", "ds:HMACOutputLengthType", "http://www.w3.org/2000/09/xmldsig#", 0); got != "1" {
 		t.Errorf("HMACOutputLength = %q, want a valid integer", got)
 	}
