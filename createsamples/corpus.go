@@ -680,7 +680,10 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			var content string
 			var err error
 			if variant.count == 0 {
-				content, err = generateMinimalSample(index, root.name, xsdDir, doc.File)
+				// Cardinality roots include XMLDSig/XAdES declarations whose
+				// required lax wildcards need a structural foreign payload even
+				// for their zero/"minimal" fixture.
+				content, err = generateCardinalityStructuralSample(index, root.name, xsdDir, doc.File, 1)
 			} else {
 				content, err = generateCardinalityStructuralSample(index, root.name, xsdDir, doc.File, variant.count)
 			}
@@ -688,7 +691,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				journal(fmt.Errorf("generate cardinality root %s %s: %w", root.name, variant.name, err))
 				continue
 			}
-			schemaPath := filepath.Join(xsdDir, "common", doc.File)
+			schemaPath := schemaPathForDocument(xsdDir, doc.File)
 			if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
 				journal(fmt.Errorf("validate cardinality root %s %s: %w", root.name, variant.name, err))
 				continue
@@ -714,6 +717,16 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		return generatedCorpus{}, err
 	}
 	return buildGeneratedCorpus(fixtures)
+}
+
+// schemaPathForDocument resolves both global common-component roots and
+// main-document roots. Cardinality coverage intentionally includes both.
+func schemaPathForDocument(xsdDir, file string) string {
+	common := filepath.Join(xsdDir, "common", file)
+	if _, err := os.Stat(common); err == nil {
+		return common
+	}
+	return filepath.Join(xsdDir, "maindoc", file)
 }
 
 func parseStructuralResumeCursor(cursor string) (phase, root string, err error) {

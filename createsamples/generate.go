@@ -248,6 +248,9 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 	rootNode.Attributes["xmlns:cbc"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
 	rootNode.Attributes["xmlns:cac"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
 	rootNode.Attributes["xmlns:ext"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+	rootNode.Attributes["xmlns:sig"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2"
+	rootNode.Attributes["xmlns:sac"] = "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2"
+	rootNode.Attributes["xmlns:sbc"] = "urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2"
 	// XMLDSig and XAdES types are imported by UBL and may be reached from a
 	// standalone root even in the minimal (non-structural) generation path.
 	rootNode.Attributes["xmlns:ds"] = "http://www.w3.org/2000/09/xmldsig#"
@@ -259,8 +262,6 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 		// extension. Keep these prefixes available for those schema-derived
 		// children in every structural fixture.
 		if state.signatureExtension {
-			rootNode.Attributes["xmlns:sig"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2"
-			rootNode.Attributes["xmlns:sac"] = "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2"
 		}
 	}
 	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(rootNode, 0) + "\n", nil

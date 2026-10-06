@@ -1,0 +1,839 @@
+Structural corpus generation failures:
+
+generate cardinality root SignatureProperties minimal: root element "SignatureProperties" requires an unsupported XSD construct (e.g. xsd:any) that cannot be generated
+
+validate cardinality root ApplicationResponse minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ApplicationResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ApplicationResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-ApplicationResponse-2.1.xsd failed to compile
+
+validate cardinality root ApplicationResponse cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ApplicationResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ApplicationResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-ApplicationResponse-2.1.xsd failed to compile
+
+validate cardinality root ApplicationResponse cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ApplicationResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ApplicationResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-ApplicationResponse-2.1.xsd failed to compile
+
+validate cardinality root AttachedDocument minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-AttachedDocument-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-AttachedDocument-2.1.xsd'.
+WXS schema XSD/common/UBL-AttachedDocument-2.1.xsd failed to compile
+
+validate cardinality root AttachedDocument cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-AttachedDocument-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-AttachedDocument-2.1.xsd'.
+WXS schema XSD/common/UBL-AttachedDocument-2.1.xsd failed to compile
+
+validate cardinality root AttachedDocument cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-AttachedDocument-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-AttachedDocument-2.1.xsd'.
+WXS schema XSD/common/UBL-AttachedDocument-2.1.xsd failed to compile
+
+validate cardinality root AwardedNotification minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-AwardedNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-AwardedNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-AwardedNotification-2.1.xsd failed to compile
+
+validate cardinality root AwardedNotification cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-AwardedNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-AwardedNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-AwardedNotification-2.1.xsd failed to compile
+
+validate cardinality root AwardedNotification cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-AwardedNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-AwardedNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-AwardedNotification-2.1.xsd failed to compile
+
+validate cardinality root BillOfLading minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-BillOfLading-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-BillOfLading-2.1.xsd'.
+WXS schema XSD/common/UBL-BillOfLading-2.1.xsd failed to compile
+
+validate cardinality root BillOfLading cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-BillOfLading-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-BillOfLading-2.1.xsd'.
+WXS schema XSD/common/UBL-BillOfLading-2.1.xsd failed to compile
+
+validate cardinality root BillOfLading cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-BillOfLading-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-BillOfLading-2.1.xsd'.
+WXS schema XSD/common/UBL-BillOfLading-2.1.xsd failed to compile
+
+validate cardinality root CallForTenders minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CallForTenders-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CallForTenders-2.1.xsd'.
+WXS schema XSD/common/UBL-CallForTenders-2.1.xsd failed to compile
+
+validate cardinality root CallForTenders cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CallForTenders-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CallForTenders-2.1.xsd'.
+WXS schema XSD/common/UBL-CallForTenders-2.1.xsd failed to compile
+
+validate cardinality root CallForTenders cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CallForTenders-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CallForTenders-2.1.xsd'.
+WXS schema XSD/common/UBL-CallForTenders-2.1.xsd failed to compile
+
+validate cardinality root Catalogue minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Catalogue-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Catalogue-2.1.xsd'.
+WXS schema XSD/common/UBL-Catalogue-2.1.xsd failed to compile
+
+validate cardinality root Catalogue cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Catalogue-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Catalogue-2.1.xsd'.
+WXS schema XSD/common/UBL-Catalogue-2.1.xsd failed to compile
+
+validate cardinality root Catalogue cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Catalogue-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Catalogue-2.1.xsd'.
+WXS schema XSD/common/UBL-Catalogue-2.1.xsd failed to compile
+
+validate cardinality root CatalogueDeletion minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueDeletion-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueDeletion-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueDeletion-2.1.xsd failed to compile
+
+validate cardinality root CatalogueDeletion cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueDeletion-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueDeletion-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueDeletion-2.1.xsd failed to compile
+
+validate cardinality root CatalogueDeletion cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueDeletion-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueDeletion-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueDeletion-2.1.xsd failed to compile
+
+validate cardinality root CatalogueItemSpecificationUpdate minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd failed to compile
+
+validate cardinality root CatalogueItemSpecificationUpdate cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd failed to compile
+
+validate cardinality root CatalogueItemSpecificationUpdate cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueItemSpecificationUpdate-2.1.xsd failed to compile
+
+validate cardinality root CataloguePricingUpdate minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CataloguePricingUpdate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CataloguePricingUpdate-2.1.xsd'.
+WXS schema XSD/common/UBL-CataloguePricingUpdate-2.1.xsd failed to compile
+
+validate cardinality root CataloguePricingUpdate cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CataloguePricingUpdate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CataloguePricingUpdate-2.1.xsd'.
+WXS schema XSD/common/UBL-CataloguePricingUpdate-2.1.xsd failed to compile
+
+validate cardinality root CataloguePricingUpdate cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CataloguePricingUpdate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CataloguePricingUpdate-2.1.xsd'.
+WXS schema XSD/common/UBL-CataloguePricingUpdate-2.1.xsd failed to compile
+
+validate cardinality root CatalogueRequest minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueRequest-2.1.xsd failed to compile
+
+validate cardinality root CatalogueRequest cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueRequest-2.1.xsd failed to compile
+
+validate cardinality root CatalogueRequest cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CatalogueRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CatalogueRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-CatalogueRequest-2.1.xsd failed to compile
+
+validate cardinality root CertificateOfOrigin minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CertificateOfOrigin-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CertificateOfOrigin-2.1.xsd'.
+WXS schema XSD/common/UBL-CertificateOfOrigin-2.1.xsd failed to compile
+
+validate cardinality root CertificateOfOrigin cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CertificateOfOrigin-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CertificateOfOrigin-2.1.xsd'.
+WXS schema XSD/common/UBL-CertificateOfOrigin-2.1.xsd failed to compile
+
+validate cardinality root CertificateOfOrigin cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CertificateOfOrigin-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CertificateOfOrigin-2.1.xsd'.
+WXS schema XSD/common/UBL-CertificateOfOrigin-2.1.xsd failed to compile
+
+generate cardinality root UBLExtensions minimal: root element "UBLExtensions" requires an unsupported XSD construct (e.g. xsd:any) that cannot be generated
+
+validate cardinality root UBLDocumentSignatures minimal: XSD validation failed: exit status 3: -:3: namespace error : Namespace prefix sac on SignatureInformation is not defined
+    <sac:SignatureInformation></sac:SignatureInformation>
+                             ^
+-:3: element sac:SignatureInformation: Schemas validity error : Element 'sac:SignatureInformation': This element is not expected. Expected is ( {urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2}SignatureInformation ).
+- fails to validate
+
+validate cardinality root UBLDocumentSignatures cardinality-2: XSD validation failed: exit status 3: -:3: namespace error : Namespace prefix sac on SignatureInformation is not defined
+    <sac:SignatureInformation>
+                             ^
+-:5: namespace error : Namespace prefix sbc on ReferencedSignatureID is not defined
+me="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001"
+                                                                               ^
+-:37: namespace error : Namespace prefix sac on SignatureInformation is not defined
+    <sac:SignatureInformation>
+                             ^
+-:39: namespace error : Namespace prefix sbc on ReferencedSignatureID is not defined
+me="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001"
+                                                                               ^
+-:3: element sac:SignatureInformation: Schemas validity error : Element 'sac:SignatureInformation': This element is not expected. Expected is ( {urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2}SignatureInformation ).
+- fails to validate
+
+validate cardinality root UBLDocumentSignatures cardinality-5: XSD validation failed: exit status 3: -:3: namespace error : Namespace prefix sac on SignatureInformation is not defined
+    <sac:SignatureInformation>
+                             ^
+-:5: namespace error : Namespace prefix sbc on ReferencedSignatureID is not defined
+me="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001"
+                                                                               ^
+-:37: namespace error : Namespace prefix sac on SignatureInformation is not defined
+    <sac:SignatureInformation>
+                             ^
+-:39: namespace error : Namespace prefix sbc on ReferencedSignatureID is not defined
+me="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001"
+                                                                               ^
+-:71: namespace error : Namespace prefix sac on SignatureInformation is not defined
+    <sac:SignatureInformation>
+                             ^
+-:73: namespace error : Namespace prefix sbc on ReferencedSignatureID is not defined
+me="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001"
+                                                                               ^
+-:105: namespace error : Namespace prefix sac on SignatureInformation is not defined
+    <sac:SignatureInformation>
+                             ^
+-:107: namespace error : Namespace prefix sbc on ReferencedSignatureID is not defined
+me="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001"
+                                                                               ^
+-:139: namespace error : Namespace prefix sac on SignatureInformation is not defined
+    <sac:SignatureInformation>
+                             ^
+-:141: namespace error : Namespace prefix sbc on ReferencedSignatureID is not defined
+me="Value of schemeName" schemeURI="Value of schemeURI" schemeVersionID="ID-001"
+                                                                               ^
+-:3: element sac:SignatureInformation: Schemas validity error : Element 'sac:SignatureInformation': This element is not expected. Expected is ( {urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2}SignatureInformation ).
+- fails to validate
+
+validate cardinality root ContractAwardNotice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ContractAwardNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ContractAwardNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-ContractAwardNotice-2.1.xsd failed to compile
+
+validate cardinality root ContractAwardNotice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ContractAwardNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ContractAwardNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-ContractAwardNotice-2.1.xsd failed to compile
+
+validate cardinality root ContractAwardNotice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ContractAwardNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ContractAwardNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-ContractAwardNotice-2.1.xsd failed to compile
+
+validate cardinality root ContractNotice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ContractNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ContractNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-ContractNotice-2.1.xsd failed to compile
+
+validate cardinality root ContractNotice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ContractNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ContractNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-ContractNotice-2.1.xsd failed to compile
+
+validate cardinality root ContractNotice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ContractNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ContractNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-ContractNotice-2.1.xsd failed to compile
+
+validate cardinality root CreditNote minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CreditNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CreditNote-2.1.xsd'.
+WXS schema XSD/common/UBL-CreditNote-2.1.xsd failed to compile
+
+validate cardinality root CreditNote cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CreditNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CreditNote-2.1.xsd'.
+WXS schema XSD/common/UBL-CreditNote-2.1.xsd failed to compile
+
+validate cardinality root CreditNote cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-CreditNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-CreditNote-2.1.xsd'.
+WXS schema XSD/common/UBL-CreditNote-2.1.xsd failed to compile
+
+validate cardinality root DebitNote minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DebitNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DebitNote-2.1.xsd'.
+WXS schema XSD/common/UBL-DebitNote-2.1.xsd failed to compile
+
+validate cardinality root DebitNote cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DebitNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DebitNote-2.1.xsd'.
+WXS schema XSD/common/UBL-DebitNote-2.1.xsd failed to compile
+
+validate cardinality root DebitNote cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DebitNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DebitNote-2.1.xsd'.
+WXS schema XSD/common/UBL-DebitNote-2.1.xsd failed to compile
+
+validate cardinality root DespatchAdvice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DespatchAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DespatchAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-DespatchAdvice-2.1.xsd failed to compile
+
+validate cardinality root DespatchAdvice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DespatchAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DespatchAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-DespatchAdvice-2.1.xsd failed to compile
+
+validate cardinality root DespatchAdvice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DespatchAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DespatchAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-DespatchAdvice-2.1.xsd failed to compile
+
+validate cardinality root DocumentStatus minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DocumentStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DocumentStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-DocumentStatus-2.1.xsd failed to compile
+
+validate cardinality root DocumentStatus cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DocumentStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DocumentStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-DocumentStatus-2.1.xsd failed to compile
+
+validate cardinality root DocumentStatus cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DocumentStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DocumentStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-DocumentStatus-2.1.xsd failed to compile
+
+validate cardinality root DocumentStatusRequest minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DocumentStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DocumentStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-DocumentStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root DocumentStatusRequest cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DocumentStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DocumentStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-DocumentStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root DocumentStatusRequest cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-DocumentStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-DocumentStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-DocumentStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root ExceptionCriteria minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ExceptionCriteria-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ExceptionCriteria-2.1.xsd'.
+WXS schema XSD/common/UBL-ExceptionCriteria-2.1.xsd failed to compile
+
+validate cardinality root ExceptionCriteria cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ExceptionCriteria-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ExceptionCriteria-2.1.xsd'.
+WXS schema XSD/common/UBL-ExceptionCriteria-2.1.xsd failed to compile
+
+validate cardinality root ExceptionCriteria cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ExceptionCriteria-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ExceptionCriteria-2.1.xsd'.
+WXS schema XSD/common/UBL-ExceptionCriteria-2.1.xsd failed to compile
+
+validate cardinality root ExceptionNotification minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ExceptionNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ExceptionNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-ExceptionNotification-2.1.xsd failed to compile
+
+validate cardinality root ExceptionNotification cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ExceptionNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ExceptionNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-ExceptionNotification-2.1.xsd failed to compile
+
+validate cardinality root ExceptionNotification cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ExceptionNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ExceptionNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-ExceptionNotification-2.1.xsd failed to compile
+
+validate cardinality root Forecast minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Forecast-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Forecast-2.1.xsd'.
+WXS schema XSD/common/UBL-Forecast-2.1.xsd failed to compile
+
+validate cardinality root Forecast cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Forecast-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Forecast-2.1.xsd'.
+WXS schema XSD/common/UBL-Forecast-2.1.xsd failed to compile
+
+validate cardinality root Forecast cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Forecast-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Forecast-2.1.xsd'.
+WXS schema XSD/common/UBL-Forecast-2.1.xsd failed to compile
+
+validate cardinality root ForecastRevision minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ForecastRevision-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ForecastRevision-2.1.xsd'.
+WXS schema XSD/common/UBL-ForecastRevision-2.1.xsd failed to compile
+
+validate cardinality root ForecastRevision cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ForecastRevision-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ForecastRevision-2.1.xsd'.
+WXS schema XSD/common/UBL-ForecastRevision-2.1.xsd failed to compile
+
+validate cardinality root ForecastRevision cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ForecastRevision-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ForecastRevision-2.1.xsd'.
+WXS schema XSD/common/UBL-ForecastRevision-2.1.xsd failed to compile
+
+validate cardinality root ForwardingInstructions minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ForwardingInstructions-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ForwardingInstructions-2.1.xsd'.
+WXS schema XSD/common/UBL-ForwardingInstructions-2.1.xsd failed to compile
+
+validate cardinality root ForwardingInstructions cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ForwardingInstructions-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ForwardingInstructions-2.1.xsd'.
+WXS schema XSD/common/UBL-ForwardingInstructions-2.1.xsd failed to compile
+
+validate cardinality root ForwardingInstructions cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ForwardingInstructions-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ForwardingInstructions-2.1.xsd'.
+WXS schema XSD/common/UBL-ForwardingInstructions-2.1.xsd failed to compile
+
+validate cardinality root FreightInvoice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-FreightInvoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-FreightInvoice-2.1.xsd'.
+WXS schema XSD/common/UBL-FreightInvoice-2.1.xsd failed to compile
+
+validate cardinality root FreightInvoice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-FreightInvoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-FreightInvoice-2.1.xsd'.
+WXS schema XSD/common/UBL-FreightInvoice-2.1.xsd failed to compile
+
+validate cardinality root FreightInvoice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-FreightInvoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-FreightInvoice-2.1.xsd'.
+WXS schema XSD/common/UBL-FreightInvoice-2.1.xsd failed to compile
+
+validate cardinality root FulfilmentCancellation minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-FulfilmentCancellation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-FulfilmentCancellation-2.1.xsd'.
+WXS schema XSD/common/UBL-FulfilmentCancellation-2.1.xsd failed to compile
+
+validate cardinality root FulfilmentCancellation cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-FulfilmentCancellation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-FulfilmentCancellation-2.1.xsd'.
+WXS schema XSD/common/UBL-FulfilmentCancellation-2.1.xsd failed to compile
+
+validate cardinality root FulfilmentCancellation cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-FulfilmentCancellation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-FulfilmentCancellation-2.1.xsd'.
+WXS schema XSD/common/UBL-FulfilmentCancellation-2.1.xsd failed to compile
+
+validate cardinality root GoodsItemItinerary minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-GoodsItemItinerary-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-GoodsItemItinerary-2.1.xsd'.
+WXS schema XSD/common/UBL-GoodsItemItinerary-2.1.xsd failed to compile
+
+validate cardinality root GoodsItemItinerary cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-GoodsItemItinerary-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-GoodsItemItinerary-2.1.xsd'.
+WXS schema XSD/common/UBL-GoodsItemItinerary-2.1.xsd failed to compile
+
+validate cardinality root GoodsItemItinerary cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-GoodsItemItinerary-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-GoodsItemItinerary-2.1.xsd'.
+WXS schema XSD/common/UBL-GoodsItemItinerary-2.1.xsd failed to compile
+
+validate cardinality root GuaranteeCertificate minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-GuaranteeCertificate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-GuaranteeCertificate-2.1.xsd'.
+WXS schema XSD/common/UBL-GuaranteeCertificate-2.1.xsd failed to compile
+
+validate cardinality root GuaranteeCertificate cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-GuaranteeCertificate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-GuaranteeCertificate-2.1.xsd'.
+WXS schema XSD/common/UBL-GuaranteeCertificate-2.1.xsd failed to compile
+
+validate cardinality root GuaranteeCertificate cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-GuaranteeCertificate-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-GuaranteeCertificate-2.1.xsd'.
+WXS schema XSD/common/UBL-GuaranteeCertificate-2.1.xsd failed to compile
+
+validate cardinality root InstructionForReturns minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-InstructionForReturns-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-InstructionForReturns-2.1.xsd'.
+WXS schema XSD/common/UBL-InstructionForReturns-2.1.xsd failed to compile
+
+validate cardinality root InstructionForReturns cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-InstructionForReturns-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-InstructionForReturns-2.1.xsd'.
+WXS schema XSD/common/UBL-InstructionForReturns-2.1.xsd failed to compile
+
+validate cardinality root InstructionForReturns cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-InstructionForReturns-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-InstructionForReturns-2.1.xsd'.
+WXS schema XSD/common/UBL-InstructionForReturns-2.1.xsd failed to compile
+
+validate cardinality root InventoryReport minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-InventoryReport-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-InventoryReport-2.1.xsd'.
+WXS schema XSD/common/UBL-InventoryReport-2.1.xsd failed to compile
+
+validate cardinality root InventoryReport cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-InventoryReport-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-InventoryReport-2.1.xsd'.
+WXS schema XSD/common/UBL-InventoryReport-2.1.xsd failed to compile
+
+validate cardinality root InventoryReport cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-InventoryReport-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-InventoryReport-2.1.xsd'.
+WXS schema XSD/common/UBL-InventoryReport-2.1.xsd failed to compile
+
+validate cardinality root Invoice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Invoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Invoice-2.1.xsd'.
+WXS schema XSD/common/UBL-Invoice-2.1.xsd failed to compile
+
+validate cardinality root Invoice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Invoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Invoice-2.1.xsd'.
+WXS schema XSD/common/UBL-Invoice-2.1.xsd failed to compile
+
+validate cardinality root Invoice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Invoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Invoice-2.1.xsd'.
+WXS schema XSD/common/UBL-Invoice-2.1.xsd failed to compile
+
+validate cardinality root ItemInformationRequest minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ItemInformationRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ItemInformationRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-ItemInformationRequest-2.1.xsd failed to compile
+
+validate cardinality root ItemInformationRequest cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ItemInformationRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ItemInformationRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-ItemInformationRequest-2.1.xsd failed to compile
+
+validate cardinality root ItemInformationRequest cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ItemInformationRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ItemInformationRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-ItemInformationRequest-2.1.xsd failed to compile
+
+validate cardinality root Order minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Order-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Order-2.1.xsd'.
+WXS schema XSD/common/UBL-Order-2.1.xsd failed to compile
+
+validate cardinality root Order cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Order-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Order-2.1.xsd'.
+WXS schema XSD/common/UBL-Order-2.1.xsd failed to compile
+
+validate cardinality root Order cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Order-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Order-2.1.xsd'.
+WXS schema XSD/common/UBL-Order-2.1.xsd failed to compile
+
+validate cardinality root OrderCancellation minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderCancellation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderCancellation-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderCancellation-2.1.xsd failed to compile
+
+validate cardinality root OrderCancellation cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderCancellation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderCancellation-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderCancellation-2.1.xsd failed to compile
+
+validate cardinality root OrderCancellation cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderCancellation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderCancellation-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderCancellation-2.1.xsd failed to compile
+
+validate cardinality root OrderChange minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderChange-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderChange-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderChange-2.1.xsd failed to compile
+
+validate cardinality root OrderChange cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderChange-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderChange-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderChange-2.1.xsd failed to compile
+
+validate cardinality root OrderChange cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderChange-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderChange-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderChange-2.1.xsd failed to compile
+
+validate cardinality root OrderResponse minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderResponse-2.1.xsd failed to compile
+
+validate cardinality root OrderResponse cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderResponse-2.1.xsd failed to compile
+
+validate cardinality root OrderResponse cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderResponse-2.1.xsd failed to compile
+
+validate cardinality root OrderResponseSimple minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderResponseSimple-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderResponseSimple-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderResponseSimple-2.1.xsd failed to compile
+
+validate cardinality root OrderResponseSimple cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderResponseSimple-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderResponseSimple-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderResponseSimple-2.1.xsd failed to compile
+
+validate cardinality root OrderResponseSimple cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-OrderResponseSimple-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-OrderResponseSimple-2.1.xsd'.
+WXS schema XSD/common/UBL-OrderResponseSimple-2.1.xsd failed to compile
+
+validate cardinality root PackingList minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-PackingList-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-PackingList-2.1.xsd'.
+WXS schema XSD/common/UBL-PackingList-2.1.xsd failed to compile
+
+validate cardinality root PackingList cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-PackingList-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-PackingList-2.1.xsd'.
+WXS schema XSD/common/UBL-PackingList-2.1.xsd failed to compile
+
+validate cardinality root PackingList cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-PackingList-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-PackingList-2.1.xsd'.
+WXS schema XSD/common/UBL-PackingList-2.1.xsd failed to compile
+
+validate cardinality root PriorInformationNotice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-PriorInformationNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-PriorInformationNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-PriorInformationNotice-2.1.xsd failed to compile
+
+validate cardinality root PriorInformationNotice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-PriorInformationNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-PriorInformationNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-PriorInformationNotice-2.1.xsd failed to compile
+
+validate cardinality root PriorInformationNotice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-PriorInformationNotice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-PriorInformationNotice-2.1.xsd'.
+WXS schema XSD/common/UBL-PriorInformationNotice-2.1.xsd failed to compile
+
+validate cardinality root ProductActivity minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ProductActivity-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ProductActivity-2.1.xsd'.
+WXS schema XSD/common/UBL-ProductActivity-2.1.xsd failed to compile
+
+validate cardinality root ProductActivity cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ProductActivity-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ProductActivity-2.1.xsd'.
+WXS schema XSD/common/UBL-ProductActivity-2.1.xsd failed to compile
+
+validate cardinality root ProductActivity cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ProductActivity-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ProductActivity-2.1.xsd'.
+WXS schema XSD/common/UBL-ProductActivity-2.1.xsd failed to compile
+
+validate cardinality root Quotation minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Quotation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Quotation-2.1.xsd'.
+WXS schema XSD/common/UBL-Quotation-2.1.xsd failed to compile
+
+validate cardinality root Quotation cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Quotation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Quotation-2.1.xsd'.
+WXS schema XSD/common/UBL-Quotation-2.1.xsd failed to compile
+
+validate cardinality root Quotation cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Quotation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Quotation-2.1.xsd'.
+WXS schema XSD/common/UBL-Quotation-2.1.xsd failed to compile
+
+validate cardinality root ReceiptAdvice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ReceiptAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ReceiptAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-ReceiptAdvice-2.1.xsd failed to compile
+
+validate cardinality root ReceiptAdvice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ReceiptAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ReceiptAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-ReceiptAdvice-2.1.xsd failed to compile
+
+validate cardinality root ReceiptAdvice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-ReceiptAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-ReceiptAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-ReceiptAdvice-2.1.xsd failed to compile
+
+validate cardinality root Reminder minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Reminder-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Reminder-2.1.xsd'.
+WXS schema XSD/common/UBL-Reminder-2.1.xsd failed to compile
+
+validate cardinality root Reminder cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Reminder-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Reminder-2.1.xsd'.
+WXS schema XSD/common/UBL-Reminder-2.1.xsd failed to compile
+
+validate cardinality root Reminder cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Reminder-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Reminder-2.1.xsd'.
+WXS schema XSD/common/UBL-Reminder-2.1.xsd failed to compile
+
+validate cardinality root RemittanceAdvice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RemittanceAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RemittanceAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-RemittanceAdvice-2.1.xsd failed to compile
+
+validate cardinality root RemittanceAdvice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RemittanceAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RemittanceAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-RemittanceAdvice-2.1.xsd failed to compile
+
+validate cardinality root RemittanceAdvice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RemittanceAdvice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RemittanceAdvice-2.1.xsd'.
+WXS schema XSD/common/UBL-RemittanceAdvice-2.1.xsd failed to compile
+
+validate cardinality root RequestForQuotation minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RequestForQuotation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RequestForQuotation-2.1.xsd'.
+WXS schema XSD/common/UBL-RequestForQuotation-2.1.xsd failed to compile
+
+validate cardinality root RequestForQuotation cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RequestForQuotation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RequestForQuotation-2.1.xsd'.
+WXS schema XSD/common/UBL-RequestForQuotation-2.1.xsd failed to compile
+
+validate cardinality root RequestForQuotation cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RequestForQuotation-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RequestForQuotation-2.1.xsd'.
+WXS schema XSD/common/UBL-RequestForQuotation-2.1.xsd failed to compile
+
+validate cardinality root RetailEvent minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RetailEvent-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RetailEvent-2.1.xsd'.
+WXS schema XSD/common/UBL-RetailEvent-2.1.xsd failed to compile
+
+validate cardinality root RetailEvent cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RetailEvent-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RetailEvent-2.1.xsd'.
+WXS schema XSD/common/UBL-RetailEvent-2.1.xsd failed to compile
+
+validate cardinality root RetailEvent cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-RetailEvent-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-RetailEvent-2.1.xsd'.
+WXS schema XSD/common/UBL-RetailEvent-2.1.xsd failed to compile
+
+validate cardinality root SelfBilledCreditNote minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-SelfBilledCreditNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-SelfBilledCreditNote-2.1.xsd'.
+WXS schema XSD/common/UBL-SelfBilledCreditNote-2.1.xsd failed to compile
+
+validate cardinality root SelfBilledCreditNote cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-SelfBilledCreditNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-SelfBilledCreditNote-2.1.xsd'.
+WXS schema XSD/common/UBL-SelfBilledCreditNote-2.1.xsd failed to compile
+
+validate cardinality root SelfBilledCreditNote cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-SelfBilledCreditNote-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-SelfBilledCreditNote-2.1.xsd'.
+WXS schema XSD/common/UBL-SelfBilledCreditNote-2.1.xsd failed to compile
+
+validate cardinality root SelfBilledInvoice minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-SelfBilledInvoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-SelfBilledInvoice-2.1.xsd'.
+WXS schema XSD/common/UBL-SelfBilledInvoice-2.1.xsd failed to compile
+
+validate cardinality root SelfBilledInvoice cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-SelfBilledInvoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-SelfBilledInvoice-2.1.xsd'.
+WXS schema XSD/common/UBL-SelfBilledInvoice-2.1.xsd failed to compile
+
+validate cardinality root SelfBilledInvoice cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-SelfBilledInvoice-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-SelfBilledInvoice-2.1.xsd'.
+WXS schema XSD/common/UBL-SelfBilledInvoice-2.1.xsd failed to compile
+
+validate cardinality root Statement minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Statement-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Statement-2.1.xsd'.
+WXS schema XSD/common/UBL-Statement-2.1.xsd failed to compile
+
+validate cardinality root Statement cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Statement-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Statement-2.1.xsd'.
+WXS schema XSD/common/UBL-Statement-2.1.xsd failed to compile
+
+validate cardinality root Statement cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Statement-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Statement-2.1.xsd'.
+WXS schema XSD/common/UBL-Statement-2.1.xsd failed to compile
+
+validate cardinality root StockAvailabilityReport minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-StockAvailabilityReport-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-StockAvailabilityReport-2.1.xsd'.
+WXS schema XSD/common/UBL-StockAvailabilityReport-2.1.xsd failed to compile
+
+validate cardinality root StockAvailabilityReport cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-StockAvailabilityReport-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-StockAvailabilityReport-2.1.xsd'.
+WXS schema XSD/common/UBL-StockAvailabilityReport-2.1.xsd failed to compile
+
+validate cardinality root StockAvailabilityReport cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-StockAvailabilityReport-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-StockAvailabilityReport-2.1.xsd'.
+WXS schema XSD/common/UBL-StockAvailabilityReport-2.1.xsd failed to compile
+
+validate cardinality root Tender minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Tender-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Tender-2.1.xsd'.
+WXS schema XSD/common/UBL-Tender-2.1.xsd failed to compile
+
+validate cardinality root Tender cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Tender-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Tender-2.1.xsd'.
+WXS schema XSD/common/UBL-Tender-2.1.xsd failed to compile
+
+validate cardinality root Tender cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Tender-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Tender-2.1.xsd'.
+WXS schema XSD/common/UBL-Tender-2.1.xsd failed to compile
+
+validate cardinality root TenderReceipt minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TenderReceipt-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TenderReceipt-2.1.xsd'.
+WXS schema XSD/common/UBL-TenderReceipt-2.1.xsd failed to compile
+
+validate cardinality root TenderReceipt cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TenderReceipt-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TenderReceipt-2.1.xsd'.
+WXS schema XSD/common/UBL-TenderReceipt-2.1.xsd failed to compile
+
+validate cardinality root TenderReceipt cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TenderReceipt-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TenderReceipt-2.1.xsd'.
+WXS schema XSD/common/UBL-TenderReceipt-2.1.xsd failed to compile
+
+validate cardinality root TendererQualification minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TendererQualification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TendererQualification-2.1.xsd'.
+WXS schema XSD/common/UBL-TendererQualification-2.1.xsd failed to compile
+
+validate cardinality root TendererQualification cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TendererQualification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TendererQualification-2.1.xsd'.
+WXS schema XSD/common/UBL-TendererQualification-2.1.xsd failed to compile
+
+validate cardinality root TendererQualification cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TendererQualification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TendererQualification-2.1.xsd'.
+WXS schema XSD/common/UBL-TendererQualification-2.1.xsd failed to compile
+
+validate cardinality root TendererQualificationResponse minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TendererQualificationResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TendererQualificationResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-TendererQualificationResponse-2.1.xsd failed to compile
+
+validate cardinality root TendererQualificationResponse cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TendererQualificationResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TendererQualificationResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-TendererQualificationResponse-2.1.xsd failed to compile
+
+validate cardinality root TendererQualificationResponse cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TendererQualificationResponse-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TendererQualificationResponse-2.1.xsd'.
+WXS schema XSD/common/UBL-TendererQualificationResponse-2.1.xsd failed to compile
+
+validate cardinality root TradeItemLocationProfile minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TradeItemLocationProfile-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TradeItemLocationProfile-2.1.xsd'.
+WXS schema XSD/common/UBL-TradeItemLocationProfile-2.1.xsd failed to compile
+
+validate cardinality root TradeItemLocationProfile cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TradeItemLocationProfile-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TradeItemLocationProfile-2.1.xsd'.
+WXS schema XSD/common/UBL-TradeItemLocationProfile-2.1.xsd failed to compile
+
+validate cardinality root TradeItemLocationProfile cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TradeItemLocationProfile-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TradeItemLocationProfile-2.1.xsd'.
+WXS schema XSD/common/UBL-TradeItemLocationProfile-2.1.xsd failed to compile
+
+validate cardinality root TransportExecutionPlan minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportExecutionPlan-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportExecutionPlan-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportExecutionPlan-2.1.xsd failed to compile
+
+validate cardinality root TransportExecutionPlan cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportExecutionPlan-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportExecutionPlan-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportExecutionPlan-2.1.xsd failed to compile
+
+validate cardinality root TransportExecutionPlan cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportExecutionPlan-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportExecutionPlan-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportExecutionPlan-2.1.xsd failed to compile
+
+validate cardinality root TransportExecutionPlanRequest minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportExecutionPlanRequest cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportExecutionPlanRequest cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportExecutionPlanRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportProgressStatus minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportProgressStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportProgressStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportProgressStatus-2.1.xsd failed to compile
+
+validate cardinality root TransportProgressStatus cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportProgressStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportProgressStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportProgressStatus-2.1.xsd failed to compile
+
+validate cardinality root TransportProgressStatus cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportProgressStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportProgressStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportProgressStatus-2.1.xsd failed to compile
+
+validate cardinality root TransportProgressStatusRequest minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportProgressStatusRequest cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportProgressStatusRequest cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportProgressStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportServiceDescription minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportServiceDescription-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportServiceDescription-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportServiceDescription-2.1.xsd failed to compile
+
+validate cardinality root TransportServiceDescription cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportServiceDescription-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportServiceDescription-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportServiceDescription-2.1.xsd failed to compile
+
+validate cardinality root TransportServiceDescription cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportServiceDescription-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportServiceDescription-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportServiceDescription-2.1.xsd failed to compile
+
+validate cardinality root TransportServiceDescriptionRequest minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportServiceDescriptionRequest cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportServiceDescriptionRequest cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportServiceDescriptionRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportationStatus minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportationStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportationStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportationStatus-2.1.xsd failed to compile
+
+validate cardinality root TransportationStatus cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportationStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportationStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportationStatus-2.1.xsd failed to compile
+
+validate cardinality root TransportationStatus cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportationStatus-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportationStatus-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportationStatus-2.1.xsd failed to compile
+
+validate cardinality root TransportationStatusRequest minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportationStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportationStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportationStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportationStatusRequest cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportationStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportationStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportationStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root TransportationStatusRequest cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-TransportationStatusRequest-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-TransportationStatusRequest-2.1.xsd'.
+WXS schema XSD/common/UBL-TransportationStatusRequest-2.1.xsd failed to compile
+
+validate cardinality root UnawardedNotification minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-UnawardedNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-UnawardedNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-UnawardedNotification-2.1.xsd failed to compile
+
+validate cardinality root UnawardedNotification cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-UnawardedNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-UnawardedNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-UnawardedNotification-2.1.xsd failed to compile
+
+validate cardinality root UnawardedNotification cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-UnawardedNotification-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-UnawardedNotification-2.1.xsd'.
+WXS schema XSD/common/UBL-UnawardedNotification-2.1.xsd failed to compile
+
+validate cardinality root UtilityStatement minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-UtilityStatement-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-UtilityStatement-2.1.xsd'.
+WXS schema XSD/common/UBL-UtilityStatement-2.1.xsd failed to compile
+
+validate cardinality root UtilityStatement cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-UtilityStatement-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-UtilityStatement-2.1.xsd'.
+WXS schema XSD/common/UBL-UtilityStatement-2.1.xsd failed to compile
+
+validate cardinality root UtilityStatement cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-UtilityStatement-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-UtilityStatement-2.1.xsd'.
+WXS schema XSD/common/UBL-UtilityStatement-2.1.xsd failed to compile
+
+validate cardinality root Waybill minimal: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Waybill-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Waybill-2.1.xsd'.
+WXS schema XSD/common/UBL-Waybill-2.1.xsd failed to compile
+
+validate cardinality root Waybill cardinality-2: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Waybill-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Waybill-2.1.xsd'.
+WXS schema XSD/common/UBL-Waybill-2.1.xsd failed to compile
+
+validate cardinality root Waybill cardinality-5: XSD validation failed: exit status 5: warning: failed to load external entity "XSD/common/UBL-Waybill-2.1.xsd"
+Schemas parser error : Failed to locate the main schema resource at 'XSD/common/UBL-Waybill-2.1.xsd'.
+WXS schema XSD/common/UBL-Waybill-2.1.xsd failed to compile
