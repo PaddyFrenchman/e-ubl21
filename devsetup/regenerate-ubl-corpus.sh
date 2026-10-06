@@ -36,7 +36,16 @@ if ! git diff --quiet HEAD -- "${provenance_inputs[@]}" || \
 fi
 
 stage=$(mktemp -d "${TMPDIR:-/tmp}/e-ubl21-corpus.XXXXXX")
-trap 'rm -rf "$stage"' EXIT
+cleanup_stage() {
+  status=$?
+  if [ "$status" -eq 0 ]; then
+    rm -rf "$stage"
+  else
+    echo "Retaining failed corpus staging directory for diagnosis: $stage" >&2
+  fi
+  exit "$status"
+}
+trap cleanup_stage EXIT
 go_cache="$stage/go-cache"
 # Generated fixtures are deliberately excluded. Otherwise, committing a
 # regenerated manifest changes the computed version embedded in that manifest
