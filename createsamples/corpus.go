@@ -668,7 +668,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		if doc == nil {
 			continue
 		}
-		rootKey := strings.NewReplacer(":", "-", "/", "-", "#", "-").Replace(root.namespace)
+		rootKey := namespaceFixtureKey(root.namespace)
 		for _, variant := range []struct {
 			name  string
 			count int
@@ -727,6 +727,26 @@ func schemaPathForDocument(xsdDir, file string) string {
 		return common
 	}
 	return filepath.Join(xsdDir, "maindoc", file)
+}
+
+// namespaceFixtureKey produces a manifest-safe identifier component from a
+// namespace URI. The manifest permits separators only between non-empty
+// alphanumeric segments, so URI punctuation runs must collapse to one dash.
+func namespaceFixtureKey(namespace string) string {
+	var out strings.Builder
+	separator := false
+	for _, r := range strings.ToLower(namespace) {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			if separator && out.Len() > 0 {
+				out.WriteByte('-')
+			}
+			out.WriteRune(r)
+			separator = false
+		} else {
+			separator = true
+		}
+	}
+	return out.String()
 }
 
 func parseStructuralResumeCursor(cursor string) (phase, root string, err error) {

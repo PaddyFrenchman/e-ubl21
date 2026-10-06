@@ -940,3 +940,14 @@ func TestParseStructuralResumeCursor(t *testing.T) {
 		}
 	}
 }
+
+func TestNamespaceFixtureKey(t *testing.T) {
+	for input, want := range map[string]string{
+		"http://www.w3.org/2000/09/xmldsig#":                     "http-www-w3-org-2000-09-xmldsig",
+		"urn:oasis:names:specification:ubl:schema:xsd:Invoice-2": "urn-oasis-names-specification-ubl-schema-xsd-invoice-2",
+	} {
+		if got := namespaceFixtureKey(input); got != want {
+			t.Errorf("namespaceFixtureKey(%q) = %q, want %q", input, got, want)
+		}
+	}
+}
