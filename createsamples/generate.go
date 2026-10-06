@@ -462,7 +462,9 @@ func sequenceRequiresAny(seq *xsdSequence) bool {
 	if seq == nil || seq.Any == nil {
 		return false
 	}
-	return seq.Any.MinOccurs != "0"
+	// A wildcard within an optional sequence does not make the enclosing
+	// content model mandatory: omitting that sequence is schema-valid.
+	return seq.MinOccurs != "0" && seq.Any.MinOccurs != "0"
 }
 
 // flattenSequence emits every element in document order. While state.full is

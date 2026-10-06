@@ -734,6 +734,24 @@ func TestGenerateOtherTimeStampMinimalRootIsXSDValid(t *testing.T) {
 	}
 }
 
+func TestGenerateUnsignedDataObjectPropertiesMinimalRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "UnsignedDataObjectProperties")]
+	if doc == nil {
+		t.Fatal("UnsignedDataObjectProperties declaration not found")
+	}
+	content, err := generateMinimalSample(index, "UnsignedDataObjectProperties", filepath.Join("..", "XSD"), doc.File)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *testing.T) {
 	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
 	if err != nil {
@@ -1020,7 +1038,7 @@ func TestQNameValuesAndGenerationHelpers(t *testing.T) {
 	if occurrenceCount(xsdElementDecl{MinOccurs: "99"}, newGenState(), 1) != maxOccursSample || occurrenceCount(xsdElementDecl{MinOccurs: "0"}, newGenState(), 1) != 1 {
 		t.Error("occurrence cap/default incorrect")
 	}
-	if sequenceRequiresAny(nil) || sequenceRequiresAny(&xsdSequence{}) || !sequenceRequiresAny(&xsdSequence{Any: &xsdAny{}}) {
+	if sequenceRequiresAny(nil) || sequenceRequiresAny(&xsdSequence{}) || !sequenceRequiresAny(&xsdSequence{Any: &xsdAny{}}) || sequenceRequiresAny(&xsdSequence{MinOccurs: "0", Any: &xsdAny{}}) {
 		t.Error("sequenceRequiresAny incorrect")
 	}
 }
