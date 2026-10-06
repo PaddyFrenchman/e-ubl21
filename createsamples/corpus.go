@@ -226,7 +226,8 @@ func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventor
 		return err
 	}
 	if resumeFrom != "" {
-		return fmt.Errorf("resume run from %q completed without new failures; rerun without --resume-from to regenerate and promote the complete corpus", resumeFrom)
+		fmt.Printf("Structural resume from %q completed without new failures; no partial corpus was installed. Rerun without --resume-from to regenerate and promote the complete corpus.\n", resumeFrom)
+		return nil
 	}
 	if err := os.WriteFile(filepath.Join(staging, corpusOwnershipMarkerName), []byte(corpusOwnershipMarkerContent), 0o644); err != nil {
 		return err
