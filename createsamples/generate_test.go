@@ -673,6 +673,34 @@ func TestGenerateSignaturePropertiesRootIsXSDValid(t *testing.T) {
 	}
 }
 
+func TestGenerateMinimalStructuralRootsWithWildcardsAreXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, root := range []struct {
+		namespace string
+		name      string
+	}{
+		{"http://www.w3.org/2000/09/xmldsig#", "SignatureProperties"},
+		{"urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2", "UBLExtensions"},
+	} {
+		t.Run(root.name, func(t *testing.T) {
+			doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
+			if doc == nil {
+				t.Fatalf("%s declaration not found", root.name)
+			}
+			content, err := generateMinimalStructuralSample(index, root.name, filepath.Join("..", "XSD"), doc.File)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := validateStructuralCandidate([]byte(content), schemaPathForDocument(filepath.Join("..", "XSD"), doc.File)); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
 func TestGenerateAllDataObjectsTimeStampCardinalityRootIsXSDValid(t *testing.T) {
 	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
 	if err != nil {

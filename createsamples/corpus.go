@@ -685,7 +685,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				// particles.  A structural cardinality sample emits optional
 				// elements at least once, so using one here silently turned this
 				// supposed minimal fixture into another singleton fixture.
-				content, err = generateMinimalSample(index, root.name, xsdDir, doc.File)
+				content, err = generateMinimalStructuralSample(index, root.name, xsdDir, doc.File)
 			} else {
 				content, err = generateCardinalityStructuralSample(index, root.name, xsdDir, doc.File, variant.count)
 			}

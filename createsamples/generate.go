@@ -227,6 +227,16 @@ func generateMinimalSample(index schemaIndex, rootName, xsdDir, schemaFile strin
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
+// generateMinimalStructuralSample is the required-only counterpart to a
+// structural sample.  It retains structural wildcard rendering, which lets a
+// standalone root with a mandatory xsd:any remain XSD-valid, while omitting
+// optional elements so it can witness zero occurrences of optional particles.
+func generateMinimalStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string) (string, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	state.full = false
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
 func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile string, state genState) (string, error) {
 	rootNS, err := rootNamespaceForSchema(xsdDir, schemaFile)
 	if err != nil {
