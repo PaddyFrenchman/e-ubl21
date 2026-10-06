@@ -48,8 +48,19 @@ version="git:$(git log -1 --format=%H -- \
   regression/schemas/fixture-manifest.schema.json \
   ':(glob)XSD/**/*.xsd')"
 run_generator() {
-  GOCACHE="$go_cache" go run ./createsamples generate --xsd XSD --generator-version "$version" "$@"
+  resume_args=()
+  if [ -n "${RESUME_FROM:-}" ]; then
+    resume_args=(--resume-from "$RESUME_FROM")
+  fi
+  GOCACHE="$go_cache" go run ./createsamples generate --xsd XSD --generator-version "$version" "${resume_args[@]}" "$@"
 }
+
+# A resumed structural run is a diagnostic pass: it deliberately skips the
+# earlier corpus phases and cannot promote a complete replacement corpus.
+if [ -n "${RESUME_FROM:-}" ]; then
+  run_generator --profile ubl21-structural --set positive --output "$stage/samples-structural"
+  exit 0
+fi
 
 run_generator --profile ubl21 --set all --output "$stage/samples"
 run_generator --profile ubl21-structural --set positive --output "$stage/samples-structural"

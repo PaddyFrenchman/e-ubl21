@@ -7,7 +7,7 @@ corpus-regenerate:
 	./devsetup/regenerate-ubl-corpus.sh
 
 corpus-replace:
-	./devsetup/regenerate-ubl-corpus.sh --replace
+	RESUME_FROM="$(RESUME_FROM)" ./devsetup/regenerate-ubl-corpus.sh --replace
 
 # Verify the genuine Docker Engine and official Compose plugin through a
 # disposable image/container/network/volume/bind-mount/health-check lifecycle.

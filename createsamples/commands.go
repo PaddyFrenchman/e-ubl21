@@ -52,6 +52,8 @@ func runGenerate(args []string) error {
 	set := flags.String("set", "positive", "fixture set to generate (positive, negative, or all)")
 	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: latest generator implementation commit)")
 	count := flags.Int("count", 1, "number of positive sample files to generate per main document schema")
+	errorJournal := flags.String("error-journal", "", "text file that receives all structural-generation failures")
+	resumeFrom := flags.String("resume-from", "", "diagnostic structural resume cursor: main:<root>, signature:<root>, or cardinality:<root>")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -99,7 +101,10 @@ func runGenerate(args []string) error {
 		if err != nil {
 			return err
 		}
-		if err := generateAndWriteUBLStructuralCorpus(*output, report, index, *xsdDir, version); err != nil {
+		if *errorJournal == "" {
+			*errorJournal = filepath.Join("createsamples", "corpus-generation-errors.txt")
+		}
+		if err := generateAndWriteUBLStructuralCorpus(*output, report, index, *xsdDir, version, *errorJournal, *resumeFrom); err != nil {
 			return err
 		}
 		fmt.Printf("Generated and independently validated structural samples under %s\n", *output)

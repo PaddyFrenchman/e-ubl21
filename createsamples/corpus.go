@@ -188,7 +188,7 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 // generateAndWriteUBLStructuralCorpus streams each fixture to an isolated
 // staging directory.  It keeps manifest metadata only; XML content is written
 // and released before the next fixture is generated.
-func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventory, index schemaIndex, xsdDir, generatorVersion string) error {
+func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventory, index schemaIndex, xsdDir, generatorVersion, errorJournal, resumeFrom string) error {
 	if err := validateCorpusOutputDirectory(outputDir); err != nil {
 		return err
 	}
@@ -221,9 +221,12 @@ func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventor
 		}
 		return nil
 	}
-	corpus, err := generateUBLStructuralCorpusWithSink(report, index, xsdDir, generatorVersion, sink)
+	corpus, err := generateUBLStructuralCorpusWithSink(report, index, xsdDir, generatorVersion, sink, errorJournal, resumeFrom)
 	if err != nil {
 		return err
+	}
+	if resumeFrom != "" {
+		return fmt.Errorf("resume run from %q completed without new failures; rerun without --resume-from to regenerate and promote the complete corpus", resumeFrom)
 	}
 	if err := os.WriteFile(filepath.Join(staging, corpusOwnershipMarkerName), []byte(corpusOwnershipMarkerContent), 0o644); err != nil {
 		return err
@@ -257,7 +260,30 @@ func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventor
 // generateUBLStructuralCorpusWithSink sends each validated structural fixture
 // to sink before the next fixture is generated.  With a sink, only manifest
 // metadata is retained in the returned corpus.
-func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string, sink func(generatedFixture) error) (generatedCorpus, error) {
+func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string, sink func(generatedFixture) error, errorJournal, resumeFrom string) (generatedCorpus, error) {
+	resumePhase, resumeRoot, err := parseStructuralResumeCursor(resumeFrom)
+	if err != nil {
+		return generatedCorpus{}, err
+	}
+	resumeStarted := resumeFrom == ""
+	var problems []string
+	journal := func(err error) { problems = append(problems, err.Error()) }
+	finishWithJournal := func() (generatedCorpus, error) {
+		if len(problems) == 0 {
+			return generatedCorpus{}, nil
+		}
+		if errorJournal == "" {
+			return generatedCorpus{}, fmt.Errorf("structural generation completed with %d failures", len(problems))
+		}
+		if err := os.MkdirAll(filepath.Dir(errorJournal), 0o755); err != nil {
+			return generatedCorpus{}, fmt.Errorf("write structural error journal: create directory: %w", err)
+		}
+		content := "Structural corpus generation failures:\n\n" + strings.Join(problems, "\n\n") + "\n"
+		if err := os.WriteFile(errorJournal, []byte(content), 0o644); err != nil {
+			return generatedCorpus{}, fmt.Errorf("write structural error journal: %w", err)
+		}
+		return generatedCorpus{}, fmt.Errorf("structural generation completed with %d failures; see %s", len(problems), errorJournal)
+	}
 	choiceVariants := maxChoiceAlternatives(index)
 	if choiceVariants < 1 {
 		choiceVariants = 1
@@ -279,9 +305,19 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		if root == "" {
 			root = strings.TrimSuffix(filepath.Base(schema.File), filepath.Ext(schema.File))
 		}
+		if resumePhase == "signature" || resumePhase == "cardinality" {
+			continue
+		}
+		if !resumeStarted {
+			if root != resumeRoot {
+				continue
+			}
+			resumeStarted = true
+		}
 		choicePlans, err := structuralChoicePlans(index, root, xsdDir, schema.File)
 		if err != nil {
-			return generatedCorpus{}, fmt.Errorf("count %s choice sites: %w", root, err)
+			journal(fmt.Errorf("count %s choice sites: %w", root, err))
+			continue
 		}
 		add := func(family string, choices map[int]int, recursiveDepth, facetBoundary, repeatCount int, repeatElement string, repeatElements map[string]int, tags ...string) error {
 			var content string
@@ -326,9 +362,8 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		}
 		minimal, err := generateMinimalSample(index, root, xsdDir, schema.File)
 		if err != nil {
-			return generatedCorpus{}, fmt.Errorf("generate %s minimal: %w", root, err)
-		}
-		if err := record(generatedFixture{entry: fixtureManifestEntry{
+			journal(fmt.Errorf("generate %s minimal: %w", root, err))
+		} else if err := record(generatedFixture{entry: fixtureManifestEntry{
 			ID:                fmt.Sprintf("ubl21.%s.minimal", strings.ToLower(root)),
 			DocumentType:      root,
 			Profile:           "ubl21",
@@ -341,10 +376,10 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			Tags:              []string{"positive", "ubl21", "structural", "minimal", "optional-absent", "cardinality", "occurrences-0"},
 			StructuralTargets: []string{"schema-root:" + root, "family:minimal"},
 		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
-			return generatedCorpus{}, err
+			journal(err)
 		}
 		if err := add("optional-rich", nil, 1, 0, 0, "", nil, "optional-elements", "optional-attributes", "cardinality", "occurrences-1"); err != nil {
-			return generatedCorpus{}, err
+			journal(err)
 		}
 		// Exercise nested cardinality contracts one particle at a time.  The
 		// ordinary cardinality families deliberately limit themselves to the
@@ -355,11 +390,13 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		// fixture for each required non-singleton count.
 		baseline, err := generateTargetedStructuralSample(index, root, xsdDir, schema.File, nil, 1)
 		if err != nil {
-			return generatedCorpus{}, fmt.Errorf("generate %s cardinality baseline: %w", root, err)
+			journal(fmt.Errorf("generate %s cardinality baseline: %w", root, err))
+			continue
 		}
 		matched, err := matchFixtureDetailedReader(index, strings.NewReader(baseline))
 		if err != nil {
-			return generatedCorpus{}, fmt.Errorf("match %s cardinality baseline: %w", root, err)
+			journal(fmt.Errorf("match %s cardinality baseline: %w", root, err))
+			continue
 		}
 		reachable := make([]string, 0, len(matched.cardinalities))
 		for id := range matched.cardinalities {
@@ -402,7 +439,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			for _, count := range counts {
 				family := fmt.Sprintf("cardinality-target-%s-%d", strings.ToLower(element), count)
 				if err := add(family, nil, 1, 0, count, element, nil, "cardinality", "targeted", fmt.Sprintf("occurrences-%d", count)); err != nil {
-					return generatedCorpus{}, err
+					journal(err)
 				}
 			}
 		}
@@ -431,10 +468,12 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			} {
 				content, err := generateSignatureExtensionStructuralSample(index, root, xsdDir, schema.File, variant)
 				if err != nil {
-					return generatedCorpus{}, fmt.Errorf("generate %s signature extension %s: %w", root, family, err)
+					journal(fmt.Errorf("generate %s signature extension %s: %w", root, family, err))
+					continue
 				}
 				if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
-					return generatedCorpus{}, fmt.Errorf("validate %s signature extension %s: %w", root, family, err)
+					journal(fmt.Errorf("validate %s signature extension %s: %w", root, family, err))
+					continue
 				}
 				if err := record(generatedFixture{entry: fixtureManifestEntry{
 					ID:                "ubl21.invoice.signature-extension-" + family,
@@ -455,22 +494,22 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		}
 		for planIndex, choices := range choicePlans[1:] {
 			if err := add(fmt.Sprintf("choice-path-%03d", planIndex+1), choices, 1, 0, 0, "", nil, "choice-alternative", "targeted"); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		for boundary, family := range []string{"facet-boundary-low", "facet-boundary-high"} {
 			if err := add(family, nil, 1, boundary+1, 0, "", nil, "facet-boundary"); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		for _, recursiveDepth := range []int{2, 3} {
 			if err := add(fmt.Sprintf("recursive-depth-%d", recursiveDepth), nil, recursiveDepth, 0, 0, "", nil, "recursive"); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		for _, count := range []int{2, 5} {
 			if err := add(fmt.Sprintf("cardinality-%d", count), nil, 1, 0, count, "", nil, "cardinality", fmt.Sprintf("occurrences-%d", count)); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		// These fixtures exercise the progressive high-volume collection tiers
@@ -504,12 +543,12 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				continue
 			}
 			if err := add(fmt.Sprintf("%s-%03d", strings.ToLower(large.element), large.count), nil, 1, 0, large.count, large.element, nil, "cardinality", "large-document", large.kind); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		if root == "Invoice" {
 			if err := add("multi-collection-100", nil, 1, 0, 0, "", map[string]int{"InvoiceLine": 100, "AllowanceCharge": 50, "TaxTotal": 50}, "cardinality", "large-document", "line-collection", "aggregate-collection", "multi-collection"); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 	}
@@ -540,6 +579,15 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		return roots[i].namespace < roots[j].namespace
 	})
 	for _, root := range roots {
+		if resumePhase == "cardinality" {
+			continue
+		}
+		if resumePhase == "signature" && !resumeStarted {
+			if root.name != resumeRoot {
+				continue
+			}
+			resumeStarted = true
+		}
 		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
 		if doc == nil {
 			continue
@@ -548,11 +596,13 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		state.signatureExtension = true
 		content, err := generateSampleWithState(index, root.name, xsdDir, doc.File, state)
 		if err != nil {
-			return generatedCorpus{}, fmt.Errorf("generate signature root %s: %w", root.name, err)
+			journal(fmt.Errorf("generate signature root %s: %w", root.name, err))
+			continue
 		}
 		schemaPath := filepath.Join(xsdDir, "common", doc.File)
 		if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
-			return generatedCorpus{}, fmt.Errorf("validate signature root %s: %w", root.name, err)
+			journal(fmt.Errorf("validate signature root %s: %w", root.name, err))
+			continue
 		}
 		family := signatureNamespaces[root.namespace] + "-root-" + strings.ToLower(root.name)
 		if err := record(generatedFixture{entry: fixtureManifestEntry{
@@ -608,6 +658,12 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		return cardinalityRoots[i].namespace < cardinalityRoots[j].namespace
 	})
 	for _, root := range cardinalityRoots {
+		if resumePhase == "cardinality" && !resumeStarted {
+			if root.name != resumeRoot {
+				continue
+			}
+			resumeStarted = true
+		}
 		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
 		if doc == nil {
 			continue
@@ -629,11 +685,13 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				content, err = generateCardinalityStructuralSample(index, root.name, xsdDir, doc.File, variant.count)
 			}
 			if err != nil {
-				return generatedCorpus{}, fmt.Errorf("generate cardinality root %s %s: %w", root.name, variant.name, err)
+				journal(fmt.Errorf("generate cardinality root %s %s: %w", root.name, variant.name, err))
+				continue
 			}
 			schemaPath := filepath.Join(xsdDir, "common", doc.File)
 			if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
-				return generatedCorpus{}, fmt.Errorf("validate cardinality root %s %s: %w", root.name, variant.name, err)
+				journal(fmt.Errorf("validate cardinality root %s %s: %w", root.name, variant.name, err))
+				continue
 			}
 			family := "cardinality-root-" + variant.name
 			if err := record(generatedFixture{entry: fixtureManifestEntry{
@@ -649,7 +707,24 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			}
 		}
 	}
+	if resumeFrom != "" && !resumeStarted {
+		return generatedCorpus{}, fmt.Errorf("resume cursor %q did not match a generated structural root", resumeFrom)
+	}
+	if _, err := finishWithJournal(); err != nil {
+		return generatedCorpus{}, err
+	}
 	return buildGeneratedCorpus(fixtures)
+}
+
+func parseStructuralResumeCursor(cursor string) (phase, root string, err error) {
+	if cursor == "" {
+		return "", "", nil
+	}
+	phase, root, ok := strings.Cut(cursor, ":")
+	if !ok || root == "" || (phase != "main" && phase != "signature" && phase != "cardinality") {
+		return "", "", fmt.Errorf("invalid --resume-from %q; use main:<root>, signature:<root>, or cardinality:<root>", cursor)
+	}
+	return phase, root, nil
 }
 
 func validateStructuralCandidate(content []byte, schemaPath string) error {

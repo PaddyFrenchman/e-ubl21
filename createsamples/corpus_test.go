@@ -921,3 +921,22 @@ func TestCorpusDeterminismRejectsFixtureCountAndIdentityChanges(t *testing.T) {
 		t.Fatal("fixture identity drift was accepted")
 	}
 }
+
+func TestParseStructuralResumeCursor(t *testing.T) {
+	for cursor, want := range map[string][2]string{
+		"":                           {"", ""},
+		"main:Invoice":               {"main", "Invoice"},
+		"signature:PGPData":          {"signature", "PGPData"},
+		"cardinality:OtherTimeStamp": {"cardinality", "OtherTimeStamp"},
+	} {
+		phase, root, err := parseStructuralResumeCursor(cursor)
+		if err != nil || phase != want[0] || root != want[1] {
+			t.Errorf("parseStructuralResumeCursor(%q) = %q, %q, %v", cursor, phase, root, err)
+		}
+	}
+	for _, cursor := range []string{"Invoice", "unknown:Invoice", "main:"} {
+		if _, _, err := parseStructuralResumeCursor(cursor); err == nil {
+			t.Errorf("parseStructuralResumeCursor(%q) accepted invalid cursor", cursor)
+		}
+	}
+}
