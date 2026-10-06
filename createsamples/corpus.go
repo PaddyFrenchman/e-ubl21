@@ -681,10 +681,11 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			var content string
 			var err error
 			if variant.count == 0 {
-				// Cardinality roots include XMLDSig/XAdES declarations whose
-				// required lax wildcards need a structural foreign payload even
-				// for their zero/"minimal" fixture.
-				content, err = generateCardinalityStructuralSample(index, root.name, xsdDir, doc.File, 1)
+				// This is the zero-occurrence witness for optional repeatable
+				// particles.  A structural cardinality sample emits optional
+				// elements at least once, so using one here silently turned this
+				// supposed minimal fixture into another singleton fixture.
+				content, err = generateMinimalSample(index, root.name, xsdDir, doc.File)
 			} else {
 				content, err = generateCardinalityStructuralSample(index, root.name, xsdDir, doc.File, variant.count)
 			}
