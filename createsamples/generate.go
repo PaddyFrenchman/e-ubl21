@@ -73,9 +73,10 @@ type genState struct {
 	// finite schema maximum is always respected. repeatOverrides is used for
 	// deliberately large, line-oriented documents without inflating unrelated
 	// collections in the same document.
-	repeatCount     int
-	repeatOverrides map[string]int
-	typeDepth       map[string]int
+	repeatCount      int
+	repeatEveryDepth bool
+	repeatOverrides  map[string]int
+	typeDepth        map[string]int
 }
 
 func newGenState() genState {
@@ -156,6 +157,13 @@ func generateFacetBoundaryStructuralSample(index schemaIndex, rootName, xsdDir, 
 func generateCardinalityStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, count int) (string, error) {
 	state := newTargetedStructuralGenState(nil, 1)
 	state.repeatCount = count
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+func generateDeepCardinalityStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, choices map[int]int, count int) (string, error) {
+	state := newTargetedStructuralGenState(choices, 1)
+	state.repeatCount = count
+	state.repeatEveryDepth = true
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
@@ -915,7 +923,7 @@ func occurrenceCount(element xsdElementDecl, state genState, depth int) int {
 		// multiplies UBL's shared aggregate graph exponentially, producing a corpus
 		// too large to generate or review. Targeted large-collection fixtures use
 		// repeatOverrides and remain valid at any depth.
-	} else if state.repeatCount > 0 && depth <= 1 && isRepeatableElement(element) {
+	} else if state.repeatCount > 0 && (state.repeatEveryDepth || depth <= 1) && isRepeatableElement(element) {
 		n = state.repeatCount
 	}
 	max := parseMaxOccurs(element.MaxOccurs)

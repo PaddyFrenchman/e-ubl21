@@ -618,6 +618,43 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			return generatedCorpus{}, err
 		}
 	}
+	// The XMLDSig/XAdES schemas place most repeatable particles beneath nested
+	// choices.  Exercise every reachable choice plan at the required multiple
+	// counts; ordinary cardinality roots intentionally stop at shallow depth.
+	for _, root := range roots {
+		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
+		if doc == nil {
+			continue
+		}
+		plans, err := structuralChoicePlans(index, root.name, xsdDir, doc.File)
+		if err != nil {
+			journal(fmt.Errorf("plan signature cardinality root %s: %w", root.name, err))
+			continue
+		}
+		for planIndex, choices := range plans {
+			for _, count := range []int{2, 5} {
+				content, err := generateDeepCardinalityStructuralSample(index, root.name, xsdDir, doc.File, choices, count)
+				if err != nil {
+					journal(fmt.Errorf("generate signature cardinality root %s: %w", root.name, err))
+					continue
+				}
+				schemaPath := schemaPathForDocument(xsdDir, doc.File)
+				if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
+					journal(fmt.Errorf("validate signature cardinality root %s: %w", root.name, err))
+					continue
+				}
+				family := fmt.Sprintf("signature-cardinality-%03d-%d", planIndex, count)
+				if err := record(generatedFixture{entry: fixtureManifestEntry{
+					ID: fmt.Sprintf("ubl21.signature.%s.%s", strings.ToLower(root.name), family), DocumentType: root.name, Profile: "ubl21",
+					File: filepath.ToSlash(filepath.Join("SignatureSchemas", strings.ToLower(root.name)+"-"+family+".xml")), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+					Standards: fixtureStandards{UBL: "2.1"}, Provenance: fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion}, ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+					Tags: []string{"positive", "ubl21", "structural", "signature-schema", "cardinality", fmt.Sprintf("occurrences-%d", count)}, StructuralTargets: []string{"signature-root:" + root.name, "family:" + family},
+				}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+					return generatedCorpus{}, err
+				}
+			}
+		}
+	}
 	// A main-document expansion intentionally demotes repeated aggregate types
 	// after their first full visit.  That keeps ordinary fixtures bounded, but
 	// it also means a repeatable particle owned by one of those types might
@@ -675,6 +712,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			count int
 		}{
 			{name: "minimal"},
+			{name: "cardinality-1", count: 1},
 			{name: "cardinality-2", count: 2},
 			{name: "cardinality-5", count: 5},
 		} {
