@@ -784,6 +784,19 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 	for offset := range alternatives {
 		out, supported := alternatives[(selection+offset)%len(alternatives)]()
 		if supported {
+			if state.repeatEveryDepth && (choice.MaxOccurs == "unbounded" || parseOccursInt(choice.MaxOccurs, 1) > 1) {
+				count := state.repeatCount
+				if maximum := parseMaxOccurs(choice.MaxOccurs); maximum > 0 && count > maximum {
+					count = maximum
+				}
+				repeated := make([]xmlNode, 0, len(out)*count)
+				for occurrence := 0; occurrence < count; occurrence++ {
+					for _, node := range out {
+						repeated = append(repeated, nodeWithFreshDescendantIDs(node, state))
+					}
+				}
+				return repeated, true
+			}
 			return out, true
 		}
 	}
