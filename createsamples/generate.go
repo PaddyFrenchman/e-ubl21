@@ -592,6 +592,19 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 			out = append(out, node)
 		}
 	}
+	if state.repeatEveryDepth && (seq.MaxOccurs == "unbounded" || parseOccursInt(seq.MaxOccurs, 1) > 1) {
+		count := state.repeatCount
+		if maximum := parseMaxOccurs(seq.MaxOccurs); maximum > 0 && count > maximum {
+			count = maximum
+		}
+		repeated := make([]xmlNode, 0, len(out)*count)
+		for occurrence := 0; occurrence < count; occurrence++ {
+			for _, node := range out {
+				repeated = append(repeated, nodeWithFreshDescendantIDs(node, state))
+			}
+		}
+		return repeated, true
+	}
 	return out, true
 }
 
