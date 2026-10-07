@@ -276,7 +276,7 @@ func findInAll(index schemaIndex, f schemaFrame, parent string, all *xsdAll, q x
 	}
 	return xsdElementDecl{}, "", false
 }
-func recordInheritance(index schemaIndex, f schemaFrame) {
+func recordInheritance(f schemaFrame) {
 	base := typeBase(f.typ)
 	if base == "" {
 		return
@@ -575,7 +575,7 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 				out[complexTypeIDForElement(td, id, n)]++
 				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}, seen: map[string]bool{}})
 				recordAttributes(index, stack[len(stack)-1], v)
-				recordInheritance(index, stack[len(stack)-1])
+				recordInheritance(stack[len(stack)-1])
 				continue
 			}
 			parent := stack[len(stack)-1]
@@ -600,7 +600,7 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 								out[complexTypeIDForElement(td, globalID, typeName)]++
 								frame := schemaFrame{doc: td, typ: typ, typeName: typeName, targets: out, siblings: map[string]int{}, seen: map[string]bool{}}
 								recordAttributes(index, frame, v)
-								recordInheritance(index, frame)
+								recordInheritance(frame)
 								stack = append(stack, frame)
 								continue
 							}
@@ -648,7 +648,7 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 				}
 				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}, seen: map[string]bool{}})
 				recordAttributes(index, stack[len(stack)-1], v)
-				recordInheritance(index, stack[len(stack)-1])
+				recordInheritance(stack[len(stack)-1])
 			} else {
 				stack = append(stack, schemaFrame{})
 			}

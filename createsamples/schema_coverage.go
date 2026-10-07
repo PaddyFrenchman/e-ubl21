@@ -207,17 +207,17 @@ func schemaCoverageTargets(index schemaIndex) coverageTargets {
 			t.addSequence(doc, name, typ.Sequence)
 			if typ.Sequence != nil {
 				for _, e := range typ.Sequence.Elements {
-					t.addRecursiveEdge(index, doc, name, e)
+					t.addRecursiveEdge(doc, name, e)
 				}
 			}
 			if typ.All != nil {
 				for _, e := range typ.All.Elements {
-					t.addRecursiveEdge(index, doc, name, e)
+					t.addRecursiveEdge(doc, name, e)
 				}
 			}
 			if typ.Choice != nil {
 				for _, e := range typ.Choice.Elements {
-					t.addRecursiveEdge(index, doc, name, e)
+					t.addRecursiveEdge(doc, name, e)
 				}
 			}
 			t.addAll(doc, name, typ.All)
@@ -257,7 +257,7 @@ func directTypeName(doc *schemaDoc, element xsdElementDecl) (string, string) {
 	}
 	return qualifyRef(element.Type, doc.TargetNamespace)
 }
-func (t coverageTargets) addRecursiveEdge(index schemaIndex, doc *schemaDoc, owner string, element xsdElementDecl) {
+func (t coverageTargets) addRecursiveEdge(doc *schemaDoc, owner string, element xsdElementDecl) {
 	ns, name := directTypeName(doc, element)
 	if name == "" {
 		return
@@ -278,9 +278,10 @@ func withOccurs(parent occurrence, min, max string) occurrence {
 	}
 	childMin := parseOccursInt(min, 1)
 	childMax := parseMaxOccurs(max)
-	if max == "unbounded" {
+	switch max {
+	case "unbounded":
 		childMax = -1
-	} else if max == "" {
+	case "":
 		childMax = 1
 	}
 	bounds := occurrenceBounds{min: parent.bounds.min * childMin, max: parent.bounds.max * childMax}
@@ -855,9 +856,13 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	}
 	for _, key := range keys {
 		if missing := report.Uncovered[key]; len(missing) > 0 {
-			out.WriteString("\n## Uncovered " + key + "\n\n")
+			out.WriteString("\n## Uncovered ")
+			out.WriteString(key)
+			out.WriteString("\n\n")
 			for _, id := range missing {
-				out.WriteString("- `" + id + "`\n")
+				out.WriteString("- `")
+				out.WriteString(id)
+				out.WriteString("`\n")
 			}
 		}
 	}
@@ -871,7 +876,9 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	if len(unexercisedRepeatable) > 0 {
 		out.WriteString("\n## Repeatable particles with zero exercised occurrences\n\n")
 		for _, id := range unexercisedRepeatable {
-			out.WriteString("- `" + id + "`\n")
+			out.WriteString("- `")
+			out.WriteString(id)
+			out.WriteString("`\n")
 		}
 	}
 	if len(report.CardinalityGaps) > 0 {
@@ -890,7 +897,11 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 		}
 		sort.Strings(paths)
 		for _, path := range paths {
-			out.WriteString("- `" + path + "`: " + report.Unparseable[path] + "\n")
+			out.WriteString("- `")
+			out.WriteString(path)
+			out.WriteString("`: ")
+			out.WriteString(report.Unparseable[path])
+			out.WriteString("\n")
 		}
 	}
 	return os.WriteFile(path, []byte(out.String()), 0o644)

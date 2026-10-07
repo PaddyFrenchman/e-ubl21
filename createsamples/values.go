@@ -322,8 +322,8 @@ func isPrimitiveType(t string) bool {
 // the unprefixed built-ins used by the XMLDSig schema, whose default
 // namespace is XML Schema.
 func canonicalPrimitiveType(t string) string {
-	if strings.HasPrefix(t, "xsd:") {
-		t = strings.TrimPrefix(t, "xsd:")
+	if after, ok := strings.CutPrefix(t, "xsd:"); ok {
+		t = after
 	}
 	switch t {
 	case "string", "boolean", "int", "integer", "decimal", "double", "date", "dateTime", "time", "token", "normalizedString", "anyURI", "language", "base64Binary", "duration":
