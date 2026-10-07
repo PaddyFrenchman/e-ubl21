@@ -28,6 +28,20 @@ visual infrastructure design and administration. This proposal addresses the
 more focused monitoring-client requirement. It does not replace that evaluation
 or authorize visual deployment changes.
 
+## Programming languages and framework
+
+- **UI: TypeScript with React**, implemented as a Headlamp plugin. This covers
+  the component map, dashboards, pod details and scaling timeline.
+- **Additional backend services: Go**, consistent with UBL21. Use Go for the
+  durable scaling recorder and any required telemetry aggregation or read API.
+- Use upstream Headlamp extension APIs rather than maintaining a private fork.
+  Reuse existing Kubernetes, metrics and log integrations where sufficient;
+  introduce a Go service only for capabilities that require additional backend logic.
+
+React is the UI framework; TypeScript is the UI programming language.
+The plugin does not require a separate Node.js production backend. Node.js/npm
+are used for frontend development and build tooling.
+
 ## Scope of the first version
 
 The client is read-only. It must provide:
