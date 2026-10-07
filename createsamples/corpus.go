@@ -632,7 +632,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			continue
 		}
 		for planIndex, choices := range plans {
-			for _, count := range []int{2, 5} {
+			for _, count := range []int{1, 2, 5} {
 				content, err := generateDeepCardinalityStructuralSample(index, root.name, xsdDir, doc.File, choices, count)
 				if err != nil {
 					journal(fmt.Errorf("generate signature cardinality root %s: %w", root.name, err))
