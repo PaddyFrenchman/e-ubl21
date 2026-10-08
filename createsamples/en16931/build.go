@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/PaddyFrenchman/e-ubl21/createsamples/xmlnode"
 )
@@ -261,7 +262,7 @@ func BuildInvoiceXML(doc InvoiceDocument) (string, error) {
 		Children: children,
 	}
 
-	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(root, 0) + "\n", nil
+	return renderDocument(root), nil
 }
 
 // BuildCreditNoteXML converts a populated CreditNoteDocument into a complete,
@@ -320,5 +321,16 @@ func BuildCreditNoteXML(doc CreditNoteDocument) (string, error) {
 		},
 		Children: children,
 	}
-	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(root, 0) + "\n", nil
+	return renderDocument(root), nil
+}
+
+// renderDocument uses one builder for declaration, XML tree, and trailing
+// newline. The former string concatenation retained a complete rendered XML
+// buffer while allocating the final document string.
+func renderDocument(root xmlnode.Node) string {
+	var output strings.Builder
+	output.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	xmlnode.RenderTo(&output, root, 0)
+	output.WriteByte('\n')
+	return output.String()
 }

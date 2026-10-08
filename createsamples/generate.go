@@ -21,6 +21,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/PaddyFrenchman/e-ubl21/createsamples/xmlnode"
 )
@@ -292,7 +293,11 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 		if state.signatureExtension {
 		}
 	}
-	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(rootNode, 0) + "\n", nil
+	var output strings.Builder
+	output.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	xmlnode.RenderTo(&output, rootNode, 0)
+	output.WriteByte('\n')
+	return output.String(), nil
 }
 
 // maxDepth guards against runaway or genuinely cyclic schema graphs. Generation

@@ -72,7 +72,7 @@ func TestGenerateRestrictedXAdESTimestampRoot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -96,7 +96,7 @@ func TestGenerateXAdESCertificateValuesRoot(t *testing.T) {
 	if !strings.Contains(content, ">U2FtcGxlRGF0YQ==</") {
 		t.Fatalf("EncapsulatedX509Certificate is not base64: %s", content)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -120,7 +120,7 @@ func TestGenerateXAdESAttributeCertificateRefsRoot(t *testing.T) {
 	if !strings.Contains(content, "<ds:X509IssuerName>") {
 		t.Fatalf("X509IssuerName lacks XMLDSig namespace: %s", content)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -163,7 +163,7 @@ func TestLargeInvoiceLineFixtureIsDeterministicAndValid(t *testing.T) {
 	if got, err := directChildCount(first, "InvoiceLine"); err != nil || got != 100 {
 		t.Fatalf("direct InvoiceLine count = %d, err = %v, want 100", got, err)
 	}
-	if err := validateStructuralCandidate([]byte(first), filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+	if err := validateStructuralCandidate(first, filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -191,7 +191,7 @@ func TestMultiCollectionInvoiceFixtureIsValid(t *testing.T) {
 			t.Fatalf("direct %s count = %d, want %d", element, got, want)
 		}
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -215,7 +215,7 @@ func TestLargeAttachmentReferenceAndShipmentFixturesAreValid(t *testing.T) {
 		if got, err := directChildCount(content, fixture.element); err != nil || got != 50 {
 			t.Fatalf("%s direct %s count = %d, err = %v, want 50", fixture.root, fixture.element, got, err)
 		}
-		if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", fixture.schema)); err != nil {
+		if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", fixture.schema)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -234,7 +234,7 @@ func TestLargeItemBearingCatalogueFixtureIsValid(t *testing.T) {
 	if got, err := directChildCount(content, "CatalogueLine"); err != nil || got != 100 {
 		t.Fatalf("direct CatalogueLine count = %d, err = %v, want 100", got, err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", "UBL-Catalogue-2.1.xsd")); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", "UBL-Catalogue-2.1.xsd")); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -590,7 +590,7 @@ func TestGenerateSignatureExtensionStructuralSampleIsXSDValid(t *testing.T) {
 			t.Errorf("signature extension missing %q", want)
 		}
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
 		t.Fatal(err)
 	}
 	matched, err := matchFixtureBytes(index, []byte(content))
@@ -648,7 +648,7 @@ func TestGenerateCounterSignatureRootIsXSDValid(t *testing.T) {
 	if !strings.Contains(content, ">1</ds:HMACOutputLength>") {
 		t.Fatalf("HMACOutputLength is not a valid integer:\n%s", content)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -668,7 +668,7 @@ func TestGenerateSignaturePropertiesRootIsXSDValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -694,7 +694,7 @@ func TestGenerateMinimalStructuralRootsWithWildcardsAreXSDValid(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := validateStructuralCandidate([]byte(content), schemaPathForDocument(filepath.Join("..", "XSD"), doc.File)); err != nil {
+			if err := validateStructuralCandidate(content, schemaPathForDocument(filepath.Join("..", "XSD"), doc.File)); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -714,7 +714,7 @@ func TestGenerateAllDataObjectsTimeStampCardinalityRootIsXSDValid(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -732,7 +732,7 @@ func TestGenerateSignedDataObjectPropertiesCardinalityRootIsXSDValid(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -750,14 +750,14 @@ func TestGenerateOtherTimeStampMinimalRootIsXSDValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 	content, err = generateCardinalityStructuralSample(index, "OtherTimeStamp", filepath.Join("..", "XSD"), doc.File, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -775,7 +775,7 @@ func TestGenerateUnsignedDataObjectPropertiesMinimalRootIsXSDValid(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -795,7 +795,7 @@ func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *t
 			t.Fatalf("variant %d duplicates an earlier signature fixture", variant)
 		}
 		seen[content] = true
-		if err := validateStructuralCandidate([]byte(content), filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+		if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
 			t.Fatalf("variant %d: %v", variant, err)
 		}
 	}

@@ -30,18 +30,21 @@ type Node struct {
 // order for deterministic output.
 func Render(node Node, indent int) string {
 	var output strings.Builder
-	renderTo(&output, node, indent)
+	RenderTo(&output, node, indent)
 	return output.String()
 }
 
+// RenderTo serializes node into output. Callers that need to add an XML
+// declaration can use this rather than rendering into an intermediate string
+// and concatenating a second complete document buffer.
+func RenderTo(output *strings.Builder, node Node, indent int) {
+	renderTo(output, node, indent)
+}
+
 func renderTo(output *strings.Builder, node Node, indent int) {
-	prefix := ""
-	if node.Prefix != "" {
-		prefix = node.Prefix + ":"
-	}
-	output.WriteString(indentString(indent))
+	writeIndent(output, indent)
 	output.WriteByte('<')
-	output.WriteString(prefix)
+	writePrefix(output, node.Prefix)
 	output.WriteString(node.Name)
 	if len(node.Attributes) > 0 {
 		keys := make([]string, 0, len(node.Attributes))
@@ -61,7 +64,7 @@ func renderTo(output *strings.Builder, node Node, indent int) {
 		output.WriteByte('>')
 		output.WriteString(escapeText(node.Value))
 		output.WriteString("</")
-		output.WriteString(prefix)
+		writePrefix(output, node.Prefix)
 		output.WriteString(node.Name)
 		output.WriteString(">\n")
 		return
@@ -70,18 +73,24 @@ func renderTo(output *strings.Builder, node Node, indent int) {
 	for _, child := range node.Children {
 		renderTo(output, child, indent+2)
 	}
-	output.WriteString(indentString(indent))
+	writeIndent(output, indent)
 	output.WriteString("</")
-	output.WriteString(prefix)
+	writePrefix(output, node.Prefix)
 	output.WriteString(node.Name)
 	output.WriteString(">\n")
 }
 
-func indentString(n int) string {
-	if n <= 0 {
-		return ""
+func writePrefix(output *strings.Builder, prefix string) {
+	if prefix != "" {
+		output.WriteString(prefix)
+		output.WriteByte(':')
 	}
-	return strings.Repeat("  ", n)
+}
+
+func writeIndent(output *strings.Builder, n int) {
+	for range n {
+		output.WriteString("  ")
+	}
 }
 
 func escapeText(s string) string {

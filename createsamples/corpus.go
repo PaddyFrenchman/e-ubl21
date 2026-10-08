@@ -499,7 +499,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			if err != nil {
 				return fmt.Errorf("generate %s %s: %w", root, family, err)
 			}
-			if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
+			if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
 				return fmt.Errorf("validate %s %s: %w", root, family, err)
 			}
 			if err := record(generatedFixture{entry: fixtureManifestEntry{
@@ -634,7 +634,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 					journal(fmt.Errorf("generate %s signature extension %s: %w", root, family, err))
 					continue
 				}
-				if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
+				if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
 					journal(fmt.Errorf("validate %s signature extension %s: %w", root, family, err))
 					continue
 				}
@@ -763,7 +763,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			continue
 		}
 		schemaPath := filepath.Join(xsdDir, "common", doc.File)
-		if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
+		if err := validateStructuralCandidate(content, schemaPath); err != nil {
 			journal(fmt.Errorf("validate signature root %s: %w", root.name, err))
 			continue
 		}
@@ -801,7 +801,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 					continue
 				}
 				schemaPath := schemaPathForDocument(xsdDir, doc.File)
-				if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
+				if err := validateStructuralCandidate(content, schemaPath); err != nil {
 					journal(fmt.Errorf("validate signature cardinality root %s: %w", root.name, err))
 					continue
 				}
@@ -901,7 +901,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				continue
 			}
 			schemaPath := schemaPathForDocument(xsdDir, doc.File)
-			if err := validateStructuralCandidate([]byte(content), schemaPath); err != nil {
+			if err := validateStructuralCandidate(content, schemaPath); err != nil {
 				journal(fmt.Errorf("validate cardinality root %s %s: %w", root.name, variant.name, err))
 				continue
 			}
@@ -969,13 +969,16 @@ func parseStructuralResumeCursor(cursor string) (phase, root string, err error) 
 	return phase, root, nil
 }
 
-func validateStructuralCandidate(content []byte, schemaPath string) error {
+func validateStructuralCandidate(content string, schemaPath string) error {
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
 		return fmt.Errorf("xmllint is required for structural candidate validation: %w", err)
 	}
 	cmd := exec.Command(xmllint, "--nonet", "--noout", "--schema", schemaPath, "-")
-	cmd.Stdin = bytes.NewReader(content)
+	// strings.Reader presents the generated buffer directly to xmllint. The
+	// previous []byte conversion duplicated every structural fixture solely for
+	// validation (including the multi-megabyte collection witnesses).
+	cmd.Stdin = strings.NewReader(content)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("XSD validation failed: %w: %s", err, strings.TrimSpace(string(output)))
 	}
