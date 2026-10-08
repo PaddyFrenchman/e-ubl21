@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -109,6 +111,158 @@ type generatedCorpus struct {
 	manifestJSON []byte
 }
 
+// structuralManifestStore keeps the very large structural manifest out of the
+// Go heap. SQLite is used as an append-only journal because the structural
+// generator can produce hundreds of thousands of entries; keeping the entry
+// structs (and their strings/slices) reachable until the final marshal made
+// the collector repeatedly scan a multi-gigabyte object graph.
+//
+// This deliberately uses the sqlite3 command already available to the corpus
+// tooling rather than adding a database driver to the product binary. The
+// database is private to the staging directory and is deleted after its rows
+// have been streamed into manifest.json.
+type structuralManifestStore struct {
+	path       string
+	sqlitePath string
+	cmd        *exec.Cmd
+	stdin      io.WriteCloser
+	writer     *bufio.Writer
+	stderr     bytes.Buffer
+	finished   bool
+}
+
+func newStructuralManifestStore(path string) (*structuralManifestStore, error) {
+	sqlitePath, err := exec.LookPath("sqlite3")
+	if err != nil {
+		return nil, fmt.Errorf("sqlite3 is required to spool the structural fixture manifest: %w", err)
+	}
+	store := &structuralManifestStore{path: path, sqlitePath: sqlitePath}
+	store.cmd = exec.Command(sqlitePath, "-batch", path)
+	store.cmd.Stderr = &store.stderr
+	store.stdin, err = store.cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("open structural manifest SQLite input: %w", err)
+	}
+	store.writer = bufio.NewWriterSize(store.stdin, 256*1024)
+	if err := store.cmd.Start(); err != nil {
+		_ = store.stdin.Close()
+		return nil, fmt.Errorf("start structural manifest SQLite journal: %w", err)
+	}
+	if _, err := store.writer.WriteString("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; CREATE TABLE entries (ordinal INTEGER PRIMARY KEY, entry TEXT NOT NULL); BEGIN;\n"); err != nil {
+		return nil, store.fail(err)
+	}
+	return store, nil
+}
+
+func (store *structuralManifestStore) add(entry fixtureManifestEntry) error {
+	encoded, err := json.Marshal(entry)
+	if err != nil {
+		return fmt.Errorf("marshal structural manifest entry %q: %w", entry.ID, err)
+	}
+	// JSON never contains literal newlines, and SQL single quotes are escaped
+	// by doubling them. This keeps one entry per SQLite command without a Go
+	// database-driver dependency or a live in-memory row cache.
+	value := strings.ReplaceAll(string(encoded), "'", "''")
+	if _, err := store.writer.WriteString("INSERT INTO entries (entry) VALUES ('" + value + "');\n"); err != nil {
+		return store.fail(err)
+	}
+	return nil
+}
+
+func (store *structuralManifestStore) fail(cause error) error {
+	_ = store.stdin.Close()
+	_ = store.cmd.Wait()
+	return fmt.Errorf("write structural manifest SQLite journal: %w: %s", cause, strings.TrimSpace(store.stderr.String()))
+}
+
+func (store *structuralManifestStore) finish() error {
+	if store.finished {
+		return nil
+	}
+	store.finished = true
+	if _, err := store.writer.WriteString("COMMIT;\n"); err != nil {
+		return store.fail(err)
+	}
+	if err := store.writer.Flush(); err != nil {
+		return store.fail(err)
+	}
+	if err := store.stdin.Close(); err != nil {
+		return store.fail(err)
+	}
+	if err := store.cmd.Wait(); err != nil {
+		return fmt.Errorf("finalize structural manifest SQLite journal: %w: %s", err, strings.TrimSpace(store.stderr.String()))
+	}
+	return nil
+}
+
+func (store *structuralManifestStore) writeManifest(path string) error {
+	if err := store.finish(); err != nil {
+		return err
+	}
+	query := exec.Command(store.sqlitePath, "-batch", "-noheader", store.path, "SELECT entry FROM entries ORDER BY ordinal;")
+	output, err := query.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("open structural manifest SQLite output: %w", err)
+	}
+	var stderr bytes.Buffer
+	query.Stderr = &stderr
+	if err := query.Start(); err != nil {
+		return fmt.Errorf("read structural manifest SQLite journal: %w", err)
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		_ = output.Close()
+		_ = query.Wait()
+		return fmt.Errorf("create structural manifest: %w", err)
+	}
+	writer := bufio.NewWriterSize(file, 256*1024)
+	_, err = writer.WriteString("{\n  \"schemaVersion\": 1,\n  \"fixtures\": [\n")
+	first := true
+	reader := bufio.NewReaderSize(output, 256*1024)
+	for err == nil {
+		line, readErr := reader.ReadString('\n')
+		if len(line) > 0 {
+			if !first {
+				_, err = writer.WriteString(",\n")
+			}
+			if err == nil {
+				_, err = writer.WriteString("    " + strings.TrimSuffix(line, "\n"))
+			}
+			first = false
+		}
+		if readErr == io.EOF {
+			break
+		}
+		if readErr != nil {
+			err = readErr
+		}
+	}
+	if err == nil {
+		_, err = writer.WriteString("\n  ]\n}\n")
+	}
+	if flushErr := writer.Flush(); err == nil {
+		err = flushErr
+	}
+	if closeErr := file.Close(); err == nil {
+		err = closeErr
+	}
+	if waitErr := query.Wait(); err == nil {
+		err = waitErr
+	}
+	if err != nil {
+		return fmt.Errorf("stream structural manifest from SQLite journal: %w: %s", err, strings.TrimSpace(stderr.String()))
+	}
+	return nil
+}
+
+func (store *structuralManifestStore) remove() error {
+	if !store.finished {
+		_ = store.stdin.Close()
+		_ = store.cmd.Wait()
+	}
+	return os.Remove(store.path)
+}
+
 func resolveGeneratorVersion(explicit string) (string, error) {
 	if explicit != "" {
 		if !immutableGeneratorVersion.MatchString(explicit) {
@@ -186,8 +340,8 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 }
 
 // generateAndWriteUBLStructuralCorpus streams each fixture to an isolated
-// staging directory.  It keeps manifest metadata only; XML content is written
-// and released before the next fixture is generated.
+// staging directory. XML is written and manifest metadata is journaled before
+// the next fixture is generated, so neither is retained on the Go heap.
 func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventory, index schemaIndex, xsdDir, generatorVersion, errorJournal, resumeFrom string) error {
 	if err := validateCorpusOutputDirectory(outputDir); err != nil {
 		return err
@@ -205,6 +359,11 @@ func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventor
 		return fmt.Errorf("create generated corpus staging directory: %w", err)
 	}
 	defer os.RemoveAll(staging)
+	manifestStore, err := newStructuralManifestStore(filepath.Join(staging, ".manifest.sqlite"))
+	if err != nil {
+		return err
+	}
+	defer manifestStore.remove()
 	generated := 0
 	fmt.Printf("Structural corpus: streaming validated fixtures to staging directory\n")
 	sink := func(fixture generatedFixture) error {
@@ -221,7 +380,7 @@ func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventor
 		}
 		return nil
 	}
-	corpus, err := generateUBLStructuralCorpusWithSink(report, index, xsdDir, generatorVersion, sink, errorJournal, resumeFrom)
+	err = generateUBLStructuralCorpusWithSink(report, index, xsdDir, generatorVersion, sink, manifestStore, errorJournal, resumeFrom)
 	if err != nil {
 		return err
 	}
@@ -232,8 +391,11 @@ func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventor
 	if err := os.WriteFile(filepath.Join(staging, corpusOwnershipMarkerName), []byte(corpusOwnershipMarkerContent), 0o644); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(staging, "manifest.json"), corpus.manifestJSON, 0o644); err != nil {
+	if err := manifestStore.writeManifest(filepath.Join(staging, "manifest.json")); err != nil {
 		return err
+	}
+	if err := manifestStore.remove(); err != nil {
+		return fmt.Errorf("remove structural manifest SQLite journal: %w", err)
 	}
 	fmt.Printf("Structural corpus: wrote manifest for %d fixtures; installing corpus\n", generated)
 	if _, err := os.Stat(absolute); err == nil {
@@ -259,37 +421,35 @@ func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventor
 }
 
 // generateUBLStructuralCorpusWithSink sends each validated structural fixture
-// to sink before the next fixture is generated.  With a sink, only manifest
-// metadata is retained in the returned corpus.
-func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string, sink func(generatedFixture) error, errorJournal, resumeFrom string) (generatedCorpus, error) {
+// to its output sink and manifest journal before generating the next one.
+func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string, sink func(generatedFixture) error, manifestStore *structuralManifestStore, errorJournal, resumeFrom string) error {
 	resumePhase, resumeRoot, err := parseStructuralResumeCursor(resumeFrom)
 	if err != nil {
-		return generatedCorpus{}, err
+		return err
 	}
 	resumeStarted := resumeFrom == ""
 	var problems []string
 	journal := func(err error) { problems = append(problems, err.Error()) }
-	finishWithJournal := func() (generatedCorpus, error) {
+	finishWithJournal := func() error {
 		if len(problems) == 0 {
-			return generatedCorpus{}, nil
+			return nil
 		}
 		if errorJournal == "" {
-			return generatedCorpus{}, fmt.Errorf("structural generation completed with %d failures", len(problems))
+			return fmt.Errorf("structural generation completed with %d failures", len(problems))
 		}
 		if err := os.MkdirAll(filepath.Dir(errorJournal), 0o755); err != nil {
-			return generatedCorpus{}, fmt.Errorf("write structural error journal: create directory: %w", err)
+			return fmt.Errorf("write structural error journal: create directory: %w", err)
 		}
 		content := "Structural corpus generation failures:\n\n" + strings.Join(problems, "\n\n") + "\n"
 		if err := os.WriteFile(errorJournal, []byte(content), 0o644); err != nil {
-			return generatedCorpus{}, fmt.Errorf("write structural error journal: %w", err)
+			return fmt.Errorf("write structural error journal: %w", err)
 		}
-		return generatedCorpus{}, fmt.Errorf("structural generation completed with %d failures; see %s", len(problems), errorJournal)
+		return fmt.Errorf("structural generation completed with %d failures; see %s", len(problems), errorJournal)
 	}
 	choiceVariants := maxChoiceAlternatives(index)
 	if choiceVariants < 1 {
 		choiceVariants = 1
 	}
-	fixtures := make([]generatedFixture, 0, len(report.MainFiles)*(choiceVariants+3))
 	record := func(fixture generatedFixture) error {
 		if sink != nil {
 			if err := sink(fixture); err != nil {
@@ -297,8 +457,10 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			}
 			fixture.content = nil
 		}
-		fixtures = append(fixtures, fixture)
-		return nil
+		if manifestStore == nil {
+			return errors.New("structural manifest store is required")
+		}
+		return manifestStore.add(fixture.entry)
 	}
 	repeatableTargets := schemaCoverageTargets(index)
 	for _, schema := range report.MainFiles {
@@ -410,7 +572,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		for _, id := range reachable {
 			parts := strings.Split(id, "|")
 			if len(parts) != 4 {
-				return generatedCorpus{}, fmt.Errorf("invalid repeatable target %q", id)
+				return fmt.Errorf("invalid repeatable target %q", id)
 			}
 			element := filepath.Base(parts[3])
 			if planned[element] == nil {
@@ -489,7 +651,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 					Tags:              []string{"positive", "ubl21", "structural", "signature-extension", "choice-alternative", "wildcard", family},
 					StructuralTargets: []string{"schema-root:" + root, "family:signature-extension", "signature-variant:" + family},
 				}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
-					return generatedCorpus{}, err
+					return err
 				}
 			}
 		}
@@ -567,7 +729,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 	for key := range index.GlobalElements {
 		namespace, name, ok := splitQualifiedKey(key)
 		if !ok {
-			return generatedCorpus{}, fmt.Errorf("invalid global element key %q", key)
+			return fmt.Errorf("invalid global element key %q", key)
 		}
 		if _, ok := signatureNamespaces[namespace]; ok {
 			roots = append(roots, signatureRoot{namespace, name})
@@ -615,7 +777,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			Tags:              []string{"positive", "ubl21", "structural", "signature-schema", signatureNamespaces[root.namespace]},
 			StructuralTargets: []string{"signature-root:" + root.name},
 		}, content: []byte(content), schemaPath: schemaPath}); err != nil {
-			return generatedCorpus{}, err
+			return err
 		}
 	}
 	// The XMLDSig/XAdES schemas place most repeatable particles beneath nested
@@ -650,7 +812,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 					Standards: fixtureStandards{UBL: "2.1"}, Provenance: fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion}, ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
 					Tags: []string{"positive", "ubl21", "structural", "signature-schema", "cardinality", fmt.Sprintf("occurrences-%d", count)}, StructuralTargets: []string{"signature-root:" + root.name, "family:" + family},
 				}, content: []byte(content), schemaPath: schemaPath}); err != nil {
-					return generatedCorpus{}, err
+					return err
 				}
 			}
 		}
@@ -667,7 +829,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 	for id := range repeatableTargets.repeatable {
 		parts := strings.Split(id, "|")
 		if len(parts) != 4 {
-			return generatedCorpus{}, fmt.Errorf("invalid repeatable target %q", id)
+			return fmt.Errorf("invalid repeatable target %q", id)
 		}
 		owner, _, _ := strings.Cut(parts[3], "/")
 		cardinalityOwners[qualifiedKey(parts[0], owner)] = struct{}{}
@@ -685,7 +847,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		}
 		namespace, name, ok := splitQualifiedKey(key)
 		if !ok {
-			return generatedCorpus{}, fmt.Errorf("invalid global element key %q", key)
+			return fmt.Errorf("invalid global element key %q", key)
 		}
 		cardinalityRoots = append(cardinalityRoots, cardinalityRoot{namespace: namespace, name: name})
 	}
@@ -753,17 +915,17 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				Tags:              []string{"positive", "ubl21", "structural", "cardinality", "cardinality-root", variant.name},
 				StructuralTargets: []string{"schema-root:" + root.name, "family:" + family},
 			}, content: []byte(content), schemaPath: schemaPath}); err != nil {
-				return generatedCorpus{}, err
+				return err
 			}
 		}
 	}
 	if resumeFrom != "" && !resumeStarted {
-		return generatedCorpus{}, fmt.Errorf("resume cursor %q did not match a generated structural root", resumeFrom)
+		return fmt.Errorf("resume cursor %q did not match a generated structural root", resumeFrom)
 	}
-	if _, err := finishWithJournal(); err != nil {
-		return generatedCorpus{}, err
+	if err := finishWithJournal(); err != nil {
+		return err
 	}
-	return buildGeneratedCorpus(fixtures)
+	return nil
 }
 
 // schemaPathForDocument resolves both global common-component roots and

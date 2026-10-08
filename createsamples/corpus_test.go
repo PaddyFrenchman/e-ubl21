@@ -908,6 +908,48 @@ func TestCorpusFileWritingAndValidationFailureBranches(t *testing.T) {
 	}
 }
 
+func TestStructuralManifestStoreStreamsSQLiteRowsInInsertionOrder(t *testing.T) {
+	store, err := newStructuralManifestStore(filepath.Join(t.TempDir(), "manifest.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.remove()
+	entry := func(id, file string, tags []string) fixtureManifestEntry {
+		return fixtureManifestEntry{
+			ID: id, DocumentType: "Invoice", Profile: "ubl21", File: file,
+			SHA256: strings.Repeat("a", 64), Standards: fixtureStandards{UBL: "2.1"},
+			Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: testGeneratorVersion},
+			ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}}, Tags: tags,
+		}
+	}
+	for _, entry := range []fixtureManifestEntry{
+		entry("second", "second.xml", []string{"second"}),
+		entry("first", "first.xml", []string{"first"}),
+	} {
+		if err := store.add(entry); err != nil {
+			t.Fatal(err)
+		}
+	}
+	path := filepath.Join(t.TempDir(), "manifest.json")
+	if err := store.writeManifest(path); err != nil {
+		t.Fatal(err)
+	}
+	manifestJSON, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifestJSON); err != nil {
+		t.Fatalf("streamed manifest rejected: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestJSON, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) != 2 || manifest.Fixtures[0].ID != "second" || manifest.Fixtures[1].ID != "first" {
+		t.Fatalf("streamed manifest order = %#v", manifest.Fixtures)
+	}
+}
+
 func TestCorpusDeterminismRejectsFixtureCountAndIdentityChanges(t *testing.T) {
 	manifest := []byte("same")
 	first := generatedCorpus{manifestJSON: manifest, fixtures: []generatedFixture{{entry: fixtureManifestEntry{ID: "one", File: "one.xml"}, content: []byte("one")}}}
