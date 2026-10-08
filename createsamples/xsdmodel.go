@@ -36,6 +36,7 @@ type xsdElementDecl struct {
 }
 
 type xsdComplexType struct {
+	Abstract       string             `xml:"abstract,attr"`
 	ComplexContent *xsdComplexContent `xml:"complexContent"`
 	Name           string             `xml:"name,attr"`
 	Sequence       *xsdSequence       `xml:"sequence"`

@@ -187,6 +187,12 @@ func schemaCoverageTargets(index schemaIndex) coverageTargets {
 			}
 		}
 		for name, typ := range doc.Types {
+			// Abstract types cannot be instantiated in an XSD-valid fixture.
+			// Their concrete restrictions/extensions contribute their own
+			// particles and are covered through those declarations instead.
+			if typ.Abstract == "true" || typ.Abstract == "1" {
+				continue
+			}
 			t.complexTypes[coverageID(doc, "complexType", name)] = struct{}{}
 			if base := typeBase(typ); base != "" {
 				ns, baseName := qualifyRef(base, doc.TargetNamespace)
