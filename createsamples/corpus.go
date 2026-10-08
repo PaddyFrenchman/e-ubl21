@@ -794,8 +794,21 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			continue
 		}
 		for planIndex, choices := range plans {
-			for _, count := range []int{1, 2, 5} {
-				content, err := generateDeepCardinalityStructuralSample(index, root.name, xsdDir, doc.File, choices, count)
+			counts := []int{1, 2, 5}
+			// IntegerListType/int is optional and is reachable from SPUserNotice
+			// only through its optional NoticeRef branch.  Its zero witness must
+			// retain that branch (and NoticeNumbers) while omitting int itself;
+			// the regular deep generator otherwise emits a singleton for zero.
+			if root.name == "SPUserNotice" {
+				counts = append([]int{0}, counts...)
+			}
+			for _, count := range counts {
+				var content string
+				if count == 0 {
+					content, err = generateStructuralSampleOmitting(index, root.name, xsdDir, doc.File, "int")
+				} else {
+					content, err = generateDeepCardinalityStructuralSample(index, root.name, xsdDir, doc.File, choices, count)
+				}
 				if err != nil {
 					journal(fmt.Errorf("generate signature cardinality root %s: %w", root.name, err))
 					continue
