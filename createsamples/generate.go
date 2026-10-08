@@ -76,6 +76,7 @@ type genState struct {
 	repeatCount      int
 	repeatEveryDepth bool
 	repeatOverrides  map[string]int
+	omitElements     map[string]bool
 	typeDepth        map[string]int
 }
 
@@ -242,6 +243,15 @@ func generateMinimalSample(index schemaIndex, rootName, xsdDir, schemaFile strin
 func generateMinimalStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string) (string, error) {
 	state := newTargetedStructuralGenState(nil, 1)
 	state.full = false
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+func generateStructuralSampleOmitting(index schemaIndex, rootName, xsdDir, schemaFile string, names ...string) (string, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	state.omitElements = map[string]bool{}
+	for _, name := range names {
+		state.omitElements[name] = true
+	}
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
@@ -503,6 +513,9 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 			return true
 		}
 		if !state.full && isOptionalElement(child) {
+			return true
+		}
+		if state.omitElements[name] {
 			return true
 		}
 		node, supported := expandElement(index, child, name, prefix, ns, state, depth)
