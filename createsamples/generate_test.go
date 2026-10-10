@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -859,6 +860,40 @@ func TestStructuralChoicePlansDiscoverNestedAlternativeSites(t *testing.T) {
 	}
 	if !foundNested {
 		t.Fatalf("plans did not include nested alternate after parent alternate: %#v", plans)
+	}
+}
+
+func TestStructuralChoicePlansHaveStableOrder(t *testing.T) {
+	ns := "urn:test"
+	inner := xsdChoice{Elements: []xsdElementDecl{{Name: "One", Type: "xsd:string"}, {Name: "Two", Type: "xsd:string"}}}
+	rootType := xsdComplexType{Choice: &xsdChoice{Sequences: []xsdSequence{
+		{Choices: []xsdChoice{inner}},
+		{Choices: []xsdChoice{inner}},
+	}}}
+	index := schemaIndex{
+		GlobalElements: map[string]xsdElementDecl{qualifiedKey(ns, "Root"): {Name: "Root", Type: "RootType"}},
+		GlobalTypes:    map[string]xsdComplexType{qualifiedKey(ns, "RootType"): rootType},
+		ByTargetNS:     map[string]*schemaDoc{ns: {TargetNamespace: ns, Types: map[string]xsdComplexType{"RootType": rootType}}},
+	}
+	xsdDir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(xsdDir, "maindoc"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(xsdDir, "maindoc", "root.xsd"), []byte(`<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:test"/>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	want, err := structuralChoicePlans(index, "Root", xsdDir, "root.xsd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for range 50 {
+		got, err := structuralChoicePlans(index, "Root", xsdDir, "root.xsd")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("choice plan order is unstable:\n got %#v\nwant %#v", got, want)
+		}
 	}
 }
 

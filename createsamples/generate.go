@@ -20,6 +20,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -217,7 +218,16 @@ func structuralChoicePlans(index schemaIndex, rootName, xsdDir, schemaFile strin
 			return nil, err
 		}
 		plans = append(plans, selection)
-		for site, alternatives := range *state.choiceAlternatives {
+		// choiceAlternatives is a map because generation discovers sites while
+		// traversing a schema.  Its iteration order must not decide the order
+		// of plans: plan indices are part of the generated fixture names.
+		sites := make([]int, 0, len(*state.choiceAlternatives))
+		for site := range *state.choiceAlternatives {
+			sites = append(sites, site)
+		}
+		sort.Ints(sites)
+		for _, site := range sites {
+			alternatives := (*state.choiceAlternatives)[site]
 			for alternative := 1; alternative < alternatives; alternative++ {
 				next := make(map[int]int, len(selection)+1)
 				for k, v := range selection {

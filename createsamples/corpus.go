@@ -1186,9 +1186,6 @@ func writeGeneratedCorpus(outputDir string, corpus generatedCorpus) error {
 			return fmt.Errorf("remove replaced generated corpus backup %s: %w", backup, err)
 		}
 	}
-	for _, fixture := range corpus.fixtures {
-		fmt.Println(filepath.Join(outputDir, filepath.FromSlash(fixture.entry.File)))
-	}
 	return nil
 }
 
