@@ -75,7 +75,7 @@ run_generator --profile ubl21 --set all --output "$stage/samples"
 run_generator --profile ubl21-structural --set positive --output "$stage/samples-structural"
 # Cardinality is a hard structural-coverage gate. The report is written before
 # failure so the missing parent-instance states remain reviewable.
-GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples "$stage/samples-structural" --json "$stage/samples-structural/coverage.json" --markdown "$stage/samples-structural/coverage.md"
+GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples "$stage/samples-structural" --json "$stage/coverage.json" --markdown "$stage/coverage.md"
 
 status=0
 for corpus in samples samples-structural; do
@@ -90,7 +90,7 @@ if [ "$replace" = true ]; then
   # the only tracked-output write; this is intentionally a second generation.
   run_generator --profile ubl21 --set all --output createsamples/samples
   run_generator --profile ubl21-structural --set positive --output createsamples/samples-structural
-  GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples createsamples/samples-structural --json createsamples/samples-structural/coverage.json --markdown createsamples/samples-structural/coverage.md
+  GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples createsamples/samples-structural --json "$stage/coverage.json" --markdown "$stage/coverage.md"
   echo "Promoted regenerated corpus. Review with: git diff -- createsamples/samples createsamples/samples-structural"
   exit 0
 fi
