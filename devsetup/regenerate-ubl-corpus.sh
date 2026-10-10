@@ -80,7 +80,9 @@ GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples "$stage/
 status=0
 for corpus in samples samples-structural; do
   echo "\n== review: createsamples/$corpus =="
-  if ! diff -ruN "createsamples/$corpus" "$stage/$corpus"; then
+  # Structural coverage reports are local qualification evidence, not corpus
+  # fixtures. Older local runs may have left them in this ignored directory.
+  if ! diff -ruN --exclude=coverage.json --exclude=coverage.md "createsamples/$corpus" "$stage/$corpus"; then
     status=1
   fi
 done
