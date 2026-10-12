@@ -14,6 +14,7 @@ func newRegressionCmd(cfg *Config) *cobra.Command {
 	var baseURL, token, manifest, outputDir, profile string
 	var fixtureIDs []string
 	var pollInterval, fixtureTimeout time.Duration
+	var concurrency int
 	command := &cobra.Command{
 		Use:   "regression",
 		Short: "Run a manifest corpus through the authenticated public API",
@@ -24,7 +25,7 @@ func newRegressionCmd(cfg *Config) *cobra.Command {
 			}
 			summary, err := regression.RunCorpus(cmd.Context(), regression.RunnerConfig{
 				BaseURL: baseURL, Token: token, ManifestPath: manifest, OutputDir: outputDir,
-				Profile: profile, FixtureIDs: fixtureIDs, PollInterval: pollInterval, FixtureTimeout: fixtureTimeout,
+				Profile: profile, FixtureIDs: fixtureIDs, PollInterval: pollInterval, FixtureTimeout: fixtureTimeout, Concurrency: concurrency,
 			})
 			fmt.Fprintf(cmd.OutOrStdout(), "regression total=%d submitted=%d terminally-evaluated=%d missing=%d passed=%d failed=%d artifacts=%s\n", summary.Total, summary.Submitted, summary.TerminallyEvaluated, len(summary.MissingFixtureIDs), summary.Passed, summary.Failed, outputDir)
 			return err
@@ -38,6 +39,7 @@ func newRegressionCmd(cfg *Config) *cobra.Command {
 	command.Flags().StringSliceVar(&fixtureIDs, "fixture-id", nil, "One or more exact fixture IDs to run through the real pipeline")
 	command.Flags().DurationVar(&pollInterval, "poll-interval", 100*time.Millisecond, "Delay between durable status polls")
 	command.Flags().DurationVar(&fixtureTimeout, "fixture-timeout", 60*time.Second, "Maximum upload-to-terminal time per fixture")
+	command.Flags().IntVar(&concurrency, "concurrency", 1, "Maximum fixtures submitted and polled concurrently")
 	command.AddCommand(newRegressionEvidenceCmd(cfg))
 	command.AddCommand(newRegressionEquivalenceCmd())
 	return command
