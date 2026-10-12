@@ -170,6 +170,72 @@ func generateDeepCardinalityStructuralSample(index schemaIndex, rootName, xsdDir
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
+// minimalRepetition keeps the first occurrence as the nested coverage witness
+// and gives its siblings only required content. Cloning the fully expanded
+// first occurrence at every level would multiply the output by count^depth,
+// even though shared schema types are expanded only once. Keep choice ordinals
+// local to these extra occurrences so they cannot shift later targeted choices.
+func (s genState) minimalRepetition() genState {
+	if !s.repeatEveryDepth {
+		return s
+	}
+	s = s.demoted()
+	s.repeatCount = 0
+	s.repeatEveryDepth = false
+	s.repeatOverrides = nil
+	if s.nextChoice != nil {
+		nextChoice := *s.nextChoice
+		s.nextChoice = &nextChoice
+	}
+	s.choiceAlternatives = nil
+	return s
+}
+
+func expandElementOccurrences(index schemaIndex, element xsdElementDecl, name, prefix, ns string, state genState, depth int) ([]xmlNode, bool) {
+	minimalState := state.minimalRepetition()
+	node, supported := expandElement(index, element, name, prefix, ns, state, depth)
+	if !supported {
+		return nil, false
+	}
+	count := occurrenceCount(element, state, depth)
+	if count == 0 {
+		return nil, true
+	}
+	out := []xmlNode{node}
+	for i := 1; i < count; i++ {
+		if i == 1 && state.repeatEveryDepth {
+			var ok bool
+			node, ok = expandElement(index, element, name, prefix, ns, minimalState, depth)
+			if !ok {
+				return nil, false
+			}
+			out = append(out, node)
+		} else {
+			out = append(out, nodeWithDistinctID(node, i, state))
+		}
+	}
+	return out, true
+}
+
+// repeatStructuralGroup repeats a minimal group after its full first witness.
+// Each extra occurrence still needs distinct IDs, including descendant IDs.
+func repeatStructuralGroup(first []xmlNode, count int, state genState, minimal func() ([]xmlNode, bool)) ([]xmlNode, bool) {
+	if count <= 1 {
+		return first, true
+	}
+	nodes, supported := minimal()
+	if !supported {
+		return nil, false
+	}
+	out := append(first, nodes...)
+	for occurrence := 2; occurrence < count; occurrence++ {
+		for _, node := range nodes {
+			out = append(out, nodeWithFreshDescendantIDs(node, state))
+		}
+	}
+	return out, true
+}
+
 func generateLargeCollectionStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile, element string, count int) (string, error) {
 	return generateLargeCollectionsStructuralSample(index, rootName, xsdDir, schemaFile, map[string]int{element: count})
 }
@@ -521,6 +587,10 @@ func sequenceRequiresAny(seq *xsdSequence) bool {
 // it was required, the whole sequence becomes unsupported and is propagated
 // to the caller.
 func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genState, depth int) ([]xmlNode, bool) {
+	minimalState := state.minimalRepetition()
+	// Keep the group's own optional members visible in each occurrence. Their
+	// already-visited complex types use required-only children on replay.
+	minimalState.full = state.full
 	var out []xmlNode
 	appendElement := func(child xsdElementDecl) bool {
 		name, prefix := elementNameAndPrefix(child)
@@ -533,16 +603,14 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 		if state.omitElements[name] {
 			return true
 		}
-		node, supported := expandElement(index, child, name, prefix, ns, state, depth)
+		nodes, supported := expandElementOccurrences(index, child, name, prefix, ns, state, depth)
 		if !supported {
 			if isOptionalElement(child) {
 				return true
 			}
 			return false
 		}
-		for i := 0; i < occurrenceCount(child, state, depth); i++ {
-			out = append(out, nodeWithDistinctID(node, i, state))
-		}
+		out = append(out, nodes...)
 		return true
 	}
 	appendChoice := func(choice xsdChoice) bool {
@@ -625,13 +693,9 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 		if maximum := parseMaxOccurs(seq.MaxOccurs); maximum > 0 && count > maximum {
 			count = maximum
 		}
-		repeated := make([]xmlNode, 0, len(out)*count)
-		for occurrence := 0; occurrence < count; occurrence++ {
-			for _, node := range out {
-				repeated = append(repeated, nodeWithFreshDescendantIDs(node, state))
-			}
-		}
-		return repeated, true
+		return repeatStructuralGroup(out, count, state, func() ([]xmlNode, bool) {
+			return flattenSequence(seq, index, ns, minimalState, depth)
+		})
 	}
 	return out, true
 }
@@ -764,6 +828,8 @@ func structuralWildcardNode(any xsdAny) (xmlNode, bool) {
 // cardinality while keeping generation stable. If every alternative is
 // unsupported, the choice itself is unsupported.
 func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genState, depth int) ([]xmlNode, bool) {
+	minimalState := state.minimalRepetition()
+	minimalState.full = state.full
 	type alternative func() ([]xmlNode, bool)
 	alternatives := make([]alternative, 0, len(choice.Elements)+len(choice.Sequences)+len(choice.Choices)+len(choice.Alls)+1)
 	for _, element := range choice.Elements {
@@ -773,19 +839,7 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 			if name == "" {
 				return nil, false
 			}
-			node, supported := expandElement(index, alt, name, prefix, ns, state, depth)
-			if !supported {
-				return nil, false
-			}
-			occurs := occurrenceCount(alt, state, depth)
-			if occurs == 0 {
-				occurs = 1
-			}
-			out := make([]xmlNode, 0, occurs)
-			for i := 0; i < occurs; i++ {
-				out = append(out, nodeWithDistinctID(node, i, state))
-			}
-			return out, true
+			return expandElementOccurrences(index, alt, name, prefix, ns, state, depth)
 		})
 	}
 	for i := range choice.Sequences {
@@ -830,13 +884,9 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 				if maximum := parseMaxOccurs(choice.MaxOccurs); maximum > 0 && count > maximum {
 					count = maximum
 				}
-				repeated := make([]xmlNode, 0, len(out)*count)
-				for occurrence := 0; occurrence < count; occurrence++ {
-					for _, node := range out {
-						repeated = append(repeated, nodeWithFreshDescendantIDs(node, state))
-					}
-				}
-				return repeated, true
+				return repeatStructuralGroup(out, count, state, func() ([]xmlNode, bool) {
+					return flattenChoice(choice, index, ns, minimalState, depth)
+				})
 			}
 			return out, true
 		}

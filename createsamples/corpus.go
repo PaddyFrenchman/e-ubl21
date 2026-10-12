@@ -682,8 +682,8 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		// type.  Emit bounded deep variants as a separate family: every reachable
 		// repeatable particle gets a two-occurrence witness and the five-occurrence
 		// (or finite-maximum) witness required by the coverage contract.  The
-		// normal structural state still demotes later reuse of a complex type, so
-		// this remains deterministic and avoids a Cartesian expansion.
+		// first occurrence retains nested witnesses; additional occurrences use
+		// required-only content so repeated parents cannot multiply those witnesses.
 		for _, count := range []int{2, 5} {
 			family := fmt.Sprintf("cardinality-deep-%d", count)
 			content, err := generateDeepCardinalityStructuralSample(index, root, xsdDir, schema.File, nil, count)
