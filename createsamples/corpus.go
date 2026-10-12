@@ -675,6 +675,42 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				journal(err)
 			}
 		}
+		// The ordinary cardinality families above intentionally constrain
+		// repetition to the main-document level so that a single fixture remains
+		// small.  That does not, however, witness the contracts of repeatable
+		// particles nested in the first full expansion of a shared aggregate
+		// type.  Emit bounded deep variants as a separate family: every reachable
+		// repeatable particle gets a two-occurrence witness and the five-occurrence
+		// (or finite-maximum) witness required by the coverage contract.  The
+		// normal structural state still demotes later reuse of a complex type, so
+		// this remains deterministic and avoids a Cartesian expansion.
+		for _, count := range []int{2, 5} {
+			family := fmt.Sprintf("cardinality-deep-%d", count)
+			content, err := generateDeepCardinalityStructuralSample(index, root, xsdDir, schema.File, nil, count)
+			if err != nil {
+				journal(fmt.Errorf("generate %s %s: %w", root, family, err))
+				continue
+			}
+			if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
+				journal(fmt.Errorf("validate %s %s: %w", root, family, err))
+				continue
+			}
+			if err := record(generatedFixture{entry: fixtureManifestEntry{
+				ID:                fmt.Sprintf("ubl21.%s.%s", strings.ToLower(root), family),
+				DocumentType:      root,
+				Profile:           "ubl21",
+				File:              filepath.ToSlash(filepath.Join(root, fmt.Sprintf("%s-%s.xml", root, family))),
+				SHA256:            fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+				Standards:         fixtureStandards{UBL: "2.1"},
+				Provenance:        fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+				ExpectedFinal:     "valid",
+				ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+				Tags:              []string{"positive", "ubl21", "structural", family, "cardinality", "nested", fmt.Sprintf("occurrences-%d", count)},
+				StructuralTargets: []string{"schema-root:" + root, "family:" + family},
+			}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
+				return err
+			}
+		}
 		// These fixtures exercise the progressive high-volume collection tiers
 		// seen by the real service without making every repeatable branch of a
 		// document enormous.  The smaller tiers make it possible to locate
