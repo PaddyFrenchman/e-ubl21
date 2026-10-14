@@ -11,34 +11,35 @@ corpus and take precedence over the counts in this document.
 
 The current report analyzes 24,692 fixtures. It records no missing required
 cardinalities (`cardinalityGaps: 0`, `cardinalityResiduals: 0`) and zero
-unparseable fixtures. It still lists 1,771 distinct uncovered schema targets
-across 3,476 category entries. These remaining targets are not approved for
-exclusion; the generated report is the detailed register.
+unparseable fixtures. After correcting global element reference accounting
+and recording inherited type chains, the report lists 52 distinct uncovered
+schema targets across 82 category entries. These remaining targets are not
+approved for exclusion; the generated report is the detailed register.
 
 | Target kind | Remaining |
 |---|---:|
 | attributes | 10 |
 | choice alternatives | 4 |
 | choice sites | 2 |
-| complex types | 32 |
-| elements | 1,690 |
-| inheritance edges | 30 |
+| complex types | 10 |
+| elements | 15 |
+| inheritance edges | 8 |
 | optional attributes | 6 |
 | optional elements | 5 |
 | recursive edges | 2 |
 | repeatable elements missing required cardinalities | 0 |
 | required attributes | 4 |
-| required elements | 1,685 |
+| required elements | 10 |
 | sequence members | 3 |
 | wildcards | 3 |
 
-Category counts overlap; the report contains 1,771 distinct uncovered targets.
+Category counts overlap; the report contains 52 distinct uncovered targets.
 
 ## Review classification
 
 ### Requires future fixture work
 
-These targets are schema-reachable and are not approved as unsupported:
+These targets are not approved as unsupported:
 
 - The remaining XMLDSig signature-object and signature-property branches and
   attributes, plus their associated wildcard positions.
@@ -46,10 +47,13 @@ These targets are schema-reachable and are not approved as unsupported:
   revocation references and values, policy qualifiers, signer roles,
   counter-signatures, timestamp/reference forms, validation data, and their
   IDs/URIs/encodings.
-- Uncovered wildcards, recursive edges, choice branches, attributes, and
-  required or optional document elements identified in the generated register.
-- UBL document content not present in the representative root fixtures,
-  including the 1,715 required-element targets and 1,787 total element targets.
+- Two reachable recursive edges in common aggregate components, plus global
+  component declarations not reachable from a main document root.
+- UDT/CCTS types and attributes, including graphic, picture, sound, video,
+  date-time, and value forms not observed in the current corpus.
+- Remaining UBL global component declarations and their required-element
+  targets. The dependency map identifies which are reachable from main-document
+  roots and which need review as standalone or wildcard-boundary constructs.
 
 These are ordinary coverage gaps. They must remain visible in the generated
 register and should be addressed by adding XSD-valid fixtures, not by excluding

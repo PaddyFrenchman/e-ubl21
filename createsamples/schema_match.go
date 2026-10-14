@@ -54,6 +54,26 @@ func elementDeclaration(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) 
 	}
 	return doc, decl, doc.TargetNamespace, decl.Name
 }
+
+// recordGlobalElementUse credits a referenced global declaration in addition
+// to the containing complex type's particle. Coverage inventories both kinds
+// of targets: the local particle describes where the element appears, while
+// the global target describes the shared declaration used by xsd:element ref.
+func recordGlobalElementUse(index schemaIndex, targets map[string]int, parentDoc *schemaDoc, decl xsdElementDecl, actual xml.Name, substitutionID string) {
+	if decl.Ref != "" {
+		doc, _, _, name := elementDeclaration(index, parentDoc, decl)
+		if doc != nil {
+			targets[coverageID(doc, "element", "global/"+name+"/"+name)]++
+		}
+	}
+	if substitutionID != "" {
+		key := qualifiedKey(actual.Space, actual.Local)
+		if doc := index.GlobalElementDocs[key]; doc != nil {
+			targets[coverageID(doc, "element", "global/"+actual.Local+"/"+actual.Local)]++
+		}
+	}
+}
+
 func substitutionMember(index schemaIndex, doc *schemaDoc, head xsdElementDecl, q xml.Name) (xsdElementDecl, string, bool) {
 	headDoc, resolvedHead, headNS, headName := elementDeclaration(index, doc, head)
 	_ = headDoc
@@ -276,13 +296,27 @@ func findInAll(index schemaIndex, f schemaFrame, parent string, all *xsdAll, q x
 	}
 	return xsdElementDecl{}, "", false
 }
-func recordInheritance(f schemaFrame) {
-	base := typeBase(f.typ)
-	if base == "" {
-		return
+func recordInheritance(index schemaIndex, f schemaFrame) {
+	seen := map[string]struct{}{}
+	for f.doc != nil && f.typeName != "" {
+		key := qualifiedKey(f.doc.TargetNamespace, f.typeName)
+		if _, ok := seen[key]; ok {
+			return
+		}
+		seen[key] = struct{}{}
+		f.targets[complexTypeIDForElement(f.doc, "", f.typeName)]++
+		base := typeBase(f.typ)
+		if base == "" {
+			return
+		}
+		ns, name := qualifyRef(base, f.doc.TargetNamespace)
+		f.targets[fmt.Sprintf("%s|%s|inheritance|%s->%s#%s", f.doc.TargetNamespace, f.doc.File, f.typeName, ns, name)]++
+		next, ok := baseFrame(index, f)
+		if !ok {
+			return
+		}
+		f = next
 	}
-	ns, name := qualifyRef(base, f.doc.TargetNamespace)
-	f.targets[fmt.Sprintf("%s|%s|inheritance|%s->%s#%s", f.doc.TargetNamespace, f.doc.File, f.typeName, ns, name)]++
 }
 func particleElement(index schemaIndex, f schemaFrame, q xml.Name) (xsdElementDecl, string, string, bool) {
 	for _, p := range typeParticleSets(f.typ) {
@@ -570,12 +604,14 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 					stack = append(stack, schemaFrame{})
 					continue
 				}
-				id := fmt.Sprintf("%s|%s|element|global/%s", d.TargetNamespace, d.File, v.Name.Local)
+				rootID := fmt.Sprintf("%s|%s|element|global/%s", d.TargetNamespace, d.File, v.Name.Local)
+				id := fmt.Sprintf("%s|%s|element|global/%s/%s", d.TargetNamespace, d.File, v.Name.Local, v.Name.Local)
+				out[rootID]++
 				out[id]++
 				out[complexTypeIDForElement(td, id, n)]++
 				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}, seen: map[string]bool{}})
 				recordAttributes(index, stack[len(stack)-1], v)
-				recordInheritance(stack[len(stack)-1])
+				recordInheritance(index, stack[len(stack)-1])
 				continue
 			}
 			parent := stack[len(stack)-1]
@@ -595,12 +631,12 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 						if doc != nil {
 							td, typ, typeName, known := declaredType(index, doc, global)
 							if known {
-								globalID := fmt.Sprintf("%s|%s|element|global/%s", doc.TargetNamespace, doc.File, v.Name.Local)
+								globalID := fmt.Sprintf("%s|%s|element|global/%s/%s", doc.TargetNamespace, doc.File, v.Name.Local, v.Name.Local)
 								out[globalID]++
 								out[complexTypeIDForElement(td, globalID, typeName)]++
 								frame := schemaFrame{doc: td, typ: typ, typeName: typeName, targets: out, siblings: map[string]int{}, seen: map[string]bool{}}
 								recordAttributes(index, frame, v)
-								recordInheritance(frame)
+								recordInheritance(index, frame)
 								stack = append(stack, frame)
 								continue
 							}
@@ -627,6 +663,7 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			if substitutionID != "" {
 				out[substitutionID]++
 			}
+			recordGlobalElementUse(index, out, parent.doc, decl, v.Name, substitutionID)
 			declarationDoc := parent.doc
 			if substitutionID != "" && index.ByTargetNS[v.Name.Space] != nil {
 				declarationDoc = index.ByTargetNS[v.Name.Space]
@@ -648,7 +685,7 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 				}
 				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}, seen: map[string]bool{}})
 				recordAttributes(index, stack[len(stack)-1], v)
-				recordInheritance(stack[len(stack)-1])
+				recordInheritance(index, stack[len(stack)-1])
 			} else {
 				stack = append(stack, schemaFrame{})
 			}

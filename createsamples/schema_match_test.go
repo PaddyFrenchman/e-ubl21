@@ -77,6 +77,75 @@ func TestMatchFixtureUsesNestedChoiceParticleAndSiblingCardinality(t *testing.T)
 	}
 }
 
+func TestMatchFixtureCreditsGlobalElementReferencedByParticle(t *testing.T) {
+	const ns = "urn:test"
+	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Elements: map[string]xsdElementDecl{}, Types: map[string]xsdComplexType{}, SimpleTypes: map[string]xsdSimpleType{}}
+	doc.Elements["Root"] = xsdElementDecl{Name: "Root", Type: "RootType"}
+	doc.Elements["Child"] = xsdElementDecl{Name: "Child", Type: "ChildType"}
+	doc.Types["RootType"] = xsdComplexType{Name: "RootType", Sequence: &xsdSequence{Elements: []xsdElementDecl{{Ref: "Child"}}}}
+	doc.Types["ChildType"] = xsdComplexType{Name: "ChildType"}
+	index := schemaIndex{
+		ByTargetNS:        map[string]*schemaDoc{ns: doc},
+		GlobalElements:    map[string]xsdElementDecl{qualifiedKey(ns, "Root"): doc.Elements["Root"], qualifiedKey(ns, "Child"): doc.Elements["Child"]},
+		GlobalElementDocs: map[string]*schemaDoc{qualifiedKey(ns, "Root"): doc, qualifiedKey(ns, "Child"): doc},
+		GlobalTypes:       map[string]xsdComplexType{qualifiedKey(ns, "RootType"): doc.Types["RootType"], qualifiedKey(ns, "ChildType"): doc.Types["ChildType"]},
+		GlobalTypeDocs:    map[string]*schemaDoc{qualifiedKey(ns, "RootType"): doc, qualifiedKey(ns, "ChildType"): doc},
+	}
+	path := filepath.Join(t.TempDir(), "fixture.xml")
+	if err := os.WriteFile(path, []byte(`<Root xmlns="urn:test"><Child/></Root>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixture(index, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	particleID := ns + "|test.xsd|element|RootType/sequence[0]/Child"
+	rootID := ns + "|test.xsd|element|global/Root"
+	rootElementID := ns + "|test.xsd|element|global/Root/Root"
+	globalID := ns + "|test.xsd|element|global/Child/Child"
+	if matched[rootID] != 1 || matched[rootElementID] != 1 {
+		t.Fatalf("root targets = (%d, %d), want (1, 1)", matched[rootID], matched[rootElementID])
+	}
+	if matched[particleID] != 1 {
+		t.Fatalf("particle target = %d, want 1", matched[particleID])
+	}
+	if matched[globalID] != 1 {
+		t.Fatalf("referenced global target = %d, want 1", matched[globalID])
+	}
+}
+
+func TestMatchStructuralFixtureCreditsReferencedUBLGlobalElement(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixture := filepath.Join("samples-structural", "CatalogueRequest", "CatalogueRequest-optional-rich.xml")
+	matched, err := matchFixture(index, fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	globalID := "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2|UBL-CommonBasicComponents-2.1.xsd|element|global/BirthDate/BirthDate"
+	if matched[globalID] == 0 {
+		t.Fatalf("referenced global target %s was not credited", globalID)
+	}
+	amountTypeID := "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|AmountType"
+	if matched[amountTypeID] == 0 {
+		t.Fatalf("instantiated complex type %s was not credited", amountTypeID)
+	}
+	cctsTypeID := "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|AmountType"
+	if matched[cctsTypeID] == 0 {
+		t.Fatalf("inherited complex type %s was not credited", cctsTypeID)
+	}
+	udtInheritanceID := "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|AmountType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#AmountType"
+	if matched[udtInheritanceID] == 0 {
+		t.Fatalf("inherited edge %s was not credited", udtInheritanceID)
+	}
+	cctsInheritanceID := "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|AmountType->#decimal"
+	if matched[cctsInheritanceID] == 0 {
+		t.Fatalf("base edge %s was not credited", cctsInheritanceID)
+	}
+}
+
 func TestCardinalityObservationsRetainEveryParentInstance(t *testing.T) {
 	const ns = "urn:test"
 	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Elements: map[string]xsdElementDecl{"Root": {Name: "Root", Type: "RootType"}}, Types: map[string]xsdComplexType{
