@@ -173,6 +173,49 @@ func TestMatchStructuralFixtureCreditsObservedRecursiveSchemaEdges(t *testing.T)
 	}
 }
 
+func TestMatchXMLDSigChoiceSitesAndAlternatives(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "http://www.w3.org/2000/09/xmldsig#"
+	for alternative := 0; alternative < 2; alternative++ {
+		fixture, err := generateSignatureChoiceStructuralFixture(index, xsdDir, "test", "PGPData", alternative)
+		if err != nil {
+			t.Fatal(err)
+		}
+		matched, err := matchFixtureBytes(index, fixture.content)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, id := range []string{
+			namespace + "|UBL-xmldsig-core-schema-2.1.xsd|choice|PGPDataType",
+			namespace + "|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[" + fmt.Sprint(alternative) + "]",
+		} {
+			if matched[id] == 0 {
+				t.Errorf("PGPData alternative %d did not credit %q", alternative, id)
+			}
+		}
+	}
+
+	signatureProperty, err := generateTargetedStructuralSample(index, "SignatureProperty", xsdDir, "UBL-xmldsig-core-schema-2.1.xsd", nil, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(signatureProperty, filepath.Join(xsdDir, "common", "UBL-xmldsig-core-schema-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixtureBytes(index, []byte(signatureProperty))
+	if err != nil {
+		t.Fatal(err)
+	}
+	choiceID := namespace + "|UBL-xmldsig-core-schema-2.1.xsd|choice|SignaturePropertyType"
+	if matched[choiceID] == 0 {
+		t.Errorf("SignatureProperty wildcard did not credit choice site %q", choiceID)
+	}
+}
+
 func TestCardinalityObservationsRetainEveryParentInstance(t *testing.T) {
 	const ns = "urn:test"
 	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Elements: map[string]xsdElementDecl{"Root": {Name: "Root", Type: "RootType"}}, Types: map[string]xsdComplexType{

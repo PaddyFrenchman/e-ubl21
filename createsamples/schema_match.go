@@ -440,6 +440,154 @@ func choiceSiteForGroupAlternative(alternativeID string) string {
 	}
 	return parts[0] + "|" + parts[1] + "|choice|" + path[:cut]
 }
+
+func choiceObservationForElement(index schemaIndex, f schemaFrame, child xml.Name) (sites, alternatives []string) {
+	if f.doc == nil {
+		return nil, nil
+	}
+	if index.ChoiceTypes != nil {
+		if _, hasChoice := index.ChoiceTypes[qualifiedKey(f.doc.TargetNamespace, f.typeName)]; !hasChoice {
+			if base, ok := baseFrame(index, f); ok {
+				return choiceObservationForElement(index, base, child)
+			}
+			return nil, nil
+		}
+	}
+	matched := false
+	contains := func(elements []xsdElementDecl) bool {
+		for _, element := range elements {
+			_, _, ns, name := elementDeclaration(index, f.doc, element)
+			if ns == child.Space && name == child.Local {
+				return true
+			}
+		}
+		return false
+	}
+	requiredElementsObserved := func(elements []xsdElementDecl) bool {
+		for _, element := range elements {
+			if element.MinOccurs == "0" {
+				continue
+			}
+			_, _, ns, name := elementDeclaration(index, f.doc, element)
+			if !f.seen[qualifiedKey(ns, name)] {
+				return false
+			}
+		}
+		return true
+	}
+	var walkSequence func(string, *xsdSequence, []string, []string) bool
+	var walkChoice func(string, *xsdChoice, []string, []string) bool
+	var walkAll func(string, *xsdAll, []string, []string) bool
+	walkSequence = func(parent string, sequence *xsdSequence, activeSites, activeAlternatives []string) bool {
+		if sequence == nil {
+			return false
+		}
+		if contains(sequence.Elements) {
+			sites, alternatives, matched = activeSites, activeAlternatives, true
+			return true
+		}
+		for i := range sequence.Sequences {
+			if walkSequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &sequence.Sequences[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		for i := range sequence.Choices {
+			if walkChoice(fmt.Sprintf("%s/choice[%d]", parent, i), &sequence.Choices[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		for i := range sequence.Alls {
+			if walkAll(fmt.Sprintf("%s/all[%d]", parent, i), &sequence.Alls[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		return false
+	}
+	walkChoice = func(parent string, choice *xsdChoice, activeSites, activeAlternatives []string) bool {
+		if choice == nil {
+			return false
+		}
+		choiceID := coverageID(f.doc, "choice", parent)
+		nextSites := append(append([]string(nil), activeSites...), choiceID)
+		if contains(choice.Elements) {
+			sites, alternatives, matched = nextSites, activeAlternatives, true
+			return true
+		}
+		for i := range choice.Sequences {
+			if !requiredElementsObserved(choice.Sequences[i].Elements) {
+				continue
+			}
+			path := fmt.Sprintf("%s/sequence[%d]", parent, i)
+			nextAlternatives := append(append([]string(nil), activeAlternatives...), coverageID(f.doc, "choiceAlternative", path))
+			if walkSequence(path, &choice.Sequences[i], nextSites, nextAlternatives) {
+				return true
+			}
+		}
+		for i := range choice.Choices {
+			path := fmt.Sprintf("%s/choice[%d]", parent, i)
+			nextAlternatives := append(append([]string(nil), activeAlternatives...), coverageID(f.doc, "choiceAlternative", path))
+			if walkChoice(path, &choice.Choices[i], nextSites, nextAlternatives) {
+				return true
+			}
+		}
+		for i := range choice.Alls {
+			if !requiredElementsObserved(choice.Alls[i].Elements) {
+				continue
+			}
+			path := fmt.Sprintf("%s/all[%d]", parent, i)
+			nextAlternatives := append(append([]string(nil), activeAlternatives...), coverageID(f.doc, "choiceAlternative", path))
+			if walkAll(path, &choice.Alls[i], nextSites, nextAlternatives) {
+				return true
+			}
+		}
+		return false
+	}
+	walkAll = func(parent string, all *xsdAll, activeSites, activeAlternatives []string) bool {
+		if all == nil {
+			return false
+		}
+		if contains(all.Elements) {
+			sites, alternatives, matched = activeSites, activeAlternatives, true
+			return true
+		}
+		for i := range all.Sequences {
+			if walkSequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &all.Sequences[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		for i := range all.Choices {
+			if walkChoice(fmt.Sprintf("%s/choice[%d]", parent, i), &all.Choices[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		for i := range all.Alls {
+			if walkAll(fmt.Sprintf("%s/all[%d]", parent, i), &all.Alls[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, particles := range typeParticleSets(f.typ) {
+		if walkSequence(f.typeName, particles.sequence, nil, nil) || walkChoice(f.typeName, particles.choice, nil, nil) || walkAll(f.typeName, particles.all, nil, nil) {
+			return sites, alternatives
+		}
+	}
+	if !matched {
+		if base, ok := baseFrame(index, f); ok {
+			return choiceObservationForElement(index, base, child)
+		}
+	}
+	return sites, alternatives
+}
+
+func choiceSiteForWildcard(wildcardID string) string {
+	parts := strings.Split(wildcardID, "|")
+	if len(parts) != 4 || !strings.HasSuffix(parts[3], "/choice") {
+		return ""
+	}
+	return parts[0] + "|" + parts[1] + "|choice|" + strings.TrimSuffix(parts[3], "/choice")
+}
+
 func wildcardAllows(any *xsdAny, ownerNS, childNS string) bool {
 	if any == nil {
 		return false
@@ -623,6 +771,9 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			if !ok {
 				if wildcard := wildcardSite(index, parent, v.Name); wildcard != "" {
 					out[wildcard]++
+					if choiceID := choiceSiteForWildcard(wildcard); choiceID != "" {
+						out[choiceID]++
+					}
 					// A lax wildcard may contain a declaration from an imported
 					// schema. Continue matching through it when we know that
 					// declaration; otherwise it remains an intentionally opaque
@@ -652,6 +803,13 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			}
 			parent.siblings[id]++
 			parent.seen[qualifiedKey(v.Name.Space, v.Name.Local)] = true
+			choiceSites, choiceAlternatives := choiceObservationForElement(index, parent, v.Name)
+			for _, choiceID := range choiceSites {
+				out[choiceID]++
+			}
+			for _, alternativeID := range choiceAlternatives {
+				out[alternativeID]++
+			}
 			if parent.siblings[id] > out[id] {
 				out[id] = parent.siblings[id]
 			}

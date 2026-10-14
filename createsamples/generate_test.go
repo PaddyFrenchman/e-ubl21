@@ -169,6 +169,34 @@ func TestLargeInvoiceLineFixtureIsDeterministicAndValid(t *testing.T) {
 	}
 }
 
+func TestStandaloneCommonComponentFixturesCoverUnreachableGlobalRoots(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	for _, root := range []string{"Branch", "Communication", "Duty", "MonetaryTotal", "Payment", "Regulation", "ServiceFrequency"} {
+		t.Run(root, func(t *testing.T) {
+			fixture, err := generateCommonComponentStructuralFixture(index, xsdDir, "test", root)
+			if err != nil {
+				t.Fatal(err)
+			}
+			matched, err := matchFixtureBytes(index, fixture.content)
+			if err != nil {
+				t.Fatal(err)
+			}
+			id := namespace + "|UBL-CommonAggregateComponents-2.1.xsd|element|global/" + root + "/" + root
+			if matched[id] == 0 {
+				t.Errorf("standalone fixture did not cover global declaration %q", id)
+			}
+			if fixture.entry.File != filepath.ToSlash(filepath.Join("CommonComponents", root+".xml")) {
+				t.Errorf("fixture path = %q", fixture.entry.File)
+			}
+		})
+	}
+}
+
 func TestMultiCollectionInvoiceFixtureIsValid(t *testing.T) {
 	xsdDir := filepath.Join("..", "XSD")
 	index, err := buildSchemaIndex(xsdDir)

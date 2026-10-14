@@ -9,7 +9,7 @@ coverage. The exhaustive, machine-readable list is
 `createsamples/samples-structural/coverage.md`. Both are regenerated with the
 corpus and take precedence over the counts in this document.
 
-The current report analyzes 24,692 fixtures. It records no missing required
+The last full report analyzes 24,692 fixtures. It records no missing required
 cardinalities (`cardinalityGaps: 0`, `cardinalityResiduals: 0`) and zero
 unparseable fixtures. After correcting global element reference accounting
 and recording inherited type chains, the report lists 50 distinct uncovered
@@ -59,6 +59,15 @@ These targets are not approved as unsupported:
 These are ordinary coverage gaps. They must remain visible in the generated
 register and should be addressed by adding XSD-valid fixtures, not by excluding
 them from accounting.
+
+The generator now has standalone CAC-root fixtures for the seven uncovered
+global declarations (`Branch`, `Communication`, `Duty`, `MonetaryTotal`,
+`Payment`, `Regulation`, and `ServiceFrequency`). The current local corpus
+report still shows these as uncovered until the corpus is regenerated. The
+matcher also now credits choice sites reached through sequence alternatives
+and wildcard-only choices, and the generator adds the second `PGPData` choice
+branch. Refresh coverage after the next corpus generation to update this
+residual register.
 
 ### Bounded by design; approval requested
 

@@ -23,6 +23,7 @@ type schemaIndex struct {
 	GlobalTypeDocs    map[string]*schemaDoc
 	GlobalSimpleTypes map[string]xsdSimpleType
 	RecursiveEdges    map[string]struct{}
+	ChoiceTypes       map[string]struct{}
 }
 
 // ublNamespaceByPrefix records the fixed namespace URI for every namespace
@@ -129,7 +130,17 @@ func buildSchemaIndex(xsdDir string) (schemaIndex, error) {
 			index.GlobalSimpleTypes[qualifiedKey(doc.TargetNamespace, name)] = typ
 		}
 	}
-	index.RecursiveEdges = schemaCoverageTargets(index).recursiveEdges
+	targets := schemaCoverageTargets(index)
+	index.RecursiveEdges = targets.recursiveEdges
+	index.ChoiceTypes = map[string]struct{}{}
+	for id := range targets.choices {
+		parts := strings.Split(id, "|")
+		if len(parts) != 4 {
+			continue
+		}
+		owner := strings.SplitN(parts[3], "/", 2)[0]
+		index.ChoiceTypes[qualifiedKey(parts[0], owner)] = struct{}{}
+	}
 	return index, nil
 }
 

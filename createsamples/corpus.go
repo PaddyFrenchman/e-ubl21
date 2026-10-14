@@ -730,6 +730,22 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			}
 		}
 	}
+	// These CAC global declarations are not referenced by any UBL main-document
+	// root, but remain part of the published common-component schema. Exercise
+	// each as a standalone schema root so declaration coverage does not depend
+	// on inventing an unrelated business-document path to it.
+	if resumePhase != "signature" && resumePhase != "cardinality" {
+		for _, root := range []string{"Branch", "Communication", "Duty", "MonetaryTotal", "Payment", "Regulation", "ServiceFrequency"} {
+			fixture, err := generateCommonComponentStructuralFixture(index, xsdDir, generatorVersion, root)
+			if err != nil {
+				journal(err)
+				continue
+			}
+			if err := record(fixture); err != nil {
+				return err
+			}
+		}
+	}
 	// XMLDSig and XAdES declarations are schema-reachable through the UBL
 	// signature extension, but many are not reachable through its deliberately
 	// small hand-authored payload. Generate their global roots directly so the
@@ -756,6 +772,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		}
 		return roots[i].namespace < roots[j].namespace
 	})
+	includePGPDataChoice := resumePhase == "" || resumePhase == "main"
 	for _, root := range roots {
 		if resumePhase == "cardinality" {
 			continue
@@ -769,6 +786,9 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
 		if doc == nil {
 			continue
+		}
+		if root.namespace == "http://www.w3.org/2000/09/xmldsig#" && root.name == "PGPData" {
+			includePGPDataChoice = true
 		}
 		state := newTargetedStructuralGenState(nil, 1)
 		state.signatureExtension = true
@@ -792,6 +812,14 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			Tags:              []string{"positive", "ubl21", "structural", "signature-schema", signatureNamespaces[root.namespace]},
 			StructuralTargets: []string{"signature-root:" + root.name},
 		}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+			return err
+		}
+	}
+	if includePGPDataChoice {
+		fixture, err := generateSignatureChoiceStructuralFixture(index, xsdDir, generatorVersion, "PGPData", 1)
+		if err != nil {
+			journal(err)
+		} else if err := record(fixture); err != nil {
 			return err
 		}
 	}
@@ -1155,6 +1183,59 @@ func schemaPathForDocument(xsdDir, file string) string {
 		return common
 	}
 	return filepath.Join(xsdDir, "maindoc", file)
+}
+
+func generateCommonComponentStructuralFixture(index schemaIndex, xsdDir, generatorVersion, root string) (generatedFixture, error) {
+	const namespace = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, root)]
+	if doc == nil {
+		return generatedFixture{}, fmt.Errorf("common component root %s is not declared", root)
+	}
+	content, err := generateTargetedStructuralSample(index, root, xsdDir, doc.File, nil, 2)
+	if err != nil {
+		return generatedFixture{}, fmt.Errorf("generate common component root %s: %w", root, err)
+	}
+	schemaPath := schemaPathForDocument(xsdDir, doc.File)
+	if err := validateStructuralCandidate(content, schemaPath); err != nil {
+		return generatedFixture{}, fmt.Errorf("validate common component root %s: %w", root, err)
+	}
+	family := "common-component-root-" + strings.ToLower(root)
+	return generatedFixture{entry: fixtureManifestEntry{
+		ID: "ubl21.component." + strings.ToLower(root), DocumentType: root, Profile: "ubl21",
+		File:   filepath.ToSlash(filepath.Join("CommonComponents", root+".xml")),
+		SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+		Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+		ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+		Tags:              []string{"positive", "ubl21", "structural", "common-component", "standalone-root"},
+		StructuralTargets: []string{"component-root:" + root, "family:" + family},
+	}, content: []byte(content), schemaPath: schemaPath}, nil
+}
+
+func generateSignatureChoiceStructuralFixture(index schemaIndex, xsdDir, generatorVersion, root string, alternative int) (generatedFixture, error) {
+	const namespace = "http://www.w3.org/2000/09/xmldsig#"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, root)]
+	if doc == nil {
+		return generatedFixture{}, fmt.Errorf("XMLDSig choice root %s is not declared", root)
+	}
+	state := newTargetedStructuralGenState(map[int]int{0: alternative}, 1)
+	content, err := generateSampleWithState(index, root, xsdDir, doc.File, state)
+	if err != nil {
+		return generatedFixture{}, fmt.Errorf("generate XMLDSig choice root %s alternative %d: %w", root, alternative, err)
+	}
+	schemaPath := schemaPathForDocument(xsdDir, doc.File)
+	if err := validateStructuralCandidate(content, schemaPath); err != nil {
+		return generatedFixture{}, fmt.Errorf("validate XMLDSig choice root %s alternative %d: %w", root, alternative, err)
+	}
+	family := fmt.Sprintf("xmldsig-root-%s-choice-%03d", strings.ToLower(root), alternative)
+	return generatedFixture{entry: fixtureManifestEntry{
+		ID: "ubl21.signature." + family, DocumentType: root, Profile: "ubl21",
+		File:   filepath.ToSlash(filepath.Join("SignatureSchemas", family+".xml")),
+		SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+		Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+		ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+		Tags:              []string{"positive", "ubl21", "structural", "signature-schema", "xmldsig", "choice-alternative"},
+		StructuralTargets: []string{"signature-root:" + root, "family:" + family},
+	}, content: []byte(content), schemaPath: schemaPath}, nil
 }
 
 // namespaceFixtureKey produces a manifest-safe identifier component from a
