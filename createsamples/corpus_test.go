@@ -863,6 +863,33 @@ func TestGeneratedCorpusReplacesOnlyMarkedOutput(t *testing.T) {
 	}
 }
 
+func TestStructuralManifestStoreRejectsDuplicateFixtureFiles(t *testing.T) {
+	store, err := newStructuralManifestStore(filepath.Join(t.TempDir(), "manifest.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.add(fixtureManifestEntry{ID: "first", File: "same.xml"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.add(fixtureManifestEntry{ID: "second", File: "same.xml"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.finish(); err == nil || !strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		t.Fatalf("duplicate structural fixture file error = %v", err)
+	}
+}
+
+func TestSignatureCardinalityZeroFamilyIsStableAndTargetSpecific(t *testing.T) {
+	first := signatureCardinalityZeroFamily(7, "ns|owner|type|path/First")
+	if got := signatureCardinalityZeroFamily(7, "ns|owner|type|path/First"); got != first {
+		t.Fatalf("zero-witness family changed: %q != %q", got, first)
+	}
+	second := signatureCardinalityZeroFamily(7, "ns|owner|type|path/Second")
+	if second == first {
+		t.Fatalf("different repeatable targets share zero-witness family %q", first)
+	}
+}
+
 func TestCorpusFileWritingAndValidationFailureBranches(t *testing.T) {
 	if _, err := buildGeneratedCorpus([]generatedFixture{{entry: fixtureManifestEntry{
 		ID: "invalid", Provenance: fixtureProvenance{SourceMember: make(chan int)},

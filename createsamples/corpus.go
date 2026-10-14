@@ -148,7 +148,7 @@ func newStructuralManifestStore(path string) (*structuralManifestStore, error) {
 		_ = store.stdin.Close()
 		return nil, fmt.Errorf("start structural manifest SQLite journal: %w", err)
 	}
-	if _, err := store.writer.WriteString("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; CREATE TABLE entries (ordinal INTEGER PRIMARY KEY, entry TEXT NOT NULL); BEGIN;\n"); err != nil {
+	if _, err := store.writer.WriteString("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; CREATE TABLE entries (ordinal INTEGER PRIMARY KEY, id TEXT NOT NULL UNIQUE, file TEXT NOT NULL UNIQUE, entry TEXT NOT NULL); BEGIN;\n"); err != nil {
 		return nil, store.fail(err)
 	}
 	return store, nil
@@ -163,7 +163,9 @@ func (store *structuralManifestStore) add(entry fixtureManifestEntry) error {
 	// by doubling them. This keeps one entry per SQLite command without a Go
 	// database-driver dependency or a live in-memory row cache.
 	value := strings.ReplaceAll(string(encoded), "'", "''")
-	if _, err := store.writer.WriteString("INSERT INTO entries (entry) VALUES ('" + value + "');\n"); err != nil {
+	id := strings.ReplaceAll(entry.ID, "'", "''")
+	file := strings.ReplaceAll(entry.File, "'", "''")
+	if _, err := store.writer.WriteString("INSERT INTO entries (id, file, entry) VALUES ('" + id + "', '" + file + "', '" + value + "');\n"); err != nil {
 		return store.fail(err)
 	}
 	return nil
@@ -839,7 +841,13 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				journal(fmt.Errorf("match signature cardinality baseline %s: %w", root.name, err))
 				continue
 			}
-			for id, values := range matched.cardinalities {
+			cardinalityIDs := make([]string, 0, len(matched.cardinalities))
+			for id := range matched.cardinalities {
+				cardinalityIDs = append(cardinalityIDs, id)
+			}
+			sort.Strings(cardinalityIDs)
+			for _, id := range cardinalityIDs {
+				values := matched.cardinalities[id]
 				_, isRepeatable := repeatableTargets.repeatable[id]
 				if !isRepeatable {
 					continue
@@ -888,7 +896,7 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 					journal(fmt.Errorf("validate signature cardinality zero %s plan %d: %w", root.name, planIndex, err))
 					continue
 				}
-				family := fmt.Sprintf("signature-cardinality-plan-%05d-0", planIndex)
+				family := signatureCardinalityZeroFamily(planIndex, id)
 				if err := record(generatedFixture{entry: fixtureManifestEntry{
 					ID: fmt.Sprintf("ubl21.signature.%s.%s", strings.ToLower(root.name), family), DocumentType: root.name, Profile: "ubl21",
 					File: filepath.ToSlash(filepath.Join("SignatureSchemas", strings.ToLower(root.name)+"-"+family+".xml")), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
@@ -1258,8 +1266,13 @@ func maxChoiceAlternatives(index schemaIndex) int {
 func buildGeneratedCorpus(fixtures []generatedFixture) (generatedCorpus, error) {
 	sort.Slice(fixtures, func(i, j int) bool { return fixtures[i].entry.ID < fixtures[j].entry.ID })
 	entries := make([]fixtureManifestEntry, len(fixtures))
+	files := make(map[string]string, len(fixtures))
 	for index := range fixtures {
 		entries[index] = fixtures[index].entry
+		if previousID, duplicate := files[fixtures[index].entry.File]; duplicate {
+			return generatedCorpus{}, fmt.Errorf("generated fixtures %q and %q use the same file %q", previousID, fixtures[index].entry.ID, fixtures[index].entry.File)
+		}
+		files[fixtures[index].entry.File] = fixtures[index].entry.ID
 	}
 	manifestJSON, err := json.MarshalIndent(fixtureManifest{SchemaVersion: 1, Fixtures: entries}, "", "  ")
 	if err != nil {
@@ -1270,6 +1283,11 @@ func buildGeneratedCorpus(fixtures []generatedFixture) (generatedCorpus, error) 
 		return generatedCorpus{}, fmt.Errorf("validate generated fixture manifest: %w", err)
 	}
 	return generatedCorpus{fixtures: fixtures, manifestJSON: manifestJSON}, nil
+}
+
+func signatureCardinalityZeroFamily(planIndex int, targetID string) string {
+	targetHash := sha256.Sum256([]byte(targetID))
+	return fmt.Sprintf("signature-cardinality-plan-%05d-0-target-%x", planIndex, targetHash[:6])
 }
 
 func combineGeneratedCorpora(corpora ...generatedCorpus) (generatedCorpus, error) {
