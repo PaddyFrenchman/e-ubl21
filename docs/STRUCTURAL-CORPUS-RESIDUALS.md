@@ -9,30 +9,30 @@ coverage. The exhaustive, machine-readable list is
 `createsamples/samples-structural/coverage.md`. Both are regenerated with the
 corpus and take precedence over the counts in this document.
 
-The current report analyzes 578 fixtures. It records 3,925 uncovered targets
-and 622 failed cardinality target contracts. The report's
-`cardinalityResiduals` array is the per-target residual register: it records
-each target's exercised, required, and missing counts, its disposition, and
-whether it has an approval. Each current entry is explicitly
-`requires-xsd-valid-fixture` with `approved: false`; this is an open work item,
-not a waiver.
+The current report analyzes 24,692 fixtures. It records no missing required
+cardinalities (`cardinalityGaps: 0`, `cardinalityResiduals: 0`) and zero
+unparseable fixtures. It still lists 1,771 distinct uncovered schema targets
+across 3,476 category entries. These remaining targets are not approved for
+exclusion; the generated report is the detailed register.
 
 | Target kind | Remaining |
 |---|---:|
-| attributes | 38 |
-| choice alternatives | 21 |
-| choice sites | 6 |
-| complex types | 69 |
-| elements | 1,787 |
-| inheritance edges | 33 |
-| optional attributes | 31 |
-| optional elements | 72 |
-| recursive edges | 22 |
-| repeatable elements | 35 |
-| required attributes | 7 |
-| required elements | 1,715 |
-| sequence members | 83 |
-| wildcards | 6 |
+| attributes | 10 |
+| choice alternatives | 4 |
+| choice sites | 2 |
+| complex types | 32 |
+| elements | 1,690 |
+| inheritance edges | 30 |
+| optional attributes | 6 |
+| optional elements | 5 |
+| recursive edges | 2 |
+| repeatable elements missing required cardinalities | 0 |
+| required attributes | 4 |
+| required elements | 1,685 |
+| sequence members | 3 |
+| wildcards | 3 |
+
+Category counts overlap; the report contains 1,771 distinct uncovered targets.
 
 ## Review classification
 
@@ -46,8 +46,8 @@ These targets are schema-reachable and are not approved as unsupported:
   revocation references and values, policy qualifiers, signer roles,
   counter-signatures, timestamp/reference forms, validation data, and their
   IDs/URIs/encodings.
-- Uncovered wildcards, recursive edges, and all 622 cardinality combinations
-  identified in the generated per-target register.
+- Uncovered wildcards, recursive edges, choice branches, attributes, and
+  required or optional document elements identified in the generated register.
 - UBL document content not present in the representative root fixtures,
   including the 1,715 required-element targets and 1,787 total element targets.
 
@@ -78,6 +78,7 @@ The approval recorded on 2026-10-02 was withdrawn by the repository user on
 Every schema-reachable construct and each documented boundary behavior remains
 an open coverage obligation. The generated `coverage.json`/`coverage.md`
 register remains the source of truth for the residual target list. In
-particular, cardinality enforcement remains a qualification gate: a report
-with any `cardinalityResiduals` fails `createsamples coverage`, including when
-corpus regeneration is requested.
+particular, cardinality enforcement remains a qualification gate. The current
+generated report passes that gate with no missing required cardinalities. The
+other uncovered targets remain open until reviewed and explicitly
+dispositioned.
