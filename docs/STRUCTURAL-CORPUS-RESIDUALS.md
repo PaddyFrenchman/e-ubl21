@@ -9,21 +9,20 @@ coverage. The exhaustive, machine-readable list is
 `createsamples/samples-structural/coverage.md`. Both are regenerated with the
 corpus and take precedence over the counts in this document.
 
-The last full report analyzes 24,692 fixtures. It records no missing required
-cardinalities (`cardinalityGaps: 0`, `cardinalityResiduals: 0`) and zero
-unparseable fixtures. After correcting global element reference accounting
-and recording inherited type chains, the report lists 50 distinct uncovered
-schema targets across 80 category entries. The matcher now credits an
-observed schema edge that belongs to a recursive type cycle, removing the two
-recursive-edge residuals without changing the corpus fixtures. These remaining
-targets are not approved for exclusion; the generated report is the detailed
-register.
+The latest refreshed local scan analyzed 24,692 fixtures. It records no
+missing required cardinalities (`cardinalityGaps: 0`, `cardinalityResiduals:
+0`) and zero unparseable fixtures. It lists 46 distinct uncovered schema
+targets across 76 category entries. The scan also includes the matcher fixes
+for recursive edges and choice alternatives, but it predates the latest
+fixture-generation changes below. The checked-in `coverage.json`/`coverage.md`
+remain stale until the next corpus generation. These targets are not approved
+for exclusion.
 
 | Target kind | Remaining |
 |---|---:|
 | attributes | 10 |
-| choice alternatives | 4 |
-| choice sites | 2 |
+| choice alternatives | 2 |
+| choice sites | 0 |
 | complex types | 10 |
 | elements | 15 |
 | inheritance edges | 8 |
@@ -35,7 +34,8 @@ register.
 | sequence members | 3 |
 | wildcards | 3 |
 
-Category counts overlap; the report contains 50 distinct uncovered targets.
+Category counts overlap; the refreshed scan contains 46 distinct uncovered
+targets.
 
 ## Review classification
 
@@ -60,14 +60,17 @@ These are ordinary coverage gaps. They must remain visible in the generated
 register and should be addressed by adding XSD-valid fixtures, not by excluding
 them from accounting.
 
-The generator now has standalone CAC-root fixtures for the seven uncovered
-global declarations (`Branch`, `Communication`, `Duty`, `MonetaryTotal`,
-`Payment`, `Regulation`, and `ServiceFrequency`). The current local corpus
-report still shows these as uncovered until the corpus is regenerated. The
-matcher also now credits choice sites reached through sequence alternatives
-and wildcard-only choices, and the generator adds the second `PGPData` choice
-branch. Refresh coverage after the next corpus generation to update this
-residual register.
+The generator has standalone CAC-root fixtures for the seven uncovered global
+declarations (`Branch`, `Communication`, `Duty`, `MonetaryTotal`, `Payment`,
+`Regulation`, and `ServiceFrequency`). It now also adds wrapper-validated type
+roots for the eight otherwise unreachable CCTS/UDT types, a standalone UBL
+`SignatureInformation` root, standalone XAdES 1.4.1 roots and targeted XAdES
+choice branches. Strict wildcard fixtures use
+declared elements from the root schema's import closure. The matcher now
+credits simple-typed global roots, named attribute types, and the correct
+choice branch when alternatives contain the same element name. Focused tests
+cover these additions; the corpus-wide residual count must be refreshed after
+the code is committed and the corpus regenerated.
 
 ### Bounded by design; approval requested
 

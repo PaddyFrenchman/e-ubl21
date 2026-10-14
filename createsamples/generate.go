@@ -20,6 +20,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -64,6 +65,7 @@ type genState struct {
 	includeOptionalAttrs bool
 	structural           bool
 	rootNamespace        string
+	rootSchemaFile       string
 	// signatureExtension replaces the generic private extension payload with a
 	// declared UBL XMLDSig payload. It is used only by the dedicated structural
 	// signature family, leaving ordinary wildcard pass-through fixtures intact.
@@ -346,6 +348,7 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 		return "", fmt.Errorf("root element %q not found in schema index", rootName)
 	}
 	state.rootNamespace = rootNS
+	state.rootSchemaFile = filepath.Base(schemaFile)
 	rootNode, supported := expandElement(index, rootDecl, rootName, "", rootNS, state, 0)
 	if !supported {
 		return "", fmt.Errorf("root element %q requires an unsupported XSD construct (e.g. xsd:any) that cannot be generated", rootName)
@@ -688,7 +691,7 @@ func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genSta
 	if seq.Any != nil && state.signatureExtension && ns == "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" && seq.Any.Namespace == "##other" && seq.Any.ProcessContents == "lax" {
 		out = append(out, structuralSignatureExtensionNode(state.signatureVariant))
 	} else if seq.Any != nil && state.structural {
-		if node, ok := structuralWildcardNode(*seq.Any); ok {
+		if node, ok := structuralWildcardNode(index, *seq.Any, ns, state, depth); ok {
 			out = append(out, node)
 		}
 	}
@@ -811,10 +814,55 @@ func xadesQualifyingProperties(variant int) xmlNode {
 // UBL extension points declare xsd:any with lax processing, so this proves
 // namespace-qualified pass-through without presenting private data as UBL
 // business content.
-func structuralWildcardNode(any xsdAny) (xmlNode, bool) {
-	// Strict processing needs a declared permitted element; do not invent one.
-	// XML Schema defaults an omitted processContents attribute to strict.
+func structuralWildcardNode(index schemaIndex, any xsdAny, ownerNS string, state genState, depth int) (xmlNode, bool) {
+	// XML Schema defaults omitted processContents to strict. Strict wildcards
+	// need a real global declaration; select a simple global element so this
+	// witness stays small and valid against the schema's import closure.
 	if any.ProcessContents == "" || any.ProcessContents == "strict" {
+		keys := make([]string, 0, len(index.GlobalElements))
+		for key := range index.GlobalElements {
+			keys = append(keys, key)
+		}
+		const commonBasicNS = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+		sort.Slice(keys, func(i, j int) bool {
+			iNS, _, _ := splitQualifiedKey(keys[i])
+			jNS, _, _ := splitQualifiedKey(keys[j])
+			if (iNS == commonBasicNS) != (jNS == commonBasicNS) {
+				return iNS == commonBasicNS
+			}
+			if (iNS == state.rootNamespace) != (jNS == state.rootNamespace) {
+				return iNS == state.rootNamespace
+			}
+			return keys[i] < keys[j]
+		})
+		for _, key := range keys {
+			namespace, name, ok := splitQualifiedKey(key)
+			if !ok || !wildcardAllows(&any, ownerNS, namespace) || !schemaImportClosureContains(index, state.rootSchemaFile, namespace) {
+				continue
+			}
+			declaration := index.GlobalElements[key]
+			doc := index.GlobalElementDocs[key]
+			if doc == nil || declaration.Type == "" || declaration.ComplexType != nil {
+				continue
+			}
+			if !isPrimitiveType(declaration.Type) {
+				typeNS, typeName := qualifyRef(declaration.Type, doc.TargetNamespace)
+				if _, ok := index.GlobalSimpleTypes[qualifiedKey(typeNS, typeName)]; !ok {
+					_, typ, ok := schemaTypeDocument(index, typeNS, typeName)
+					if !ok || typ.SimpleContent == nil {
+						continue
+					}
+				}
+			}
+			prefix := ""
+			if namespace != state.rootNamespace {
+				prefix = schemaNamespacePrefix(namespace)
+			}
+			node, supported := expandElement(index, declaration, name, prefix, namespace, state, depth)
+			if supported {
+				return node, true
+			}
+		}
 		return xmlNode{}, false
 	}
 	switch any.Namespace {
@@ -825,6 +873,41 @@ func structuralWildcardNode(any xsdAny) (xmlNode, bool) {
 	default: // ##any, ##other, and explicit foreign namespace lists
 		return xmlNode{Prefix: "struct", Name: "Extension", Attributes: map[string]string{"purpose": "schema-coverage", "namespacePolicy": any.Namespace, "processContents": any.ProcessContents}, Children: []xmlNode{{Prefix: "struct", Name: "Value", Value: "sample"}}}, true
 	}
+}
+
+func schemaImportClosureContains(index schemaIndex, rootFile, targetNamespace string) bool {
+	seen := map[string]bool{}
+	findDoc := func(file string) *schemaDoc {
+		file = filepath.Base(file)
+		for path, doc := range index.ByFile {
+			if filepath.Base(path) == file || doc.File == file {
+				return doc
+			}
+		}
+		return nil
+	}
+	var visit func(string) bool
+	visit = func(file string) bool {
+		file = filepath.Base(file)
+		if seen[file] {
+			return false
+		}
+		seen[file] = true
+		doc := findDoc(file)
+		if doc == nil {
+			return false
+		}
+		if doc.TargetNamespace == targetNamespace {
+			return true
+		}
+		for _, imported := range doc.Imports {
+			if imported.Namespace == targetNamespace || visit(imported.SchemaLocation) {
+				return true
+			}
+		}
+		return false
+	}
+	return visit(rootFile)
 }
 
 // flattenChoice deterministically selects the first alternative whose
@@ -861,7 +944,7 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 	if choice.Any != nil && state.structural {
 		any := *choice.Any
 		alternatives = append(alternatives, func() ([]xmlNode, bool) {
-			node, ok := structuralWildcardNode(any)
+			node, ok := structuralWildcardNode(index, any, ns, state, depth)
 			if !ok {
 				return nil, false
 			}
@@ -981,7 +1064,7 @@ func flattenAll(all xsdAll, index schemaIndex, ns string, state genState, depth 
 		out = append(out, children...)
 	}
 	if all.Any != nil && state.structural {
-		if node, ok := structuralWildcardNode(*all.Any); ok {
+		if node, ok := structuralWildcardNode(index, *all.Any, ns, state, depth); ok {
 			out = append(out, node)
 		}
 	}
@@ -1122,6 +1205,16 @@ func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, v
 		}
 	}
 	collect(ct.Attributes)
+	if ct.ComplexContent != nil {
+		if r := ct.ComplexContent.Restriction; r != nil {
+			collect(r.Attributes)
+			mergeBaseTypeAttributes(index, r.Base, ns, visited, depth, attrs, includeOptional, nextID)
+		}
+		if e := ct.ComplexContent.Extension; e != nil {
+			collect(e.Attributes)
+			mergeBaseTypeAttributes(index, e.Base, ns, visited, depth, attrs, includeOptional, nextID)
+		}
+	}
 	if ct.SimpleContent != nil {
 		if r := ct.SimpleContent.Restriction; r != nil {
 			collect(r.Attributes)

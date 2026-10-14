@@ -253,6 +253,9 @@ func findInChoice(index schemaIndex, f schemaFrame, parent string, choice *xsdCh
 		}
 	}
 	for i := range choice.Sequences {
+		if !requiredBranchElementsObserved(index, f, choice.Sequences[i].Elements, q) {
+			continue
+		}
 		if x, id, ok := findInSequence(index, f, parent+fmt.Sprintf("/sequence[%d]", i), &choice.Sequences[i], q); ok {
 			return x, id, true
 		}
@@ -263,12 +266,32 @@ func findInChoice(index schemaIndex, f schemaFrame, parent string, choice *xsdCh
 		}
 	}
 	for i := range choice.Alls {
+		if !requiredBranchElementsObserved(index, f, choice.Alls[i].Elements, q) {
+			continue
+		}
 		if x, id, ok := findInAll(index, f, parent+fmt.Sprintf("/all[%d]", i), &choice.Alls[i], q); ok {
 			return x, id, true
 		}
 	}
 	return xsdElementDecl{}, "", false
 }
+
+func requiredBranchElementsObserved(index schemaIndex, f schemaFrame, elements []xsdElementDecl, child xml.Name) bool {
+	for _, element := range elements {
+		if element.MinOccurs == "0" {
+			continue
+		}
+		_, _, namespace, name := elementDeclaration(index, f.doc, element)
+		if namespace == child.Space && name == child.Local {
+			continue
+		}
+		if !f.seen[qualifiedKey(namespace, name)] {
+			return false
+		}
+	}
+	return true
+}
+
 func findInAll(index schemaIndex, f schemaFrame, parent string, all *xsdAll, q xml.Name) (xsdElementDecl, string, bool) {
 	if all == nil {
 		return xsdElementDecl{}, "", false
@@ -305,6 +328,13 @@ func recordInheritance(index schemaIndex, f schemaFrame) {
 		}
 		seen[key] = struct{}{}
 		f.targets[complexTypeIDForElement(f.doc, "", f.typeName)]++
+		if simple, ok := f.doc.SimpleTypes[f.typeName]; ok && simple.Restriction != nil {
+			baseNS, baseName := qualifyRef(simple.Restriction.Base, f.doc.TargetNamespace)
+			if baseName != "" {
+				f.targets[coverageID(f.doc, "inheritance", f.typeName+"->"+baseNS+"#"+baseName)]++
+			}
+			return
+		}
 		base := typeBase(f.typ)
 		if base == "" {
 			return
@@ -378,6 +408,12 @@ func recordAttributes(index schemaIndex, f schemaFrame, start xml.StartElement) 
 		for _, declaration := range typeAttributes(f.typ) {
 			if declaration.Name == attribute.Name.Local {
 				f.targets[fmt.Sprintf("%s|%s|attribute|%s/@%s", f.doc.TargetNamespace, f.doc.File, f.typeName, declaration.Name)]++
+				if declaration.Type != "" {
+					ns, name := qualifyRef(declaration.Type, f.doc.TargetNamespace)
+					if typeDoc, _, ok := schemaTypeDocument(index, ns, name); ok {
+						f.targets[coverageID(typeDoc, "complexType", name)]++
+					}
+				}
 			}
 		}
 	}
@@ -469,6 +505,9 @@ func choiceObservationForElement(index schemaIndex, f schemaFrame, child xml.Nam
 				continue
 			}
 			_, _, ns, name := elementDeclaration(index, f.doc, element)
+			if ns == child.Space && name == child.Local {
+				continue
+			}
 			if !f.seen[qualifiedKey(ns, name)] {
 				return false
 			}
@@ -748,18 +787,37 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			if len(stack) == 0 {
 				root, ok := index.GlobalElements[qualifiedKey(v.Name.Space, v.Name.Local)]
 				if !ok {
+					typeKey := qualifiedKey(v.Name.Space, v.Name.Local)
+					if typ, exists := index.GlobalTypes[typeKey]; exists {
+						doc := index.GlobalTypeDocs[typeKey]
+						if doc == nil {
+							return fixtureMatch{}, fmt.Errorf("schema document for type root %s is missing", v.Name)
+						}
+						frame := schemaFrame{doc: doc, typ: typ, typeName: v.Name.Local, targets: out, siblings: map[string]int{}, seen: map[string]bool{}}
+						out[complexTypeIDForElement(doc, "", v.Name.Local)]++
+						stack = append(stack, frame)
+						recordAttributes(index, frame, v)
+						recordInheritance(index, frame)
+						continue
+					}
 					return fixtureMatch{}, fmt.Errorf("unknown root %s", v.Name)
 				}
-				d := index.ByTargetNS[v.Name.Space]
-				td, t, n, ok := declaredType(index, d, root)
-				if !ok {
-					stack = append(stack, schemaFrame{})
-					continue
+				d := index.GlobalElementDocs[qualifiedKey(v.Name.Space, v.Name.Local)]
+				if d == nil {
+					d = index.ByTargetNS[v.Name.Space]
+				}
+				if d == nil {
+					return fixtureMatch{}, fmt.Errorf("schema document for root %s is missing", v.Name)
 				}
 				rootID := fmt.Sprintf("%s|%s|element|global/%s", d.TargetNamespace, d.File, v.Name.Local)
 				id := fmt.Sprintf("%s|%s|element|global/%s/%s", d.TargetNamespace, d.File, v.Name.Local, v.Name.Local)
 				out[rootID]++
 				out[id]++
+				td, t, n, ok := declaredType(index, d, root)
+				if !ok {
+					stack = append(stack, schemaFrame{})
+					continue
+				}
 				out[complexTypeIDForElement(td, id, n)]++
 				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}, seen: map[string]bool{}})
 				recordAttributes(index, stack[len(stack)-1], v)

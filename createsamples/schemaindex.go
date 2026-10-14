@@ -83,6 +83,7 @@ func splitQualifiedKey(key string) (namespace, name string, ok bool) {
 type schemaDoc struct {
 	File            string
 	TargetNamespace string
+	Imports         []xsdImport
 	Elements        map[string]xsdElementDecl
 	Types           map[string]xsdComplexType
 	SimpleTypes     map[string]xsdSimpleType
@@ -153,7 +154,7 @@ func loadSchemaDoc(path string) (*schemaDoc, error) {
 	if err := xml.Unmarshal(content, &doc); err != nil {
 		return nil, err
 	}
-	result := &schemaDoc{File: filepath.Base(path), TargetNamespace: doc.TargetNamespace, Elements: map[string]xsdElementDecl{}, Types: map[string]xsdComplexType{}, SimpleTypes: map[string]xsdSimpleType{}}
+	result := &schemaDoc{File: filepath.Base(path), TargetNamespace: doc.TargetNamespace, Imports: doc.Imports, Elements: map[string]xsdElementDecl{}, Types: map[string]xsdComplexType{}, SimpleTypes: map[string]xsdSimpleType{}}
 	for _, element := range doc.Elements {
 		if element.Name != "" {
 			result.Elements[element.Name] = element

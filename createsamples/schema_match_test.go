@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -114,6 +115,36 @@ func TestMatchFixtureCreditsGlobalElementReferencedByParticle(t *testing.T) {
 	}
 }
 
+func TestMatchFixtureCreditsSimpleTypedGlobalRoot(t *testing.T) {
+	const ns = "urn:test:simple"
+	doc := &schemaDoc{
+		File:            "simple.xsd",
+		TargetNamespace: ns,
+		Elements:        map[string]xsdElementDecl{"Value": {Name: "Value", Type: "xsd:string"}},
+		Types:           map[string]xsdComplexType{},
+		SimpleTypes:     map[string]xsdSimpleType{},
+	}
+	key := qualifiedKey(ns, "Value")
+	index := schemaIndex{
+		ByTargetNS:        map[string]*schemaDoc{ns: doc},
+		GlobalElements:    map[string]xsdElementDecl{key: doc.Elements["Value"]},
+		GlobalElementDocs: map[string]*schemaDoc{key: doc},
+	}
+	path := filepath.Join(t.TempDir(), "fixture.xml")
+	if err := os.WriteFile(path, []byte(`<Value xmlns="urn:test:simple">sample</Value>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixture(index, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rootID := ns + "|simple.xsd|element|global/Value"
+	declarationID := ns + "|simple.xsd|element|global/Value/Value"
+	if matched[rootID] != 1 || matched[declarationID] != 1 {
+		t.Fatalf("simple root targets = (%d, %d), want (1, 1)", matched[rootID], matched[declarationID])
+	}
+}
+
 func TestMatchStructuralFixtureCreditsReferencedUBLGlobalElement(t *testing.T) {
 	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
 	if err != nil {
@@ -213,6 +244,59 @@ func TestMatchXMLDSigChoiceSitesAndAlternatives(t *testing.T) {
 	choiceID := namespace + "|UBL-xmldsig-core-schema-2.1.xsd|choice|SignaturePropertyType"
 	if matched[choiceID] == 0 {
 		t.Errorf("SignatureProperty wildcard did not credit choice site %q", choiceID)
+	}
+	for _, rootCase := range []struct {
+		root     string
+		wildcard string
+	}{
+		{"CanonicalizationMethod", namespace + "|UBL-xmldsig-core-schema-2.1.xsd|any|CanonicalizationMethodType/sequence"},
+	} {
+		doc := index.GlobalElementDocs[qualifiedKey(namespace, rootCase.root)]
+		if doc == nil {
+			t.Fatalf("XMLDSig root %s is not indexed", rootCase.root)
+		}
+		content, err := generateTargetedStructuralSample(index, rootCase.root, xsdDir, doc.File, nil, 1)
+		if err != nil {
+			t.Fatalf("generate XMLDSig root %s: %v", rootCase.root, err)
+		}
+		matched, err := matchFixtureBytes(index, []byte(content))
+		if err != nil {
+			t.Fatalf("match XMLDSig root %s: %v", rootCase.root, err)
+		}
+		if matched[rootCase.wildcard] == 0 {
+			t.Errorf("XMLDSig root %s did not exercise wildcard %s; fixture:\n%s", rootCase.root, rootCase.wildcard, content)
+		}
+	}
+	pgp, err := generateSignatureChoiceStructuralFixture(index, xsdDir, "test", "PGPData", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	matched, err = matchFixtureBytes(index, pgp.content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{
+		namespace + "|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket",
+		namespace + "|UBL-xmldsig-core-schema-2.1.xsd|any|PGPDataType/sequence[1]/sequence",
+	} {
+		if matched[id] == 0 {
+			t.Errorf("PGPData second sequence did not exercise %s; fixture:\n%s", id, string(pgp.content))
+		}
+	}
+	if !schemaImportClosureContains(index, "UBL-SignatureAggregateComponents-2.1.xsd", "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2") {
+		t.Fatal("signature aggregate schema import closure does not contain common basic components")
+	}
+	fixture, err := generateSignatureInformationStructuralFixture(index, xsdDir, "git:"+strings.Repeat("0", 40))
+	if err != nil {
+		t.Fatalf("generate UBL SignatureInformation fixture: %v", err)
+	}
+	matched, err = matchFixtureBytes(index, fixture.content)
+	if err != nil {
+		t.Fatalf("match UBL SignatureInformation root: %v", err)
+	}
+	signatureMethodWildcard := namespace + "|UBL-xmldsig-core-schema-2.1.xsd|any|SignatureMethodType/sequence"
+	if matched[signatureMethodWildcard] == 0 {
+		t.Errorf("UBL SignatureInformation did not exercise strict SignatureMethod wildcard %s; fixture:\n%s", signatureMethodWildcard, string(fixture.content))
 	}
 }
 
