@@ -324,7 +324,11 @@ func generateMinimalStructuralSample(index schemaIndex, rootName, xsdDir, schema
 }
 
 func generateStructuralSampleOmitting(index schemaIndex, rootName, xsdDir, schemaFile string, names ...string) (string, error) {
-	state := newTargetedStructuralGenState(nil, 1)
+	return generateStructuralSampleOmittingChoices(index, rootName, xsdDir, schemaFile, nil, names...)
+}
+
+func generateStructuralSampleOmittingChoices(index schemaIndex, rootName, xsdDir, schemaFile string, choices map[int]int, names ...string) (string, error) {
+	state := newTargetedStructuralGenState(choices, 1)
 	state.omitElements = map[string]bool{}
 	for _, name := range names {
 		state.omitElements[name] = true

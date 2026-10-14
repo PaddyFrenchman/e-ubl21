@@ -463,6 +463,15 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 		return manifestStore.add(fixture.entry)
 	}
 	repeatableTargets := schemaCoverageTargets(index)
+	cardinalityOwners := map[string]struct{}{}
+	for id := range repeatableTargets.repeatable {
+		parts := strings.Split(id, "|")
+		if len(parts) != 4 {
+			return fmt.Errorf("invalid repeatable target %q", id)
+		}
+		owner, _, _ := strings.Cut(parts[3], "/")
+		cardinalityOwners[qualifiedKey(parts[0], owner)] = struct{}{}
+	}
 	for _, schema := range report.MainFiles {
 		root := schema.RootElement
 		if root == "" {
@@ -675,42 +684,10 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 				journal(err)
 			}
 		}
-		// The ordinary cardinality families above intentionally constrain
-		// repetition to the main-document level so that a single fixture remains
-		// small.  That does not, however, witness the contracts of repeatable
-		// particles nested in the first full expansion of a shared aggregate
-		// type.  Emit bounded deep variants as a separate family: every reachable
-		// repeatable particle gets a two-occurrence witness and the five-occurrence
-		// (or finite-maximum) witness required by the coverage contract.  The
-		// first occurrence retains nested witnesses; additional occurrences use
-		// required-only content so repeated parents cannot multiply those witnesses.
-		for _, count := range []int{2, 5} {
-			family := fmt.Sprintf("cardinality-deep-%d", count)
-			content, err := generateDeepCardinalityStructuralSample(index, root, xsdDir, schema.File, nil, count)
-			if err != nil {
-				journal(fmt.Errorf("generate %s %s: %w", root, family, err))
-				continue
-			}
-			if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
-				journal(fmt.Errorf("validate %s %s: %w", root, family, err))
-				continue
-			}
-			if err := record(generatedFixture{entry: fixtureManifestEntry{
-				ID:                fmt.Sprintf("ubl21.%s.%s", strings.ToLower(root), family),
-				DocumentType:      root,
-				Profile:           "ubl21",
-				File:              filepath.ToSlash(filepath.Join(root, fmt.Sprintf("%s-%s.xml", root, family))),
-				SHA256:            fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
-				Standards:         fixtureStandards{UBL: "2.1"},
-				Provenance:        fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
-				ExpectedFinal:     "valid",
-				ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
-				Tags:              []string{"positive", "ubl21", "structural", family, "cardinality", "nested", fmt.Sprintf("occurrences-%d", count)},
-				StructuralTargets: []string{"schema-root:" + root, "family:" + family},
-			}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
-				return err
-			}
-		}
+		// Nested repeatable particles are exercised one target at a time by the
+		// cardinality-target fixtures above. Repeating every nested particle in
+		// one document multiplies shared aggregate content and creates hundreds
+		// of thousands of fixtures across the UBL roots.
 		// These fixtures exercise the progressive high-volume collection tiers
 		// seen by the real service without making every repeatable branch of a
 		// document enormous.  The smaller tiers make it possible to locate
@@ -816,12 +793,34 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			return err
 		}
 	}
-	// The XMLDSig/XAdES schemas place most repeatable particles beneath nested
-	// choices.  Exercise every reachable choice plan at the required multiple
-	// counts; ordinary cardinality roots intentionally stop at shallow depth.
+	// Keep signature cardinality witnesses bounded per repeatable schema target.
+	// Exhaustively combining nested XMLDSig/XAdES choices produced tens of
+	// thousands of plans and hundreds of thousands of redundant fixtures.
+	coveredSignatureCardinalities := map[string]map[int]struct{}{}
+	emittedSignatureZeroCardinalities := map[string]struct{}{}
 	for _, root := range roots {
 		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
 		if doc == nil {
+			continue
+		}
+		probe, err := generateTargetedStructuralSample(index, root.name, xsdDir, doc.File, nil, 1)
+		if err != nil {
+			journal(fmt.Errorf("probe signature cardinality root %s: %w", root.name, err))
+			continue
+		}
+		probeMatch, err := matchFixtureDetailedReader(index, strings.NewReader(probe))
+		if err != nil {
+			journal(fmt.Errorf("match signature cardinality root %s: %w", root.name, err))
+			continue
+		}
+		relevant := false
+		for id := range probeMatch.cardinalities {
+			if _, ok := repeatableTargets.repeatable[id]; ok {
+				relevant = true
+				break
+			}
+		}
+		if !relevant {
 			continue
 		}
 		plans, err := structuralChoicePlans(index, root.name, xsdDir, doc.File)
@@ -830,31 +829,190 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 			continue
 		}
 		for planIndex, choices := range plans {
-			counts := []int{1, 2, 5}
-			// IntegerListType/int is optional and is reachable from SPUserNotice
-			// only through its optional NoticeRef branch.  Its zero witness must
-			// retain that branch (and NoticeNumbers) while omitting int itself;
-			// the regular deep generator otherwise emits a singleton for zero.
-			if root.name == "SPUserNotice" {
-				counts = append([]int{0}, counts...)
+			baseline, err := generateTargetedStructuralSample(index, root.name, xsdDir, doc.File, choices, 1)
+			if err != nil {
+				journal(fmt.Errorf("generate signature cardinality baseline %s: %w", root.name, err))
+				continue
 			}
-			for _, count := range counts {
-				var content string
-				if count == 0 {
-					content, err = generateStructuralSampleOmitting(index, root.name, xsdDir, doc.File, "int")
-				} else {
-					content, err = generateDeepCardinalityStructuralSample(index, root.name, xsdDir, doc.File, choices, count)
+			matched, err := matchFixtureDetailedReader(index, strings.NewReader(baseline))
+			if err != nil {
+				journal(fmt.Errorf("match signature cardinality baseline %s: %w", root.name, err))
+				continue
+			}
+			for id, values := range matched.cardinalities {
+				_, isRepeatable := repeatableTargets.repeatable[id]
+				if !isRepeatable {
+					continue
 				}
+				needsZero := false
+				for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+					if required != 0 {
+						continue
+					}
+					if _, ok := emittedSignatureZeroCardinalities[id]; !ok {
+						needsZero = true
+					}
+				}
+				hasPositiveCount := false
+				for _, value := range values {
+					if value > 0 {
+						hasPositiveCount = true
+						break
+					}
+				}
+				if !needsZero || !hasPositiveCount {
+					continue
+				}
+				parts := strings.Split(id, "|")
+				if len(parts) != 4 {
+					return fmt.Errorf("invalid repeatable target %q", id)
+				}
+				element := filepath.Base(parts[3])
+				content, err := generateStructuralSampleOmittingChoices(index, root.name, xsdDir, doc.File, choices, element)
 				if err != nil {
-					journal(fmt.Errorf("generate signature cardinality root %s: %w", root.name, err))
+					journal(fmt.Errorf("generate signature cardinality zero %s plan %d: %w", root.name, planIndex, err))
+					continue
+				}
+				observed, err := matchFixtureDetailedReader(index, strings.NewReader(content))
+				if err != nil {
+					journal(fmt.Errorf("match signature cardinality zero %s plan %d: %w", root.name, planIndex, err))
+					continue
+				}
+				parentInstances := observed.parentInstances[particleParentComplexTypeID(id)]
+				zeroObserved := parentInstances > len(observed.cardinalities[id])
+				if !zeroObserved {
 					continue
 				}
 				schemaPath := schemaPathForDocument(xsdDir, doc.File)
 				if err := validateStructuralCandidate(content, schemaPath); err != nil {
-					journal(fmt.Errorf("validate signature cardinality root %s: %w", root.name, err))
+					journal(fmt.Errorf("validate signature cardinality zero %s plan %d: %w", root.name, planIndex, err))
 					continue
 				}
-				family := fmt.Sprintf("signature-cardinality-%03d-%d", planIndex, count)
+				family := fmt.Sprintf("signature-cardinality-plan-%05d-0", planIndex)
+				if err := record(generatedFixture{entry: fixtureManifestEntry{
+					ID: fmt.Sprintf("ubl21.signature.%s.%s", strings.ToLower(root.name), family), DocumentType: root.name, Profile: "ubl21",
+					File: filepath.ToSlash(filepath.Join("SignatureSchemas", strings.ToLower(root.name)+"-"+family+".xml")), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+					Standards: fixtureStandards{UBL: "2.1"}, Provenance: fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion}, ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+					Tags: []string{"positive", "ubl21", "structural", "signature-schema", "cardinality", "occurrences-0"}, StructuralTargets: []string{"signature-root:" + root.name, "family:" + family},
+				}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+					return err
+				}
+				if coveredSignatureCardinalities[id] == nil {
+					coveredSignatureCardinalities[id] = map[int]struct{}{}
+				}
+				coveredSignatureCardinalities[id][0] = struct{}{}
+				emittedSignatureZeroCardinalities[id] = struct{}{}
+			}
+			baselineImproved := false
+			needsDeepCardinality := false
+			for id, values := range matched.cardinalities {
+				if _, isRepeatable := repeatableTargets.repeatable[id]; !isRepeatable {
+					continue
+				}
+				targetPresent := false
+				for _, value := range values {
+					if value > 0 {
+						targetPresent = true
+					}
+					for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+						if value != required {
+							continue
+						}
+						if _, ok := coveredSignatureCardinalities[id][value]; !ok {
+							if value == 1 || value == 0 {
+								baselineImproved = true
+							} else if value > 1 {
+								needsDeepCardinality = true
+							}
+						}
+					}
+				}
+				if targetPresent {
+					for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+						if required <= 1 {
+							continue
+						}
+						if _, ok := coveredSignatureCardinalities[id][required]; !ok {
+							needsDeepCardinality = true
+						}
+					}
+				}
+			}
+			if baselineImproved {
+				schemaPath := schemaPathForDocument(xsdDir, doc.File)
+				if err := validateStructuralCandidate(baseline, schemaPath); err != nil {
+					journal(fmt.Errorf("validate signature cardinality baseline %s plan %d: %w", root.name, planIndex, err))
+				} else {
+					family := fmt.Sprintf("signature-cardinality-plan-%05d-1", planIndex)
+					if err := record(generatedFixture{entry: fixtureManifestEntry{
+						ID: fmt.Sprintf("ubl21.signature.%s.%s", strings.ToLower(root.name), family), DocumentType: root.name, Profile: "ubl21",
+						File: filepath.ToSlash(filepath.Join("SignatureSchemas", strings.ToLower(root.name)+"-"+family+".xml")), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(baseline))),
+						Standards: fixtureStandards{UBL: "2.1"}, Provenance: fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion}, ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+						Tags: []string{"positive", "ubl21", "structural", "signature-schema", "cardinality", "occurrences-1"}, StructuralTargets: []string{"signature-root:" + root.name, "family:" + family},
+					}, content: []byte(baseline), schemaPath: schemaPath}); err != nil {
+						return err
+					}
+					for id, values := range matched.cardinalities {
+						if _, ok := repeatableTargets.repeatable[id]; !ok {
+							continue
+						}
+						if coveredSignatureCardinalities[id] == nil {
+							coveredSignatureCardinalities[id] = map[int]struct{}{}
+						}
+						for _, value := range values {
+							for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+								if value == required {
+									coveredSignatureCardinalities[id][value] = struct{}{}
+								}
+							}
+						}
+					}
+				}
+			}
+			if !needsDeepCardinality {
+				continue
+			}
+			for _, count := range []int{2, 5} {
+				content, err := generateDeepCardinalityStructuralSample(index, root.name, xsdDir, doc.File, choices, count)
+				if err != nil {
+					journal(fmt.Errorf("generate signature cardinality root %s plan %d count %d: %w", root.name, planIndex, count, err))
+					continue
+				}
+				observed, err := matchFixtureDetailedReader(index, strings.NewReader(content))
+				if err != nil {
+					journal(fmt.Errorf("match signature cardinality root %s plan %d count %d: %w", root.name, planIndex, count, err))
+					continue
+				}
+				improved := false
+				for id, values := range observed.cardinalities {
+					if _, isRepeatable := repeatableTargets.repeatable[id]; !isRepeatable {
+						continue
+					}
+					if coveredSignatureCardinalities[id] == nil {
+						coveredSignatureCardinalities[id] = map[int]struct{}{}
+					}
+					for _, value := range values {
+						if value <= 1 {
+							continue
+						}
+						for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+							if value == required {
+								if _, ok := coveredSignatureCardinalities[id][value]; !ok {
+									improved = true
+								}
+							}
+						}
+					}
+				}
+				if !improved {
+					continue
+				}
+				schemaPath := schemaPathForDocument(xsdDir, doc.File)
+				if err := validateStructuralCandidate(content, schemaPath); err != nil {
+					journal(fmt.Errorf("validate signature cardinality root %s plan %d count %d: %w", root.name, planIndex, count, err))
+					continue
+				}
+				family := fmt.Sprintf("signature-cardinality-plan-%05d-%d", planIndex, count)
 				if err := record(generatedFixture{entry: fixtureManifestEntry{
 					ID: fmt.Sprintf("ubl21.signature.%s.%s", strings.ToLower(root.name), family), DocumentType: root.name, Profile: "ubl21",
 					File: filepath.ToSlash(filepath.Join("SignatureSchemas", strings.ToLower(root.name)+"-"+family+".xml")), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
@@ -862,6 +1020,19 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 					Tags: []string{"positive", "ubl21", "structural", "signature-schema", "cardinality", fmt.Sprintf("occurrences-%d", count)}, StructuralTargets: []string{"signature-root:" + root.name, "family:" + family},
 				}, content: []byte(content), schemaPath: schemaPath}); err != nil {
 					return err
+				}
+				for id, values := range observed.cardinalities {
+					if _, isRepeatable := repeatableTargets.repeatable[id]; !isRepeatable {
+						continue
+					}
+					if coveredSignatureCardinalities[id] == nil {
+						coveredSignatureCardinalities[id] = map[int]struct{}{}
+					}
+					for _, value := range values {
+						if value > 1 {
+							coveredSignatureCardinalities[id][value] = struct{}{}
+						}
+					}
 				}
 			}
 		}
@@ -874,15 +1045,6 @@ func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaInd
 	// At a root the generic cardinality state applies directly to that type's
 	// particles, exercising the zero, two and capped-unbounded (five) cases
 	// without multiplying unrelated nested collections.
-	cardinalityOwners := map[string]struct{}{}
-	for id := range repeatableTargets.repeatable {
-		parts := strings.Split(id, "|")
-		if len(parts) != 4 {
-			return fmt.Errorf("invalid repeatable target %q", id)
-		}
-		owner, _, _ := strings.Cut(parts[3], "/")
-		cardinalityOwners[qualifiedKey(parts[0], owner)] = struct{}{}
-	}
 	type cardinalityRoot struct{ namespace, name string }
 	var cardinalityRoots []cardinalityRoot
 	for key, declaration := range index.GlobalElements {

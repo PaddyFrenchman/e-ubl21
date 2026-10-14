@@ -937,13 +937,28 @@ func runCoverage(args []string) error {
 	jsonPath := flags.String("json", "", "required JSON report path")
 	markdownPath := flags.String("markdown", "", "required Markdown report path")
 	requireCardinality := flags.Bool("require-cardinality", true, "fail when a repeatable particle misses a schema-required cardinality")
+	auditPath := flags.String("audit", "", "optional per-fixture observation log path")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
 	if *jsonPath == "" || *markdownPath == "" {
 		return fmt.Errorf("--json and --markdown are required")
 	}
-	report, err := buildSchemaCoverageWithAudit(*xsdDir, *samples, os.Stdout)
+	var err error
+	var audit io.Writer
+	var auditFile *os.File
+	if *auditPath != "" {
+		if err := os.MkdirAll(filepath.Dir(*auditPath), 0o755); err != nil {
+			return err
+		}
+		auditFile, err = os.Create(*auditPath)
+		if err != nil {
+			return err
+		}
+		defer auditFile.Close()
+		audit = auditFile
+	}
+	report, err := buildSchemaCoverageWithAudit(*xsdDir, *samples, audit)
 	if err != nil {
 		return err
 	}
