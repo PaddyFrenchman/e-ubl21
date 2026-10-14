@@ -581,6 +581,10 @@ func matchFixtureDetailed(index schemaIndex, path string) (fixtureMatch, error) 
 func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMatch, error) {
 	match := fixtureMatch{targets: map[string]int{}, cardinalities: map[string][]int{}, parentInstances: map[string]int{}}
 	out := match.targets
+	// Recursive coverage targets are schema edges that participate in a type
+	// cycle. Observing the direct edge in a valid fixture exercises that target;
+	// the edge need not close a cycle in this particular XML path.
+	recursiveEdges := index.RecursiveEdges
 	dec := xml.NewDecoder(reader)
 	var stack []schemaFrame
 	for {
@@ -670,6 +674,12 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			}
 			td, t, n, ok := declaredType(index, declarationDoc, decl)
 			if ok {
+				if parent.doc != nil && parent.typeName != "" {
+					recursiveID := fmt.Sprintf("%s|%s|recursive|%s->%s", parent.doc.TargetNamespace, parent.doc.File, parent.typeName, qualifiedKey(td.TargetNamespace, n))
+					if _, isRecursiveEdge := recursiveEdges[recursiveID]; isRecursiveEdge {
+						out[recursiveID]++
+					}
+				}
 				out[complexTypeIDForElement(td, id, n)]++
 				depth := 1
 				for _, ancestor := range stack {

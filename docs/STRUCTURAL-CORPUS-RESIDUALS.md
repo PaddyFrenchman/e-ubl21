@@ -12,9 +12,12 @@ corpus and take precedence over the counts in this document.
 The current report analyzes 24,692 fixtures. It records no missing required
 cardinalities (`cardinalityGaps: 0`, `cardinalityResiduals: 0`) and zero
 unparseable fixtures. After correcting global element reference accounting
-and recording inherited type chains, the report lists 52 distinct uncovered
-schema targets across 82 category entries. These remaining targets are not
-approved for exclusion; the generated report is the detailed register.
+and recording inherited type chains, the report lists 50 distinct uncovered
+schema targets across 80 category entries. The matcher now credits an
+observed schema edge that belongs to a recursive type cycle, removing the two
+recursive-edge residuals without changing the corpus fixtures. These remaining
+targets are not approved for exclusion; the generated report is the detailed
+register.
 
 | Target kind | Remaining |
 |---|---:|
@@ -26,14 +29,13 @@ approved for exclusion; the generated report is the detailed register.
 | inheritance edges | 8 |
 | optional attributes | 6 |
 | optional elements | 5 |
-| recursive edges | 2 |
 | repeatable elements missing required cardinalities | 0 |
 | required attributes | 4 |
 | required elements | 10 |
 | sequence members | 3 |
 | wildcards | 3 |
 
-Category counts overlap; the report contains 52 distinct uncovered targets.
+Category counts overlap; the report contains 50 distinct uncovered targets.
 
 ## Review classification
 
@@ -47,8 +49,7 @@ These targets are not approved as unsupported:
   revocation references and values, policy qualifiers, signer roles,
   counter-signatures, timestamp/reference forms, validation data, and their
   IDs/URIs/encodings.
-- Two reachable recursive edges in common aggregate components, plus global
-  component declarations not reachable from a main document root.
+- Global component declarations not reachable from a main document root.
 - UDT/CCTS types and attributes, including graphic, picture, sound, video,
   date-time, and value forms not observed in the current corpus.
 - Remaining UBL global component declarations and their required-element

@@ -146,6 +146,33 @@ func TestMatchStructuralFixtureCreditsReferencedUBLGlobalElement(t *testing.T) {
 	}
 }
 
+func TestMatchStructuralFixtureCreditsObservedRecursiveSchemaEdges(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	content, err := generateTargetedStructuralSample(index, "AwardedNotification", xsdDir, "UBL-AwardedNotification-2.1.xsd", nil, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", "UBL-AwardedNotification-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixtureBytes(index, []byte(content))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{
+		"urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|DocumentReferenceType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ResultOfVerificationType",
+		"urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|recursive|PartyLegalEntityType->urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2#ShareholderPartyType",
+	} {
+		if matched[id] == 0 {
+			t.Errorf("fixture did not credit recursive schema edge %q", id)
+		}
+	}
+}
+
 func TestCardinalityObservationsRetainEveryParentInstance(t *testing.T) {
 	const ns = "urn:test"
 	doc := &schemaDoc{File: "test.xsd", TargetNamespace: ns, Elements: map[string]xsdElementDecl{"Root": {Name: "Root", Type: "RootType"}}, Types: map[string]xsdComplexType{

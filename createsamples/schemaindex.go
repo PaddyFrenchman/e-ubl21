@@ -22,6 +22,7 @@ type schemaIndex struct {
 	GlobalTypes       map[string]xsdComplexType
 	GlobalTypeDocs    map[string]*schemaDoc
 	GlobalSimpleTypes map[string]xsdSimpleType
+	RecursiveEdges    map[string]struct{}
 }
 
 // ublNamespaceByPrefix records the fixed namespace URI for every namespace
@@ -128,6 +129,7 @@ func buildSchemaIndex(xsdDir string) (schemaIndex, error) {
 			index.GlobalSimpleTypes[qualifiedKey(doc.TargetNamespace, name)] = typ
 		}
 	}
+	index.RecursiveEdges = schemaCoverageTargets(index).recursiveEdges
 	return index, nil
 }
 
