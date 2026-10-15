@@ -89,11 +89,12 @@ schema constructs, but they limit what a fixture proves:
 
 ## Approval record
 
-The approval recorded on 2026-10-02 was withdrawn by the repository user on
-2026-10-02. No coverage boundary is approved.
+The repository user accepted the safety bounds and semantic limits listed
+above on 2026-10-15 for issue #167. This acceptance covers structural XSD
+qualification only; it does not assert cryptographic signature validity,
+certificate trust, revocation, timestamp semantics, arbitrary recursion depth,
+or exhaustive repeat counts.
 
-The generated report currently has no uncovered schema targets, and
-cardinality enforcement passes. The approval withdrawn on 2026-10-02 has not
-been restored: the safety bounds and semantic limits listed above still need
-review before issue #167 can be approved or closed. This is a review status,
-not a request to add the former target groups again.
+The generated report has no uncovered schema targets, cardinality gaps, or
+cardinality residuals. Together with the accepted bounds above, the structural
+corpus is qualified for issue #167.
