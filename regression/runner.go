@@ -114,6 +114,7 @@ type RunnerConfig struct {
 	Client         *http.Client
 	PollInterval   time.Duration
 	FixtureTimeout time.Duration
+	Concurrency    int
 }
 
 func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
@@ -159,13 +160,40 @@ func RunCorpus(ctx context.Context, cfg RunnerConfig) (Summary, error) {
 		fixtureTimeout = defaultFixtureTimeout
 	}
 	corpusRoot := filepath.Dir(cfg.ManifestPath)
-	results := make([]NormalizedResult, 0, len(fixtures))
-	runMap := make([]RunMapEntry, 0, len(fixtures))
+	concurrency := cfg.Concurrency
+	if concurrency <= 0 {
+		concurrency = 1
+	}
+	if concurrency > len(fixtures) {
+		concurrency = len(fixtures)
+	}
+	// Store each response in manifest order.  Concurrent completion must not
+	// make normalized results, run maps, or diagnostic artifacts nondeterministic.
+	results := make([]NormalizedResult, len(fixtures))
+	runMap := make([]RunMapEntry, len(fixtures))
+	failuresByFixture := make([]*FixtureFailure, len(fixtures))
+	jobs := make(chan int)
+	done := make(chan struct{})
+	for range concurrency {
+		go func() {
+			defer func() { done <- struct{}{} }()
+			for index := range jobs {
+				result, correlation, failure := runFixture(ctx, client, baseURL, cfg.Token, corpusRoot, fixtures[index], pollInterval, fixtureTimeout)
+				results[index] = result
+				runMap[index] = correlation
+				failuresByFixture[index] = failure
+			}
+		}()
+	}
+	for index := range fixtures {
+		jobs <- index
+	}
+	close(jobs)
+	for range concurrency {
+		<-done
+	}
 	failures := make([]FixtureFailure, 0)
-	for _, fixture := range fixtures {
-		result, correlation, failure := runFixture(ctx, client, baseURL, cfg.Token, corpusRoot, fixture, pollInterval, fixtureTimeout)
-		results = append(results, result)
-		runMap = append(runMap, correlation)
+	for _, failure := range failuresByFixture {
 		if failure != nil {
 			failures = append(failures, *failure)
 		}

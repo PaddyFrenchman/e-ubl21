@@ -863,6 +863,33 @@ func TestGeneratedCorpusReplacesOnlyMarkedOutput(t *testing.T) {
 	}
 }
 
+func TestStructuralManifestStoreRejectsDuplicateFixtureFiles(t *testing.T) {
+	store, err := newStructuralManifestStore(filepath.Join(t.TempDir(), "manifest.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.add(fixtureManifestEntry{ID: "first", File: "same.xml"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.add(fixtureManifestEntry{ID: "second", File: "same.xml"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.finish(); err == nil || !strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		t.Fatalf("duplicate structural fixture file error = %v", err)
+	}
+}
+
+func TestSignatureCardinalityZeroFamilyIsStableAndTargetSpecific(t *testing.T) {
+	first := signatureCardinalityZeroFamily(7, "ns|owner|type|path/First")
+	if got := signatureCardinalityZeroFamily(7, "ns|owner|type|path/First"); got != first {
+		t.Fatalf("zero-witness family changed: %q != %q", got, first)
+	}
+	second := signatureCardinalityZeroFamily(7, "ns|owner|type|path/Second")
+	if second == first {
+		t.Fatalf("different repeatable targets share zero-witness family %q", first)
+	}
+}
+
 func TestCorpusFileWritingAndValidationFailureBranches(t *testing.T) {
 	if _, err := buildGeneratedCorpus([]generatedFixture{{entry: fixtureManifestEntry{
 		ID: "invalid", Provenance: fixtureProvenance{SourceMember: make(chan int)},
@@ -908,6 +935,48 @@ func TestCorpusFileWritingAndValidationFailureBranches(t *testing.T) {
 	}
 }
 
+func TestStructuralManifestStoreStreamsSQLiteRowsInInsertionOrder(t *testing.T) {
+	store, err := newStructuralManifestStore(filepath.Join(t.TempDir(), "manifest.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.remove()
+	entry := func(id, file string, tags []string) fixtureManifestEntry {
+		return fixtureManifestEntry{
+			ID: id, DocumentType: "Invoice", Profile: "ubl21", File: file,
+			SHA256: strings.Repeat("a", 64), Standards: fixtureStandards{UBL: "2.1"},
+			Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: testGeneratorVersion},
+			ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}}, Tags: tags,
+		}
+	}
+	for _, entry := range []fixtureManifestEntry{
+		entry("second", "second.xml", []string{"second"}),
+		entry("first", "first.xml", []string{"first"}),
+	} {
+		if err := store.add(entry); err != nil {
+			t.Fatal(err)
+		}
+	}
+	path := filepath.Join(t.TempDir(), "manifest.json")
+	if err := store.writeManifest(path); err != nil {
+		t.Fatal(err)
+	}
+	manifestJSON, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := regression.ValidateFixtureManifest(manifestJSON); err != nil {
+		t.Fatalf("streamed manifest rejected: %v", err)
+	}
+	var manifest fixtureManifest
+	if err := json.Unmarshal(manifestJSON, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if len(manifest.Fixtures) != 2 || manifest.Fixtures[0].ID != "second" || manifest.Fixtures[1].ID != "first" {
+		t.Fatalf("streamed manifest order = %#v", manifest.Fixtures)
+	}
+}
+
 func TestCorpusDeterminismRejectsFixtureCountAndIdentityChanges(t *testing.T) {
 	manifest := []byte("same")
 	first := generatedCorpus{manifestJSON: manifest, fixtures: []generatedFixture{{entry: fixtureManifestEntry{ID: "one", File: "one.xml"}, content: []byte("one")}}}
@@ -919,5 +988,35 @@ func TestCorpusDeterminismRejectsFixtureCountAndIdentityChanges(t *testing.T) {
 	second.fixtures[0].entry.File = "two.xml"
 	if err := verifyCorpusDeterminism(first, second); err == nil {
 		t.Fatal("fixture identity drift was accepted")
+	}
+}
+
+func TestParseStructuralResumeCursor(t *testing.T) {
+	for cursor, want := range map[string][2]string{
+		"":                           {"", ""},
+		"main:Invoice":               {"main", "Invoice"},
+		"signature:PGPData":          {"signature", "PGPData"},
+		"cardinality:OtherTimeStamp": {"cardinality", "OtherTimeStamp"},
+	} {
+		phase, root, err := parseStructuralResumeCursor(cursor)
+		if err != nil || phase != want[0] || root != want[1] {
+			t.Errorf("parseStructuralResumeCursor(%q) = %q, %q, %v", cursor, phase, root, err)
+		}
+	}
+	for _, cursor := range []string{"Invoice", "unknown:Invoice", "main:"} {
+		if _, _, err := parseStructuralResumeCursor(cursor); err == nil {
+			t.Errorf("parseStructuralResumeCursor(%q) accepted invalid cursor", cursor)
+		}
+	}
+}
+
+func TestNamespaceFixtureKey(t *testing.T) {
+	for input, want := range map[string]string{
+		"http://www.w3.org/2000/09/xmldsig#":                     "http-www-w3-org-2000-09-xmldsig",
+		"urn:oasis:names:specification:ubl:schema:xsd:Invoice-2": "urn-oasis-names-specification-ubl-schema-xsd-invoice-2",
+	} {
+		if got := namespaceFixtureKey(input); got != want {
+			t.Errorf("namespaceFixtureKey(%q) = %q, want %q", input, got, want)
+		}
 	}
 }

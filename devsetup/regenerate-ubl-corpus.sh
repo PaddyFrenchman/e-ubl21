@@ -36,21 +36,53 @@ if ! git diff --quiet HEAD -- "${provenance_inputs[@]}" || \
 fi
 
 stage=$(mktemp -d "${TMPDIR:-/tmp}/e-ubl21-corpus.XXXXXX")
-trap 'rm -rf "$stage"' EXIT
-go_cache="$stage/go-cache"
-version="git:$(git log -1 --format=%H -- createsamples regression/manifest.go regression/schemas/fixture-manifest.schema.json XSD)"
-run_generator() {
-  GOCACHE="$go_cache" go run ./createsamples generate --xsd XSD --generator-version "$version" "$@"
+cleanup_stage() {
+  status=$?
+  if [ "$status" -eq 0 ]; then
+    rm -rf "$stage"
+  else
+    echo "Retaining failed corpus staging directory for diagnosis: $stage" >&2
+  fi
+  exit "$status"
 }
+trap cleanup_stage EXIT
+go_cache="$stage/go-cache"
+# Generated fixtures are deliberately excluded. Otherwise, committing a
+# regenerated manifest changes the computed version embedded in that manifest
+# and makes the next no-write regeneration differ solely due to itself.
+version="git:$(git log -1 --format=%H -- \
+  ':(glob)createsamples/**/*.go' \
+  ':(exclude,glob)createsamples/**/*_test.go' \
+  regression/manifest.go \
+  regression/schemas/fixture-manifest.schema.json \
+  ':(glob)XSD/**/*.xsd')"
+run_generator() {
+  resume_args=()
+  if [ -n "${RESUME_FROM:-}" ]; then
+    resume_args=(--resume-from "$RESUME_FROM")
+  fi
+  GOCACHE="$go_cache" go run ./createsamples generate --xsd XSD --generator-version "$version" "${resume_args[@]}" "$@"
+}
+
+# A resumed structural run is a diagnostic pass: it deliberately skips the
+# earlier corpus phases and cannot promote a complete replacement corpus.
+if [ -n "${RESUME_FROM:-}" ]; then
+  run_generator --profile ubl21-structural --set positive --output "$stage/samples-structural"
+  exit 0
+fi
 
 run_generator --profile ubl21 --set all --output "$stage/samples"
 run_generator --profile ubl21-structural --set positive --output "$stage/samples-structural"
-GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples "$stage/samples-structural" --json "$stage/samples-structural/coverage.json" --markdown "$stage/samples-structural/coverage.md" --require-cardinality=false
+# Cardinality is a hard structural-coverage gate. The report is written before
+# failure so the missing parent-instance states remain reviewable.
+GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples "$stage/samples-structural" --json "$stage/coverage.json" --markdown "$stage/coverage.md"
 
 status=0
 for corpus in samples samples-structural; do
   echo "\n== review: createsamples/$corpus =="
-  if ! diff -ruN "createsamples/$corpus" "$stage/$corpus"; then
+  # Structural coverage reports are local qualification evidence, not corpus
+  # fixtures. Older local runs may have left them in this ignored directory.
+  if ! diff -ruN --exclude=coverage.json --exclude=coverage.md --brief "createsamples/$corpus" "$stage/$corpus"; then
     status=1
   fi
 done
@@ -60,7 +92,7 @@ if [ "$replace" = true ]; then
   # the only tracked-output write; this is intentionally a second generation.
   run_generator --profile ubl21 --set all --output createsamples/samples
   run_generator --profile ubl21-structural --set positive --output createsamples/samples-structural
-  GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples createsamples/samples-structural --json createsamples/samples-structural/coverage.json --markdown createsamples/samples-structural/coverage.md --require-cardinality=false
+  GOCACHE="$go_cache" go run ./createsamples coverage --xsd XSD --samples createsamples/samples-structural --json "$stage/coverage.json" --markdown "$stage/coverage.md"
   echo "Promoted regenerated corpus. Review with: git diff -- createsamples/samples createsamples/samples-structural"
   exit 0
 fi

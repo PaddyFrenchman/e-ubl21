@@ -1157,6 +1157,27 @@ classified diagnostics, and an exact single-fixture reproduction command.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/166
 
+### 76. #167 — TEST COVERAGE — Qualify expanded UBL 2.1 structural corpus
+
+**Goal:** Perform the final qualification of #160 after its corpus-generation,
+full-pipeline regression, and diagnostic implementation work has been
+integrated.
+
+**Status:** Open. The qualification gate now preserves a summary on either
+success or first required-stage failure, but it does not approve residual gaps
+or close the issue. The generated coverage still reports unapproved
+cardinality residuals, so #167 and parent #160 remain open.
+
+**Acceptance:** Regenerate the corpus deterministically, validate expected
+valid and targeted invalid fixtures, review the final machine-readable and
+Markdown coverage reports and documented residuals, run the required runtime
+qualification and controlled diagnostic failures, and demonstrate the parent
+#160 acceptance criteria or explicitly approved residual gaps.
+
+**Dependencies:** #161 through #166. Parent #160 remains open.
+
+Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/167
+
 ---
 
 ## Dependency summary

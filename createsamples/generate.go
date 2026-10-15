@@ -20,7 +20,10 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/PaddyFrenchman/e-ubl21/createsamples/xmlnode"
 )
@@ -57,22 +60,33 @@ type genState struct {
 	choiceAlternative    int
 	choiceSelections     map[int]int
 	nextChoice           *int
+	nextID               *int
 	choiceAlternatives   *map[int]int
 	includeOptionalAttrs bool
 	structural           bool
-	recursiveDepthLimit  int
-	facetBoundary        int
+	rootNamespace        string
+	rootSchemaFile       string
+	// signatureExtension replaces the generic private extension payload with a
+	// declared UBL XMLDSig payload. It is used only by the dedicated structural
+	// signature family, leaving ordinary wildcard pass-through fixtures intact.
+	signatureExtension  bool
+	signatureVariant    int
+	recursiveDepthLimit int
+	facetBoundary       int
 	// repeatCount exercises every repeatable particle at this cardinality. A
 	// finite schema maximum is always respected. repeatOverrides is used for
 	// deliberately large, line-oriented documents without inflating unrelated
 	// collections in the same document.
-	repeatCount     int
-	repeatOverrides map[string]int
-	typeDepth       map[string]int
+	repeatCount      int
+	repeatEveryDepth bool
+	repeatOverrides  map[string]int
+	omitElements     map[string]bool
+	typeDepth        map[string]int
 }
 
 func newGenState() genState {
-	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, recursiveDepthLimit: 1, typeDepth: map[string]int{}}
+	nextID := 0
+	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, nextID: &nextID, recursiveDepthLimit: 1, typeDepth: map[string]int{}}
 }
 
 // newStructuralGenState keeps the ordinary shared-type expansion bound. UBL's
@@ -86,8 +100,9 @@ func newStructuralGenState(choiceAlternative, recursiveDepthLimit int, includeOp
 		recursiveDepthLimit = 1
 	}
 	nextChoice := 0
+	nextID := 0
 	observed := map[int]int{}
-	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, choiceAlternative: choiceAlternative, choiceSelections: map[int]int{}, nextChoice: &nextChoice, choiceAlternatives: &observed, includeOptionalAttrs: includeOptionalAttrs, structural: true, recursiveDepthLimit: recursiveDepthLimit, typeDepth: map[string]int{}}
+	return genState{full: true, ancestors: map[string]bool{}, visitedFull: map[string]bool{}, choiceAlternative: choiceAlternative, choiceSelections: map[int]int{}, nextChoice: &nextChoice, nextID: &nextID, choiceAlternatives: &observed, includeOptionalAttrs: includeOptionalAttrs, structural: true, recursiveDepthLimit: recursiveDepthLimit, typeDepth: map[string]int{}}
 }
 
 // newTargetedStructuralGenState selects alternatives independently by traversal-site ordinal.
@@ -150,6 +165,79 @@ func generateCardinalityStructuralSample(index schemaIndex, rootName, xsdDir, sc
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
+func generateDeepCardinalityStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, choices map[int]int, count int) (string, error) {
+	state := newTargetedStructuralGenState(choices, 1)
+	state.repeatCount = count
+	state.repeatEveryDepth = true
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+// minimalRepetition keeps the first occurrence as the nested coverage witness
+// and gives its siblings only required content. Cloning the fully expanded
+// first occurrence at every level would multiply the output by count^depth,
+// even though shared schema types are expanded only once. Keep choice ordinals
+// local to these extra occurrences so they cannot shift later targeted choices.
+func (s genState) minimalRepetition() genState {
+	if !s.repeatEveryDepth {
+		return s
+	}
+	s = s.demoted()
+	s.repeatCount = 0
+	s.repeatEveryDepth = false
+	s.repeatOverrides = nil
+	if s.nextChoice != nil {
+		nextChoice := *s.nextChoice
+		s.nextChoice = &nextChoice
+	}
+	s.choiceAlternatives = nil
+	return s
+}
+
+func expandElementOccurrences(index schemaIndex, element xsdElementDecl, name, prefix, ns string, state genState, depth int) ([]xmlNode, bool) {
+	minimalState := state.minimalRepetition()
+	node, supported := expandElement(index, element, name, prefix, ns, state, depth)
+	if !supported {
+		return nil, false
+	}
+	count := occurrenceCount(element, state, depth)
+	if count == 0 {
+		return nil, true
+	}
+	out := []xmlNode{node}
+	for i := 1; i < count; i++ {
+		if i == 1 && state.repeatEveryDepth {
+			var ok bool
+			node, ok = expandElement(index, element, name, prefix, ns, minimalState, depth)
+			if !ok {
+				return nil, false
+			}
+			out = append(out, node)
+		} else {
+			out = append(out, nodeWithDistinctID(node, i, state))
+		}
+	}
+	return out, true
+}
+
+// repeatStructuralGroup repeats a minimal group after its full first witness.
+// Each extra occurrence still needs distinct IDs, including descendant IDs.
+func repeatStructuralGroup(first []xmlNode, count int, state genState, minimal func() ([]xmlNode, bool)) ([]xmlNode, bool) {
+	if count <= 1 {
+		return first, true
+	}
+	nodes, supported := minimal()
+	if !supported {
+		return nil, false
+	}
+	out := append(first, nodes...)
+	for occurrence := 2; occurrence < count; occurrence++ {
+		for _, node := range nodes {
+			out = append(out, nodeWithFreshDescendantIDs(node, state))
+		}
+	}
+	return out, true
+}
+
 func generateLargeCollectionStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile, element string, count int) (string, error) {
 	return generateLargeCollectionsStructuralSample(index, rootName, xsdDir, schemaFile, map[string]int{element: count})
 }
@@ -157,6 +245,13 @@ func generateLargeCollectionStructuralSample(index schemaIndex, rootName, xsdDir
 func generateLargeCollectionsStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, elements map[string]int) (string, error) {
 	state := newTargetedStructuralGenState(nil, 1)
 	state.repeatOverrides = elements
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+func generateSignatureExtensionStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string, variant int) (string, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	state.signatureVariant = variant
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
@@ -191,7 +286,16 @@ func structuralChoicePlans(index schemaIndex, rootName, xsdDir, schemaFile strin
 			return nil, err
 		}
 		plans = append(plans, selection)
-		for site, alternatives := range *state.choiceAlternatives {
+		// choiceAlternatives is a map because generation discovers sites while
+		// traversing a schema.  Its iteration order must not decide the order
+		// of plans: plan indices are part of the generated fixture names.
+		sites := make([]int, 0, len(*state.choiceAlternatives))
+		for site := range *state.choiceAlternatives {
+			sites = append(sites, site)
+		}
+		sort.Ints(sites)
+		for _, site := range sites {
+			alternatives := (*state.choiceAlternatives)[site]
 			for alternative := 1; alternative < alternatives; alternative++ {
 				next := make(map[int]int, len(selection)+1)
 				for k, v := range selection {
@@ -211,6 +315,29 @@ func generateMinimalSample(index schemaIndex, rootName, xsdDir, schemaFile strin
 	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
 }
 
+// generateMinimalStructuralSample is the required-only counterpart to a
+// structural sample.  It retains structural wildcard rendering, which lets a
+// standalone root with a mandatory xsd:any remain XSD-valid, while omitting
+// optional elements so it can witness zero occurrences of optional particles.
+func generateMinimalStructuralSample(index schemaIndex, rootName, xsdDir, schemaFile string) (string, error) {
+	state := newTargetedStructuralGenState(nil, 1)
+	state.full = false
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
+func generateStructuralSampleOmitting(index schemaIndex, rootName, xsdDir, schemaFile string, names ...string) (string, error) {
+	return generateStructuralSampleOmittingChoices(index, rootName, xsdDir, schemaFile, nil, names...)
+}
+
+func generateStructuralSampleOmittingChoices(index schemaIndex, rootName, xsdDir, schemaFile string, choices map[int]int, names ...string) (string, error) {
+	state := newTargetedStructuralGenState(choices, 1)
+	state.omitElements = map[string]bool{}
+	for _, name := range names {
+		state.omitElements[name] = true
+	}
+	return generateSampleWithState(index, rootName, xsdDir, schemaFile, state)
+}
+
 func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile string, state genState) (string, error) {
 	rootNS, err := rootNamespaceForSchema(xsdDir, schemaFile)
 	if err != nil {
@@ -220,6 +347,8 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 	if !ok {
 		return "", fmt.Errorf("root element %q not found in schema index", rootName)
 	}
+	state.rootNamespace = rootNS
+	state.rootSchemaFile = filepath.Base(schemaFile)
 	rootNode, supported := expandElement(index, rootDecl, rootName, "", rootNS, state, 0)
 	if !supported {
 		return "", fmt.Errorf("root element %q requires an unsupported XSD construct (e.g. xsd:any) that cannot be generated", rootName)
@@ -231,10 +360,27 @@ func generateSampleWithState(index schemaIndex, rootName, xsdDir, schemaFile str
 	rootNode.Attributes["xmlns:cbc"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
 	rootNode.Attributes["xmlns:cac"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
 	rootNode.Attributes["xmlns:ext"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+	rootNode.Attributes["xmlns:sig"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2"
+	rootNode.Attributes["xmlns:sac"] = "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2"
+	rootNode.Attributes["xmlns:sbc"] = "urn:oasis:names:specification:ubl:schema:xsd:SignatureBasicComponents-2"
+	// XMLDSig and XAdES types are imported by UBL and may be reached from a
+	// standalone root even in the minimal (non-structural) generation path.
+	rootNode.Attributes["xmlns:ds"] = "http://www.w3.org/2000/09/xmldsig#"
+	rootNode.Attributes["xmlns:xades"] = "http://uri.etsi.org/01903/v1.3.2#"
 	if state.structural {
 		rootNode.Attributes["xmlns:struct"] = "urn:e-ubl21:structural-fixture"
+		// Standalone XMLDSig/XAdES cardinality roots can contain imported
+		// declarations even when they are not being rendered as a UBL signature
+		// extension. Keep these prefixes available for those schema-derived
+		// children in every structural fixture.
+		if state.signatureExtension {
+		}
 	}
-	return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + xmlnode.Render(rootNode, 0) + "\n", nil
+	var output strings.Builder
+	output.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	xmlnode.RenderTo(&output, rootNode, 0)
+	output.WriteByte('\n')
+	return output.String(), nil
 }
 
 // maxDepth guards against runaway or genuinely cyclic schema graphs. Generation
@@ -262,6 +408,13 @@ const maxOccursSample = 5
 // Callers skip an unsupported element if it was itself optional, or
 // propagate the failure upward if it was required.
 func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefix, ns string, state genState, depth int) (xmlNode, bool) {
+	// Local declarations belong to their declaring type's namespace. When a
+	// foreign type is used from a schema root with a different default
+	// namespace (notably XAdES' ds:X509IssuerSerialType), render its local
+	// children with the declared namespace prefix.
+	if prefix == "" && ns != state.rootNamespace {
+		prefix = schemaNamespacePrefix(ns)
+	}
 	node := xmlNode{Prefix: prefix, Name: elementName}
 	if depth > maxDepth {
 		node.Value = sampleValueForType(elementName, element.Type, 0)
@@ -281,7 +434,7 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 			// not the main-document default namespace used by the rendered
 			// root, so give it the conventional UBL prefix.
 			if state.structural && prefix == "" {
-				prefix = ublNamespacePrefix(refNS)
+				prefix = schemaNamespacePrefix(refNS)
 			}
 			return expandElement(index, target, elementName, prefix, refNS, state, depth)
 		}
@@ -289,7 +442,7 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 
 	typeName := element.Type
 	if typeName != "" && isPrimitiveType(typeName) {
-		node.Value = sampleValueForType(elementName, typeName, 0)
+		node.Value = sampleValueForType(elementName, canonicalPrimitiveType(typeName), 0)
 		return node, true
 	}
 
@@ -301,19 +454,23 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 		typeNS = ns
 	case typeName != "":
 		tNS, tName := qualifyRef(typeName, ns)
-		if t, ok := index.GlobalTypes[qualifiedKey(tNS, tName)]; ok {
+		// Prefer simple declarations when resolving scalar content. Some
+		// imported XMLDSig names are also present in the complex-type index;
+		// treating their empty complex shell as authoritative loses the
+		// restricted scalar value (e.g. HMACOutputLengthType's integer).
+		if _, ok := index.GlobalSimpleTypes[qualifiedKey(tNS, tName)]; ok {
+			node.Value = sampleScalarForType(index, elementName, typeName, tNS, state.facetBoundary)
+			return node, true
+		} else if t, ok := index.GlobalTypes[qualifiedKey(tNS, tName)]; ok {
 			typeCopy := t
 			ct = &typeCopy
 			typeNS = tNS
-		} else if _, ok := index.GlobalSimpleTypes[qualifiedKey(tNS, tName)]; ok {
-			node.Value = sampleScalarForType(index, elementName, typeName, tNS, state.facetBoundary)
-			return node, true
 		}
 	}
 
 	if ct != nil {
 		if ct.SimpleContent != nil {
-			node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs)
+			node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs, state.nextID)
 			node.Value = sampleScalarForType(index, elementName, typeName, typeNS, state.facetBoundary)
 			return node, true
 		}
@@ -354,11 +511,19 @@ func expandElement(index schemaIndex, element xsdElementDecl, elementName, prefi
 				state = state.withAncestor(cycleKey)
 			}
 		}
-		node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs)
+		node.Attributes = attributesForComplexType(index, *ct, typeNS, map[string]bool{}, 0, state.includeOptionalAttrs, state.nextID)
 		// Any complex type reaching this point has no simple content: it is
 		// either element-only or attribute-only. Neither permits text, so no
 		// Value fallback is applied here.
-		children, supported := flattenContentModel(ct.Sequence, ct.Choice, ct.All, index, typeNS, state, depth+1)
+		sequence, choice, all := ct.Sequence, ct.Choice, ct.All
+		// XAdES timestamp roots restrict an abstract base type and declare their
+		// required timestamp choice inside the restriction. Use that restricted
+		// content model rather than treating the derived type as empty.
+		if ct.ComplexContent != nil && ct.ComplexContent.Restriction != nil {
+			restriction := ct.ComplexContent.Restriction
+			sequence, choice, all = restriction.Sequence, restriction.Choice, restriction.All
+		}
+		children, supported := flattenContentModel(sequence, choice, all, index, typeNS, state, depth+1)
 		if !supported {
 			return node, false
 		}
@@ -414,7 +579,9 @@ func sequenceRequiresAny(seq *xsdSequence) bool {
 	if seq == nil || seq.Any == nil {
 		return false
 	}
-	return seq.Any.MinOccurs != "0"
+	// A wildcard within an optional sequence does not make the enclosing
+	// content model mandatory: omitting that sequence is schema-valid.
+	return seq.MinOccurs != "0" && seq.Any.MinOccurs != "0"
 }
 
 // flattenSequence emits every element in document order. While state.full is
@@ -427,65 +594,275 @@ func sequenceRequiresAny(seq *xsdSequence) bool {
 // it was required, the whole sequence becomes unsupported and is propagated
 // to the caller.
 func flattenSequence(seq xsdSequence, index schemaIndex, ns string, state genState, depth int) ([]xmlNode, bool) {
+	minimalState := state.minimalRepetition()
+	// Keep the group's own optional members visible in each occurrence. Their
+	// already-visited complex types use required-only children on replay.
+	minimalState.full = state.full
 	var out []xmlNode
-	for _, child := range seq.Elements {
+	appendElement := func(child xsdElementDecl) bool {
 		name, prefix := elementNameAndPrefix(child)
 		if name == "" {
-			continue
+			return true
 		}
 		if !state.full && isOptionalElement(child) {
-			continue
+			return true
 		}
-		node, supported := expandElement(index, child, name, prefix, ns, state, depth)
+		if state.omitElements[name] {
+			return true
+		}
+		nodes, supported := expandElementOccurrences(index, child, name, prefix, ns, state, depth)
 		if !supported {
 			if isOptionalElement(child) {
-				continue
+				return true
 			}
-			return nil, false
+			return false
 		}
-		for i := 0; i < occurrenceCount(child, state, depth); i++ {
+		out = append(out, nodes...)
+		return true
+	}
+	appendChoice := func(choice xsdChoice) bool {
+		if !state.full && choice.MinOccurs == "0" {
+			return true
+		}
+		children, supported := flattenChoice(choice, index, ns, state, depth)
+		if !supported {
+			return false
+		}
+		out = append(out, children...)
+		return true
+	}
+	appendSequence := func(nested xsdSequence) bool {
+		children, supported := flattenSequence(nested, index, ns, state, depth)
+		if !supported {
+			return false
+		}
+		out = append(out, children...)
+		return true
+	}
+	appendAll := func(all xsdAll) bool {
+		children, supported := flattenAll(all, index, ns, state, depth)
+		if !supported {
+			return false
+		}
+		out = append(out, children...)
+		return true
+	}
+	if len(seq.Particles) > 0 {
+		for _, particle := range seq.Particles {
+			var ok bool
+			switch particle.kind {
+			case "element":
+				ok = appendElement(seq.Elements[particle.index])
+			case "sequence":
+				ok = appendSequence(seq.Sequences[particle.index])
+			case "choice":
+				ok = appendChoice(seq.Choices[particle.index])
+			case "all":
+				ok = appendAll(seq.Alls[particle.index])
+			default:
+				continue // xsd:any is handled below.
+			}
+			if !ok {
+				return nil, false
+			}
+		}
+	} else {
+		for _, child := range seq.Elements {
+			if !appendElement(child) {
+				return nil, false
+			}
+		}
+		for i := range seq.Sequences {
+			if !appendSequence(seq.Sequences[i]) {
+				return nil, false
+			}
+		}
+		for i := range seq.Choices {
+			if !appendChoice(seq.Choices[i]) {
+				return nil, false
+			}
+		}
+		for i := range seq.Alls {
+			if !appendAll(seq.Alls[i]) {
+				return nil, false
+			}
+		}
+	}
+	if seq.Any != nil && state.signatureExtension && ns == "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" && seq.Any.Namespace == "##other" && seq.Any.ProcessContents == "lax" {
+		out = append(out, structuralSignatureExtensionNode(state.signatureVariant))
+	} else if seq.Any != nil && state.structural {
+		if node, ok := structuralWildcardNode(index, *seq.Any, ns, state, depth); ok {
 			out = append(out, node)
 		}
 	}
-	for i := range seq.Sequences {
-		children, supported := flattenSequence(seq.Sequences[i], index, ns, state, depth)
-		if !supported {
-			return nil, false
+	if state.repeatEveryDepth && (seq.MaxOccurs == "unbounded" || parseOccursInt(seq.MaxOccurs, 1) > 1) {
+		count := state.repeatCount
+		if maximum := parseMaxOccurs(seq.MaxOccurs); maximum > 0 && count > maximum {
+			count = maximum
 		}
-		out = append(out, children...)
-	}
-	for i := range seq.Choices {
-		if !state.full && seq.Choices[i].MinOccurs == "0" {
-			continue
-		}
-		children, supported := flattenChoice(seq.Choices[i], index, ns, state, depth)
-		if !supported {
-			return nil, false
-		}
-		out = append(out, children...)
-	}
-	for i := range seq.Alls {
-		children, supported := flattenAll(seq.Alls[i], index, ns, state, depth)
-		if !supported {
-			return nil, false
-		}
-		out = append(out, children...)
-	}
-	if seq.Any != nil && state.structural {
-		if node, ok := structuralWildcardNode(*seq.Any); ok {
-			out = append(out, node)
-		}
+		return repeatStructuralGroup(out, count, state, func() ([]xmlNode, bool) {
+			return flattenSequence(seq, index, ns, minimalState, depth)
+		})
 	}
 	return out, true
+}
+
+// structuralSignatureExtensionNode is a deliberately unsigned, XSD-valid
+// XMLDSig skeleton carried through UBL's declared extension point. Its two
+// choice-bearing children exercise declared signature choices without claiming
+// cryptographic validity (signature verification is outside XSD scope).
+func structuralSignatureExtensionNode(variant int) xmlNode {
+	transform := xmlNode{Prefix: "ds", Name: "Transform", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:transform"}, Children: []xmlNode{{Prefix: "ds", Name: "XPath", Value: "/*"}}}
+	if variant%2 == 1 {
+		transform.Children = []xmlNode{{Prefix: "struct", Name: "TransformData", Value: "sample"}}
+	}
+	keyInfo := xmlNode{Prefix: "ds", Name: "KeyInfo", Children: []xmlNode{{Prefix: "ds", Name: "KeyName", Value: "e-ubl21-structural"}}}
+	switch variant / 2 {
+	case 1:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "KeyValue", Children: []xmlNode{{Prefix: "ds", Name: "RSAKeyValue", Children: []xmlNode{{Prefix: "ds", Name: "Modulus", Value: "c2FtcGxl"}, {Prefix: "ds", Name: "Exponent", Value: "AQAB"}}}}}}
+	case 2:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "RetrievalMethod", Attributes: map[string]string{"URI": "#key"}}}
+	case 3:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509SubjectName", Value: "CN=e-ubl21"}}}}
+	case 4:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "PGPData", Children: []xmlNode{{Prefix: "ds", Name: "PGPKeyID", Value: "cGdwLWtleQ=="}}}}
+	case 5:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "PGPData", Children: []xmlNode{{Prefix: "ds", Name: "PGPKeyPacket", Value: "cGdwLXBhY2tldA=="}}}}
+	case 6:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "SPKIData", Children: []xmlNode{{Prefix: "ds", Name: "SPKISexp", Value: "c3BraQ=="}}}}
+	case 7:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "MgmtData", Value: "e-ubl21"}}
+	case 8:
+		keyInfo.Children = []xmlNode{{Prefix: "struct", Name: "KeyData", Value: "sample"}}
+	case 9:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "KeyValue", Children: []xmlNode{{Prefix: "ds", Name: "DSAKeyValue", Children: []xmlNode{{Prefix: "ds", Name: "Y", Value: "c2FtcGxl"}}}}}}
+	case 10:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "KeyValue", Children: []xmlNode{{Prefix: "struct", Name: "KeyValueData", Value: "sample"}}}}
+	case 11:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509IssuerSerial", Children: []xmlNode{{Prefix: "ds", Name: "X509IssuerName", Value: "CN=e-ubl21"}, {Prefix: "ds", Name: "X509SerialNumber", Value: "1"}}}}}}
+	case 12:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509SKI", Value: "c2tp"}}}}
+	case 13:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509Certificate", Value: "Y2VydGlmaWNhdGU="}}}}
+	case 14:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "ds", Name: "X509CRL", Value: "Y3Js"}}}}
+	case 15:
+		keyInfo.Children = []xmlNode{{Prefix: "ds", Name: "X509Data", Children: []xmlNode{{Prefix: "struct", Name: "CertificateData", Value: "sample"}}}}
+	}
+	return xmlNode{Prefix: "sig", Name: "UBLDocumentSignatures", Children: []xmlNode{{Prefix: "sac", Name: "SignatureInformation", Children: []xmlNode{
+		{Prefix: "cbc", Name: "ID", Value: "SIG-001"},
+		{Prefix: "ds", Name: "Signature", Children: []xmlNode{
+			{Prefix: "ds", Name: "SignedInfo", Children: []xmlNode{
+				{Prefix: "ds", Name: "CanonicalizationMethod", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:canonicalization"}},
+				{Prefix: "ds", Name: "SignatureMethod", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:signature"}},
+				{Prefix: "ds", Name: "Reference", Attributes: map[string]string{"URI": "#document"}, Children: []xmlNode{
+					{Prefix: "ds", Name: "Transforms", Children: []xmlNode{transform}},
+					{Prefix: "ds", Name: "DigestMethod", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:digest"}},
+					{Prefix: "ds", Name: "DigestValue", Value: "c2FtcGxl"},
+				}},
+			}},
+			{Prefix: "ds", Name: "SignatureValue", Value: "c2lnbmF0dXJl"},
+			keyInfo,
+			{Prefix: "ds", Name: "Object", Attributes: map[string]string{"Id": "object-1", "MimeType": "application/xml"}, Children: []xmlNode{
+				{Prefix: "ds", Name: "SignatureProperties", Children: []xmlNode{{Prefix: "ds", Name: "SignatureProperty", Attributes: map[string]string{"Target": "#signature"}, Children: []xmlNode{{Prefix: "struct", Name: "Property", Value: "sample"}}}}},
+				xadesQualifyingProperties(variant),
+			}},
+		}},
+	}}}}
+}
+
+func xadesQualifyingProperties(variant int) xmlNode {
+	timestamp := xmlNode{Prefix: "xades", Name: "SignatureTimeStamp", Children: []xmlNode{{Prefix: "xades", Name: "EncapsulatedTimeStamp", Value: "dGltZXN0YW1w"}}}
+	if variant%2 == 1 {
+		timestamp.Children = []xmlNode{{Prefix: "xades", Name: "XMLTimeStamp", Children: []xmlNode{{Prefix: "struct", Name: "TimeStampData", Value: "sample"}}}}
+	}
+	unsigned := xmlNode{Prefix: "xades", Name: "UnsignedSignatureProperties", Children: []xmlNode{timestamp}}
+	switch (variant / 2) % 4 {
+	case 1:
+		unsigned.Children = []xmlNode{{Prefix: "xades", Name: "CertificateValues", Attributes: map[string]string{"Id": "cert-values"}, Children: []xmlNode{{Prefix: "xades", Name: "EncapsulatedX509Certificate", Attributes: map[string]string{"Id": "cert-1", "Encoding": "urn:e-ubl21:base64"}, Value: "Y2VydGlmaWNhdGU="}}}}
+	case 2:
+		unsigned.Children = []xmlNode{{Prefix: "xades", Name: "RevocationValues", Attributes: map[string]string{"Id": "revocations"}, Children: []xmlNode{{Prefix: "xades", Name: "CRLValues", Children: []xmlNode{{Prefix: "xades", Name: "EncapsulatedCRLValue", Value: "Y3Js"}}}}}}
+	case 3:
+		// This wildcard has strict processing; use a declared foreign XMLDSig
+		// element rather than an invented private payload.
+		unsigned.Children = []xmlNode{{Prefix: "ds", Name: "SignatureValue", Value: "dW5zaWduZWQ="}}
+	}
+	policy := xmlNode{Prefix: "xades", Name: "SignaturePolicyIdentifier", Children: []xmlNode{{Prefix: "xades", Name: "SignaturePolicyImplied"}}}
+	if variant%4 >= 2 {
+		policy.Children = []xmlNode{{Prefix: "xades", Name: "SignaturePolicyId", Children: []xmlNode{
+			{Prefix: "xades", Name: "SigPolicyId", Children: []xmlNode{{Prefix: "xades", Name: "Identifier", Attributes: map[string]string{"Qualifier": "OIDAsURI"}, Value: "urn:e-ubl21:policy"}}},
+			{Prefix: "xades", Name: "SigPolicyHash", Children: []xmlNode{{Prefix: "ds", Name: "DigestMethod", Attributes: map[string]string{"Algorithm": "urn:e-ubl21:digest"}}, {Prefix: "ds", Name: "DigestValue", Value: "c2FtcGxl"}}},
+		}}}
+	}
+	commitment := xmlNode{Prefix: "xades", Name: "CommitmentTypeIndication", Children: []xmlNode{
+		{Prefix: "xades", Name: "CommitmentTypeId", Children: []xmlNode{{Prefix: "xades", Name: "Identifier", Attributes: map[string]string{"Qualifier": "OIDAsURI"}, Value: "urn:e-ubl21:commitment"}}},
+		{Prefix: "xades", Name: "AllSignedDataObjects"},
+	}}
+	if variant%4 == 1 {
+		commitment.Children[1] = xmlNode{Prefix: "xades", Name: "ObjectReference", Value: "#document"}
+	}
+	return xmlNode{Prefix: "xades", Name: "QualifyingProperties", Attributes: map[string]string{"Target": "#signature", "Id": "qualifying-properties"}, Children: []xmlNode{
+		{Prefix: "xades", Name: "SignedProperties", Attributes: map[string]string{"Id": "signed-properties"}, Children: []xmlNode{
+			{Prefix: "xades", Name: "SignedSignatureProperties", Children: []xmlNode{{Prefix: "xades", Name: "SigningTime", Value: "2026-10-02T00:00:00Z"}, policy}},
+			{Prefix: "xades", Name: "SignedDataObjectProperties", Children: []xmlNode{commitment}},
+		}},
+		{Prefix: "xades", Name: "UnsignedProperties", Attributes: map[string]string{"Id": "unsigned-properties"}, Children: []xmlNode{unsigned}},
+	}}
 }
 
 // structuralWildcardNode is deliberately foreign to every UBL namespace.
 // UBL extension points declare xsd:any with lax processing, so this proves
 // namespace-qualified pass-through without presenting private data as UBL
 // business content.
-func structuralWildcardNode(any xsdAny) (xmlNode, bool) {
-	// Strict processing needs a declared permitted element; do not invent one.
-	if any.ProcessContents == "strict" {
+func structuralWildcardNode(index schemaIndex, any xsdAny, ownerNS string, state genState, depth int) (xmlNode, bool) {
+	// XML Schema defaults omitted processContents to strict. Strict wildcards
+	// need a real global declaration; select a simple global element so this
+	// witness stays small and valid against the schema's import closure.
+	if any.ProcessContents == "" || any.ProcessContents == "strict" {
+		keys := make([]string, 0, len(index.GlobalElements))
+		for key := range index.GlobalElements {
+			keys = append(keys, key)
+		}
+		const commonBasicNS = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+		sort.Slice(keys, func(i, j int) bool {
+			iNS, _, _ := splitQualifiedKey(keys[i])
+			jNS, _, _ := splitQualifiedKey(keys[j])
+			if (iNS == commonBasicNS) != (jNS == commonBasicNS) {
+				return iNS == commonBasicNS
+			}
+			if (iNS == state.rootNamespace) != (jNS == state.rootNamespace) {
+				return iNS == state.rootNamespace
+			}
+			return keys[i] < keys[j]
+		})
+		for _, key := range keys {
+			namespace, name, ok := splitQualifiedKey(key)
+			if !ok || !wildcardAllows(&any, ownerNS, namespace) || !schemaImportClosureContains(index, state.rootSchemaFile, namespace) {
+				continue
+			}
+			declaration := index.GlobalElements[key]
+			doc := index.GlobalElementDocs[key]
+			if doc == nil || declaration.Type == "" || declaration.ComplexType != nil {
+				continue
+			}
+			if !isPrimitiveType(declaration.Type) {
+				typeNS, typeName := qualifyRef(declaration.Type, doc.TargetNamespace)
+				if _, ok := index.GlobalSimpleTypes[qualifiedKey(typeNS, typeName)]; !ok {
+					_, typ, ok := schemaTypeDocument(index, typeNS, typeName)
+					if !ok || typ.SimpleContent == nil {
+						continue
+					}
+				}
+			}
+			prefix := ""
+			if namespace != state.rootNamespace {
+				prefix = schemaNamespacePrefix(namespace)
+			}
+			node, supported := expandElement(index, declaration, name, prefix, namespace, state, depth)
+			if supported {
+				return node, true
+			}
+		}
 		return xmlNode{}, false
 	}
 	switch any.Namespace {
@@ -498,13 +875,50 @@ func structuralWildcardNode(any xsdAny) (xmlNode, bool) {
 	}
 }
 
+func schemaImportClosureContains(index schemaIndex, rootFile, targetNamespace string) bool {
+	seen := map[string]bool{}
+	findDoc := func(file string) *schemaDoc {
+		file = filepath.Base(file)
+		for path, doc := range index.ByFile {
+			if filepath.Base(path) == file || doc.File == file {
+				return doc
+			}
+		}
+		return nil
+	}
+	var visit func(string) bool
+	visit = func(file string) bool {
+		file = filepath.Base(file)
+		if seen[file] {
+			return false
+		}
+		seen[file] = true
+		doc := findDoc(file)
+		if doc == nil {
+			return false
+		}
+		if doc.TargetNamespace == targetNamespace {
+			return true
+		}
+		for _, imported := range doc.Imports {
+			if imported.Namespace == targetNamespace || visit(imported.SchemaLocation) {
+				return true
+			}
+		}
+		return false
+	}
+	return visit(rootFile)
+}
+
 // flattenChoice deterministically selects the first alternative whose
 // content is actually supported, which satisfies the choice's own
 // cardinality while keeping generation stable. If every alternative is
 // unsupported, the choice itself is unsupported.
 func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genState, depth int) ([]xmlNode, bool) {
+	minimalState := state.minimalRepetition()
+	minimalState.full = state.full
 	type alternative func() ([]xmlNode, bool)
-	alternatives := make([]alternative, 0, len(choice.Elements)+len(choice.Sequences)+len(choice.Choices)+len(choice.Alls))
+	alternatives := make([]alternative, 0, len(choice.Elements)+len(choice.Sequences)+len(choice.Choices)+len(choice.Alls)+1)
 	for _, element := range choice.Elements {
 		alt := element
 		alternatives = append(alternatives, func() ([]xmlNode, bool) {
@@ -512,19 +926,7 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 			if name == "" {
 				return nil, false
 			}
-			node, supported := expandElement(index, alt, name, prefix, ns, state, depth)
-			if !supported {
-				return nil, false
-			}
-			occurs := occurrenceCount(alt, state, depth)
-			if occurs == 0 {
-				occurs = 1
-			}
-			out := make([]xmlNode, 0, occurs)
-			for i := 0; i < occurs; i++ {
-				out = append(out, node)
-			}
-			return out, true
+			return expandElementOccurrences(index, alt, name, prefix, ns, state, depth)
 		})
 	}
 	for i := range choice.Sequences {
@@ -538,6 +940,16 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 	for i := range choice.Alls {
 		alt := choice.Alls[i]
 		alternatives = append(alternatives, func() ([]xmlNode, bool) { return flattenAll(alt, index, ns, state, depth) })
+	}
+	if choice.Any != nil && state.structural {
+		any := *choice.Any
+		alternatives = append(alternatives, func() ([]xmlNode, bool) {
+			node, ok := structuralWildcardNode(index, any, ns, state, depth)
+			if !ok {
+				return nil, false
+			}
+			return []xmlNode{node}, true
+		})
 	}
 	selection := state.choiceAlternative
 	site := -1
@@ -554,10 +966,54 @@ func flattenChoice(choice xsdChoice, index schemaIndex, ns string, state genStat
 	for offset := range alternatives {
 		out, supported := alternatives[(selection+offset)%len(alternatives)]()
 		if supported {
+			if state.repeatEveryDepth && (choice.MaxOccurs == "unbounded" || parseOccursInt(choice.MaxOccurs, 1) > 1) {
+				count := state.repeatCount
+				if maximum := parseMaxOccurs(choice.MaxOccurs); maximum > 0 && count > maximum {
+					count = maximum
+				}
+				return repeatStructuralGroup(out, count, state, func() ([]xmlNode, bool) {
+					return flattenChoice(choice, index, ns, minimalState, depth)
+				})
+			}
 			return out, true
 		}
 	}
 	return nil, false
+}
+
+// nodeWithDistinctID gives repeated schema particles their own XML ID. A
+// repeated occurrence must not reuse the first node's xs:ID, even though its
+// other generated content is identical.
+func nodeWithDistinctID(node xmlNode, occurrence int, state genState) xmlNode {
+	if occurrence == 0 || state.nextID == nil {
+		return node
+	}
+	return nodeWithFreshDescendantIDs(node, state)
+}
+
+// nodeWithFreshDescendantIDs deep-copies a repeated subtree and remaps every
+// Id it contains. Repeating a parent otherwise duplicates IDs held by its
+// descendants, which violates xs:ID's document-wide uniqueness constraint.
+func nodeWithFreshDescendantIDs(node xmlNode, state genState) xmlNode {
+	if node.Attributes != nil {
+		attributes := make(map[string]string, len(node.Attributes))
+		for key, value := range node.Attributes {
+			attributes[key] = value
+		}
+		if _, ok := attributes["Id"]; ok {
+			*state.nextID = *state.nextID + 1
+			attributes["Id"] = fmt.Sprintf("id-%d", *state.nextID)
+		}
+		node.Attributes = attributes
+	}
+	if len(node.Children) > 0 {
+		children := make([]xmlNode, len(node.Children))
+		for i, child := range node.Children {
+			children[i] = nodeWithFreshDescendantIDs(child, state)
+		}
+		node.Children = children
+	}
+	return node
 }
 
 // flattenAll emits every member of an xsd:all group while state.full is true
@@ -608,7 +1064,7 @@ func flattenAll(all xsdAll, index schemaIndex, ns string, state genState, depth 
 		out = append(out, children...)
 	}
 	if all.Any != nil && state.structural {
-		if node, ok := structuralWildcardNode(*all.Any); ok {
+		if node, ok := structuralWildcardNode(index, *all.Any, ns, state, depth); ok {
 			out = append(out, node)
 		}
 	}
@@ -622,7 +1078,7 @@ func elementNameAndPrefix(element xsdElementDecl) (string, string) {
 	return element.Name, ""
 }
 
-func ublNamespacePrefix(namespace string) string {
+func schemaNamespacePrefix(namespace string) string {
 	switch namespace {
 	case "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2":
 		return "cbc"
@@ -630,6 +1086,10 @@ func ublNamespacePrefix(namespace string) string {
 		return "cac"
 	case "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2":
 		return "ext"
+	case "http://www.w3.org/2000/09/xmldsig#":
+		return "ds"
+	case "http://uri.etsi.org/01903/v1.3.2#":
+		return "xades"
 	}
 	return ""
 }
@@ -649,12 +1109,12 @@ func occurrenceCount(element xsdElementDecl, state genState, depth int) int {
 	}
 	if desired, ok := state.repeatOverrides[elementNameForOccurrence(element)]; ok && isRepeatableElement(element) {
 		n = desired
-	// Generic cardinality fixtures deliberately exercise only the
-	// main-document particle level. Repeating every reachable nested particle
-	// multiplies UBL's shared aggregate graph exponentially, producing a corpus
-	// too large to generate or review. Targeted large-collection fixtures use
-	// repeatOverrides and remain valid at any depth.
-	} else if state.repeatCount > 0 && depth <= 1 && isRepeatableElement(element) {
+		// Generic cardinality fixtures deliberately exercise only the
+		// main-document particle level. Repeating every reachable nested particle
+		// multiplies UBL's shared aggregate graph exponentially, producing a corpus
+		// too large to generate or review. Targeted large-collection fixtures use
+		// repeatOverrides and remain valid at any depth.
+	} else if state.repeatCount > 0 && (state.repeatEveryDepth || depth <= 1) && isRepeatableElement(element) {
 		n = state.repeatCount
 	}
 	max := parseMaxOccurs(element.MaxOccurs)
@@ -717,13 +1177,13 @@ func withAncestor(ancestors map[string]bool, name string) map[string]bool {
 // the many UBL types that merely extend those base types with no attributes
 // of their own.
 func requiredAttributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, visited map[string]bool, depth int) map[string]string {
-	return attributesForComplexType(index, ct, ns, visited, depth, false)
+	return attributesForComplexType(index, ct, ns, visited, depth, false, nil)
 }
 
 // attributesForComplexType follows the same inheritance chain as the
 // baseline generator but can include optional attributes for structural
 // fixtures. Attribute-only and simple-content types use this path too.
-func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, visited map[string]bool, depth int, includeOptional bool) map[string]string {
+func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, visited map[string]bool, depth int, includeOptional bool, nextID *int) map[string]string {
 	if depth > 10 {
 		return nil
 	}
@@ -733,18 +1193,36 @@ func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, v
 			if attr.Name == "" || attr.Use == "prohibited" || (attr.Use != "required" && !includeOptional) {
 				continue
 			}
-			attrs[attr.Name] = sampleValueForType(attr.Name, attr.Type, 0)
+			if (attr.Type == "xsd:ID" || attr.Type == "ID") && nextID != nil {
+				*nextID = *nextID + 1
+				attrs[attr.Name] = fmt.Sprintf("id-%d", *nextID)
+			} else {
+				// Attributes can carry named simple types with enumerations (for
+				// example XAdES Identifier/@Qualifier). Resolve those constraints
+				// before falling back to name-based scalar generation.
+				attrs[attr.Name] = sampleScalarForType(index, attr.Name, attr.Type, ns, 0)
+			}
 		}
 	}
 	collect(ct.Attributes)
+	if ct.ComplexContent != nil {
+		if r := ct.ComplexContent.Restriction; r != nil {
+			collect(r.Attributes)
+			mergeBaseTypeAttributes(index, r.Base, ns, visited, depth, attrs, includeOptional, nextID)
+		}
+		if e := ct.ComplexContent.Extension; e != nil {
+			collect(e.Attributes)
+			mergeBaseTypeAttributes(index, e.Base, ns, visited, depth, attrs, includeOptional, nextID)
+		}
+	}
 	if ct.SimpleContent != nil {
 		if r := ct.SimpleContent.Restriction; r != nil {
 			collect(r.Attributes)
-			mergeBaseTypeAttributes(index, r.Base, ns, visited, depth, attrs, includeOptional)
+			mergeBaseTypeAttributes(index, r.Base, ns, visited, depth, attrs, includeOptional, nextID)
 		}
 		if e := ct.SimpleContent.Extension; e != nil {
 			collect(e.Attributes)
-			mergeBaseTypeAttributes(index, e.Base, ns, visited, depth, attrs, includeOptional)
+			mergeBaseTypeAttributes(index, e.Base, ns, visited, depth, attrs, includeOptional, nextID)
 		}
 	}
 	if len(attrs) == 0 {
@@ -753,7 +1231,7 @@ func attributesForComplexType(index schemaIndex, ct xsdComplexType, ns string, v
 	return attrs
 }
 
-func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[string]bool, depth int, attrs map[string]string, includeOptional bool) {
+func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[string]bool, depth int, attrs map[string]string, includeOptional bool, nextID *int) {
 	baseNS, name := qualifyRef(base, ns)
 	key := qualifiedKey(baseNS, name)
 	if name == "" || visited[key] {
@@ -764,7 +1242,7 @@ func mergeBaseTypeAttributes(index schemaIndex, base, ns string, visited map[str
 		return
 	}
 	visited = withAncestor(visited, key)
-	for k, v := range attributesForComplexType(index, baseType, baseNS, visited, depth+1, includeOptional) {
+	for k, v := range attributesForComplexType(index, baseType, baseNS, visited, depth+1, includeOptional, nextID) {
 		if _, exists := attrs[k]; !exists {
 			attrs[k] = v
 		}

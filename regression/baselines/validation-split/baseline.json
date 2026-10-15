@@ -6,9 +6,9 @@
     {
       "name": "ubl21",
       "manifest": "createsamples/samples/manifest.json",
-      "manifestSha256": "9d3d391f20001baaf07c2977f0220ffdbb266c280c45dcf56d3aa56adbd058ae",
+      "manifestSha256": "6689a2029c5c79cbad98ad425a42c8fe1ad9296bd806b1cf44c2da217f91de8e",
       "results": "regression/baselines/validation-split/ubl21.results.jsonl",
-      "resultsSha256": "e1303b72a7ea27d4ef84d744ff6caf2141d56ddcb42a3ce986789c98425ad7ec",
+      "resultsSha256": "a3d82dfe089df4349484fc24ae1cb4428dbd0cef97737c468774c94699d920d5",
       "fixtures": 71
     },
     {

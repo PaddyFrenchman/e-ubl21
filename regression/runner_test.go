@@ -87,6 +87,52 @@ func TestRunCorpusProducesDeterministicArtifacts(t *testing.T) {
 	}
 }
 
+func TestRunCorpusHonorsConfiguredConcurrency(t *testing.T) {
+	manifest := writeRunnerManifestWithFixtures(t, 3)
+	output := t.TempDir()
+	entered := make(chan struct{}, 3)
+	release := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			entered <- struct{}{}
+			<-release
+			w.WriteHeader(http.StatusAccepted)
+			_, _ = w.Write([]byte(`{"id":"0123456789abcdef0123456789abcdef","profile":"ubl21"}`))
+		case http.MethodGet:
+			_, _ = w.Write([]byte(`{"status":"valid","profile":"ubl21","validationStages":[{"layer":"ubl21-xsd","valid":true}]}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	type runResult struct {
+		summary Summary
+		err     error
+	}
+	completed := make(chan runResult, 1)
+	go func() {
+		summary, err := RunCorpus(t.Context(), RunnerConfig{
+			BaseURL: server.URL, Token: "test-token", ManifestPath: manifest, OutputDir: output,
+			PollInterval: time.Millisecond, FixtureTimeout: time.Second, Concurrency: 3,
+		})
+		completed <- runResult{summary: summary, err: err}
+	}()
+	for range 3 {
+		select {
+		case <-entered:
+		case <-time.After(time.Second):
+			t.Fatal("runner did not submit three fixtures concurrently")
+		}
+	}
+	close(release)
+	result := <-completed
+	if result.err != nil || result.summary.Passed != 3 || result.summary.Submitted != 3 || result.summary.TerminallyEvaluated != 3 {
+		t.Fatalf("summary=%+v error=%v", result.summary, result.err)
+	}
+}
+
 func TestSelectFixturesSupportsExactFixtureIDsAndRejectsUnknownIDs(t *testing.T) {
 	fixtures := []Fixture{
 		{ID: "ubl21.invoice.one", Profile: "ubl21"},
@@ -232,26 +278,39 @@ func TestCompareResultRequiresExpectedRulesButAllowsRuleCascades(t *testing.T) {
 }
 
 func writeRunnerManifest(t *testing.T) string {
+	return writeRunnerManifestWithFixtures(t, 1)
+}
+
+func writeRunnerManifestWithFixtures(t *testing.T, fixtureCount int) string {
 	t.Helper()
 	dir := t.TempDir()
 	content := []byte(`<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"/>`)
 	digest := sha256.Sum256(content)
-	manifest := map[string]any{
-		"schemaVersion": 1,
-		"fixtures": []any{map[string]any{
-			"id": "ubl21.invoice.runner", "documentType": "Invoice", "profile": "ubl21", "file": "invoice.xml",
+	fixtures := make([]any, 0, fixtureCount)
+	for index := range fixtureCount {
+		id, file := "ubl21.invoice.runner", "invoice.xml"
+		if fixtureCount > 1 {
+			id = fmt.Sprintf("ubl21.invoice.runner-%d", index)
+			file = fmt.Sprintf("invoice-%d.xml", index)
+		}
+		fixtures = append(fixtures, map[string]any{
+			"id": id, "documentType": "Invoice", "profile": "ubl21", "file": file,
 			"sha256":        fmtHash(digest[:]),
 			"standards":     map[string]any{"ubl": "2.1", "en16931": nil, "peppol": nil},
 			"provenance":    map[string]any{"kind": "generated", "generator": "runner-test", "generatorVersion": "git:0123456789abcdef0123456789abcdef01234567"},
 			"expectedFinal": "valid", "expectedStages": []any{map[string]any{"stage": "ubl21-xsd", "outcome": "passed"}},
 			"tags": []string{"runner"},
-		}},
+		})
+		if err := os.WriteFile(filepath.Join(dir, file), content, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	manifest := map[string]any{
+		"schemaVersion": 1,
+		"fixtures":      fixtures,
 	}
 	encoded, err := json.Marshal(manifest)
 	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(dir, "invoice.xml"), content, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	path := filepath.Join(dir, "manifest.json")

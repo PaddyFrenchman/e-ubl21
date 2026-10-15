@@ -41,6 +41,10 @@ func complexTypeIDForElement(typeDoc *schemaDoc, elementID, typeName string) str
 func elementDeclaration(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) (*schemaDoc, xsdElementDecl, string, string) {
 	if decl.Ref != "" {
 		ns, n := qualifyRef(decl.Ref, doc.TargetNamespace)
+		key := qualifiedKey(ns, n)
+		if d := index.GlobalElementDocs[key]; d != nil {
+			return d, index.GlobalElements[key], ns, n
+		}
 		if d := index.ByTargetNS[ns]; d != nil {
 			if x, ok := d.Elements[n]; ok {
 				return d, x, ns, n
@@ -50,6 +54,26 @@ func elementDeclaration(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) 
 	}
 	return doc, decl, doc.TargetNamespace, decl.Name
 }
+
+// recordGlobalElementUse credits a referenced global declaration in addition
+// to the containing complex type's particle. Coverage inventories both kinds
+// of targets: the local particle describes where the element appears, while
+// the global target describes the shared declaration used by xsd:element ref.
+func recordGlobalElementUse(index schemaIndex, targets map[string]int, parentDoc *schemaDoc, decl xsdElementDecl, actual xml.Name, substitutionID string) {
+	if decl.Ref != "" {
+		doc, _, _, name := elementDeclaration(index, parentDoc, decl)
+		if doc != nil {
+			targets[coverageID(doc, "element", "global/"+name+"/"+name)]++
+		}
+	}
+	if substitutionID != "" {
+		key := qualifiedKey(actual.Space, actual.Local)
+		if doc := index.GlobalElementDocs[key]; doc != nil {
+			targets[coverageID(doc, "element", "global/"+actual.Local+"/"+actual.Local)]++
+		}
+	}
+}
+
 func substitutionMember(index schemaIndex, doc *schemaDoc, head xsdElementDecl, q xml.Name) (xsdElementDecl, string, bool) {
 	headDoc, resolvedHead, headNS, headName := elementDeclaration(index, doc, head)
 	_ = headDoc
@@ -151,12 +175,33 @@ func declaredType(index schemaIndex, doc *schemaDoc, decl xsdElementDecl) (*sche
 		return nil, xsdComplexType{}, "", false
 	}
 	ns, n := qualifyRef(x.Type, d.TargetNamespace)
-	td := index.ByTargetNS[ns]
-	if td == nil {
-		return nil, xsdComplexType{}, "", false
-	}
-	t, ok := td.Types[n]
+	td, t, ok := schemaTypeDocument(index, ns, n)
 	return td, t, n, ok
+}
+
+// schemaTypeDocument resolves types declared in xsd:include files as well as
+// in the namespace's primary document.  Includes share a target namespace;
+// ByTargetNS deliberately has one representative document, so using it alone
+// loses the included ExtensionContentType and makes otherwise observed
+// wildcard content invisible to coverage matching.
+func schemaTypeDocument(index schemaIndex, namespace, name string) (*schemaDoc, xsdComplexType, bool) {
+	if doc := index.GlobalTypeDocs[qualifiedKey(namespace, name)]; doc != nil {
+		return doc, index.GlobalTypes[qualifiedKey(namespace, name)], true
+	}
+	if doc := index.ByTargetNS[namespace]; doc != nil {
+		if typ, ok := doc.Types[name]; ok {
+			return doc, typ, true
+		}
+	}
+	for _, doc := range index.ByFile {
+		if doc == nil || doc.TargetNamespace != namespace {
+			continue
+		}
+		if typ, ok := doc.Types[name]; ok {
+			return doc, typ, true
+		}
+	}
+	return nil, xsdComplexType{}, false
 }
 func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
 	base := typeBase(f.typ)
@@ -164,11 +209,7 @@ func baseFrame(index schemaIndex, f schemaFrame) (schemaFrame, bool) {
 		return schemaFrame{}, false
 	}
 	ns, name := qualifyRef(base, f.doc.TargetNamespace)
-	doc := index.ByTargetNS[ns]
-	if doc == nil {
-		return schemaFrame{}, false
-	}
-	typ, ok := doc.Types[name]
+	doc, typ, ok := schemaTypeDocument(index, ns, name)
 	if !ok {
 		return schemaFrame{}, false
 	}
@@ -212,6 +253,9 @@ func findInChoice(index schemaIndex, f schemaFrame, parent string, choice *xsdCh
 		}
 	}
 	for i := range choice.Sequences {
+		if !requiredBranchElementsObserved(index, f, choice.Sequences[i].Elements, q) {
+			continue
+		}
 		if x, id, ok := findInSequence(index, f, parent+fmt.Sprintf("/sequence[%d]", i), &choice.Sequences[i], q); ok {
 			return x, id, true
 		}
@@ -222,12 +266,32 @@ func findInChoice(index schemaIndex, f schemaFrame, parent string, choice *xsdCh
 		}
 	}
 	for i := range choice.Alls {
+		if !requiredBranchElementsObserved(index, f, choice.Alls[i].Elements, q) {
+			continue
+		}
 		if x, id, ok := findInAll(index, f, parent+fmt.Sprintf("/all[%d]", i), &choice.Alls[i], q); ok {
 			return x, id, true
 		}
 	}
 	return xsdElementDecl{}, "", false
 }
+
+func requiredBranchElementsObserved(index schemaIndex, f schemaFrame, elements []xsdElementDecl, child xml.Name) bool {
+	for _, element := range elements {
+		if element.MinOccurs == "0" {
+			continue
+		}
+		_, _, namespace, name := elementDeclaration(index, f.doc, element)
+		if namespace == child.Space && name == child.Local {
+			continue
+		}
+		if !f.seen[qualifiedKey(namespace, name)] {
+			return false
+		}
+	}
+	return true
+}
+
 func findInAll(index schemaIndex, f schemaFrame, parent string, all *xsdAll, q xml.Name) (xsdElementDecl, string, bool) {
 	if all == nil {
 		return xsdElementDecl{}, "", false
@@ -256,12 +320,33 @@ func findInAll(index schemaIndex, f schemaFrame, parent string, all *xsdAll, q x
 	return xsdElementDecl{}, "", false
 }
 func recordInheritance(index schemaIndex, f schemaFrame) {
-	base := typeBase(f.typ)
-	if base == "" {
-		return
+	seen := map[string]struct{}{}
+	for f.doc != nil && f.typeName != "" {
+		key := qualifiedKey(f.doc.TargetNamespace, f.typeName)
+		if _, ok := seen[key]; ok {
+			return
+		}
+		seen[key] = struct{}{}
+		f.targets[complexTypeIDForElement(f.doc, "", f.typeName)]++
+		if simple, ok := f.doc.SimpleTypes[f.typeName]; ok && simple.Restriction != nil {
+			baseNS, baseName := qualifyRef(simple.Restriction.Base, f.doc.TargetNamespace)
+			if baseName != "" {
+				f.targets[coverageID(f.doc, "inheritance", f.typeName+"->"+baseNS+"#"+baseName)]++
+			}
+			return
+		}
+		base := typeBase(f.typ)
+		if base == "" {
+			return
+		}
+		ns, name := qualifyRef(base, f.doc.TargetNamespace)
+		f.targets[fmt.Sprintf("%s|%s|inheritance|%s->%s#%s", f.doc.TargetNamespace, f.doc.File, f.typeName, ns, name)]++
+		next, ok := baseFrame(index, f)
+		if !ok {
+			return
+		}
+		f = next
 	}
-	ns, name := qualifyRef(base, f.doc.TargetNamespace)
-	f.targets[fmt.Sprintf("%s|%s|inheritance|%s->%s#%s", f.doc.TargetNamespace, f.doc.File, f.typeName, ns, name)]++
 }
 func particleElement(index schemaIndex, f schemaFrame, q xml.Name) (xsdElementDecl, string, string, bool) {
 	for _, p := range typeParticleSets(f.typ) {
@@ -323,6 +408,12 @@ func recordAttributes(index schemaIndex, f schemaFrame, start xml.StartElement) 
 		for _, declaration := range typeAttributes(f.typ) {
 			if declaration.Name == attribute.Name.Local {
 				f.targets[fmt.Sprintf("%s|%s|attribute|%s/@%s", f.doc.TargetNamespace, f.doc.File, f.typeName, declaration.Name)]++
+				if declaration.Type != "" {
+					ns, name := qualifyRef(declaration.Type, f.doc.TargetNamespace)
+					if typeDoc, _, ok := schemaTypeDocument(index, ns, name); ok {
+						f.targets[coverageID(typeDoc, "complexType", name)]++
+					}
+				}
 			}
 		}
 	}
@@ -385,6 +476,157 @@ func choiceSiteForGroupAlternative(alternativeID string) string {
 	}
 	return parts[0] + "|" + parts[1] + "|choice|" + path[:cut]
 }
+
+func choiceObservationForElement(index schemaIndex, f schemaFrame, child xml.Name) (sites, alternatives []string) {
+	if f.doc == nil {
+		return nil, nil
+	}
+	if index.ChoiceTypes != nil {
+		if _, hasChoice := index.ChoiceTypes[qualifiedKey(f.doc.TargetNamespace, f.typeName)]; !hasChoice {
+			if base, ok := baseFrame(index, f); ok {
+				return choiceObservationForElement(index, base, child)
+			}
+			return nil, nil
+		}
+	}
+	matched := false
+	contains := func(elements []xsdElementDecl) bool {
+		for _, element := range elements {
+			_, _, ns, name := elementDeclaration(index, f.doc, element)
+			if ns == child.Space && name == child.Local {
+				return true
+			}
+		}
+		return false
+	}
+	requiredElementsObserved := func(elements []xsdElementDecl) bool {
+		for _, element := range elements {
+			if element.MinOccurs == "0" {
+				continue
+			}
+			_, _, ns, name := elementDeclaration(index, f.doc, element)
+			if ns == child.Space && name == child.Local {
+				continue
+			}
+			if !f.seen[qualifiedKey(ns, name)] {
+				return false
+			}
+		}
+		return true
+	}
+	var walkSequence func(string, *xsdSequence, []string, []string) bool
+	var walkChoice func(string, *xsdChoice, []string, []string) bool
+	var walkAll func(string, *xsdAll, []string, []string) bool
+	walkSequence = func(parent string, sequence *xsdSequence, activeSites, activeAlternatives []string) bool {
+		if sequence == nil {
+			return false
+		}
+		if contains(sequence.Elements) {
+			sites, alternatives, matched = activeSites, activeAlternatives, true
+			return true
+		}
+		for i := range sequence.Sequences {
+			if walkSequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &sequence.Sequences[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		for i := range sequence.Choices {
+			if walkChoice(fmt.Sprintf("%s/choice[%d]", parent, i), &sequence.Choices[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		for i := range sequence.Alls {
+			if walkAll(fmt.Sprintf("%s/all[%d]", parent, i), &sequence.Alls[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		return false
+	}
+	walkChoice = func(parent string, choice *xsdChoice, activeSites, activeAlternatives []string) bool {
+		if choice == nil {
+			return false
+		}
+		choiceID := coverageID(f.doc, "choice", parent)
+		nextSites := append(append([]string(nil), activeSites...), choiceID)
+		if contains(choice.Elements) {
+			sites, alternatives, matched = nextSites, activeAlternatives, true
+			return true
+		}
+		for i := range choice.Sequences {
+			if !requiredElementsObserved(choice.Sequences[i].Elements) {
+				continue
+			}
+			path := fmt.Sprintf("%s/sequence[%d]", parent, i)
+			nextAlternatives := append(append([]string(nil), activeAlternatives...), coverageID(f.doc, "choiceAlternative", path))
+			if walkSequence(path, &choice.Sequences[i], nextSites, nextAlternatives) {
+				return true
+			}
+		}
+		for i := range choice.Choices {
+			path := fmt.Sprintf("%s/choice[%d]", parent, i)
+			nextAlternatives := append(append([]string(nil), activeAlternatives...), coverageID(f.doc, "choiceAlternative", path))
+			if walkChoice(path, &choice.Choices[i], nextSites, nextAlternatives) {
+				return true
+			}
+		}
+		for i := range choice.Alls {
+			if !requiredElementsObserved(choice.Alls[i].Elements) {
+				continue
+			}
+			path := fmt.Sprintf("%s/all[%d]", parent, i)
+			nextAlternatives := append(append([]string(nil), activeAlternatives...), coverageID(f.doc, "choiceAlternative", path))
+			if walkAll(path, &choice.Alls[i], nextSites, nextAlternatives) {
+				return true
+			}
+		}
+		return false
+	}
+	walkAll = func(parent string, all *xsdAll, activeSites, activeAlternatives []string) bool {
+		if all == nil {
+			return false
+		}
+		if contains(all.Elements) {
+			sites, alternatives, matched = activeSites, activeAlternatives, true
+			return true
+		}
+		for i := range all.Sequences {
+			if walkSequence(fmt.Sprintf("%s/sequence[%d]", parent, i), &all.Sequences[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		for i := range all.Choices {
+			if walkChoice(fmt.Sprintf("%s/choice[%d]", parent, i), &all.Choices[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		for i := range all.Alls {
+			if walkAll(fmt.Sprintf("%s/all[%d]", parent, i), &all.Alls[i], activeSites, activeAlternatives) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, particles := range typeParticleSets(f.typ) {
+		if walkSequence(f.typeName, particles.sequence, nil, nil) || walkChoice(f.typeName, particles.choice, nil, nil) || walkAll(f.typeName, particles.all, nil, nil) {
+			return sites, alternatives
+		}
+	}
+	if !matched {
+		if base, ok := baseFrame(index, f); ok {
+			return choiceObservationForElement(index, base, child)
+		}
+	}
+	return sites, alternatives
+}
+
+func choiceSiteForWildcard(wildcardID string) string {
+	parts := strings.Split(wildcardID, "|")
+	if len(parts) != 4 || !strings.HasSuffix(parts[3], "/choice") {
+		return ""
+	}
+	return parts[0] + "|" + parts[1] + "|choice|" + strings.TrimSuffix(parts[3], "/choice")
+}
+
 func wildcardAllows(any *xsdAny, ownerNS, childNS string) bool {
 	if any == nil {
 		return false
@@ -526,6 +768,10 @@ func matchFixtureDetailed(index schemaIndex, path string) (fixtureMatch, error) 
 func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMatch, error) {
 	match := fixtureMatch{targets: map[string]int{}, cardinalities: map[string][]int{}, parentInstances: map[string]int{}}
 	out := match.targets
+	// Recursive coverage targets are schema edges that participate in a type
+	// cycle. Observing the direct edge in a valid fixture exercises that target;
+	// the edge need not close a cycle in this particular XML path.
+	recursiveEdges := index.RecursiveEdges
 	dec := xml.NewDecoder(reader)
 	var stack []schemaFrame
 	for {
@@ -541,16 +787,37 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			if len(stack) == 0 {
 				root, ok := index.GlobalElements[qualifiedKey(v.Name.Space, v.Name.Local)]
 				if !ok {
+					typeKey := qualifiedKey(v.Name.Space, v.Name.Local)
+					if typ, exists := index.GlobalTypes[typeKey]; exists {
+						doc := index.GlobalTypeDocs[typeKey]
+						if doc == nil {
+							return fixtureMatch{}, fmt.Errorf("schema document for type root %s is missing", v.Name)
+						}
+						frame := schemaFrame{doc: doc, typ: typ, typeName: v.Name.Local, targets: out, siblings: map[string]int{}, seen: map[string]bool{}}
+						out[complexTypeIDForElement(doc, "", v.Name.Local)]++
+						stack = append(stack, frame)
+						recordAttributes(index, frame, v)
+						recordInheritance(index, frame)
+						continue
+					}
 					return fixtureMatch{}, fmt.Errorf("unknown root %s", v.Name)
 				}
-				d := index.ByTargetNS[v.Name.Space]
+				d := index.GlobalElementDocs[qualifiedKey(v.Name.Space, v.Name.Local)]
+				if d == nil {
+					d = index.ByTargetNS[v.Name.Space]
+				}
+				if d == nil {
+					return fixtureMatch{}, fmt.Errorf("schema document for root %s is missing", v.Name)
+				}
+				rootID := fmt.Sprintf("%s|%s|element|global/%s", d.TargetNamespace, d.File, v.Name.Local)
+				id := fmt.Sprintf("%s|%s|element|global/%s/%s", d.TargetNamespace, d.File, v.Name.Local, v.Name.Local)
+				out[rootID]++
+				out[id]++
 				td, t, n, ok := declaredType(index, d, root)
 				if !ok {
 					stack = append(stack, schemaFrame{})
 					continue
 				}
-				id := fmt.Sprintf("%s|%s|element|global/%s", d.TargetNamespace, d.File, v.Name.Local)
-				out[id]++
 				out[complexTypeIDForElement(td, id, n)]++
 				stack = append(stack, schemaFrame{doc: td, typ: t, typeName: n, targets: out, siblings: map[string]int{}, seen: map[string]bool{}})
 				recordAttributes(index, stack[len(stack)-1], v)
@@ -562,12 +829,45 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			if !ok {
 				if wildcard := wildcardSite(index, parent, v.Name); wildcard != "" {
 					out[wildcard]++
+					if choiceID := choiceSiteForWildcard(wildcard); choiceID != "" {
+						out[choiceID]++
+					}
+					// A lax wildcard may contain a declaration from an imported
+					// schema. Continue matching through it when we know that
+					// declaration; otherwise it remains an intentionally opaque
+					// private extension payload.
+					if global, exists := index.GlobalElements[qualifiedKey(v.Name.Space, v.Name.Local)]; exists {
+						doc := index.GlobalElementDocs[qualifiedKey(v.Name.Space, v.Name.Local)]
+						if doc == nil {
+							doc = index.ByTargetNS[v.Name.Space]
+						}
+						if doc != nil {
+							td, typ, typeName, known := declaredType(index, doc, global)
+							if known {
+								globalID := fmt.Sprintf("%s|%s|element|global/%s/%s", doc.TargetNamespace, doc.File, v.Name.Local, v.Name.Local)
+								out[globalID]++
+								out[complexTypeIDForElement(td, globalID, typeName)]++
+								frame := schemaFrame{doc: td, typ: typ, typeName: typeName, targets: out, siblings: map[string]int{}, seen: map[string]bool{}}
+								recordAttributes(index, frame, v)
+								recordInheritance(index, frame)
+								stack = append(stack, frame)
+								continue
+							}
+						}
+					}
 				}
 				stack = append(stack, schemaFrame{})
 				continue
 			}
 			parent.siblings[id]++
 			parent.seen[qualifiedKey(v.Name.Space, v.Name.Local)] = true
+			choiceSites, choiceAlternatives := choiceObservationForElement(index, parent, v.Name)
+			for _, choiceID := range choiceSites {
+				out[choiceID]++
+			}
+			for _, alternativeID := range choiceAlternatives {
+				out[alternativeID]++
+			}
 			if parent.siblings[id] > out[id] {
 				out[id] = parent.siblings[id]
 			}
@@ -583,12 +883,24 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 			if substitutionID != "" {
 				out[substitutionID]++
 			}
+			recordGlobalElementUse(index, out, parent.doc, decl, v.Name, substitutionID)
 			declarationDoc := parent.doc
 			if substitutionID != "" && index.ByTargetNS[v.Name.Space] != nil {
 				declarationDoc = index.ByTargetNS[v.Name.Space]
 			}
 			td, t, n, ok := declaredType(index, declarationDoc, decl)
 			if ok {
+				if parent.doc != nil && parent.typeName != "" {
+					recursiveID := fmt.Sprintf("%s|%s|recursive|%s->%s", parent.doc.TargetNamespace, parent.doc.File, parent.typeName, qualifiedKey(td.TargetNamespace, n))
+					if _, isRecursiveEdge := recursiveEdges[recursiveID]; isRecursiveEdge {
+						// The edge is covered even when this particular path does
+						// not recurse. Keep a minimum witness value of one; the
+						// maximum is updated below only from actual type nesting.
+						if out[recursiveID] < 1 {
+							out[recursiveID] = 1
+						}
+					}
+				}
 				out[complexTypeIDForElement(td, id, n)]++
 				depth := 1
 				for _, ancestor := range stack {

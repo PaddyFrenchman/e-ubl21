@@ -57,6 +57,23 @@ an individual structural fixture through the identical public pipeline, add
 `--fixture-id ubl21.invoice.invoiceline-500`. Repeat the flag or provide a
 comma-separated list for an explicit small set.
 
+For a long-running, full structural-runtime qualification, leave
+`STRUCTURAL_FIXTURE_ID` and `STRUCTURAL_FIXTURE_IDS` unset and run the local
+correctness harness with a token and source-object lifetime sufficient for the
+expected queue-drain time. For example:
+
+```bash
+REGRESSION_TOKEN_TTL=24h \
+EUBL21_UPLOAD_CONTENT_RETENTION=48h \
+REGRESSION_CONCURRENCY=8 \
+STRUCTURAL_REGRESSION_CONCURRENCY=8 \
+./devsetup/regression-correctness.sh
+```
+
+This runs the whole checked-in structural manifest through the API and worker
+topology (as well as the ordinary UBL and EN 16931 manifests). Do not set
+either structural fixture-selection variable for this command.
+
 ## Validation-split equivalence gate
 
 The reviewed monolithic-worker result sets live in

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +15,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/PaddyFrenchman/e-ubl21/createsamples/xmlnode"
 	"github.com/PaddyFrenchman/e-ubl21/regression"
 )
 
@@ -109,6 +112,160 @@ type generatedCorpus struct {
 	manifestJSON []byte
 }
 
+// structuralManifestStore keeps the very large structural manifest out of the
+// Go heap. SQLite is used as an append-only journal because the structural
+// generator can produce hundreds of thousands of entries; keeping the entry
+// structs (and their strings/slices) reachable until the final marshal made
+// the collector repeatedly scan a multi-gigabyte object graph.
+//
+// This deliberately uses the sqlite3 command already available to the corpus
+// tooling rather than adding a database driver to the product binary. The
+// database is private to the staging directory and is deleted after its rows
+// have been streamed into manifest.json.
+type structuralManifestStore struct {
+	path       string
+	sqlitePath string
+	cmd        *exec.Cmd
+	stdin      io.WriteCloser
+	writer     *bufio.Writer
+	stderr     bytes.Buffer
+	finished   bool
+}
+
+func newStructuralManifestStore(path string) (*structuralManifestStore, error) {
+	sqlitePath, err := exec.LookPath("sqlite3")
+	if err != nil {
+		return nil, fmt.Errorf("sqlite3 is required to spool the structural fixture manifest: %w", err)
+	}
+	store := &structuralManifestStore{path: path, sqlitePath: sqlitePath}
+	store.cmd = exec.Command(sqlitePath, "-batch", path)
+	store.cmd.Stderr = &store.stderr
+	store.stdin, err = store.cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("open structural manifest SQLite input: %w", err)
+	}
+	store.writer = bufio.NewWriterSize(store.stdin, 256*1024)
+	if err := store.cmd.Start(); err != nil {
+		_ = store.stdin.Close()
+		return nil, fmt.Errorf("start structural manifest SQLite journal: %w", err)
+	}
+	if _, err := store.writer.WriteString("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; CREATE TABLE entries (ordinal INTEGER PRIMARY KEY, id TEXT NOT NULL UNIQUE, file TEXT NOT NULL UNIQUE, entry TEXT NOT NULL); BEGIN;\n"); err != nil {
+		return nil, store.fail(err)
+	}
+	return store, nil
+}
+
+func (store *structuralManifestStore) add(entry fixtureManifestEntry) error {
+	encoded, err := json.Marshal(entry)
+	if err != nil {
+		return fmt.Errorf("marshal structural manifest entry %q: %w", entry.ID, err)
+	}
+	// JSON never contains literal newlines, and SQL single quotes are escaped
+	// by doubling them. This keeps one entry per SQLite command without a Go
+	// database-driver dependency or a live in-memory row cache.
+	value := strings.ReplaceAll(string(encoded), "'", "''")
+	id := strings.ReplaceAll(entry.ID, "'", "''")
+	file := strings.ReplaceAll(entry.File, "'", "''")
+	if _, err := store.writer.WriteString("INSERT INTO entries (id, file, entry) VALUES ('" + id + "', '" + file + "', '" + value + "');\n"); err != nil {
+		return store.fail(err)
+	}
+	return nil
+}
+
+func (store *structuralManifestStore) fail(cause error) error {
+	_ = store.stdin.Close()
+	_ = store.cmd.Wait()
+	return fmt.Errorf("write structural manifest SQLite journal: %w: %s", cause, strings.TrimSpace(store.stderr.String()))
+}
+
+func (store *structuralManifestStore) finish() error {
+	if store.finished {
+		return nil
+	}
+	store.finished = true
+	if _, err := store.writer.WriteString("COMMIT;\n"); err != nil {
+		return store.fail(err)
+	}
+	if err := store.writer.Flush(); err != nil {
+		return store.fail(err)
+	}
+	if err := store.stdin.Close(); err != nil {
+		return store.fail(err)
+	}
+	if err := store.cmd.Wait(); err != nil {
+		return fmt.Errorf("finalize structural manifest SQLite journal: %w: %s", err, strings.TrimSpace(store.stderr.String()))
+	}
+	return nil
+}
+
+func (store *structuralManifestStore) writeManifest(path string) error {
+	if err := store.finish(); err != nil {
+		return err
+	}
+	query := exec.Command(store.sqlitePath, "-batch", "-noheader", store.path, "SELECT entry FROM entries ORDER BY ordinal;")
+	output, err := query.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("open structural manifest SQLite output: %w", err)
+	}
+	var stderr bytes.Buffer
+	query.Stderr = &stderr
+	if err := query.Start(); err != nil {
+		return fmt.Errorf("read structural manifest SQLite journal: %w", err)
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		_ = output.Close()
+		_ = query.Wait()
+		return fmt.Errorf("create structural manifest: %w", err)
+	}
+	writer := bufio.NewWriterSize(file, 256*1024)
+	_, err = writer.WriteString("{\n  \"schemaVersion\": 1,\n  \"fixtures\": [\n")
+	first := true
+	reader := bufio.NewReaderSize(output, 256*1024)
+	for err == nil {
+		line, readErr := reader.ReadString('\n')
+		if len(line) > 0 {
+			if !first {
+				_, err = writer.WriteString(",\n")
+			}
+			if err == nil {
+				_, err = writer.WriteString("    " + strings.TrimSuffix(line, "\n"))
+			}
+			first = false
+		}
+		if readErr == io.EOF {
+			break
+		}
+		if readErr != nil {
+			err = readErr
+		}
+	}
+	if err == nil {
+		_, err = writer.WriteString("\n  ]\n}\n")
+	}
+	if flushErr := writer.Flush(); err == nil {
+		err = flushErr
+	}
+	if closeErr := file.Close(); err == nil {
+		err = closeErr
+	}
+	if waitErr := query.Wait(); err == nil {
+		err = waitErr
+	}
+	if err != nil {
+		return fmt.Errorf("stream structural manifest from SQLite journal: %w: %s", err, strings.TrimSpace(stderr.String()))
+	}
+	return nil
+}
+
+func (store *structuralManifestStore) remove() error {
+	if !store.finished {
+		_ = store.stdin.Close()
+		_ = store.cmd.Wait()
+	}
+	return os.Remove(store.path)
+}
+
 func resolveGeneratorVersion(explicit string) (string, error) {
 	if explicit != "" {
 		if !immutableGeneratorVersion.MatchString(explicit) {
@@ -185,24 +342,157 @@ func generateUBLPositiveCorpus(report schemaInventory, index schemaIndex, xsdDir
 	return buildGeneratedCorpus(fixtures)
 }
 
-// generateUBLStructuralCorpus produces purpose-specific fixtures instead of
-// trying to force every legal structural variation into one document. The
-// variants share the ordinary manifest/provenance contract and remain wholly
-// generated from the pinned schema graph.
-func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string) (generatedCorpus, error) {
+// generateAndWriteUBLStructuralCorpus streams each fixture to an isolated
+// staging directory. XML is written and manifest metadata is journaled before
+// the next fixture is generated, so neither is retained on the Go heap.
+func generateAndWriteUBLStructuralCorpus(outputDir string, report schemaInventory, index schemaIndex, xsdDir, generatorVersion, errorJournal, resumeFrom string) error {
+	if err := validateCorpusOutputDirectory(outputDir); err != nil {
+		return err
+	}
+	absolute, err := filepath.Abs(outputDir)
+	if err != nil {
+		return fmt.Errorf("resolve generated corpus output: %w", err)
+	}
+	parent := filepath.Dir(absolute)
+	if err := os.MkdirAll(parent, 0o755); err != nil {
+		return fmt.Errorf("create generated corpus parent: %w", err)
+	}
+	staging, err := os.MkdirTemp(parent, "."+filepath.Base(absolute)+".staging-*")
+	if err != nil {
+		return fmt.Errorf("create generated corpus staging directory: %w", err)
+	}
+	defer os.RemoveAll(staging)
+	manifestStore, err := newStructuralManifestStore(filepath.Join(staging, ".manifest.sqlite"))
+	if err != nil {
+		return err
+	}
+	defer manifestStore.remove()
+	generated := 0
+	fmt.Printf("Structural corpus: streaming validated fixtures to staging directory\n")
+	sink := func(fixture generatedFixture) error {
+		path := filepath.Join(staging, filepath.FromSlash(fixture.entry.File))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(path, fixture.content, 0o644); err != nil {
+			return err
+		}
+		generated++
+		if generated%100 == 0 {
+			fmt.Printf("Structural corpus: generated and validated %d fixtures\n", generated)
+		}
+		return nil
+	}
+	err = generateUBLStructuralCorpusWithSink(report, index, xsdDir, generatorVersion, sink, manifestStore, errorJournal, resumeFrom)
+	if err != nil {
+		return err
+	}
+	if resumeFrom != "" {
+		fmt.Printf("Structural resume from %q completed without new failures; no partial corpus was installed. Rerun without --resume-from to regenerate and promote the complete corpus.\n", resumeFrom)
+		return nil
+	}
+	if err := os.WriteFile(filepath.Join(staging, corpusOwnershipMarkerName), []byte(corpusOwnershipMarkerContent), 0o644); err != nil {
+		return err
+	}
+	if err := manifestStore.writeManifest(filepath.Join(staging, "manifest.json")); err != nil {
+		return err
+	}
+	if err := manifestStore.remove(); err != nil {
+		return fmt.Errorf("remove structural manifest SQLite journal: %w", err)
+	}
+	fmt.Printf("Structural corpus: wrote manifest for %d fixtures; installing corpus\n", generated)
+	if _, err := os.Stat(absolute); err == nil {
+		backup, err := os.MkdirTemp(parent, "."+filepath.Base(absolute)+".backup-*")
+		if err != nil {
+			return err
+		}
+		if err := os.Remove(backup); err != nil {
+			return err
+		}
+		if err := os.Rename(absolute, backup); err != nil {
+			return err
+		}
+		if err := os.Rename(staging, absolute); err != nil {
+			_ = os.Rename(backup, absolute)
+			return err
+		}
+		return os.RemoveAll(backup)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return os.Rename(staging, absolute)
+}
+
+// generateUBLStructuralCorpusWithSink sends each validated structural fixture
+// to its output sink and manifest journal before generating the next one.
+func generateUBLStructuralCorpusWithSink(report schemaInventory, index schemaIndex, xsdDir, generatorVersion string, sink func(generatedFixture) error, manifestStore *structuralManifestStore, errorJournal, resumeFrom string) error {
+	resumePhase, resumeRoot, err := parseStructuralResumeCursor(resumeFrom)
+	if err != nil {
+		return err
+	}
+	resumeStarted := resumeFrom == ""
+	var problems []string
+	journal := func(err error) { problems = append(problems, err.Error()) }
+	finishWithJournal := func() error {
+		if len(problems) == 0 {
+			return nil
+		}
+		if errorJournal == "" {
+			return fmt.Errorf("structural generation completed with %d failures", len(problems))
+		}
+		if err := os.MkdirAll(filepath.Dir(errorJournal), 0o755); err != nil {
+			return fmt.Errorf("write structural error journal: create directory: %w", err)
+		}
+		content := "Structural corpus generation failures:\n\n" + strings.Join(problems, "\n\n") + "\n"
+		if err := os.WriteFile(errorJournal, []byte(content), 0o644); err != nil {
+			return fmt.Errorf("write structural error journal: %w", err)
+		}
+		return fmt.Errorf("structural generation completed with %d failures; see %s", len(problems), errorJournal)
+	}
 	choiceVariants := maxChoiceAlternatives(index)
 	if choiceVariants < 1 {
 		choiceVariants = 1
 	}
-	fixtures := make([]generatedFixture, 0, len(report.MainFiles)*(choiceVariants+3))
+	record := func(fixture generatedFixture) error {
+		if sink != nil {
+			if err := sink(fixture); err != nil {
+				return err
+			}
+			fixture.content = nil
+		}
+		if manifestStore == nil {
+			return errors.New("structural manifest store is required")
+		}
+		return manifestStore.add(fixture.entry)
+	}
+	repeatableTargets := schemaCoverageTargets(index)
+	cardinalityOwners := map[string]struct{}{}
+	for id := range repeatableTargets.repeatable {
+		parts := strings.Split(id, "|")
+		if len(parts) != 4 {
+			return fmt.Errorf("invalid repeatable target %q", id)
+		}
+		owner, _, _ := strings.Cut(parts[3], "/")
+		cardinalityOwners[qualifiedKey(parts[0], owner)] = struct{}{}
+	}
 	for _, schema := range report.MainFiles {
 		root := schema.RootElement
 		if root == "" {
 			root = strings.TrimSuffix(filepath.Base(schema.File), filepath.Ext(schema.File))
 		}
+		if resumePhase == "signature" || resumePhase == "cardinality" {
+			continue
+		}
+		if !resumeStarted {
+			if root != resumeRoot {
+				continue
+			}
+			resumeStarted = true
+		}
 		choicePlans, err := structuralChoicePlans(index, root, xsdDir, schema.File)
 		if err != nil {
-			return generatedCorpus{}, fmt.Errorf("count %s choice sites: %w", root, err)
+			journal(fmt.Errorf("count %s choice sites: %w", root, err))
+			continue
 		}
 		add := func(family string, choices map[int]int, recursiveDepth, facetBoundary, repeatCount int, repeatElement string, repeatElements map[string]int, tags ...string) error {
 			var content string
@@ -221,10 +511,10 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			if err != nil {
 				return fmt.Errorf("generate %s %s: %w", root, family, err)
 			}
-			if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
+			if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
 				return fmt.Errorf("validate %s %s: %w", root, family, err)
 			}
-			fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+			if err := record(generatedFixture{entry: fixtureManifestEntry{
 				ID:             fmt.Sprintf("ubl21.%s.%s", strings.ToLower(root), family),
 				DocumentType:   root,
 				Profile:        "ubl21",
@@ -240,14 +530,15 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 				// in coverage.json; duplicating it in every manifest entry makes a
 				// versioned corpus needlessly enormous.
 				StructuralTargets: []string{"schema-root:" + root, "family:" + family},
-			}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
+			}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
+				return err
+			}
 			return nil
 		}
 		minimal, err := generateMinimalSample(index, root, xsdDir, schema.File)
 		if err != nil {
-			return generatedCorpus{}, fmt.Errorf("generate %s minimal: %w", root, err)
-		}
-		fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+			journal(fmt.Errorf("generate %s minimal: %w", root, err))
+		} else if err := record(generatedFixture{entry: fixtureManifestEntry{
 			ID:                fmt.Sprintf("ubl21.%s.minimal", strings.ToLower(root)),
 			DocumentType:      root,
 			Profile:           "ubl21",
@@ -259,30 +550,147 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 			ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
 			Tags:              []string{"positive", "ubl21", "structural", "minimal", "optional-absent", "cardinality", "occurrences-0"},
 			StructuralTargets: []string{"schema-root:" + root, "family:minimal"},
-		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)})
+		}, content: []byte(minimal), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
+			journal(err)
+		}
 		if err := add("optional-rich", nil, 1, 0, 0, "", nil, "optional-elements", "optional-attributes", "cardinality", "occurrences-1"); err != nil {
-			return generatedCorpus{}, err
+			journal(err)
+		}
+		// Exercise nested cardinality contracts one particle at a time.  The
+		// ordinary cardinality families deliberately limit themselves to the
+		// document root because repeating every nested collection at once grows
+		// exponentially.  Starting from the same full structural expansion used
+		// by optional-rich gives us the particles this document can reach; an
+		// override then repeats just one element, preserving a small, XSD-valid
+		// fixture for each required non-singleton count.
+		baseline, err := generateTargetedStructuralSample(index, root, xsdDir, schema.File, nil, 1)
+		if err != nil {
+			journal(fmt.Errorf("generate %s cardinality baseline: %w", root, err))
+			continue
+		}
+		matched, err := matchFixtureDetailedReader(index, strings.NewReader(baseline))
+		if err != nil {
+			journal(fmt.Errorf("match %s cardinality baseline: %w", root, err))
+			continue
+		}
+		reachable := make([]string, 0, len(matched.cardinalities))
+		for id := range matched.cardinalities {
+			if _, ok := repeatableTargets.repeatable[id]; ok {
+				reachable = append(reachable, id)
+			}
+		}
+		sort.Strings(reachable)
+		planned := map[string]map[int]struct{}{}
+		for _, id := range reachable {
+			parts := strings.Split(id, "|")
+			if len(parts) != 4 {
+				return fmt.Errorf("invalid repeatable target %q", id)
+			}
+			element := filepath.Base(parts[3])
+			if planned[element] == nil {
+				planned[element] = map[int]struct{}{}
+			}
+			for _, count := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+				// The baseline covers the singleton case and the minimal family
+				// covers optional zero.  Only add fixtures that demonstrate an
+				// additional cardinality contract.
+				if count <= 1 {
+					continue
+				}
+				planned[element][count] = struct{}{}
+			}
+		}
+		elements := make([]string, 0, len(planned))
+		for element := range planned {
+			elements = append(elements, element)
+		}
+		sort.Strings(elements)
+		for _, element := range elements {
+			counts := make([]int, 0, len(planned[element]))
+			for count := range planned[element] {
+				counts = append(counts, count)
+			}
+			sort.Ints(counts)
+			for _, count := range counts {
+				family := fmt.Sprintf("cardinality-target-%s-%d", strings.ToLower(element), count)
+				if err := add(family, nil, 1, 0, count, element, nil, "cardinality", "targeted", fmt.Sprintf("occurrences-%d", count)); err != nil {
+					journal(err)
+				}
+			}
+		}
+		// XMLDSig/XAdES is reachable only through UBL's extension wildcard.
+		// Keep a focused declared-signature fixture alongside the generic foreign
+		// extension payload so that schema choices are measured against real UBL
+		// extension content rather than an invented private namespace.
+		if root == "Invoice" {
+			for variant, family := range []string{
+				"key-name", "key-name-transform-wildcard",
+				"rsa-key-value", "rsa-key-value-transform-wildcard",
+				"retrieval-method", "retrieval-method-transform-wildcard",
+				"x509-subject-name", "x509-subject-name-transform-wildcard",
+				"pgp-key-id", "pgp-key-id-transform-wildcard",
+				"pgp-key-packet", "pgp-key-packet-transform-wildcard",
+				"spki-data", "spki-data-transform-wildcard",
+				"management-data", "management-data-transform-wildcard",
+				"key-info-wildcard", "key-info-wildcard-transform-wildcard",
+				"dsa-key-value", "dsa-key-value-transform-wildcard",
+				"key-value-wildcard", "key-value-wildcard-transform-wildcard",
+				"x509-issuer-serial", "x509-issuer-serial-transform-wildcard",
+				"x509-ski", "x509-ski-transform-wildcard",
+				"x509-certificate", "x509-certificate-transform-wildcard",
+				"x509-crl", "x509-crl-transform-wildcard",
+				"x509-wildcard", "x509-wildcard-transform-wildcard",
+			} {
+				content, err := generateSignatureExtensionStructuralSample(index, root, xsdDir, schema.File, variant)
+				if err != nil {
+					journal(fmt.Errorf("generate %s signature extension %s: %w", root, family, err))
+					continue
+				}
+				if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", schema.File)); err != nil {
+					journal(fmt.Errorf("validate %s signature extension %s: %w", root, family, err))
+					continue
+				}
+				if err := record(generatedFixture{entry: fixtureManifestEntry{
+					ID:                "ubl21.invoice.signature-extension-" + family,
+					DocumentType:      root,
+					Profile:           "ubl21",
+					File:              filepath.ToSlash(filepath.Join(root, "Invoice-signature-extension-"+family+".xml")),
+					SHA256:            fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+					Standards:         fixtureStandards{UBL: "2.1"},
+					Provenance:        fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+					ExpectedFinal:     "valid",
+					ExpectedStages:    []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+					Tags:              []string{"positive", "ubl21", "structural", "signature-extension", "choice-alternative", "wildcard", family},
+					StructuralTargets: []string{"schema-root:" + root, "family:signature-extension", "signature-variant:" + family},
+				}, content: []byte(content), schemaPath: filepath.Join(xsdDir, "maindoc", schema.File)}); err != nil {
+					return err
+				}
+			}
 		}
 		for planIndex, choices := range choicePlans[1:] {
 			if err := add(fmt.Sprintf("choice-path-%03d", planIndex+1), choices, 1, 0, 0, "", nil, "choice-alternative", "targeted"); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		for boundary, family := range []string{"facet-boundary-low", "facet-boundary-high"} {
 			if err := add(family, nil, 1, boundary+1, 0, "", nil, "facet-boundary"); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		for _, recursiveDepth := range []int{2, 3} {
 			if err := add(fmt.Sprintf("recursive-depth-%d", recursiveDepth), nil, recursiveDepth, 0, 0, "", nil, "recursive"); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		for _, count := range []int{2, 5} {
 			if err := add(fmt.Sprintf("cardinality-%d", count), nil, 1, 0, count, "", nil, "cardinality", fmt.Sprintf("occurrences-%d", count)); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
+		// Nested repeatable particles are exercised one target at a time by the
+		// cardinality-target fixtures above. Repeating every nested particle in
+		// one document multiplies shared aggregate content and creates hundreds
+		// of thousands of fixtures across the UBL roots.
 		// These fixtures exercise the progressive high-volume collection tiers
 		// seen by the real service without making every repeatable branch of a
 		// document enormous.  The smaller tiers make it possible to locate
@@ -314,95 +722,779 @@ func generateUBLStructuralCorpus(report schemaInventory, index schemaIndex, xsdD
 				continue
 			}
 			if err := add(fmt.Sprintf("%s-%03d", strings.ToLower(large.element), large.count), nil, 1, 0, large.count, large.element, nil, "cardinality", "large-document", large.kind); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 		if root == "Invoice" {
 			if err := add("multi-collection-100", nil, 1, 0, 0, "", map[string]int{"InvoiceLine": 100, "AllowanceCharge": 50, "TaxTotal": 50}, "cardinality", "large-document", "line-collection", "aggregate-collection", "multi-collection"); err != nil {
-				return generatedCorpus{}, err
+				journal(err)
 			}
 		}
 	}
-	return buildGeneratedCorpus(fixtures)
+	// These CAC global declarations are not referenced by any UBL main-document
+	// root, but remain part of the published common-component schema. Exercise
+	// each as a standalone schema root so declaration coverage does not depend
+	// on inventing an unrelated business-document path to it.
+	if resumePhase != "signature" && resumePhase != "cardinality" {
+		for _, root := range []string{"Branch", "Communication", "Duty", "MonetaryTotal", "Payment", "Regulation", "ServiceFrequency"} {
+			fixture, err := generateCommonComponentStructuralFixture(index, xsdDir, generatorVersion, root)
+			if err != nil {
+				journal(err)
+				continue
+			}
+			if err := record(fixture); err != nil {
+				return err
+			}
+		}
+	}
+	// These published CCTS/UDT types have no global element declarations and
+	// are not referenced by another UBL schema. Exercise them through
+	// type-named wrapper roots validated against their defining schema module.
+	if resumePhase != "signature" && resumePhase != "cardinality" {
+		for _, typeRoot := range []struct{ namespace, name string }{
+			{"urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2", "DateTimeType"},
+			{"urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2", "IndicatorType"},
+			{"urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2", "DateTimeType"},
+			{"urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2", "GraphicType"},
+			{"urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2", "PictureType"},
+			{"urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2", "SoundType"},
+			{"urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2", "ValueType"},
+			{"urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2", "VideoType"},
+		} {
+			fixture, err := generateStandaloneTypeStructuralFixture(index, xsdDir, generatorVersion, typeRoot.namespace, typeRoot.name)
+			if err != nil {
+				journal(err)
+				continue
+			}
+			if err := record(fixture); err != nil {
+				_ = os.RemoveAll(filepath.Dir(fixture.schemaPath))
+				return err
+			}
+			if err := os.RemoveAll(filepath.Dir(fixture.schemaPath)); err != nil {
+				return fmt.Errorf("remove standalone type wrapper for %s: %w", typeRoot.name, err)
+			}
+		}
+	}
+	if resumePhase != "signature" && resumePhase != "cardinality" {
+		fixture, err := generateSignatureInformationStructuralFixture(index, xsdDir, generatorVersion)
+		if err != nil {
+			journal(err)
+		} else if err := record(fixture); err != nil {
+			return err
+		}
+	}
+	// XMLDSig and XAdES declarations are schema-reachable through the UBL
+	// signature extension, but many are not reachable through its deliberately
+	// small hand-authored payload. Generate their global roots directly so the
+	// same schema matcher can qualify those contracts without fabricating them
+	// inside a business document.
+	signatureNamespaces := map[string]string{
+		"http://www.w3.org/2000/09/xmldsig#": "xmldsig",
+		"http://uri.etsi.org/01903/v1.3.2#":  "xades",
+		"http://uri.etsi.org/01903/v1.4.1#":  "xadesv141",
+	}
+	type signatureRoot struct{ namespace, name string }
+	var roots []signatureRoot
+	for key := range index.GlobalElements {
+		namespace, name, ok := splitQualifiedKey(key)
+		if !ok {
+			return fmt.Errorf("invalid global element key %q", key)
+		}
+		if _, ok := signatureNamespaces[namespace]; ok {
+			roots = append(roots, signatureRoot{namespace, name})
+		}
+	}
+	sort.Slice(roots, func(i, j int) bool {
+		if roots[i].namespace == roots[j].namespace {
+			return roots[i].name < roots[j].name
+		}
+		return roots[i].namespace < roots[j].namespace
+	})
+	includePGPDataChoice := resumePhase == "" || resumePhase == "main"
+	for _, root := range roots {
+		if resumePhase == "cardinality" {
+			continue
+		}
+		if resumePhase == "signature" && !resumeStarted {
+			if root.name != resumeRoot {
+				continue
+			}
+			resumeStarted = true
+		}
+		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
+		if doc == nil {
+			continue
+		}
+		if root.namespace == "http://www.w3.org/2000/09/xmldsig#" && root.name == "PGPData" {
+			includePGPDataChoice = true
+		}
+		state := newTargetedStructuralGenState(nil, 1)
+		state.signatureExtension = true
+		content, err := generateSampleWithState(index, root.name, xsdDir, doc.File, state)
+		if err != nil {
+			journal(fmt.Errorf("generate signature root %s: %w", root.name, err))
+			continue
+		}
+		schemaPath := filepath.Join(xsdDir, "common", doc.File)
+		if err := validateStructuralCandidate(content, schemaPath); err != nil {
+			journal(fmt.Errorf("validate signature root %s: %w", root.name, err))
+			continue
+		}
+		family := signatureNamespaces[root.namespace] + "-root-" + strings.ToLower(root.name)
+		if err := record(generatedFixture{entry: fixtureManifestEntry{
+			ID: "ubl21.signature." + family, DocumentType: root.name, Profile: "ubl21",
+			File:   filepath.ToSlash(filepath.Join("SignatureSchemas", family+".xml")),
+			SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+			Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+			ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+			Tags:              []string{"positive", "ubl21", "structural", "signature-schema", signatureNamespaces[root.namespace]},
+			StructuralTargets: []string{"signature-root:" + root.name},
+		}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+			return err
+		}
+		var targetedChoiceIDs []string
+		switch root.name {
+		case "OtherTimeStamp":
+			targetedChoiceIDs = []string{root.namespace + "|" + doc.File + "|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp"}
+		case "CompleteRevocationRefs":
+			targetedChoiceIDs = []string{root.namespace + "|" + doc.File + "|element|ResponderIDType/choice[1]/ByKey"}
+		}
+		if len(targetedChoiceIDs) > 0 {
+			fixtures, err := generateSignatureChoiceCoverageFixtures(index, xsdDir, generatorVersion, root.name, doc.File, targetedChoiceIDs)
+			if err != nil {
+				journal(fmt.Errorf("generate signature choice witnesses for %s: %w", root.name, err))
+			} else {
+				for _, fixture := range fixtures {
+					if err := record(fixture); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	if includePGPDataChoice {
+		fixture, err := generateSignatureChoiceStructuralFixture(index, xsdDir, generatorVersion, "PGPData", 1)
+		if err != nil {
+			journal(err)
+		} else if err := record(fixture); err != nil {
+			return err
+		}
+	}
+	// Keep signature cardinality witnesses bounded per repeatable schema target.
+	// Exhaustively combining nested XMLDSig/XAdES choices produced tens of
+	// thousands of plans and hundreds of thousands of redundant fixtures.
+	coveredSignatureCardinalities := map[string]map[int]struct{}{}
+	emittedSignatureZeroCardinalities := map[string]struct{}{}
+	for _, root := range roots {
+		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
+		if doc == nil {
+			continue
+		}
+		probe, err := generateTargetedStructuralSample(index, root.name, xsdDir, doc.File, nil, 1)
+		if err != nil {
+			journal(fmt.Errorf("probe signature cardinality root %s: %w", root.name, err))
+			continue
+		}
+		probeMatch, err := matchFixtureDetailedReader(index, strings.NewReader(probe))
+		if err != nil {
+			journal(fmt.Errorf("match signature cardinality root %s: %w", root.name, err))
+			continue
+		}
+		relevant := false
+		for id := range probeMatch.cardinalities {
+			if _, ok := repeatableTargets.repeatable[id]; ok {
+				relevant = true
+				break
+			}
+		}
+		if !relevant {
+			continue
+		}
+		plans, err := structuralChoicePlans(index, root.name, xsdDir, doc.File)
+		if err != nil {
+			journal(fmt.Errorf("plan signature cardinality root %s: %w", root.name, err))
+			continue
+		}
+		for planIndex, choices := range plans {
+			baseline, err := generateTargetedStructuralSample(index, root.name, xsdDir, doc.File, choices, 1)
+			if err != nil {
+				journal(fmt.Errorf("generate signature cardinality baseline %s: %w", root.name, err))
+				continue
+			}
+			matched, err := matchFixtureDetailedReader(index, strings.NewReader(baseline))
+			if err != nil {
+				journal(fmt.Errorf("match signature cardinality baseline %s: %w", root.name, err))
+				continue
+			}
+			cardinalityIDs := make([]string, 0, len(matched.cardinalities))
+			for id := range matched.cardinalities {
+				cardinalityIDs = append(cardinalityIDs, id)
+			}
+			sort.Strings(cardinalityIDs)
+			for _, id := range cardinalityIDs {
+				values := matched.cardinalities[id]
+				_, isRepeatable := repeatableTargets.repeatable[id]
+				if !isRepeatable {
+					continue
+				}
+				needsZero := false
+				for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+					if required != 0 {
+						continue
+					}
+					if _, ok := emittedSignatureZeroCardinalities[id]; !ok {
+						needsZero = true
+					}
+				}
+				hasPositiveCount := false
+				for _, value := range values {
+					if value > 0 {
+						hasPositiveCount = true
+						break
+					}
+				}
+				if !needsZero || !hasPositiveCount {
+					continue
+				}
+				parts := strings.Split(id, "|")
+				if len(parts) != 4 {
+					return fmt.Errorf("invalid repeatable target %q", id)
+				}
+				element := filepath.Base(parts[3])
+				content, err := generateStructuralSampleOmittingChoices(index, root.name, xsdDir, doc.File, choices, element)
+				if err != nil {
+					journal(fmt.Errorf("generate signature cardinality zero %s plan %d: %w", root.name, planIndex, err))
+					continue
+				}
+				observed, err := matchFixtureDetailedReader(index, strings.NewReader(content))
+				if err != nil {
+					journal(fmt.Errorf("match signature cardinality zero %s plan %d: %w", root.name, planIndex, err))
+					continue
+				}
+				parentInstances := observed.parentInstances[particleParentComplexTypeID(id)]
+				zeroObserved := parentInstances > len(observed.cardinalities[id])
+				if !zeroObserved {
+					continue
+				}
+				schemaPath := schemaPathForDocument(xsdDir, doc.File)
+				if err := validateStructuralCandidate(content, schemaPath); err != nil {
+					journal(fmt.Errorf("validate signature cardinality zero %s plan %d: %w", root.name, planIndex, err))
+					continue
+				}
+				family := signatureCardinalityZeroFamily(planIndex, id)
+				if err := record(generatedFixture{entry: fixtureManifestEntry{
+					ID: fmt.Sprintf("ubl21.signature.%s.%s", strings.ToLower(root.name), family), DocumentType: root.name, Profile: "ubl21",
+					File: filepath.ToSlash(filepath.Join("SignatureSchemas", strings.ToLower(root.name)+"-"+family+".xml")), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+					Standards: fixtureStandards{UBL: "2.1"}, Provenance: fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion}, ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+					Tags: []string{"positive", "ubl21", "structural", "signature-schema", "cardinality", "occurrences-0"}, StructuralTargets: []string{"signature-root:" + root.name, "family:" + family},
+				}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+					return err
+				}
+				if coveredSignatureCardinalities[id] == nil {
+					coveredSignatureCardinalities[id] = map[int]struct{}{}
+				}
+				coveredSignatureCardinalities[id][0] = struct{}{}
+				emittedSignatureZeroCardinalities[id] = struct{}{}
+			}
+			baselineImproved := false
+			needsDeepCardinality := false
+			for id, values := range matched.cardinalities {
+				if _, isRepeatable := repeatableTargets.repeatable[id]; !isRepeatable {
+					continue
+				}
+				targetPresent := false
+				for _, value := range values {
+					if value > 0 {
+						targetPresent = true
+					}
+					for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+						if value != required {
+							continue
+						}
+						if _, ok := coveredSignatureCardinalities[id][value]; !ok {
+							if value == 1 || value == 0 {
+								baselineImproved = true
+							} else if value > 1 {
+								needsDeepCardinality = true
+							}
+						}
+					}
+				}
+				if targetPresent {
+					for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+						if required <= 1 {
+							continue
+						}
+						if _, ok := coveredSignatureCardinalities[id][required]; !ok {
+							needsDeepCardinality = true
+						}
+					}
+				}
+			}
+			if baselineImproved {
+				schemaPath := schemaPathForDocument(xsdDir, doc.File)
+				if err := validateStructuralCandidate(baseline, schemaPath); err != nil {
+					journal(fmt.Errorf("validate signature cardinality baseline %s plan %d: %w", root.name, planIndex, err))
+				} else {
+					family := fmt.Sprintf("signature-cardinality-plan-%05d-1", planIndex)
+					if err := record(generatedFixture{entry: fixtureManifestEntry{
+						ID: fmt.Sprintf("ubl21.signature.%s.%s", strings.ToLower(root.name), family), DocumentType: root.name, Profile: "ubl21",
+						File: filepath.ToSlash(filepath.Join("SignatureSchemas", strings.ToLower(root.name)+"-"+family+".xml")), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(baseline))),
+						Standards: fixtureStandards{UBL: "2.1"}, Provenance: fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion}, ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+						Tags: []string{"positive", "ubl21", "structural", "signature-schema", "cardinality", "occurrences-1"}, StructuralTargets: []string{"signature-root:" + root.name, "family:" + family},
+					}, content: []byte(baseline), schemaPath: schemaPath}); err != nil {
+						return err
+					}
+					for id, values := range matched.cardinalities {
+						if _, ok := repeatableTargets.repeatable[id]; !ok {
+							continue
+						}
+						if coveredSignatureCardinalities[id] == nil {
+							coveredSignatureCardinalities[id] = map[int]struct{}{}
+						}
+						for _, value := range values {
+							for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+								if value == required {
+									coveredSignatureCardinalities[id][value] = struct{}{}
+								}
+							}
+						}
+					}
+				}
+			}
+			if !needsDeepCardinality {
+				continue
+			}
+			for _, count := range []int{2, 5} {
+				content, err := generateDeepCardinalityStructuralSample(index, root.name, xsdDir, doc.File, choices, count)
+				if err != nil {
+					journal(fmt.Errorf("generate signature cardinality root %s plan %d count %d: %w", root.name, planIndex, count, err))
+					continue
+				}
+				observed, err := matchFixtureDetailedReader(index, strings.NewReader(content))
+				if err != nil {
+					journal(fmt.Errorf("match signature cardinality root %s plan %d count %d: %w", root.name, planIndex, count, err))
+					continue
+				}
+				improved := false
+				for id, values := range observed.cardinalities {
+					if _, isRepeatable := repeatableTargets.repeatable[id]; !isRepeatable {
+						continue
+					}
+					if coveredSignatureCardinalities[id] == nil {
+						coveredSignatureCardinalities[id] = map[int]struct{}{}
+					}
+					for _, value := range values {
+						if value <= 1 {
+							continue
+						}
+						for _, required := range requiredCardinalities(repeatableTargets.repeatableBounds[id]) {
+							if value == required {
+								if _, ok := coveredSignatureCardinalities[id][value]; !ok {
+									improved = true
+								}
+							}
+						}
+					}
+				}
+				if !improved {
+					continue
+				}
+				schemaPath := schemaPathForDocument(xsdDir, doc.File)
+				if err := validateStructuralCandidate(content, schemaPath); err != nil {
+					journal(fmt.Errorf("validate signature cardinality root %s plan %d count %d: %w", root.name, planIndex, count, err))
+					continue
+				}
+				family := fmt.Sprintf("signature-cardinality-plan-%05d-%d", planIndex, count)
+				if err := record(generatedFixture{entry: fixtureManifestEntry{
+					ID: fmt.Sprintf("ubl21.signature.%s.%s", strings.ToLower(root.name), family), DocumentType: root.name, Profile: "ubl21",
+					File: filepath.ToSlash(filepath.Join("SignatureSchemas", strings.ToLower(root.name)+"-"+family+".xml")), SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))),
+					Standards: fixtureStandards{UBL: "2.1"}, Provenance: fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion}, ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+					Tags: []string{"positive", "ubl21", "structural", "signature-schema", "cardinality", fmt.Sprintf("occurrences-%d", count)}, StructuralTargets: []string{"signature-root:" + root.name, "family:" + family},
+				}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+					return err
+				}
+				for id, values := range observed.cardinalities {
+					if _, isRepeatable := repeatableTargets.repeatable[id]; !isRepeatable {
+						continue
+					}
+					if coveredSignatureCardinalities[id] == nil {
+						coveredSignatureCardinalities[id] = map[int]struct{}{}
+					}
+					for _, value := range values {
+						if value > 1 {
+							coveredSignatureCardinalities[id][value] = struct{}{}
+						}
+					}
+				}
+			}
+		}
+	}
+	// A main-document expansion intentionally demotes repeated aggregate types
+	// after their first full visit.  That keeps ordinary fixtures bounded, but
+	// it also means a repeatable particle owned by one of those types might
+	// never be a direct child of an instantiated parent.  Generate focused
+	// roots for every globally-declared type that owns a repeatable particle.
+	// At a root the generic cardinality state applies directly to that type's
+	// particles, exercising the zero, two and capped-unbounded (five) cases
+	// without multiplying unrelated nested collections.
+	type cardinalityRoot struct{ namespace, name string }
+	var cardinalityRoots []cardinalityRoot
+	for key, declaration := range index.GlobalElements {
+		doc := index.GlobalElementDocs[key]
+		if doc == nil || declaration.Type == "" {
+			continue
+		}
+		typeNamespace, typeName := qualifyRef(declaration.Type, doc.TargetNamespace)
+		if _, ok := cardinalityOwners[qualifiedKey(typeNamespace, typeName)]; !ok {
+			continue
+		}
+		namespace, name, ok := splitQualifiedKey(key)
+		if !ok {
+			return fmt.Errorf("invalid global element key %q", key)
+		}
+		cardinalityRoots = append(cardinalityRoots, cardinalityRoot{namespace: namespace, name: name})
+	}
+	sort.Slice(cardinalityRoots, func(i, j int) bool {
+		if cardinalityRoots[i].namespace == cardinalityRoots[j].namespace {
+			return cardinalityRoots[i].name < cardinalityRoots[j].name
+		}
+		return cardinalityRoots[i].namespace < cardinalityRoots[j].namespace
+	})
+	for _, root := range cardinalityRoots {
+		if resumePhase == "cardinality" && !resumeStarted {
+			if root.name != resumeRoot {
+				continue
+			}
+			resumeStarted = true
+		}
+		doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
+		if doc == nil {
+			continue
+		}
+		rootKey := namespaceFixtureKey(root.namespace)
+		for _, variant := range []struct {
+			name  string
+			count int
+		}{
+			{name: "minimal"},
+			{name: "cardinality-1", count: 1},
+			{name: "cardinality-2", count: 2},
+			{name: "cardinality-5", count: 5},
+		} {
+			var content string
+			var err error
+			if variant.count == 0 {
+				// This is the zero-occurrence witness for optional repeatable
+				// particles.  A structural cardinality sample emits optional
+				// elements at least once, so using one here silently turned this
+				// supposed minimal fixture into another singleton fixture.
+				switch root.name {
+				case "CommitmentTypeIndication":
+					content, err = generateStructuralSampleOmitting(index, root.name, xsdDir, doc.File, "CommitmentTypeQualifier")
+				case "SPUserNotice":
+					content, err = generateStructuralSampleOmitting(index, root.name, xsdDir, doc.File, "int")
+				default:
+					content, err = generateMinimalStructuralSample(index, root.name, xsdDir, doc.File)
+				}
+			} else {
+				content, err = generateCardinalityStructuralSample(index, root.name, xsdDir, doc.File, variant.count)
+			}
+			if err != nil {
+				journal(fmt.Errorf("generate cardinality root %s %s: %w", root.name, variant.name, err))
+				continue
+			}
+			schemaPath := schemaPathForDocument(xsdDir, doc.File)
+			if err := validateStructuralCandidate(content, schemaPath); err != nil {
+				journal(fmt.Errorf("validate cardinality root %s %s: %w", root.name, variant.name, err))
+				continue
+			}
+			family := "cardinality-root-" + variant.name
+			if err := record(generatedFixture{entry: fixtureManifestEntry{
+				ID: "ubl21.cardinality." + rootKey + "." + strings.ToLower(root.name) + "." + variant.name, DocumentType: root.name, Profile: "ubl21",
+				File:   filepath.ToSlash(filepath.Join("CardinalityRoots", rootKey, root.name+"-"+variant.name+".xml")),
+				SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+				Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+				ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+				Tags:              []string{"positive", "ubl21", "structural", "cardinality", "cardinality-root", variant.name},
+				StructuralTargets: []string{"schema-root:" + root.name, "family:" + family},
+			}, content: []byte(content), schemaPath: schemaPath}); err != nil {
+				return err
+			}
+		}
+	}
+	if resumeFrom != "" && !resumeStarted {
+		return fmt.Errorf("resume cursor %q did not match a generated structural root", resumeFrom)
+	}
+	if err := finishWithJournal(); err != nil {
+		return err
+	}
+	return nil
 }
 
-func validateStructuralCandidate(content []byte, schemaPath string) error {
+// schemaPathForDocument resolves both global common-component roots and
+// main-document roots. Cardinality coverage intentionally includes both.
+func schemaPathForDocument(xsdDir, file string) string {
+	common := filepath.Join(xsdDir, "common", file)
+	if _, err := os.Stat(common); err == nil {
+		return common
+	}
+	return filepath.Join(xsdDir, "maindoc", file)
+}
+
+func generateCommonComponentStructuralFixture(index schemaIndex, xsdDir, generatorVersion, root string) (generatedFixture, error) {
+	const namespace = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, root)]
+	if doc == nil {
+		return generatedFixture{}, fmt.Errorf("common component root %s is not declared", root)
+	}
+	content, err := generateTargetedStructuralSample(index, root, xsdDir, doc.File, nil, 2)
+	if err != nil {
+		return generatedFixture{}, fmt.Errorf("generate common component root %s: %w", root, err)
+	}
+	schemaPath := schemaPathForDocument(xsdDir, doc.File)
+	if err := validateStructuralCandidate(content, schemaPath); err != nil {
+		return generatedFixture{}, fmt.Errorf("validate common component root %s: %w", root, err)
+	}
+	family := "common-component-root-" + strings.ToLower(root)
+	return generatedFixture{entry: fixtureManifestEntry{
+		ID: "ubl21.component." + strings.ToLower(root), DocumentType: root, Profile: "ubl21",
+		File:   filepath.ToSlash(filepath.Join("CommonComponents", root+".xml")),
+		SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+		Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+		ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+		Tags:              []string{"positive", "ubl21", "structural", "common-component", "standalone-root"},
+		StructuralTargets: []string{"component-root:" + root, "family:" + family},
+	}, content: []byte(content), schemaPath: schemaPath}, nil
+}
+
+func generateStandaloneTypeStructuralFixture(index schemaIndex, xsdDir, generatorVersion, namespace, typeName string) (generatedFixture, error) {
+	doc, _, ok := schemaTypeDocument(index, namespace, typeName)
+	if !ok {
+		return generatedFixture{}, fmt.Errorf("standalone type root %s#%s is not declared", namespace, typeName)
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.rootNamespace = namespace
+	state.rootSchemaFile = doc.File
+	declaration := xsdElementDecl{Name: typeName, Type: typeName}
+	root, supported := expandElement(index, declaration, typeName, "", namespace, state, 0)
+	if !supported {
+		return generatedFixture{}, fmt.Errorf("generate standalone type root %s#%s: unsupported required content", namespace, typeName)
+	}
+	if root.Attributes == nil {
+		root.Attributes = map[string]string{}
+	}
+	root.Attributes["xmlns"] = namespace
+	root.Attributes["xmlns:cbc"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+	root.Attributes["xmlns:cac"] = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	root.Attributes["xmlns:ds"] = "http://www.w3.org/2000/09/xmldsig#"
+	root.Attributes["xmlns:udt"] = "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2"
+	root.Attributes["xmlns:ccts-cct"] = "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2"
+	root.Attributes["xmlns:struct"] = "urn:e-ubl21:structural-fixture"
+	var output strings.Builder
+	output.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+	xmlnode.RenderTo(&output, root, 0)
+	output.WriteByte('\n')
+	content := output.String()
+	wrapperDir, err := os.MkdirTemp("", "e-ubl21-type-root-")
+	if err != nil {
+		return generatedFixture{}, fmt.Errorf("create standalone type wrapper directory: %w", err)
+	}
+	keepWrapper := false
+	defer func() {
+		if !keepWrapper {
+			_ = os.RemoveAll(wrapperDir)
+		}
+	}()
+	wrapperPath := filepath.Join(wrapperDir, "type-root.xsd")
+	modulePath, err := filepath.Abs(filepath.Join(xsdDir, "common", doc.File))
+	if err != nil {
+		return generatedFixture{}, fmt.Errorf("resolve standalone type schema %s: %w", doc.File, err)
+	}
+	wrapper := fmt.Sprintf("<xsd:schema xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:type=\"%s\" targetNamespace=\"%s\" elementFormDefault=\"qualified\"><xsd:include schemaLocation=\"%s\"/><xsd:element name=\"%s\" type=\"type:%s\"/></xsd:schema>", namespace, namespace, filepath.ToSlash(modulePath), typeName, typeName)
+	if err := os.WriteFile(wrapperPath, []byte(wrapper), 0o600); err != nil {
+		return generatedFixture{}, fmt.Errorf("write standalone type wrapper for %s: %w", typeName, err)
+	}
+	if err := validateStructuralCandidate(content, wrapperPath); err != nil {
+		return generatedFixture{}, fmt.Errorf("validate standalone type root %s#%s: %w", namespace, typeName, err)
+	}
+	keepWrapper = true
+	shortNamespace := "udt"
+	if strings.Contains(namespace, "CoreComponentTypeSchemaModule") {
+		shortNamespace = "ccts"
+	}
+	family := "type-root-" + shortNamespace + "-" + strings.ToLower(typeName)
+	return generatedFixture{entry: fixtureManifestEntry{
+		ID: "ubl21.structural." + family, DocumentType: typeName, Profile: "ubl21",
+		File:   filepath.ToSlash(filepath.Join("TypeRoots", family+".xml")),
+		SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+		Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+		ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+		Tags:              []string{"positive", "ubl21", "structural", "schema-type-root", shortNamespace},
+		StructuralTargets: []string{"schema-type-root:" + typeName},
+	}, content: []byte(content), schemaPath: wrapperPath}, nil
+}
+
+func generateSignatureInformationStructuralFixture(index schemaIndex, xsdDir, generatorVersion string) (generatedFixture, error) {
+	const namespace = "urn:oasis:names:specification:ubl:schema:xsd:SignatureAggregateComponents-2"
+	const root = "SignatureInformation"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, root)]
+	if doc == nil {
+		return generatedFixture{}, fmt.Errorf("UBL signature root %s is not declared", root)
+	}
+	content, err := generateTargetedStructuralSample(index, root, xsdDir, doc.File, nil, 1)
+	if err != nil {
+		return generatedFixture{}, fmt.Errorf("generate UBL signature root %s: %w", root, err)
+	}
+	schemaPath := schemaPathForDocument(xsdDir, doc.File)
+	if err := validateStructuralCandidate(content, schemaPath); err != nil {
+		return generatedFixture{}, fmt.Errorf("validate UBL signature root %s: %w", root, err)
+	}
+	family := "ubl-signature-information-root"
+	return generatedFixture{entry: fixtureManifestEntry{
+		ID: "ubl21.signature." + family, DocumentType: root, Profile: "ubl21",
+		File:   filepath.ToSlash(filepath.Join("SignatureSchemas", family+".xml")),
+		SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+		Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+		ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+		Tags:              []string{"positive", "ubl21", "structural", "signature-schema", "signature-aggregate"},
+		StructuralTargets: []string{"signature-aggregate-root:" + root},
+	}, content: []byte(content), schemaPath: schemaPath}, nil
+}
+
+func generateSignatureChoiceStructuralFixture(index schemaIndex, xsdDir, generatorVersion, root string, alternative int) (generatedFixture, error) {
+	const namespace = "http://www.w3.org/2000/09/xmldsig#"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, root)]
+	if doc == nil {
+		return generatedFixture{}, fmt.Errorf("XMLDSig choice root %s is not declared", root)
+	}
+	state := newTargetedStructuralGenState(map[int]int{0: alternative}, 1)
+	content, err := generateSampleWithState(index, root, xsdDir, doc.File, state)
+	if err != nil {
+		return generatedFixture{}, fmt.Errorf("generate XMLDSig choice root %s alternative %d: %w", root, alternative, err)
+	}
+	schemaPath := schemaPathForDocument(xsdDir, doc.File)
+	if err := validateStructuralCandidate(content, schemaPath); err != nil {
+		return generatedFixture{}, fmt.Errorf("validate XMLDSig choice root %s alternative %d: %w", root, alternative, err)
+	}
+	family := fmt.Sprintf("xmldsig-root-%s-choice-%03d", strings.ToLower(root), alternative)
+	return generatedFixture{entry: fixtureManifestEntry{
+		ID: "ubl21.signature." + family, DocumentType: root, Profile: "ubl21",
+		File:   filepath.ToSlash(filepath.Join("SignatureSchemas", family+".xml")),
+		SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+		Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+		ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+		Tags:              []string{"positive", "ubl21", "structural", "signature-schema", "xmldsig", "choice-alternative"},
+		StructuralTargets: []string{"signature-root:" + root, "family:" + family},
+	}, content: []byte(content), schemaPath: schemaPath}, nil
+}
+
+func generateSignatureChoiceCoverageFixtures(index schemaIndex, xsdDir, generatorVersion, root, schemaFile string, targets []string) ([]generatedFixture, error) {
+	plans, err := structuralChoicePlans(index, root, xsdDir, schemaFile)
+	if err != nil {
+		return nil, fmt.Errorf("plan choice alternatives: %w", err)
+	}
+	remaining := make(map[string]struct{}, len(targets))
+	for _, target := range targets {
+		remaining[target] = struct{}{}
+	}
+	var fixtures []generatedFixture
+	for planIndex, choices := range plans {
+		content, err := generateTargetedStructuralSample(index, root, xsdDir, schemaFile, choices, 1)
+		if err != nil {
+			return nil, fmt.Errorf("generate plan %d: %w", planIndex, err)
+		}
+		matched, err := matchFixtureDetailedReader(index, strings.NewReader(content))
+		if err != nil {
+			return nil, fmt.Errorf("match plan %d: %w", planIndex, err)
+		}
+		var covered []string
+		for target := range remaining {
+			if matched.targets[target] > 0 {
+				covered = append(covered, target)
+			}
+		}
+		if len(covered) == 0 {
+			continue
+		}
+		sort.Strings(covered)
+		schemaPath := schemaPathForDocument(xsdDir, schemaFile)
+		if err := validateStructuralCandidate(content, schemaPath); err != nil {
+			return nil, fmt.Errorf("validate plan %d: %w", planIndex, err)
+		}
+		family := fmt.Sprintf("xades-choice-%s-plan-%03d", strings.ToLower(root), planIndex)
+		fixtures = append(fixtures, generatedFixture{entry: fixtureManifestEntry{
+			ID: "ubl21.signature." + family, DocumentType: root, Profile: "ubl21",
+			File:   filepath.ToSlash(filepath.Join("SignatureSchemas", family+".xml")),
+			SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(content))), Standards: fixtureStandards{UBL: "2.1"},
+			Provenance:    fixtureProvenance{Kind: "generated", Generator: "createsamples", GeneratorVersion: generatorVersion},
+			ExpectedFinal: "valid", ExpectedStages: []fixtureExpectedStage{{Stage: "ubl21-xsd", Outcome: "passed"}},
+			Tags:              []string{"positive", "ubl21", "structural", "signature-schema", "xades", "choice-alternative"},
+			StructuralTargets: append([]string{"signature-root:" + root, "family:" + family}, covered...),
+		}, content: []byte(content), schemaPath: schemaPath})
+		for _, target := range covered {
+			delete(remaining, target)
+		}
+		if len(remaining) == 0 {
+			break
+		}
+	}
+	if len(remaining) > 0 {
+		missing := make([]string, 0, len(remaining))
+		for target := range remaining {
+			missing = append(missing, target)
+		}
+		sort.Strings(missing)
+		return nil, fmt.Errorf("choice plans did not cover targets: %s", strings.Join(missing, ", "))
+	}
+	return fixtures, nil
+}
+
+// namespaceFixtureKey produces a manifest-safe identifier component from a
+// namespace URI. The manifest permits separators only between non-empty
+// alphanumeric segments, so URI punctuation runs must collapse to one dash.
+func namespaceFixtureKey(namespace string) string {
+	var out strings.Builder
+	separator := false
+	for _, r := range strings.ToLower(namespace) {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			if separator && out.Len() > 0 {
+				out.WriteByte('-')
+			}
+			out.WriteRune(r)
+			separator = false
+		} else {
+			separator = true
+		}
+	}
+	return out.String()
+}
+
+func parseStructuralResumeCursor(cursor string) (phase, root string, err error) {
+	if cursor == "" {
+		return "", "", nil
+	}
+	phase, root, ok := strings.Cut(cursor, ":")
+	if !ok || root == "" || (phase != "main" && phase != "signature" && phase != "cardinality") {
+		return "", "", fmt.Errorf("invalid --resume-from %q; use main:<root>, signature:<root>, or cardinality:<root>", cursor)
+	}
+	return phase, root, nil
+}
+
+func validateStructuralCandidate(content string, schemaPath string) error {
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
 		return fmt.Errorf("xmllint is required for structural candidate validation: %w", err)
 	}
 	cmd := exec.Command(xmllint, "--nonet", "--noout", "--schema", schemaPath, "-")
-	cmd.Stdin = bytes.NewReader(content)
+	// strings.Reader presents the generated buffer directly to xmllint. The
+	// previous []byte conversion duplicated every structural fixture solely for
+	// validation (including the multi-megabyte collection witnesses).
+	cmd.Stdin = strings.NewReader(content)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("XSD validation failed: %w: %s", err, strings.TrimSpace(string(output)))
 	}
 	return nil
-}
-
-func structuralTargetIDs(index schemaIndex, content []byte) ([]string, error) {
-	matches, err := matchFixtureBytes(index, content)
-	if err != nil {
-		return nil, err
-	}
-	targets := make([]string, 0, len(matches))
-	for target := range matches {
-		targets = append(targets, target)
-	}
-	sort.Strings(targets)
-	return targets, nil
-}
-
-func countChoiceSites(index schemaIndex) int {
-	count := 0
-	var sequence func(*xsdSequence)
-	var choice func(*xsdChoice)
-	var all func(*xsdAll)
-	sequence = func(p *xsdSequence) {
-		if p != nil {
-			for i := range p.Sequences {
-				sequence(&p.Sequences[i])
-			}
-			for i := range p.Choices {
-				choice(&p.Choices[i])
-			}
-			for i := range p.Alls {
-				all(&p.Alls[i])
-			}
-		}
-	}
-	choice = func(p *xsdChoice) {
-		if p != nil {
-			count++
-			for i := range p.Sequences {
-				sequence(&p.Sequences[i])
-			}
-			for i := range p.Choices {
-				choice(&p.Choices[i])
-			}
-			for i := range p.Alls {
-				all(&p.Alls[i])
-			}
-		}
-	}
-	all = func(p *xsdAll) {
-		if p != nil {
-			for i := range p.Sequences {
-				sequence(&p.Sequences[i])
-			}
-			for i := range p.Choices {
-				choice(&p.Choices[i])
-			}
-			for i := range p.Alls {
-				all(&p.Alls[i])
-			}
-		}
-	}
-	for _, typ := range index.GlobalTypes {
-		sequence(typ.Sequence)
-		choice(typ.Choice)
-		all(typ.All)
-	}
-	return count
 }
 
 func maxChoiceAlternatives(index schemaIndex) int {
@@ -467,8 +1559,13 @@ func maxChoiceAlternatives(index schemaIndex) int {
 func buildGeneratedCorpus(fixtures []generatedFixture) (generatedCorpus, error) {
 	sort.Slice(fixtures, func(i, j int) bool { return fixtures[i].entry.ID < fixtures[j].entry.ID })
 	entries := make([]fixtureManifestEntry, len(fixtures))
+	files := make(map[string]string, len(fixtures))
 	for index := range fixtures {
 		entries[index] = fixtures[index].entry
+		if previousID, duplicate := files[fixtures[index].entry.File]; duplicate {
+			return generatedCorpus{}, fmt.Errorf("generated fixtures %q and %q use the same file %q", previousID, fixtures[index].entry.ID, fixtures[index].entry.File)
+		}
+		files[fixtures[index].entry.File] = fixtures[index].entry.ID
 	}
 	manifestJSON, err := json.MarshalIndent(fixtureManifest{SchemaVersion: 1, Fixtures: entries}, "", "  ")
 	if err != nil {
@@ -479,6 +1576,11 @@ func buildGeneratedCorpus(fixtures []generatedFixture) (generatedCorpus, error) 
 		return generatedCorpus{}, fmt.Errorf("validate generated fixture manifest: %w", err)
 	}
 	return generatedCorpus{fixtures: fixtures, manifestJSON: manifestJSON}, nil
+}
+
+func signatureCardinalityZeroFamily(planIndex int, targetID string) string {
+	targetHash := sha256.Sum256([]byte(targetID))
+	return fmt.Sprintf("signature-cardinality-plan-%05d-0-target-%x", planIndex, targetHash[:6])
 }
 
 func combineGeneratedCorpora(corpora ...generatedCorpus) (generatedCorpus, error) {
@@ -592,9 +1694,6 @@ func writeGeneratedCorpus(outputDir string, corpus generatedCorpus) error {
 		if err := os.RemoveAll(backup); err != nil {
 			return fmt.Errorf("remove replaced generated corpus backup %s: %w", backup, err)
 		}
-	}
-	for _, fixture := range corpus.fixtures {
-		fmt.Println(filepath.Join(outputDir, filepath.FromSlash(fixture.entry.File)))
 	}
 	return nil
 }

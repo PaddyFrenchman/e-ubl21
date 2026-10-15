@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -48,6 +49,83 @@ func TestShippedSchemaInventoryIndexAndGeneration(t *testing.T) {
 	}
 }
 
+func TestSplitQualifiedKeyPreservesFragmentNamespace(t *testing.T) {
+	key := qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "AllDataObjectsTimeStamp")
+	namespace, name, ok := splitQualifiedKey(key)
+	if !ok || namespace != "http://uri.etsi.org/01903/v1.3.2#" || name != "AllDataObjectsTimeStamp" {
+		t.Fatalf("splitQualifiedKey(%q) = %q, %q, %t", key, namespace, name, ok)
+	}
+}
+
+func TestGenerateRestrictedXAdESTimestampRoot(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "http://uri.etsi.org/01903/v1.3.2#"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, "AllDataObjectsTimeStamp")]
+	if doc == nil {
+		t.Fatal("AllDataObjectsTimeStamp declaration missing")
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "AllDataObjectsTimeStamp", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateXAdESCertificateValuesRoot(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "http://uri.etsi.org/01903/v1.3.2#"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, "AttrAuthoritiesCertValues")]
+	if doc == nil {
+		t.Fatal("AttrAuthoritiesCertValues declaration missing")
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "AttrAuthoritiesCertValues", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(content, ">U2FtcGxlRGF0YQ==</") {
+		t.Fatalf("EncapsulatedX509Certificate is not base64: %s", content)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateXAdESAttributeCertificateRefsRoot(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "http://uri.etsi.org/01903/v1.3.2#"
+	doc := index.GlobalElementDocs[qualifiedKey(namespace, "AttributeCertificateRefs")]
+	if doc == nil {
+		t.Fatal("AttributeCertificateRefs declaration missing")
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "AttributeCertificateRefs", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(content, "<ds:X509IssuerName>") {
+		t.Fatalf("X509IssuerName lacks XMLDSig namespace: %s", content)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCardinalityStructuralGenerationHonoursSchemaBounds(t *testing.T) {
 	state := newStructuralGenState(0, 1, true)
 	state.repeatCount = 5
@@ -86,8 +164,223 @@ func TestLargeInvoiceLineFixtureIsDeterministicAndValid(t *testing.T) {
 	if got, err := directChildCount(first, "InvoiceLine"); err != nil || got != 100 {
 		t.Fatalf("direct InvoiceLine count = %d, err = %v, want 100", got, err)
 	}
-	if err := validateStructuralCandidate([]byte(first), filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+	if err := validateStructuralCandidate(first, filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestStandaloneCommonComponentFixturesCoverUnreachableGlobalRoots(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const namespace = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	for _, root := range []string{"Branch", "Communication", "Duty", "MonetaryTotal", "Payment", "Regulation", "ServiceFrequency"} {
+		t.Run(root, func(t *testing.T) {
+			fixture, err := generateCommonComponentStructuralFixture(index, xsdDir, "test", root)
+			if err != nil {
+				t.Fatal(err)
+			}
+			matched, err := matchFixtureBytes(index, fixture.content)
+			if err != nil {
+				t.Fatal(err)
+			}
+			id := namespace + "|UBL-CommonAggregateComponents-2.1.xsd|element|global/" + root + "/" + root
+			if matched[id] == 0 {
+				t.Errorf("standalone fixture did not cover global declaration %q", id)
+			}
+			if fixture.entry.File != filepath.ToSlash(filepath.Join("CommonComponents", root+".xml")) {
+				t.Errorf("fixture path = %q", fixture.entry.File)
+			}
+		})
+	}
+}
+
+func TestSignatureRootsCoverSimpleElementsAndXAdES141ValidationData(t *testing.T) {
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const xades132 = "http://uri.etsi.org/01903/v1.3.2#"
+	for _, root := range []string{"SPURI", "SigningTime"} {
+		doc := index.GlobalElementDocs[qualifiedKey(xades132, root)]
+		if doc == nil {
+			t.Fatalf("XAdES 1.3.2 root %s is not indexed", root)
+		}
+		content, err := generateSampleWithState(index, root, xsdDir, doc.File, newTargetedStructuralGenState(nil, 1))
+		if err != nil {
+			t.Fatalf("generate XAdES 1.3.2 root %s: %v", root, err)
+		}
+		matched, err := matchFixtureDetailedReader(index, strings.NewReader(content))
+		if err != nil {
+			t.Fatalf("match XAdES 1.3.2 root %s: %v", root, err)
+		}
+		target := xades132 + "|" + doc.File + "|element|global/" + root + "/" + root
+		if matched.targets[target] == 0 {
+			t.Errorf("simple global root target %s was not credited", target)
+		}
+	}
+	for _, rootCase := range []struct{ root, typeName string }{
+		{"OtherTimeStamp", "OtherTimeStampType"},
+		{"XAdESTimeStamp", "XAdESTimeStampType"},
+	} {
+		doc := index.GlobalElementDocs[qualifiedKey(xades132, rootCase.root)]
+		if doc == nil {
+			t.Fatalf("XAdES timestamp root %s is not indexed", rootCase.root)
+		}
+		content, err := generateSampleWithState(index, rootCase.root, xsdDir, doc.File, newTargetedStructuralGenState(nil, 1))
+		if err != nil {
+			t.Fatalf("generate XAdES timestamp root %s: %v", rootCase.root, err)
+		}
+		if err := validateStructuralCandidate(content, schemaPathForDocument(xsdDir, doc.File)); err != nil {
+			t.Fatalf("validate XAdES timestamp root %s: %v", rootCase.root, err)
+		}
+		matched, err := matchFixtureDetailedReader(index, strings.NewReader(content))
+		if err != nil {
+			t.Fatalf("match XAdES timestamp root %s: %v", rootCase.root, err)
+		}
+		attributeID := xades132 + "|" + doc.File + "|attribute|" + rootCase.typeName + "/@Id"
+		if matched.targets[attributeID] == 0 {
+			t.Errorf("XAdES timestamp fixture did not exercise %s", attributeID)
+		}
+	}
+	objectIdentifier := index.GlobalElementDocs[qualifiedKey(xades132, "ObjectIdentifier")]
+	if objectIdentifier == nil {
+		t.Fatal("XAdES 1.3.2 ObjectIdentifier root is not indexed")
+	}
+	identifier, err := generateSampleWithState(index, "ObjectIdentifier", xsdDir, objectIdentifier.File, newTargetedStructuralGenState(nil, 1))
+	if err != nil {
+		t.Fatalf("generate XAdES ObjectIdentifier: %v", err)
+	}
+	matched, err := matchFixtureDetailedReader(index, strings.NewReader(identifier))
+	if err != nil {
+		t.Fatalf("match XAdES ObjectIdentifier: %v", err)
+	}
+	qualifierTypeID := xades132 + "|" + objectIdentifier.File + "|complexType|QualifierType"
+	if matched.targets[qualifierTypeID] == 0 {
+		t.Errorf("attribute simple type target %s was not credited", qualifierTypeID)
+	}
+
+	const xades141 = "http://uri.etsi.org/01903/v1.4.1#"
+	root := "TimeStampValidationData"
+	doc := index.GlobalElementDocs[qualifiedKey(xades141, root)]
+	if doc == nil {
+		t.Fatalf("XAdES 1.4.1 root %s is not indexed", root)
+	}
+	content, err := generateSampleWithState(index, root, xsdDir, doc.File, newTargetedStructuralGenState(nil, 1))
+	if err != nil {
+		t.Fatalf("generate XAdES 1.4.1 root: %v", err)
+	}
+	if !strings.Contains(content, " Id=\"id-") || !strings.Contains(content, " UR=\"") {
+		t.Fatalf("XAdES 1.4.1 optional attributes missing from generated root:\n%s", content)
+	}
+	if err := validateStructuralCandidate(content, schemaPathForDocument(xsdDir, doc.File)); err != nil {
+		t.Fatalf("validate XAdES 1.4.1 root: %v", err)
+	}
+	matched, err = matchFixtureDetailedReader(index, strings.NewReader(content))
+	if err != nil {
+		t.Fatalf("match XAdES 1.4.1 root: %v", err)
+	}
+	for _, target := range []string{
+		xades141 + "|" + doc.File + "|complexType|ValidationDataType",
+		xades141 + "|" + doc.File + "|element|global/TimeStampValidationData/TimeStampValidationData",
+		xades141 + "|" + doc.File + "|element|ValidationDataType/sequence[0]/CertificateValues",
+		xades141 + "|" + doc.File + "|element|ValidationDataType/sequence[1]/RevocationValues",
+	} {
+		if matched.targets[target] == 0 {
+			t.Errorf("XAdES 1.4.1 fixture did not cover %s", target)
+		}
+	}
+	for _, name := range []string{"Id", "UR"} {
+		target := xades141 + "|" + doc.File + "|attribute|ValidationDataType/@" + name
+		if matched.targets[target] == 0 {
+			t.Errorf("XAdES 1.4.1 attribute target %s was not credited", target)
+		}
+	}
+
+	for _, choiceCase := range []struct {
+		root   string
+		target string
+	}{
+		{"OtherTimeStamp", xades132 + "|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp"},
+		{"CompleteRevocationRefs", xades132 + "|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey"},
+	} {
+		choiceDoc := index.GlobalElementDocs[qualifiedKey(xades132, choiceCase.root)]
+		if choiceDoc == nil {
+			t.Fatalf("XAdES choice root %s is not indexed", choiceCase.root)
+		}
+		fixtures, err := generateSignatureChoiceCoverageFixtures(index, xsdDir, "git:"+strings.Repeat("0", 40), choiceCase.root, choiceDoc.File, []string{choiceCase.target})
+		if err != nil {
+			t.Fatalf("generate XAdES choice root %s: %v", choiceCase.root, err)
+		}
+		if len(fixtures) == 0 {
+			t.Fatalf("no generated fixture for XAdES choice target %s", choiceCase.target)
+		}
+		for _, fixture := range fixtures {
+			matched, err := matchFixtureDetailedReader(index, strings.NewReader(string(fixture.content)))
+			if err != nil {
+				t.Fatalf("match XAdES choice root %s: %v", choiceCase.root, err)
+			}
+			if matched.targets[choiceCase.target] == 0 {
+				t.Errorf("generated XAdES choice fixture %s missed target %s", fixture.entry.ID, choiceCase.target)
+			}
+		}
+	}
+}
+
+func TestStandaloneTypeFixturesCoverUnreferencedCCTSAndUDTTypes(t *testing.T) {
+	const ccts = "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2"
+	const udt = "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2"
+	cases := []struct {
+		namespace string
+		name      string
+		attribute string
+		base      string
+	}{
+		{ccts, "DateTimeType", "format", "#string"},
+		{ccts, "IndicatorType", "format", "#string"},
+		{udt, "DateTimeType", "", "#dateTime"},
+		{udt, "GraphicType", "mimeCode", ccts + "#BinaryObjectType"},
+		{udt, "PictureType", "mimeCode", ccts + "#BinaryObjectType"},
+		{udt, "SoundType", "mimeCode", ccts + "#BinaryObjectType"},
+		{udt, "ValueType", "", ccts + "#NumericType"},
+		{udt, "VideoType", "mimeCode", ccts + "#BinaryObjectType"},
+	}
+	xsdDir := filepath.Join("..", "XSD")
+	index, err := buildSchemaIndex(xsdDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range cases {
+		fixture, err := generateStandaloneTypeStructuralFixture(index, xsdDir, "git:"+strings.Repeat("0", 40), tc.namespace, tc.name)
+		if err != nil {
+			t.Fatalf("generate standalone type root %s#%s: %v", tc.namespace, tc.name, err)
+		}
+		wrapperDir := filepath.Dir(fixture.schemaPath)
+		t.Cleanup(func() { _ = os.RemoveAll(wrapperDir) })
+		matched, err := matchFixtureBytes(index, fixture.content)
+		if err != nil {
+			t.Fatalf("match standalone type root %s#%s: %v", tc.namespace, tc.name, err)
+		}
+		typeID := tc.namespace + "|" + filepath.Base(index.GlobalTypeDocs[qualifiedKey(tc.namespace, tc.name)].File) + "|complexType|" + tc.name
+		if matched[typeID] == 0 {
+			t.Errorf("standalone type fixture did not exercise %s", typeID)
+		}
+		if tc.attribute != "" {
+			attributeID := tc.namespace + "|" + index.GlobalTypeDocs[qualifiedKey(tc.namespace, tc.name)].File + "|attribute|" + tc.name + "/@" + tc.attribute
+			if matched[attributeID] == 0 {
+				t.Errorf("standalone type fixture did not exercise %s", attributeID)
+			}
+		}
+		if tc.base != "" {
+			inheritanceID := tc.namespace + "|" + index.GlobalTypeDocs[qualifiedKey(tc.namespace, tc.name)].File + "|inheritance|" + tc.name + "->" + tc.base
+			if matched[inheritanceID] == 0 {
+				t.Errorf("standalone type fixture did not exercise %s", inheritanceID)
+			}
+		}
 	}
 }
 
@@ -114,7 +407,7 @@ func TestMultiCollectionInvoiceFixtureIsValid(t *testing.T) {
 			t.Fatalf("direct %s count = %d, want %d", element, got, want)
 		}
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -138,7 +431,7 @@ func TestLargeAttachmentReferenceAndShipmentFixturesAreValid(t *testing.T) {
 		if got, err := directChildCount(content, fixture.element); err != nil || got != 50 {
 			t.Fatalf("%s direct %s count = %d, err = %v, want 50", fixture.root, fixture.element, got, err)
 		}
-		if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", fixture.schema)); err != nil {
+		if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", fixture.schema)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -157,7 +450,7 @@ func TestLargeItemBearingCatalogueFixtureIsValid(t *testing.T) {
 	if got, err := directChildCount(content, "CatalogueLine"); err != nil || got != 100 {
 		t.Fatalf("direct CatalogueLine count = %d, err = %v, want 100", got, err)
 	}
-	if err := validateStructuralCandidate([]byte(content), filepath.Join(xsdDir, "maindoc", "UBL-Catalogue-2.1.xsd")); err != nil {
+	if err := validateStructuralCandidate(content, filepath.Join(xsdDir, "maindoc", "UBL-Catalogue-2.1.xsd")); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -499,6 +792,231 @@ func TestTargetedChoiceSelectionIsPerSite(t *testing.T) {
 	}
 }
 
+func TestGenerateSignatureExtensionStructuralSampleIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content, err := generateSignatureExtensionStructuralSample(index, "Invoice", filepath.Join("..", "XSD"), "UBL-Invoice-2.1.xsd", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"<sig:UBLDocumentSignatures>", "<ds:KeyInfo>", "<ds:XPath>/*</ds:XPath>"} {
+		if !strings.Contains(content, want) {
+			t.Errorf("signature extension missing %q", want)
+		}
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+		t.Fatal(err)
+	}
+	matched, err := matchFixtureBytes(index, []byte(content))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"KeyInfoType/choice", "TransformType/choice", "SignaturePolicyIdentifierType", "CommitmentTypeIndicationType", "UnsignedSignaturePropertiesType", "XAdESTimeStampType"} {
+		found := false
+		for target := range matched {
+			if strings.Contains(target, want) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("signature extension did not exercise %s", want)
+		}
+	}
+}
+
+func TestGenerateCounterSignatureRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "CounterSignature")]
+	if doc == nil {
+		t.Fatal("CounterSignature declaration not found")
+	}
+	signatureMethod := index.GlobalTypes[qualifiedKey("http://www.w3.org/2000/09/xmldsig#", "SignatureMethodType")]
+	if signatureMethod.Sequence == nil || len(signatureMethod.Sequence.Elements) == 0 {
+		t.Fatal("SignatureMethod HMACOutputLength declaration not found")
+	}
+	if got := signatureMethod.Sequence.Elements[0].Type; got != "ds:HMACOutputLengthType" {
+		t.Fatalf("HMACOutputLength type = %q", got)
+	}
+	if _, ok := index.GlobalSimpleTypes[qualifiedKey("http://www.w3.org/2000/09/xmldsig#", "HMACOutputLengthType")]; !ok {
+		t.Fatal("HMACOutputLengthType not indexed as a simple type")
+	}
+	if signatureMethod.Sequence.Elements[0].ComplexType != nil {
+		t.Fatal("HMACOutputLength unexpectedly has an inline complex type")
+	}
+	if got := sampleScalarForType(index, "HMACOutputLength", "ds:HMACOutputLengthType", "http://www.w3.org/2000/09/xmldsig#", 1); got != "1" {
+		t.Fatalf("direct HMACOutputLength = %q", got)
+	}
+	if node, ok := expandElement(index, signatureMethod.Sequence.Elements[0], "HMACOutputLength", "ds", "http://www.w3.org/2000/09/xmldsig#", newTargetedStructuralGenState(nil, 1), 0); !ok || node.Value != "1" {
+		t.Fatalf("generated HMACOutputLength = %#v, supported=%v", node, ok)
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "CounterSignature", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(content, ">1</ds:HMACOutputLength>") {
+		t.Fatalf("HMACOutputLength is not a valid integer:\n%s", content)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateSignaturePropertiesRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://www.w3.org/2000/09/xmldsig#", "SignatureProperties")]
+	if doc == nil {
+		t.Fatal("SignatureProperties declaration not found")
+	}
+	state := newTargetedStructuralGenState(nil, 1)
+	state.signatureExtension = true
+	content, err := generateSampleWithState(index, "SignatureProperties", filepath.Join("..", "XSD"), doc.File, state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateMinimalStructuralRootsWithWildcardsAreXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, root := range []struct {
+		namespace string
+		name      string
+	}{
+		{"http://www.w3.org/2000/09/xmldsig#", "SignatureProperties"},
+		{"urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2", "UBLExtensions"},
+	} {
+		t.Run(root.name, func(t *testing.T) {
+			doc := index.GlobalElementDocs[qualifiedKey(root.namespace, root.name)]
+			if doc == nil {
+				t.Fatalf("%s declaration not found", root.name)
+			}
+			content, err := generateMinimalStructuralSample(index, root.name, filepath.Join("..", "XSD"), doc.File)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := validateStructuralCandidate(content, schemaPathForDocument(filepath.Join("..", "XSD"), doc.File)); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func TestGenerateAllDataObjectsTimeStampCardinalityRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "AllDataObjectsTimeStamp")]
+	if doc == nil {
+		t.Fatal("AllDataObjectsTimeStamp declaration not found")
+	}
+	content, err := generateCardinalityStructuralSample(index, "AllDataObjectsTimeStamp", filepath.Join("..", "XSD"), doc.File, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateSignedDataObjectPropertiesCardinalityRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "SignedDataObjectProperties")]
+	if doc == nil {
+		t.Fatal("SignedDataObjectProperties declaration not found")
+	}
+	content, err := generateCardinalityStructuralSample(index, "SignedDataObjectProperties", filepath.Join("..", "XSD"), doc.File, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateOtherTimeStampMinimalRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "OtherTimeStamp")]
+	if doc == nil {
+		t.Fatal("OtherTimeStamp declaration not found")
+	}
+	content, err := generateMinimalSample(index, "OtherTimeStamp", filepath.Join("..", "XSD"), doc.File)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+	content, err = generateCardinalityStructuralSample(index, "OtherTimeStamp", filepath.Join("..", "XSD"), doc.File, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateUnsignedDataObjectPropertiesMinimalRootIsXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := index.GlobalElementDocs[qualifiedKey("http://uri.etsi.org/01903/v1.3.2#", "UnsignedDataObjectProperties")]
+	if doc == nil {
+		t.Fatal("UnsignedDataObjectProperties declaration not found")
+	}
+	content, err := generateMinimalSample(index, "UnsignedDataObjectProperties", filepath.Join("..", "XSD"), doc.File)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "common", doc.File)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateSignatureExtensionStructuralVariantsAreDistinctAndXSDValid(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := map[string]bool{}
+	for variant := 0; variant < 32; variant++ {
+		content, err := generateSignatureExtensionStructuralSample(index, "Invoice", filepath.Join("..", "XSD"), "UBL-Invoice-2.1.xsd", variant)
+		if err != nil {
+			t.Fatalf("variant %d: %v", variant, err)
+		}
+		if seen[content] {
+			t.Fatalf("variant %d duplicates an earlier signature fixture", variant)
+		}
+		seen[content] = true
+		if err := validateStructuralCandidate(content, filepath.Join("..", "XSD", "maindoc", "UBL-Invoice-2.1.xsd")); err != nil {
+			t.Fatalf("variant %d: %v", variant, err)
+		}
+	}
+}
+
 func TestStructuralChoiceSiteCountIsRootLocal(t *testing.T) {
 	ns := "urn:test"
 	index := schemaIndex{
@@ -560,11 +1078,50 @@ func TestStructuralChoicePlansDiscoverNestedAlternativeSites(t *testing.T) {
 	}
 }
 
-func TestStructuralWildcardHonorsPolicy(t *testing.T) {
-	if _, ok := structuralWildcardNode(xsdAny{Namespace: "##other", ProcessContents: "strict"}); ok {
-		t.Fatal("strict wildcard must not invent an undeclared node")
+func TestStructuralChoicePlansHaveStableOrder(t *testing.T) {
+	ns := "urn:test"
+	inner := xsdChoice{Elements: []xsdElementDecl{{Name: "One", Type: "xsd:string"}, {Name: "Two", Type: "xsd:string"}}}
+	rootType := xsdComplexType{Choice: &xsdChoice{Sequences: []xsdSequence{
+		{Choices: []xsdChoice{inner}},
+		{Choices: []xsdChoice{inner}},
+	}}}
+	index := schemaIndex{
+		GlobalElements: map[string]xsdElementDecl{qualifiedKey(ns, "Root"): {Name: "Root", Type: "RootType"}},
+		GlobalTypes:    map[string]xsdComplexType{qualifiedKey(ns, "RootType"): rootType},
+		ByTargetNS:     map[string]*schemaDoc{ns: {TargetNamespace: ns, Types: map[string]xsdComplexType{"RootType": rootType}}},
 	}
-	if n, ok := structuralWildcardNode(xsdAny{Namespace: "##local", ProcessContents: "skip"}); !ok || n.Attributes["xmlns"] != "" {
+	xsdDir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(xsdDir, "maindoc"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(xsdDir, "maindoc", "root.xsd"), []byte(`<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:test"/>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	want, err := structuralChoicePlans(index, "Root", xsdDir, "root.xsd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for range 50 {
+		got, err := structuralChoicePlans(index, "Root", xsdDir, "root.xsd")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("choice plan order is unstable:\n got %#v\nwant %#v", got, want)
+		}
+	}
+}
+
+func TestStructuralWildcardHonorsPolicy(t *testing.T) {
+	index := schemaIndex{}
+	state := newTargetedStructuralGenState(nil, 1)
+	if _, ok := structuralWildcardNode(index, xsdAny{Namespace: "##other", ProcessContents: "strict"}, "urn:test", state, 0); ok {
+		t.Fatal("strict wildcard without a permitted global declaration must not invent a node")
+	}
+	if _, ok := structuralWildcardNode(index, xsdAny{Namespace: "##other"}, "urn:test", state, 0); ok {
+		t.Fatal("an omitted wildcard policy defaults to strict")
+	}
+	if n, ok := structuralWildcardNode(index, xsdAny{Namespace: "##local", ProcessContents: "skip"}, "urn:test", state, 0); !ok || n.Attributes["xmlns"] != "" {
 		t.Fatalf("local wildcard = %#v, %v", n, ok)
 	}
 }
@@ -719,6 +1276,10 @@ func TestSchemaIndexReadErrorsAndNamespaceFallback(t *testing.T) {
 }
 
 func TestQNameValuesAndGenerationHelpers(t *testing.T) {
+	index, err := buildSchemaIndex(filepath.Join("..", "XSD"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	if localPart("cbc:ID") != "ID" || prefixPart("cbc:ID") != "cbc" || trimUBLDocumentType("UBL-Invoice-2.1.xsd") != "Invoice" {
 		t.Fatal("QName helpers returned unexpected values")
 	}
@@ -737,6 +1298,15 @@ func TestQNameValuesAndGenerationHelpers(t *testing.T) {
 	if sampleValueForType("Rate", "", 2) != "1.15" || sampleValueForType("Text", "", 2) != "Value of Text 2" {
 		t.Error("indexed sample values incorrect")
 	}
+	if got := sampleValueForType("IssueTime", "xsd:dateTime", 0); got != "2026-01-01T12:00:00Z" {
+		t.Errorf("xsd:dateTime IssueTime = %q, want a valid date-time", got)
+	}
+	if got := sampleValueForType("PGPKeyID", "xsd:base64Binary", 0); got != "U2FtcGxlRGF0YQ==" {
+		t.Errorf("xsd:base64Binary PGPKeyID = %q, want valid base64", got)
+	}
+	if got := sampleScalarForType(index, "HMACOutputLength", "ds:HMACOutputLengthType", "http://www.w3.org/2000/09/xmldsig#", 0); got != "1" {
+		t.Errorf("HMACOutputLength = %q, want a valid integer", got)
+	}
 	if !isPrimitiveType("xsd:string") || isPrimitiveType("custom") {
 		t.Error("primitive detection incorrect")
 	}
@@ -748,7 +1318,7 @@ func TestQNameValuesAndGenerationHelpers(t *testing.T) {
 	if occurrenceCount(xsdElementDecl{MinOccurs: "99"}, newGenState(), 1) != maxOccursSample || occurrenceCount(xsdElementDecl{MinOccurs: "0"}, newGenState(), 1) != 1 {
 		t.Error("occurrence cap/default incorrect")
 	}
-	if sequenceRequiresAny(nil) || sequenceRequiresAny(&xsdSequence{}) || !sequenceRequiresAny(&xsdSequence{Any: &xsdAny{}}) {
+	if sequenceRequiresAny(nil) || sequenceRequiresAny(&xsdSequence{}) || !sequenceRequiresAny(&xsdSequence{Any: &xsdAny{}}) || sequenceRequiresAny(&xsdSequence{MinOccurs: "0", Any: &xsdAny{}}) {
 		t.Error("sequenceRequiresAny incorrect")
 	}
 }

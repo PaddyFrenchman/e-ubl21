@@ -1,0 +1,5 @@
+Structural corpus generation failures:
+
+generate cardinality root SignatureProperties minimal: root element "SignatureProperties" requires an unsupported XSD construct (e.g. xsd:any) that cannot be generated
+
+generate cardinality root UBLExtensions minimal: root element "UBLExtensions" requires an unsupported XSD construct (e.g. xsd:any) that cannot be generated

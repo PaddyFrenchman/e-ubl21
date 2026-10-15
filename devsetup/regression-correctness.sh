@@ -12,6 +12,11 @@ NATS_LOCAL_PORT="${NATS_LOCAL_PORT:-14223}"
 NATS_MONITOR_PORT="${NATS_MONITOR_PORT:-18223}"
 QUEUE_NAMESPACE="${QUEUE_NAMESPACE:-eubl21.correctness}"
 SOURCE_TIMEOUT="${SOURCE_TIMEOUT:-30s}"
+# Full structural qualification can run substantially longer than the ordinary
+# regression suite.  Keep the current short defaults, but allow that run to
+# extend both the bearer-token lifetime and source-object retention.
+REGRESSION_TOKEN_TTL="${REGRESSION_TOKEN_TTL:-2h}"
+UPLOAD_CONTENT_RETENTION="${EUBL21_UPLOAD_CONTENT_RETENTION:-1h}"
 ISSUER="https://correctness.e-ubl21.local"
 AUDIENCE="e-ubl21-correctness"
 NATS_CONTAINER="e-ubl21-correctness-${RUN_STAMP//[^a-zA-Z0-9]/}-$$"
@@ -21,6 +26,24 @@ RESOLVER_JAR="$SAXON_DIR/xmlresolver-6.0.17.jar"
 SAXON_CONFIG="$ROOT_DIR/validation-assets/saxon/saxon-config.xml"
 EN16931_XSLT="$ROOT_DIR/validation-assets/en16931/1.3.16/EN16931-UBL-validation.xslt"
 DATABASE_URL="${EUBL21_DATABASE_URL:-}"
+# Set STRUCTURAL_FIXTURE_ID to reproduce exactly one checked-in structural
+# fixture through the same disposable API/database/NATS/worker topology.
+STRUCTURAL_FIXTURE_ID="${STRUCTURAL_FIXTURE_ID:-}"
+STRUCTURAL_FIXTURE_IDS="${STRUCTURAL_FIXTURE_IDS:-}"
+# A full structural qualification has hundreds of thousands of fixtures. Keep
+# the work bounded to a known-safe local capacity while allowing CI operators
+# to tune it explicitly.
+REGRESSION_CONCURRENCY="${REGRESSION_CONCURRENCY:-1}"
+STRUCTURAL_REGRESSION_CONCURRENCY="${STRUCTURAL_REGRESSION_CONCURRENCY:-$REGRESSION_CONCURRENCY}"
+
+if [[ ! "$REGRESSION_CONCURRENCY" =~ ^[1-9][0-9]*$ || ! "$STRUCTURAL_REGRESSION_CONCURRENCY" =~ ^[1-9][0-9]*$ ]]; then
+    echo "ERROR: regression concurrency values must be positive integers" >&2
+    exit 2
+fi
+if [[ -n "$STRUCTURAL_FIXTURE_ID" && -n "$STRUCTURAL_FIXTURE_IDS" ]]; then
+    echo "ERROR: set only one of STRUCTURAL_FIXTURE_ID or STRUCTURAL_FIXTURE_IDS" >&2
+    exit 2
+fi
 
 for command in go java xmllint docker curl diff; do
     if ! command -v "$command" >/dev/null 2>&1; then
@@ -108,12 +131,12 @@ wait_http nats "http://127.0.0.1:$NATS_MONITOR_PORT/healthz"
 
 HMAC_SECRET="$(go run ./tools/regression-token-secret)"
 export EUBL21_REGRESSION_HMAC_SECRET="$HMAC_SECRET"
-TOKEN="$(go run ./tools/regression-token --issuer "$ISSUER" --audience "$AUDIENCE" --ttl 2h)"
+TOKEN="$(go run ./tools/regression-token --issuer "$ISSUER" --audience "$AUDIENCE" --ttl "$REGRESSION_TOKEN_TTL")"
 unset EUBL21_REGRESSION_HMAC_SECRET
 
 export EUBL21_NATS_URL="nats://127.0.0.1:$NATS_LOCAL_PORT"
 export EUBL21_QUEUE_NAMESPACE="$QUEUE_NAMESPACE"
-export EUBL21_UPLOAD_CONTENT_RETENTION=1h
+export EUBL21_UPLOAD_CONTENT_RETENTION="$UPLOAD_CONTENT_RETENTION"
 export EUBL21_UPLOAD_CONTENT_MAX_BYTES=1073741824
 # The API and worker are separate processes. Give their default filesystem
 # object-store backend one shared writable directory instead of /var/lib,
@@ -143,8 +166,9 @@ EUBL21_WORKER_XMLRESOLVER_JAR_PATH="$RESOLVER_JAR" \
 EUBL21_WORKER_SAXON_CONFIGURATION_PATH="$SAXON_CONFIG" \
 EUBL21_WORKER_EN16931_XSLT_PATH="$EN16931_XSLT" \
 EUBL21_WORKER_SAXON_STARTUP_TIMEOUT=30s \
-EUBL21_WORKER_CONCURRENCY=1 \
-EUBL21_WORKER_PREFETCH=1 \
+EUBL21_WORKER_CONCURRENCY="$STRUCTURAL_REGRESSION_CONCURRENCY" \
+EUBL21_WORKER_PREFETCH="$STRUCTURAL_REGRESSION_CONCURRENCY" \
+EUBL21_WORKER_MAX_ACK_PENDING="$((STRUCTURAL_REGRESSION_CONCURRENCY * 2))" \
 EUBL21_WORKER_ACK_WAIT=90s \
     "$TEMP_DIR/e-ubl21" worker >"$ARTIFACT_DIR/logs/worker.log" 2>&1 &
 WORKER_PID=$!
@@ -163,6 +187,20 @@ run_corpus() {
     local manifest=$2
     local output="$ARTIFACT_DIR/$name"
     local status
+    local fixture_args=()
+    local concurrency="$REGRESSION_CONCURRENCY"
+
+    if [[ "$name" == "ubl21-structural" && -n "$STRUCTURAL_FIXTURE_ID" ]]; then
+        fixture_args=(--fixture-id "$STRUCTURAL_FIXTURE_ID")
+    elif [[ "$name" == "ubl21-structural" && -n "$STRUCTURAL_FIXTURE_IDS" ]]; then
+        IFS=',' read -r -a structural_fixture_ids <<<"$STRUCTURAL_FIXTURE_IDS"
+        for fixture_id in "${structural_fixture_ids[@]}"; do
+            fixture_args+=(--fixture-id "$fixture_id")
+        done
+    fi
+    if [[ "$name" == "ubl21-structural" ]]; then
+        concurrency="$STRUCTURAL_REGRESSION_CONCURRENCY"
+    fi
 
     mkdir -p "$output"
     set +e
@@ -171,6 +209,8 @@ run_corpus() {
         --token "$TOKEN" \
         --manifest "$manifest" \
         --profile all \
+        --concurrency "$concurrency" \
+        "${fixture_args[@]}" \
         --output "$output" 2>&1 | tee "$output/runner.log"
     status=${PIPESTATUS[0]}
     set -e
@@ -221,9 +261,13 @@ run_corpus() {
     fi
 }
 
-run_corpus ubl21 "$ROOT_DIR/createsamples/samples/manifest.json"
-run_corpus en16931 "$ROOT_DIR/createsamples/samples-en16931/manifest.json"
-run_corpus ubl21-structural "$ROOT_DIR/createsamples/samples-structural/manifest.json"
+if [[ -n "$STRUCTURAL_FIXTURE_ID" || -n "$STRUCTURAL_FIXTURE_IDS" ]]; then
+    run_corpus ubl21-structural "$ROOT_DIR/createsamples/samples-structural/manifest.json"
+else
+    run_corpus ubl21 "$ROOT_DIR/createsamples/samples/manifest.json"
+    run_corpus en16931 "$ROOT_DIR/createsamples/samples-en16931/manifest.json"
+    run_corpus ubl21-structural "$ROOT_DIR/createsamples/samples-structural/manifest.json"
+fi
 
 echo "Correctness regression artifacts: $ARTIFACT_DIR"
 if (( RUNNER_STATUS != 0 )); then

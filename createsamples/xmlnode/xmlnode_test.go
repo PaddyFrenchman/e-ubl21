@@ -1,6 +1,9 @@
 package xmlnode
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestRenderEscapesAndSortsAttributes(t *testing.T) {
 	got := Render(Node{
@@ -18,7 +21,9 @@ func TestRenderEscapesAndSortsAttributes(t *testing.T) {
 	if got != want {
 		t.Fatalf("Render() = %q, want %q", got, want)
 	}
-	if got := indentString(0); got != "" {
-		t.Fatalf("indentString(0) = %q", got)
+	var streamed strings.Builder
+	RenderTo(&streamed, Node{Name: "Child", Value: "value"}, 0)
+	if got := streamed.String(); got != "<Child>value</Child>\n" {
+		t.Fatalf("RenderTo() = %q", got)
 	}
 }

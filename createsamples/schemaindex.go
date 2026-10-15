@@ -7,17 +7,23 @@ package main
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type schemaIndex struct {
 	ByFile            map[string]*schemaDoc
 	ByTargetNS        map[string]*schemaDoc
 	GlobalElements    map[string]xsdElementDecl
+	GlobalElementDocs map[string]*schemaDoc
 	GlobalTypes       map[string]xsdComplexType
+	GlobalTypeDocs    map[string]*schemaDoc
 	GlobalSimpleTypes map[string]xsdSimpleType
+	RecursiveEdges    map[string]struct{}
+	ChoiceTypes       map[string]struct{}
 }
 
 // ublNamespaceByPrefix records the fixed namespace URI for every namespace
@@ -63,9 +69,21 @@ func qualifiedKey(namespace, name string) string {
 	return namespace + "#" + name
 }
 
+// splitQualifiedKey reverses qualifiedKey. Namespace URIs such as XMLDSig
+// and XAdES legitimately end in '#', so the final separator is the only
+// unambiguous boundary between namespace and local name.
+func splitQualifiedKey(key string) (namespace, name string, ok bool) {
+	separator := strings.LastIndex(key, "#")
+	if separator <= 0 || separator == len(key)-1 {
+		return "", "", false
+	}
+	return key[:separator], key[separator+1:], true
+}
+
 type schemaDoc struct {
 	File            string
 	TargetNamespace string
+	Imports         []xsdImport
 	Elements        map[string]xsdElementDecl
 	Types           map[string]xsdComplexType
 	SimpleTypes     map[string]xsdSimpleType
@@ -76,7 +94,9 @@ func buildSchemaIndex(xsdDir string) (schemaIndex, error) {
 		ByFile:            map[string]*schemaDoc{},
 		ByTargetNS:        map[string]*schemaDoc{},
 		GlobalElements:    map[string]xsdElementDecl{},
+		GlobalElementDocs: map[string]*schemaDoc{},
 		GlobalTypes:       map[string]xsdComplexType{},
+		GlobalTypeDocs:    map[string]*schemaDoc{},
 		GlobalSimpleTypes: map[string]xsdSimpleType{},
 	}
 
@@ -98,14 +118,29 @@ func buildSchemaIndex(xsdDir string) (schemaIndex, error) {
 			index.ByTargetNS[doc.TargetNamespace] = doc
 		}
 		for name, decl := range doc.Elements {
-			index.GlobalElements[qualifiedKey(doc.TargetNamespace, name)] = decl
+			key := qualifiedKey(doc.TargetNamespace, name)
+			index.GlobalElements[key] = decl
+			index.GlobalElementDocs[key] = doc
 		}
 		for name, typ := range doc.Types {
-			index.GlobalTypes[qualifiedKey(doc.TargetNamespace, name)] = typ
+			key := qualifiedKey(doc.TargetNamespace, name)
+			index.GlobalTypes[key] = typ
+			index.GlobalTypeDocs[key] = doc
 		}
 		for name, typ := range doc.SimpleTypes {
 			index.GlobalSimpleTypes[qualifiedKey(doc.TargetNamespace, name)] = typ
 		}
+	}
+	targets := schemaCoverageTargets(index)
+	index.RecursiveEdges = targets.recursiveEdges
+	index.ChoiceTypes = map[string]struct{}{}
+	for id := range targets.choices {
+		parts := strings.Split(id, "|")
+		if len(parts) != 4 {
+			continue
+		}
+		owner := strings.SplitN(parts[3], "/", 2)[0]
+		index.ChoiceTypes[qualifiedKey(parts[0], owner)] = struct{}{}
 	}
 	return index, nil
 }
@@ -119,7 +154,7 @@ func loadSchemaDoc(path string) (*schemaDoc, error) {
 	if err := xml.Unmarshal(content, &doc); err != nil {
 		return nil, err
 	}
-	result := &schemaDoc{File: filepath.Base(path), TargetNamespace: doc.TargetNamespace, Elements: map[string]xsdElementDecl{}, Types: map[string]xsdComplexType{}, SimpleTypes: map[string]xsdSimpleType{}}
+	result := &schemaDoc{File: filepath.Base(path), TargetNamespace: doc.TargetNamespace, Imports: doc.Imports, Elements: map[string]xsdElementDecl{}, Types: map[string]xsdComplexType{}, SimpleTypes: map[string]xsdSimpleType{}}
 	for _, element := range doc.Elements {
 		if element.Name != "" {
 			result.Elements[element.Name] = element
@@ -144,6 +179,11 @@ func loadSchemaDoc(path string) (*schemaDoc, error) {
 
 func rootNamespaceForSchema(xsdDir, schemaFile string) (string, error) {
 	path := filepath.Join(xsdDir, "maindoc", schemaFile)
+	if filepath.Dir(schemaFile) != "." {
+		path = filepath.Join(xsdDir, schemaFile)
+	} else if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		path = filepath.Join(xsdDir, "common", schemaFile)
+	}
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", err

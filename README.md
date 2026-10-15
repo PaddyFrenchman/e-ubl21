@@ -311,12 +311,26 @@ fixtures (500, 250, and 250 at the largest tier respectively) for real-path
 stress validation. Targeted aggregate families also cover allowance/charge,
 tax, reference/attachment, shipment, and item-bearing collections.
 
-Both UBL corpora, their manifests, and the structural coverage reports are
-tracked. Regenerate them into staging and print a reviewable diff with:
+The baseline UBL corpus is tracked; the potentially multi-gigabyte structural
+corpus is regenerated locally from the pinned XSD inputs. Structural coverage
+reports are retained with qualification evidence. Regenerate into staging and
+print a reviewable diff with:
 
 ```bash
 make corpus-regenerate
 ```
+
+For the complete issue #167 qualification sequence (regeneration, coverage,
+runtime corpus regression, high-cardinality/single-fixture checks, and
+diagnostic-handoff checks), run:
+
+```bash
+make qualify-structural-corpus
+```
+
+It stores evidence under `regression-results/issue-167/<timestamp>/` and does
+not promote any generated output. It exits non-zero while coverage residuals
+remain unapproved.
 
 This command never changes a tracked fixture. After reviewing its output, use
 `make corpus-replace` to explicitly promote the staged-equivalent output. The

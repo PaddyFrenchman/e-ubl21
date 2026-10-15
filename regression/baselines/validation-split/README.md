@@ -32,6 +32,11 @@ baseline records, hashes in `baseline.json`, and rationale are reviewed in the
 same change. A new implementation result must never automatically replace this
 baseline.
 
+The UBL fixture hashes were rebound in `02c177bcc6cf28dcaae89b408cf62e5a47b789be`
+after the reviewed corpus regeneration. The authenticated runtime evidence
+recorded all 71 fixtures as passing with unchanged final and stage outcomes;
+only the generated fixture bytes and their manifest hashes changed.
+
 ## Separate asynchronous behavior gate
 
 Semantic equality cannot prove durable orchestration behavior. Completion of

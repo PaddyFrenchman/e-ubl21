@@ -39,6 +39,7 @@ func camelWords(s string) []string {
 // (e.g. "BinaryObject" by plain "Object", "CurrencyCode"/"CurrencyID" by
 // plain "Code"/"ID").
 var twoWordValueCategories = map[string]string{
+	"base64binary": "binary",
 	"binaryobject": "binary",
 	"datetime":     "datetime",
 	"currencycode": "currency",
@@ -63,6 +64,10 @@ var oneWordValueCategories = map[string]string{
 	"date":       "date",
 	"time":       "time",
 	"duration":   "duration",
+	"integer":    "numeric",
+	"int":        "numeric",
+	"decimal":    "numeric",
+	"double":     "numeric",
 	"code":       "code",
 	"id":         "identifier",
 	"identifier": "identifier",
@@ -93,6 +98,24 @@ func valueCategoryForName(name string) string {
 }
 
 func sampleValueForType(name, typeName string, index int) string {
+	// An element's business name is normally the best hint, but XML Schema
+	// primitive types take precedence when they impose a distinct lexical
+	// format.  In particular, XAdES has an IssueTime whose declared type is
+	// xsd:dateTime; treating it as a UBL-style Time produces "12:00:00",
+	// which is not a valid xs:dateTime.
+	switch canonicalPrimitiveType(typeName) {
+	case "xsd:date":
+		return "2026-01-01"
+	case "xsd:time":
+		return "12:00:00"
+	case "xsd:dateTime":
+		return "2026-01-01T12:00:00Z"
+	case "xsd:duration":
+		return "P0D"
+	case "xsd:base64Binary":
+		return "U2FtcGxlRGF0YQ=="
+	}
+
 	category := valueCategoryForName(name)
 	if category == "" {
 		// Fall back to the type name (e.g. for an attribute whose own name
@@ -183,7 +206,42 @@ func sampleScalarForType(index schemaIndex, name, typeName, ns string, idx int) 
 	// Boundary mode must leave unrestricted values unchanged: passing idx
 	// through would alter ordinary text/rate samples without exercising a
 	// schema facet.
-	return sampleValueForType(name, typeName, 0)
+	return sampleValueForType(name, scalarBaseType(index, typeName, ns), 0)
+}
+
+// scalarBaseType follows simple-content inheritance so a complex wrapper of
+// xsd:base64Binary (such as XAdES EncapsulatedPKIDataType) receives a value
+// legal for the primitive type rather than generic text based on its element
+// name.
+func scalarBaseType(index schemaIndex, typeName, ns string) string {
+	seen := map[string]bool{}
+	for typeName != "" {
+		if isPrimitiveType(typeName) {
+			return canonicalPrimitiveType(typeName)
+		}
+		tNS, tName := qualifyRef(typeName, ns)
+		key := qualifiedKey(tNS, tName)
+		if seen[key] {
+			break
+		}
+		seen[key] = true
+		if typ, ok := index.GlobalTypes[key]; ok && typ.SimpleContent != nil {
+			if typ.SimpleContent.Extension != nil {
+				typeName, ns = typ.SimpleContent.Extension.Base, tNS
+				continue
+			}
+			if typ.SimpleContent.Restriction != nil {
+				typeName, ns = typ.SimpleContent.Restriction.Base, tNS
+				continue
+			}
+		}
+		if typ, ok := index.GlobalSimpleTypes[key]; ok && typ.Restriction != nil {
+			typeName, ns = typ.Restriction.Base, tNS
+			continue
+		}
+		break
+	}
+	return typeName
 }
 
 // facetBoundaryValuesForType returns legal representative endpoints for the
@@ -257,10 +315,20 @@ func mustPositiveInt(value string, fallback int) int {
 }
 
 func isPrimitiveType(t string) bool {
-	set := map[string]bool{
-		"xsd:string": true, "xsd:boolean": true, "xsd:int": true, "xsd:integer": true, "xsd:decimal": true, "xsd:double": true,
-		"xsd:date": true, "xsd:dateTime": true, "xsd:time": true, "xsd:token": true, "xsd:normalizedString": true,
-		"xsd:anyURI": true, "xsd:language": true, "xsd:base64Binary": true, "xsd:duration": true,
+	return canonicalPrimitiveType(t) != ""
+}
+
+// canonicalPrimitiveType accepts both the conventional xsd: spelling and
+// the unprefixed built-ins used by the XMLDSig schema, whose default
+// namespace is XML Schema.
+func canonicalPrimitiveType(t string) string {
+	if after, ok := strings.CutPrefix(t, "xsd:"); ok {
+		t = after
 	}
-	return set[t]
+	switch t {
+	case "string", "boolean", "int", "integer", "decimal", "double", "date", "dateTime", "time", "token", "normalizedString", "anyURI", "language", "base64Binary", "duration":
+		return "xsd:" + t
+	default:
+		return ""
+	}
 }

@@ -52,6 +52,8 @@ func runGenerate(args []string) error {
 	set := flags.String("set", "positive", "fixture set to generate (positive, negative, or all)")
 	generatorVersion := flags.String("generator-version", "", "immutable generator version as git:<40-or-64-lowercase-hex-commit> (default: latest generator implementation commit)")
 	count := flags.Int("count", 1, "number of positive sample files to generate per main document schema")
+	errorJournal := flags.String("error-journal", "", "text file that receives all structural-generation failures")
+	resumeFrom := flags.String("resume-from", "", "diagnostic structural resume cursor: main:<root>, signature:<root>, or cardinality:<root>")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -90,6 +92,23 @@ func runGenerate(args []string) error {
 	version, err := resolveGeneratorVersion(*generatorVersion)
 	if err != nil {
 		return err
+	}
+	if *profile == "ubl21-structural" {
+		if *count != 1 || *set != "positive" {
+			return errors.New("ubl21-structural supports only --set positive and --count 1")
+		}
+		index, err := buildSchemaIndex(*xsdDir)
+		if err != nil {
+			return err
+		}
+		if *errorJournal == "" {
+			*errorJournal = filepath.Join("createsamples", "corpus-generation-errors.txt")
+		}
+		if err := generateAndWriteUBLStructuralCorpus(*output, report, index, *xsdDir, version, *errorJournal, *resumeFrom); err != nil {
+			return err
+		}
+		fmt.Printf("Generated and independently validated structural samples under %s\n", *output)
+		return nil
 	}
 	generate := func() (generatedCorpus, error) {
 		if *profile == "peppol-bis-billing" {
@@ -138,12 +157,6 @@ func runGenerate(args []string) error {
 		if err != nil {
 			return generatedCorpus{}, err
 		}
-		if *profile == "ubl21-structural" {
-			if *count != 1 || *set != "positive" {
-				return generatedCorpus{}, errors.New("ubl21-structural supports only --set positive and --count 1")
-			}
-			return generateUBLStructuralCorpus(report, index, *xsdDir, version)
-		}
 		switch *set {
 		case "positive":
 			return generateUBLPositiveCorpus(report, index, *xsdDir, *count, version)
@@ -165,12 +178,18 @@ func runGenerate(args []string) error {
 	if err != nil {
 		return err
 	}
-	second, err := generate()
-	if err != nil {
-		return err
-	}
-	if err := verifyCorpusDeterminism(first, second); err != nil {
-		return err
+	// Structural fixtures are intentionally numerous. Holding two complete
+	// expanded corpora solely for this command-level comparison doubles peak
+	// memory and prevents the qualified corpus from being generated. The
+	// deterministic generator remains exercised by its dedicated tests.
+	if *profile != "ubl21-structural" {
+		second, err := generate()
+		if err != nil {
+			return err
+		}
+		if err := verifyCorpusDeterminism(first, second); err != nil {
+			return err
+		}
 	}
 	xmllintPath, err := exec.LookPath("xmllint")
 	if err != nil {

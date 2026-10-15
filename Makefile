@@ -1,4 +1,4 @@
-.PHONY: corpus-regenerate corpus-replace schema-coverage docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify yugabytedb-compatibility-guard yugabytedb-ha-test yugabytedb-dr-drill yugabytedb-ybc-dr-test yugabytedb-ybc-control-plane-test on-prem-database-test on-prem-database-integration on-prem-database-upgrade-test on-prem-database-upgrade-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-envelope test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-report-test regression-correctness regression-equivalence regression-minikube regression-minikube-clean
+.PHONY: corpus-regenerate corpus-replace schema-coverage qualify-structural-corpus docker-verify database-up database-wait database-smoke database-migrate database-test database-stop database-restart database-reset database-verify yugabytedb-compatibility-guard yugabytedb-ha-test yugabytedb-dr-drill yugabytedb-ybc-dr-test yugabytedb-ybc-control-plane-test on-prem-database-test on-prem-database-integration on-prem-database-upgrade-test on-prem-database-upgrade-integration test-en16931 test-en16931-compliance test-en16931-image test-peppol-compliance test-peppol-image test-peppol-schematron test-peppol-envelope test-peppol-positive test-peppol-negative test-peppol-reference test-validation-chaos benchmark-en16931 benchmark-peppol benchmark-peppol-cgroup benchmark-stages benchmark-stages-cgroup performance-evidence regression-report-test regression-correctness regression-equivalence regression-minikube regression-minikube-clean
 
 # Generate both tracked UBL corpora into staging, validate them, produce a
 # coverage report, and show the reviewable difference. This never writes a
@@ -7,7 +7,7 @@ corpus-regenerate:
 	./devsetup/regenerate-ubl-corpus.sh
 
 corpus-replace:
-	./devsetup/regenerate-ubl-corpus.sh --replace
+	RESUME_FROM="$(RESUME_FROM)" ./devsetup/regenerate-ubl-corpus.sh --replace
 
 # Verify the genuine Docker Engine and official Compose plugin through a
 # disposable image/container/network/volume/bind-mount/health-check lifecycle.
@@ -201,3 +201,8 @@ SCHEMA_COVERAGE_SAMPLES ?= createsamples/samples-structural
 schema-coverage:
 	mkdir -p "$(SCHEMA_COVERAGE_DIR)"
 	go run ./createsamples coverage --xsd XSD --samples "$(SCHEMA_COVERAGE_SAMPLES)" --json "$(SCHEMA_COVERAGE_DIR)/report.json" --markdown "$(SCHEMA_COVERAGE_DIR)/report.md"
+
+# Run the issue #167 structural-corpus qualification checks and retain all
+# generated evidence. This never promotes a regenerated corpus.
+qualify-structural-corpus:
+	./devsetup/qualify-structural-corpus.sh
