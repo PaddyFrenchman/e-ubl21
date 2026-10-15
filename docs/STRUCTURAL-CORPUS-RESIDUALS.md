@@ -1,47 +1,45 @@
-# UBL 2.1 structural corpus residual coverage
+# UBL 2.1 structural corpus coverage status
 
 ## Status
 
-This document records the residual structural coverage of the checked-in UBL
-2.1 corpus. It is a review and approval record, not a claim of complete schema
-coverage. The exhaustive, machine-readable list is
+This document records structural coverage of the locally generated UBL 2.1
+corpus. The multi-gigabyte structural corpus is intentionally ignored by Git.
+The exhaustive, machine-readable report is retained locally at
 `createsamples/samples-structural/coverage.json`; its readable rendering is
 `createsamples/samples-structural/coverage.md`. Both are regenerated with the
 corpus and take precedence over the counts in this document.
 
-The latest refreshed local scan analyzed 24,692 fixtures. It records no
-missing required cardinalities (`cardinalityGaps: 0`, `cardinalityResiduals:
-0`) and zero unparseable fixtures. It lists 46 distinct uncovered schema
-targets across 76 category entries. The scan also includes the matcher fixes
-for recursive edges and choice alternatives, but it predates the latest
-fixture-generation changes below. The checked-in `coverage.json`/`coverage.md`
-remain stale until the next corpus generation. These targets are not approved
-for exclusion.
+The corpus generated from commit `5840d2c2` contains 24,713 fixtures. The
+coverage report passes with zero uncovered targets, zero missing required
+cardinalities, zero cardinality residuals, and zero unparseable fixtures. Every
+nonempty target category in the report is at 100% coverage. The formerly
+uncovered XMLDSig/XAdES, global component, and UDT/CCTS target groups are now
+covered by generated fixtures. No schema targets have been excluded.
 
 | Target kind | Remaining |
 |---|---:|
-| attributes | 10 |
-| choice alternatives | 2 |
+| attributes | 0 |
+| choice alternatives | 0 |
 | choice sites | 0 |
-| complex types | 10 |
-| elements | 15 |
-| inheritance edges | 8 |
-| optional attributes | 6 |
-| optional elements | 5 |
+| complex types | 0 |
+| elements | 0 |
+| inheritance edges | 0 |
+| optional attributes | 0 |
+| optional elements | 0 |
 | repeatable elements missing required cardinalities | 0 |
-| required attributes | 4 |
-| required elements | 10 |
-| sequence members | 3 |
-| wildcards | 3 |
+| required attributes | 0 |
+| required elements | 0 |
+| sequence members | 0 |
+| wildcards | 0 |
 
-Category counts overlap; the refreshed scan contains 46 distinct uncovered
-targets.
+The generated report's distinct uncovered-target map is empty. Category counts
+overlap, so the report's distinct target IDs remain the source of truth.
 
 ## Review classification
 
-### Requires future fixture work
+### Previously uncovered target groups
 
-These targets are not approved as unsupported:
+The following groups were addressed in the regenerated corpus:
 
 - The remaining XMLDSig signature-object and signature-property branches and
   attributes, plus their associated wildcard positions.
@@ -56,10 +54,6 @@ These targets are not approved as unsupported:
   targets. The dependency map identifies which are reachable from main-document
   roots and which need review as standalone or wildcard-boundary constructs.
 
-These are ordinary coverage gaps. They must remain visible in the generated
-register and should be addressed by adding XSD-valid fixtures, not by excluding
-them from accounting.
-
 The generator has standalone CAC-root fixtures for the seven uncovered global
 declarations (`Branch`, `Communication`, `Duty`, `MonetaryTotal`, `Payment`,
 `Regulation`, and `ServiceFrequency`). It now also adds wrapper-validated type
@@ -69,8 +63,8 @@ choice branches. Strict wildcard fixtures use
 declared elements from the root schema's import closure. The matcher now
 credits simple-typed global roots, named attribute types, and the correct
 choice branch when alternatives contain the same element name. Focused tests
-cover these additions; the corpus-wide residual count must be refreshed after
-the code is committed and the corpus regenerated.
+cover these additions. The refreshed coverage report confirms they now have
+fixture witnesses.
 
 ### Bounded by design; approval requested
 
@@ -92,10 +86,8 @@ schema constructs, but they limit what a fixture proves:
 The approval recorded on 2026-10-02 was withdrawn by the repository user on
 2026-10-02. No coverage boundary is approved.
 
-Every schema-reachable construct and each documented boundary behavior remains
-an open coverage obligation. The generated `coverage.json`/`coverage.md`
-register remains the source of truth for the residual target list. In
-particular, cardinality enforcement remains a qualification gate. The current
-generated report passes that gate with no missing required cardinalities. The
-other uncovered targets remain open until reviewed and explicitly
-dispositioned.
+The generated report currently has no uncovered schema targets, and
+cardinality enforcement passes. The approval withdrawn on 2026-10-02 has not
+been restored: the safety bounds and semantic limits listed above still need
+review before issue #167 can be approved or closed. This is a review status,
+not a request to add the former target groups again.
