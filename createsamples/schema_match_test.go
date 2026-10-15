@@ -371,6 +371,22 @@ func TestSimpleContentInheritanceAttributesAndDepthAreRecorded(t *testing.T) {
 	if got := matched[ns+"|test.xsd|recursive|B->"+qualifiedKey(ns, "A")]; got != 2 {
 		t.Fatalf("recursive depth = %d, want 2", got)
 	}
+
+	// Repeating a recursive-capable edge as siblings covers the edge, but
+	// must not inflate the reported nesting depth.
+	doc.Types["A"] = xsdComplexType{Name: "A", Sequence: &xsdSequence{Elements: []xsdElementDecl{{Name: "B", Type: "B", MaxOccurs: "unbounded"}}}}
+	index.RecursiveEdges = map[string]struct{}{ns + "|test.xsd|recursive|A->" + qualifiedKey(ns, "B"): {}}
+	path = filepath.Join(t.TempDir(), "siblings.xml")
+	if err := os.WriteFile(path, []byte(`<Root xmlns="urn:test"><B/><B/><B/></Root>`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	matched, err = matchFixture(index, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := matched[ns+"|test.xsd|recursive|A->"+qualifiedKey(ns, "B")]; got != 1 {
+		t.Fatalf("recursive edge sibling depth = %d, want 1", got)
+	}
 }
 
 func TestSchemaCoverageInventoriesCyclicAndSubstitutionTargets(t *testing.T) {

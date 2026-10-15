@@ -71,10 +71,16 @@ fixture witnesses.
 The generator intentionally has these safety bounds. They are not unsupported
 schema constructs, but they limit what a fixture proves:
 
-- Unbounded repeatable particles are exercised only through five siblings;
-  this is a test-data safety cap, not a runtime limit.
-- Recursive structures are finite and use the generator's recorded maximum
-  depth; arbitrary recursion depth is not enumerated.
+- General cardinality witnesses exercise unbounded particles through five
+  siblings. Dedicated large-collection fixtures separately exercise Invoice
+  lines at 10, 50, 100, and 500; CreditNote lines at 10, 50, 100, and 250; and
+  Order lines at 10, 50, 100, and 250. These are test-data bounds, not runtime
+  limits, and do not enumerate every possible collection size.
+- Recursive fixtures use explicit depth-2 and depth-3 generation variants;
+  arbitrary recursion depth is not enumerated. The report's `maximumDepth`
+  measures repeated occurrences of the same complex type along an ancestor
+  path. Repeated siblings may cover a recursive schema edge but do not increase
+  that depth.
 - Wildcard fixtures use declared foreign elements where strict processing
   requires them; they do not attempt arbitrary external schemas.
 - XMLDSig/XAdES fixtures prove UBL/XSD structural acceptance only. They do not

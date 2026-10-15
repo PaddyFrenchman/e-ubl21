@@ -893,7 +893,12 @@ func matchFixtureDetailedReader(index schemaIndex, reader io.Reader) (fixtureMat
 				if parent.doc != nil && parent.typeName != "" {
 					recursiveID := fmt.Sprintf("%s|%s|recursive|%s->%s", parent.doc.TargetNamespace, parent.doc.File, parent.typeName, qualifiedKey(td.TargetNamespace, n))
 					if _, isRecursiveEdge := recursiveEdges[recursiveID]; isRecursiveEdge {
-						out[recursiveID]++
+						// The edge is covered even when this particular path does
+						// not recurse. Keep a minimum witness value of one; the
+						// maximum is updated below only from actual type nesting.
+						if out[recursiveID] < 1 {
+							out[recursiveID] = 1
+						}
 					}
 				}
 				out[complexTypeIDForElement(td, id, n)]++

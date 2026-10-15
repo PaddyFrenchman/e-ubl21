@@ -849,7 +849,7 @@ func writeCoverageMarkdown(path string, report schemaCoverage) error {
 	out.WriteString(fmt.Sprintf("Fixtures analyzed: %d\n\n", report.Fixtures))
 
 	out.WriteString("Maximum cardinality is the greatest number of sibling matches for one schema particle under a single parent instance in a fixture. The acceptance gate records every parent-instance count and requires schema-permitted zero (when optional), one, a multiple case (two or more), and the schema maximum (capped at five for unbounded particles).\n\n")
-	out.WriteString("Maximum recursive depth is the greatest number of occurrences of the repeated target type along a fixture path.\n\n")
+	out.WriteString("Maximum recursive depth is the greatest number of occurrences of the same complex type along one ancestor path. Repeated sibling occurrences cover a recursive edge but do not increase this depth.\n\n")
 	out.WriteString("| Construct | Exercised | Total | Coverage |\n|---|---:|---:|---:|\n")
 	keys := make([]string, 0, len(report.Categories))
 	for key := range report.Categories {
