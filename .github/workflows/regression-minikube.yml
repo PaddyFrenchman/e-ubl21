@@ -38,6 +38,11 @@ jobs:
       MINIKUBE_VERSION: v1.39.0
       MINIKUBE_SHA256: b738496da01be06bbaf80c688f57ce25acd3849fbb518155f3a88e03ef555aa4
     steps:
+      - name: Report runner disk capacity
+        shell: bash
+        run: |
+          df -hT "$RUNNER_TEMP" "$GITHUB_WORKSPACE"
+          docker system df
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -57,23 +62,39 @@ jobs:
           sudo install minikube /usr/local/bin/minikube
           minikube version
       - name: Start disposable Minikube cluster
-        run: >-
-          minikube start
-          --profile "$MINIKUBE_PROFILE"
-          --driver "$MINIKUBE_DRIVER"
-          --container-runtime docker
-          --kubernetes-version v1.35.1
-          --cpus 2
-          --memory 6144mb
+        shell: bash
+        run: |
+          minikube start \
+            --profile "$MINIKUBE_PROFILE" \
+            --driver "$MINIKUBE_DRIVER" \
+            --container-runtime docker \
+            --kubernetes-version v1.35.1 \
+            --cpus 2 \
+            --memory 6144mb
+          df -hT "$RUNNER_TEMP" "$GITHUB_WORKSPACE"
+          docker system df
       - name: Run deployed Kubernetes regression
         run: >-
           make regression-minikube
           MANIFEST="${{ matrix.manifest }}"
           PROFILE=all
           ARTIFACT_DIR="regression-results/minikube/${{ matrix.corpus }}"
+      - name: Report disk usage after regression
+        if: always()
+        run: |
+          df -hT "$RUNNER_TEMP" "$GITHUB_WORKSPACE"
+          docker system df
       - name: Tear down disposable Minikube cluster
         if: always()
-        run: minikube delete --profile "$MINIKUBE_PROFILE" || true
+        shell: bash
+        run: |
+          minikube delete --profile "$MINIKUBE_PROFILE" || true
+          # Each GitHub-hosted job has a fresh Docker daemon. Prune only after
+          # the disposable Minikube profile has been deleted, to release its
+          # cached images and layers before the VM is discarded.
+          docker system prune --all --force --volumes || true
+          df -hT "$RUNNER_TEMP" "$GITHUB_WORKSPACE"
+          docker system df || true
       - name: Publish regression test summary
         if: always()
         shell: bash
