@@ -1,0 +1,1212 @@
+{
+  "sourceCoverage": "createsamples/samples-structural/coverage.json",
+  "fixtureCount": 24692,
+  "distinctUncoveredTargets": 50,
+  "mainDocumentRoots": 65,
+  "mappedTargetCount": 0,
+  "unreachableTargetCount": 50,
+  "roots": {},
+  "targets": [
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OtherTimeStampType/@Id",
+      "kind": "attribute",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "OtherTimeStampType/@Id",
+      "owner": "OtherTimeStampType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|XAdESTimeStampType/@Id",
+      "kind": "attribute",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "XAdESTimeStampType/@Id",
+      "owner": "XAdESTimeStampType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|QualifierType",
+      "kind": "complexType",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "QualifierType",
+      "owner": "QualifierType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp",
+      "owner": "OtherTimeStampType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "ResponderIDType/choice[1]/ByKey",
+      "owner": "ResponderIDType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SPURI/SPURI",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "global/SPURI/SPURI",
+      "owner": "SPURI",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SigningTime/SigningTime",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "global/SigningTime/SigningTime",
+      "owner": "SigningTime",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@Id",
+      "kind": "attribute",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType/@Id",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@UR",
+      "kind": "attribute",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType/@UR",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|complexType|ValidationDataType",
+      "kind": "complexType",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[0]/CertificateValues",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType/sequence[0]/CertificateValues",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[1]/RevocationValues",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType/sequence[1]/RevocationValues",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/TimeStampValidationData/TimeStampValidationData",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "global/TimeStampValidationData/TimeStampValidationData",
+      "owner": "TimeStampValidationData",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|CanonicalizationMethodType/sequence",
+      "kind": "any",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "CanonicalizationMethodType/sequence",
+      "owner": "CanonicalizationMethodType",
+      "roots": [],
+      "supportFlags": [
+        "wildcard-content",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|PGPDataType/sequence[1]/sequence",
+      "kind": "any",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType/sequence[1]/sequence",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "wildcard-content",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SignatureMethodType/sequence",
+      "kind": "any",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "SignatureMethodType/sequence",
+      "owner": "SignatureMethodType",
+      "roots": [],
+      "supportFlags": [
+        "wildcard-content",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[0]",
+      "kind": "choiceAlternative",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType/sequence[0]",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "choice-branch",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[1]",
+      "kind": "choiceAlternative",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType/sequence[1]",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "choice-branch",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|PGPDataType",
+      "kind": "choice",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "choice-branch",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|SignaturePropertyType",
+      "kind": "choice",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "SignaturePropertyType",
+      "owner": "SignaturePropertyType",
+      "roots": [],
+      "supportFlags": [
+        "choice-branch",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket",
+      "kind": "element",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Branch/Branch",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Branch/Branch",
+      "owner": "Branch",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Communication/Communication",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Communication/Communication",
+      "owner": "Communication",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Duty/Duty",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Duty/Duty",
+      "owner": "Duty",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MonetaryTotal/MonetaryTotal",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/MonetaryTotal/MonetaryTotal",
+      "owner": "MonetaryTotal",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Payment/Payment",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Payment/Payment",
+      "owner": "Payment",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Regulation/Regulation",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Regulation/Regulation",
+      "owner": "Regulation",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceFrequency/ServiceFrequency",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/ServiceFrequency/ServiceFrequency",
+      "owner": "ServiceFrequency",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|GraphicType/@mimeCode",
+      "kind": "attribute",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "GraphicType/@mimeCode",
+      "owner": "GraphicType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|PictureType/@mimeCode",
+      "kind": "attribute",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "PictureType/@mimeCode",
+      "owner": "PictureType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|SoundType/@mimeCode",
+      "kind": "attribute",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "SoundType/@mimeCode",
+      "owner": "SoundType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|VideoType/@mimeCode",
+      "kind": "attribute",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "VideoType/@mimeCode",
+      "owner": "VideoType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|DateTimeType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "DateTimeType",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|GraphicType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "GraphicType",
+      "owner": "GraphicType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|PictureType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "PictureType",
+      "owner": "PictureType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|SoundType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "SoundType",
+      "owner": "SoundType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|ValueType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "ValueType",
+      "owner": "ValueType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|VideoType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "VideoType",
+      "owner": "VideoType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|DateTimeType->#dateTime",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "DateTimeType->#dateTime",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|GraphicType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "GraphicType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "owner": "GraphicType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|PictureType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "PictureType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "owner": "PictureType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|SoundType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "SoundType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "owner": "SoundType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|ValueType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#NumericType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "ValueType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#NumericType",
+      "owner": "ValueType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|VideoType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "VideoType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "owner": "VideoType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|attribute|DateTimeType/@format",
+      "kind": "attribute",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "DateTimeType/@format",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|attribute|IndicatorType/@format",
+      "kind": "attribute",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "IndicatorType/@format",
+      "owner": "IndicatorType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|DateTimeType",
+      "kind": "complexType",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "DateTimeType",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|IndicatorType",
+      "kind": "complexType",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "IndicatorType",
+      "owner": "IndicatorType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|DateTimeType->#string",
+      "kind": "inheritance",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "DateTimeType->#string",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|IndicatorType->#string",
+      "kind": "inheritance",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "IndicatorType->#string",
+      "owner": "IndicatorType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    }
+  ],
+  "unreachableTargets": [
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|OtherTimeStampType/@Id",
+      "kind": "attribute",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "OtherTimeStampType/@Id",
+      "owner": "OtherTimeStampType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|attribute|XAdESTimeStampType/@Id",
+      "kind": "attribute",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "XAdESTimeStampType/@Id",
+      "owner": "XAdESTimeStampType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|complexType|QualifierType",
+      "kind": "complexType",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "QualifierType",
+      "owner": "QualifierType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "OtherTimeStampType/choice[0]/choice[1]/XMLTimeStamp",
+      "owner": "OtherTimeStampType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|ResponderIDType/choice[1]/ByKey",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "ResponderIDType/choice[1]/ByKey",
+      "owner": "ResponderIDType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SPURI/SPURI",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "global/SPURI/SPURI",
+      "owner": "SPURI",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.3.2#|UBL-XAdESv132-2.1.xsd|element|global/SigningTime/SigningTime",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv132-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.3.2#",
+      "schemaPath": "global/SigningTime/SigningTime",
+      "owner": "SigningTime",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@Id",
+      "kind": "attribute",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType/@Id",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|attribute|ValidationDataType/@UR",
+      "kind": "attribute",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType/@UR",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|complexType|ValidationDataType",
+      "kind": "complexType",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[0]/CertificateValues",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType/sequence[0]/CertificateValues",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|ValidationDataType/sequence[1]/RevocationValues",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "ValidationDataType/sequence[1]/RevocationValues",
+      "owner": "ValidationDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://uri.etsi.org/01903/v1.4.1#|UBL-XAdESv141-2.1.xsd|element|global/TimeStampValidationData/TimeStampValidationData",
+      "kind": "element",
+      "schemaFile": "UBL-XAdESv141-2.1.xsd",
+      "namespace": "http://uri.etsi.org/01903/v1.4.1#",
+      "schemaPath": "global/TimeStampValidationData/TimeStampValidationData",
+      "owner": "TimeStampValidationData",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|CanonicalizationMethodType/sequence",
+      "kind": "any",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "CanonicalizationMethodType/sequence",
+      "owner": "CanonicalizationMethodType",
+      "roots": [],
+      "supportFlags": [
+        "wildcard-content",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|PGPDataType/sequence[1]/sequence",
+      "kind": "any",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType/sequence[1]/sequence",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "wildcard-content",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|any|SignatureMethodType/sequence",
+      "kind": "any",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "SignatureMethodType/sequence",
+      "owner": "SignatureMethodType",
+      "roots": [],
+      "supportFlags": [
+        "wildcard-content",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[0]",
+      "kind": "choiceAlternative",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType/sequence[0]",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "choice-branch",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choiceAlternative|PGPDataType/sequence[1]",
+      "kind": "choiceAlternative",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType/sequence[1]",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "choice-branch",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|PGPDataType",
+      "kind": "choice",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "choice-branch",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|choice|SignaturePropertyType",
+      "kind": "choice",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "SignaturePropertyType",
+      "owner": "SignaturePropertyType",
+      "roots": [],
+      "supportFlags": [
+        "choice-branch",
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "http://www.w3.org/2000/09/xmldsig#|UBL-xmldsig-core-schema-2.1.xsd|element|PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket",
+      "kind": "element",
+      "schemaFile": "UBL-xmldsig-core-schema-2.1.xsd",
+      "namespace": "http://www.w3.org/2000/09/xmldsig#",
+      "schemaPath": "PGPDataType/sequence[1]/sequence[0]/PGPKeyPacket",
+      "owner": "PGPDataType",
+      "roots": [],
+      "supportFlags": [
+        "signature-vocabulary"
+      ],
+      "rootDisposition": "signature-or-wildcard-dedicated-fixture-candidate"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Branch/Branch",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Branch/Branch",
+      "owner": "Branch",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Communication/Communication",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Communication/Communication",
+      "owner": "Communication",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Duty/Duty",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Duty/Duty",
+      "owner": "Duty",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/MonetaryTotal/MonetaryTotal",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/MonetaryTotal/MonetaryTotal",
+      "owner": "MonetaryTotal",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Payment/Payment",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Payment/Payment",
+      "owner": "Payment",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/Regulation/Regulation",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/Regulation/Regulation",
+      "owner": "Regulation",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2|UBL-CommonAggregateComponents-2.1.xsd|element|global/ServiceFrequency/ServiceFrequency",
+      "kind": "element",
+      "schemaFile": "UBL-CommonAggregateComponents-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+      "schemaPath": "global/ServiceFrequency/ServiceFrequency",
+      "owner": "ServiceFrequency",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|GraphicType/@mimeCode",
+      "kind": "attribute",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "GraphicType/@mimeCode",
+      "owner": "GraphicType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|PictureType/@mimeCode",
+      "kind": "attribute",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "PictureType/@mimeCode",
+      "owner": "PictureType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|SoundType/@mimeCode",
+      "kind": "attribute",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "SoundType/@mimeCode",
+      "owner": "SoundType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|attribute|VideoType/@mimeCode",
+      "kind": "attribute",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "VideoType/@mimeCode",
+      "owner": "VideoType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|DateTimeType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "DateTimeType",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|GraphicType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "GraphicType",
+      "owner": "GraphicType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|PictureType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "PictureType",
+      "owner": "PictureType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|SoundType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "SoundType",
+      "owner": "SoundType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|ValueType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "ValueType",
+      "owner": "ValueType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|complexType|VideoType",
+      "kind": "complexType",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "VideoType",
+      "owner": "VideoType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|DateTimeType->#dateTime",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "DateTimeType->#dateTime",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|GraphicType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "GraphicType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "owner": "GraphicType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|PictureType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "PictureType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "owner": "PictureType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|SoundType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "SoundType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "owner": "SoundType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|ValueType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#NumericType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "ValueType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#NumericType",
+      "owner": "ValueType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2|UBL-UnqualifiedDataTypes-2.1.xsd|inheritance|VideoType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "kind": "inheritance",
+      "schemaFile": "UBL-UnqualifiedDataTypes-2.1.xsd",
+      "namespace": "urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2",
+      "schemaPath": "VideoType->urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2#BinaryObjectType",
+      "owner": "VideoType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|attribute|DateTimeType/@format",
+      "kind": "attribute",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "DateTimeType/@format",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|attribute|IndicatorType/@format",
+      "kind": "attribute",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "IndicatorType/@format",
+      "owner": "IndicatorType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|DateTimeType",
+      "kind": "complexType",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "DateTimeType",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|complexType|IndicatorType",
+      "kind": "complexType",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "IndicatorType",
+      "owner": "IndicatorType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|DateTimeType->#string",
+      "kind": "inheritance",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "DateTimeType->#string",
+      "owner": "DateTimeType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    },
+    {
+      "id": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2|CCTS_CCT_SchemaModule-2.1.xsd|inheritance|IndicatorType->#string",
+      "kind": "inheritance",
+      "schemaFile": "CCTS_CCT_SchemaModule-2.1.xsd",
+      "namespace": "urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2",
+      "schemaPath": "IndicatorType->#string",
+      "owner": "IndicatorType",
+      "roots": [],
+      "supportFlags": [],
+      "rootDisposition": "no-explicit-main-root-dependency-review-needed"
+    }
+  ],
+  "greedyRootPortfolio": []
+}
