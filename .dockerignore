@@ -13,6 +13,9 @@ devsetup/*
 docs/
 ideas/
 createsamples/samples/
+createsamples/samples-structural/
+regression-results/
+performance-results/
 e-invoice/
 *.md
 !THIRD_PARTY_NOTICES.md

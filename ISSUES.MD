@@ -896,6 +896,17 @@ These issues are intentionally tracked but are **not part of the current immedia
 
 **Revisit:** When hosted regression jobs become unstable due to disk pressure, or before GitHub removes the compatibility path for currently used action runtimes.
 
+**Progress (2026-10-15):** The Node 20 compatibility path was removed by GitHub
+on 2026-09-23, activating the runtime-warning revisit trigger. Repository
+workflows use current major releases of the GitHub-maintained checkout,
+setup, cache, and artifact actions. The Minikube workflow now records runner
+and Docker disk usage before and after cluster creation and regression, then
+prunes disposable Docker images, containers, networks, and volumes after
+deleting its dedicated Minikube profile. Recent hosted runs have failed before
+job startup with no job metadata, so they do not establish a disk-pressure
+cause. Confirm deprecation warnings and disk behavior from completed hosted
+runs before closing this issue.
+
 **Acceptance:** Hosted Minikube CI has an explicit stable disk-capacity strategy and the regression workflows no longer emit the tracked action-runtime deprecation warnings.
 
 Issue: https://github.com/PaddyFrenchman/e-ubl21/issues/85

@@ -45,7 +45,7 @@ if [[ -n "$STRUCTURAL_FIXTURE_ID" && -n "$STRUCTURAL_FIXTURE_IDS" ]]; then
     exit 2
 fi
 
-for command in go java xmllint docker curl diff; do
+for command in go java xmllint docker curl diff jq; do
     if ! command -v "$command" >/dev/null 2>&1; then
         echo "ERROR: required command not found: $command" >&2
         exit 2
@@ -56,6 +56,7 @@ mkdir -p "$ARTIFACT_DIR/logs"
 ARTIFACT_DIR="$(cd "$ARTIFACT_DIR" && pwd)"
 TEMP_DIR="$(mktemp -d)"
 SERVICE_PIDS=()
+STRUCTURAL_RUNTIME_MANIFEST=""
 
 cleanup() {
     local status=$?
@@ -68,6 +69,9 @@ cleanup() {
         wait "$pid" >/dev/null 2>&1 || true
     done
     docker stop "$NATS_CONTAINER" >/dev/null 2>&1 || true
+    if [[ -n "$STRUCTURAL_RUNTIME_MANIFEST" ]]; then
+        rm -f -- "$STRUCTURAL_RUNTIME_MANIFEST"
+    fi
     rm -rf -- "$TEMP_DIR"
     unset EUBL21_REGRESSION_HMAC_SECRET EUBL21_OAUTH_HMAC_SECRET
     exit "$status"
@@ -189,6 +193,8 @@ run_corpus() {
     local status
     local fixture_args=()
     local concurrency="$REGRESSION_CONCURRENCY"
+    local selected_manifest="$manifest"
+    mkdir -p "$output"
 
     if [[ "$name" == "ubl21-structural" && -n "$STRUCTURAL_FIXTURE_ID" ]]; then
         fixture_args=(--fixture-id "$STRUCTURAL_FIXTURE_ID")
@@ -200,14 +206,28 @@ run_corpus() {
     fi
     if [[ "$name" == "ubl21-structural" ]]; then
         concurrency="$STRUCTURAL_REGRESSION_CONCURRENCY"
+        if [[ -z "$STRUCTURAL_FIXTURE_ID" && -z "$STRUCTURAL_FIXTURE_IDS" ]]; then
+            # The structural corpus also contains standalone common-component,
+            # XMLDSig/XAdES, and simple-type roots. They are validated against
+            # their authoritative XSDs during corpus generation, but the upload
+            # API deliberately accepts main-document roots only. Run every
+            # structural fixture whose document type is in the canonical
+            # main-document corpus through the API.
+            selected_manifest="$ROOT_DIR/createsamples/samples-structural/.runtime-manifest-$RUN_STAMP.json"
+            STRUCTURAL_RUNTIME_MANIFEST="$selected_manifest"
+            jq --slurpfile main "$ROOT_DIR/createsamples/samples/manifest.json" \
+                '.fixtures |= map(select(.documentType as $type | any($main[0].fixtures[]; .documentType == $type)))' \
+                "$manifest" >"$selected_manifest"
+            cp "$selected_manifest" "$output/manifest-selected.json"
+            echo "Structural API fixtures selected: $(jq '.fixtures | length' "$selected_manifest")"
+        fi
     fi
 
-    mkdir -p "$output"
     set +e
     "$TEMP_DIR/e-ubl21" regression \
         --base-url "http://127.0.0.1:$API_LOCAL_PORT" \
         --token "$TOKEN" \
-        --manifest "$manifest" \
+        --manifest "$selected_manifest" \
         --profile all \
         --concurrency "$concurrency" \
         "${fixture_args[@]}" \

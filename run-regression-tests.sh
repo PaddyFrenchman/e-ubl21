@@ -34,7 +34,7 @@ first_line() {
 require_commands() {
     local missing=()
     local command
-    for command in bash git go make java xmllint docker curl diff helm minikube sha256sum grep sed find sort tee tail setsid timeout; do
+    for command in bash git go make java xmllint docker curl diff helm minikube sha256sum grep sed find sort tee tail setsid timeout jq wc tr; do
         if ! command -v "$command" >/dev/null 2>&1; then
             missing+=("$command")
         fi
@@ -121,6 +121,59 @@ append_json_artifacts() {
     if (( found == 0 )); then
         echo "No semantic summary/equivalence JSON files were produced." >> "$REPORT"
     fi
+}
+
+append_structural_selection_evidence() {
+    local corpus="$ROOT_DIR/createsamples/samples-structural/manifest.json"
+    local selected="$RUN_DIR/correctness/ubl21-structural/manifest-selected.json"
+    local excluded_ids="$RUN_DIR/correctness/ubl21-structural/excluded-fixture-ids.txt"
+    local evidence="$RUN_DIR/correctness/ubl21-structural/selection-evidence.json"
+    local total selected_count excluded_count generator_version
+
+    if [[ ! -f "$corpus" || ! -f "$selected" ]]; then
+        return 0
+    fi
+
+    total="$(jq '.fixtures | length' "$corpus")"
+    selected_count="$(jq '.fixtures | length' "$selected")"
+    generator_version="$(jq -r '[.fixtures[].provenance.generatorVersion] | unique | join(", ")' "$corpus")"
+    jq -r --slurpfile main "$ROOT_DIR/createsamples/samples/manifest.json" \
+        '.fixtures[] | select(.documentType as $type | (any($main[0].fixtures[]; .documentType == $type) | not)) | .id' \
+        "$corpus" >"$excluded_ids"
+    excluded_count="$(wc -l <"$excluded_ids" | tr -d '[:space:]')"
+    jq --slurpfile main "$ROOT_DIR/createsamples/samples/manifest.json" \
+        '{schemaVersion: 1,
+          totalStructuralFixtures: (.fixtures | length),
+          apiSelectedFixtures: $selectedCount,
+          excludedNonMainDocumentFixtures: [.fixtures[] | select(.documentType as $type | (any($main[0].fixtures[]; .documentType == $type) | not)) | {
+            id, documentType, sha256, generatorVersion: .provenance.generatorVersion,
+            expectedXSDOutcome: ([.expectedStages[] | select(.stage == "ubl21-xsd") | .outcome][0] // null)
+          }],
+          independentXSDValidation: {
+            validator: "xmllint --nonet --noout --schema",
+            result: "pass-at-corpus-generation",
+            generatorVersions: ([.fixtures[].provenance.generatorVersion] | unique)
+          }}' --argjson selectedCount "$selected_count" "$corpus" >"$evidence"
+
+    {
+        echo
+        echo "## Structural corpus selection and XSD evidence"
+        echo
+        echo "| Measure | Count |"
+        echo "|---|---:|"
+        echo "| Total structural fixtures | $total |"
+        echo "| Selected for API regression | $selected_count |"
+        echo "| Excluded non-main-document roots | $excluded_count |"
+        echo
+        echo "Excluded fixture IDs are listed in [excluded-fixture-ids.txt](correctness/ubl21-structural/excluded-fixture-ids.txt)."
+        echo "The machine-readable counts, excluded fixture metadata, expected XSD outcomes, and generator provenance are in [selection-evidence.json](correctness/ubl21-structural/selection-evidence.json)."
+        echo
+        echo "### Independent XSD validation of excluded fixtures"
+        echo
+        echo "The structural corpus was generated with `createsamples` generator version `$generator_version`. Generation independently validates every fixture against its fixture-specific XSD using `xmllint --nonet --noout --schema` and aborts before installing the corpus on any invalid fixture. A successful corpus installation therefore records **$excluded_count of $excluded_count** excluded fixtures as XSD-valid at generation time. The API exclusion is based on document types absent from the canonical UBL main-document manifest, not on validation outcome."
+        echo
+        echo "The source corpus manifest is retained at `createsamples/samples-structural/manifest.json`; the API-selected manifest is `correctness/ubl21-structural/manifest-selected.json`."
+    } >>"$REPORT"
 }
 
 append_failed_fixtures() {
@@ -248,6 +301,7 @@ write_report() {
         echo "## Semantic summaries and equivalence evidence"
     } >> "$REPORT"
     append_json_artifacts
+    append_structural_selection_evidence
 
     {
         echo
