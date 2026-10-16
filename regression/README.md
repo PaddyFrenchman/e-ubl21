@@ -57,6 +57,16 @@ an individual structural fixture through the identical public pipeline, add
 `--fixture-id ubl21.invoice.invoiceline-500`. Repeat the flag or provide a
 comma-separated list for an explicit small set.
 
+The generated structural corpus also contains standalone common-component,
+XMLDSig/XAdES, and simple-type roots. Corpus generation validates those
+fixtures directly against their authoritative XSDs; the public upload API
+accepts UBL main-document roots only. The correctness harness therefore runs
+all structural fixtures whose document types appear in the canonical UBL
+main-document corpus through the API. The selected manifest is retained as
+`manifest-selected.json` in the structural regression artifacts. Exact
+single-fixture and explicit small-set selections continue to use the original
+manifest.
+
 For a long-running, full structural-runtime qualification, leave
 `STRUCTURAL_FIXTURE_ID` and `STRUCTURAL_FIXTURE_IDS` unset and run the local
 correctness harness with a token and source-object lifetime sufficient for the
