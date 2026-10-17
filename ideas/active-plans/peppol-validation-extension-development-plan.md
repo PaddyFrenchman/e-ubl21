@@ -116,3 +116,17 @@ One bounded reviewable change per issue; split further if inspection reveals mul
 - [ ] [#188: RESP-03 — Add isolated Invoice Response validator and regression gate](https://github.com/PaddyFrenchman/e-ubl21/issues/188)
 
 Start with #175 (envelope audit), #179 (market requirements) and #185 (structural evidence). Invoice Response starts only after #178 and #184.
+
+## Focused enhancement corpus — required development foundation
+
+User requirement: independently generate and test the new features without processing the large structural corpus.
+
+1. [#189](https://github.com/PaddyFrenchman/e-ubl21/issues/189): select named feature suites and recipe/fixture/rule filters before generation; dry-run and fail on unknown/empty selection.
+2. [#190](https://github.com/PaddyFrenchman/e-ubl21/issues/190): write only selected fixtures and an isolated deterministic manifest, with safe output ownership and reviewed size budgets. Depends on #189.
+3. [#191](https://github.com/PaddyFrenchman/e-ubl21/issues/191): add manifest-only focused test targets, real prerequisite validators, exact counts, timing evidence and reproduction commands. Depends on #190.
+
+Proposed suite names (not implemented CLI flags): peppol-envelope, peppol-ie, peppol-gb-ni, peppol-response (later), combined peppol-enhancements. Generate only necessary positive/negative/boundary/non-applicable scenarios and explicit prerequisite controls. The runner reads only the selected manifest; it does not regenerate fixtures or walk the full repository. Unknown suites, unimplemented suites, zero matches and missing dependencies fail clearly.
+
+Existing audit/requirements work #175, #179 and #185 can begin immediately. Build selection/manifest/runner infrastructure before repeated feature qualification. #181 and #182 use #190 for generation. #178 and #184 use #191 for focused execution/evidence. #187 and #188 extend the same infrastructure for responses later. Infrastructure can be proven initially with existing representative Peppol fixtures so there is no circular dependency on future scenario implementation.
+
+Keep full regression separately invokable for broad qualification; a focused pass does not satisfy #167. No performance result or implemented CLI is claimed by this plan.
