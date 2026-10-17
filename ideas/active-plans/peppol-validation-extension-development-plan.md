@@ -97,3 +97,22 @@ Reuse bounded runner/evidence mechanisms; wire an explicit versioned response va
 ## Working rules
 
 One bounded reviewable change per issue; split further if inspection reveals multiple independent fixes. Audit existing behaviour before changing it. Every implementation issue needs targeted tests, exact revision/asset identity and source-linked diagnostics. Keep national legal advice/applicability distinct from machine-enforced Peppol rules. Local passing evidence does not establish network interoperability or certification. Do not close #82 or #167 automatically when a child issue is complete.
+
+## GitHub implementation checklist
+
+- [ ] [#175: ENV-01 — Audit existing SBDH implementation and remaining qualification gaps](https://github.com/PaddyFrenchman/e-ubl21/issues/175)
+- [ ] [#176: ENV-02 — Qualify SBDH sender and receiver identifier matching](https://github.com/PaddyFrenchman/e-ubl21/issues/176)
+- [ ] [#177: ENV-03 — Qualify SBDH document and process identifiers](https://github.com/PaddyFrenchman/e-ubl21/issues/177)
+- [ ] [#178: ENV-04 — Qualify envelope pipeline and publish issue 82 closure evidence](https://github.com/PaddyFrenchman/e-ubl21/issues/178)
+- [ ] [#179: MARKET-01 — Inventory authoritative Ireland and UK invoice requirements](https://github.com/PaddyFrenchman/e-ubl21/issues/179)
+- [ ] [#180: MARKET-02 — Specify reviewed Ireland and UK fixture recipes](https://github.com/PaddyFrenchman/e-ubl21/issues/180)
+- [ ] [#181: MARKET-03 — Generate minimal deterministic Ireland fixtures](https://github.com/PaddyFrenchman/e-ubl21/issues/181)
+- [ ] [#182: MARKET-04 — Generate minimal deterministic GB and Northern Ireland fixtures](https://github.com/PaddyFrenchman/e-ubl21/issues/182)
+- [ ] [#183: MARKET-05 — Decide and implement only evidenced market-rule gaps](https://github.com/PaddyFrenchman/e-ubl21/issues/183)
+- [ ] [#184: MARKET-06 — Publish reproducible Ireland and UK qualification evidence](https://github.com/PaddyFrenchman/e-ubl21/issues/184)
+- [ ] [#185: CORPUS-01 — Reconcile outstanding issue 167 evidence and residuals](https://github.com/PaddyFrenchman/e-ubl21/issues/185)
+- [ ] [#186: RESP-01 — Define versioned Invoice Response validation contract](https://github.com/PaddyFrenchman/e-ubl21/issues/186)
+- [ ] [#187: RESP-02 — Pin Invoice Response validation assets and fixtures](https://github.com/PaddyFrenchman/e-ubl21/issues/187)
+- [ ] [#188: RESP-03 — Add isolated Invoice Response validator and regression gate](https://github.com/PaddyFrenchman/e-ubl21/issues/188)
+
+Start with #175 (envelope audit), #179 (market requirements) and #185 (structural evidence). Invoice Response starts only after #178 and #184.
