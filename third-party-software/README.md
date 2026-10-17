@@ -25,3 +25,7 @@ Each product adapter will target a shared e-UBL21 invoice submission contract. P
 - [FreeAgent](freeagent/README.md)
 
 Background: [UK and Ireland invoice generation plan](../ideas/active-plans/invoice-generation-uk-ireland.md).
+
+## Official invoice interface research
+
+See the [research register and product specifications](INTEGRATION-RESEARCH.md) for official documentation links, verified interface details, initial mappings, access restrictions and remaining qualification work. Research reviewed on 17 October 2026; adapters are not implemented.
