@@ -29,3 +29,7 @@ Background: [UK and Ireland invoice generation plan](../ideas/active-plans/invoi
 ## Official invoice interface research
 
 See the [research register and product specifications](INTEGRATION-RESEARCH.md) for official documentation links, verified interface details, initial mappings, access restrictions and remaining qualification work. Research reviewed on 17 October 2026; adapters are not implemented.
+
+## Registration and system access
+
+See the [registration and access checklist](REGISTRATION-AND-ACCESS-CHECKLIST.md). Sage 200 third-party API development requires enrolment in its paid UKI API Developer Programme under the official September 2026 notice; public documentation access alone does not provide API credentials.
