@@ -28,3 +28,7 @@ Do not use an API that posts a sales ledger transaction as evidence that a compl
 - [Customer SOP invoice/credit line views, 2024.02](https://developer.sage.com/200-uk/apis/sage-200-professional/2024.02/combined/groups/sales/tags/customer-sop-invoice-credit-line-views)
 
 See the [shared research register](../../INTEGRATION-RESEARCH.md) for common mapping and acceptance requirements.
+
+## Registration and system access
+
+See the [registration and access checklist](../../REGISTRATION-AND-ACCESS-CHECKLIST.md). Sage 200 third-party API development requires enrolment in its paid UKI API Developer Programme under the official September 2026 notice; public documentation access alone does not provide API credentials.
